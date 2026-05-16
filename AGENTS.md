@@ -32,6 +32,12 @@ Three commitments follow from that:
    for math). If a labmate would need a diagram to understand something, we
    make the diagram.
 
+### Session start
+
+At the start of a substantial session, skim `meta/workflow-issues.md` for
+any open items relevant to today's work. Address what's cheap inline;
+leave the rest for later but note in your plan that you saw them.
+
 ## Directory map
 
 - `notes/` — ideas and sketches we develop. New content.
@@ -84,3 +90,10 @@ this project is designed to avoid. If a spec is ambiguous, ask. If a result
 seems too good, double-check. If a paper citation is needed and you're not
 sure of the exact reference, mark it `[CITATION NEEDED]` rather than
 inventing one.
+
+If you notice a workflow-level issue mid-session — something we should
+change about how we work, not about the immediate task — add it to
+`meta/workflow-issues.md` rather than derailing the current work. A short
+entry under "Open" with a title, today's date, a category, and one
+paragraph of context is enough.
+

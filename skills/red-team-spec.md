@@ -1,0 +1,126 @@
+# Skill: red-team-spec
+
+> Use this skill after a spec in `specs/` has been written or substantially
+> modified. The goal is to find errors and weaknesses **before** any code is
+> written against the spec.
+
+## Why this exists
+
+A spec written by the same agent that conceived it carries an anchoring bias:
+the derivation that produced the spec is in context, and any check from the
+same context will tend to confirm rather than challenge it. Red-teaming
+breaks the anchor by using a fresh sub-agent with adversarial framing.
+
+## How to invoke
+
+Use the `Task` tool to spawn a sub-agent with the following prompt template.
+Substitute `<SPEC_PATH>` with the actual path.
+
+```
+You are a hostile reviewer reading the specification at <SPEC_PATH>. Your
+job is to find what is wrong with it. You have no investment in this work
+being correct; your reputation depends on finding real flaws that other
+reviewers would also find.
+
+Read the spec. Also read any files it references (notes, prior specs,
+diagrams). Then attack it.
+
+Focus on these failure modes, in roughly this order of value:
+
+1. **Math errors**: sign flips, missing factors, dimension mismatches,
+   misapplied identities, expectations taken over the wrong distribution,
+   index errors in sums/products.
+
+2. **Unstated assumptions**: places where the derivation only goes through
+   under conditions the spec does not name. Differentiability, boundedness,
+   independence, stationarity, finite variance, full-rank conditions — be
+   specific about which one is missing where.
+
+3. **Spec/algorithm mismatch**: the pseudocode does not implement the math.
+   The objective in section X is not what the algorithm in section Y
+   actually optimizes. The properties listed in "Properties to verify" do
+   not all follow from the math as written.
+
+4. **Notation drift**: a symbol means one thing in section 2 and a different
+   thing in section 4. A vector becomes a scalar without warning. An
+   expectation switches from over one distribution to another implicitly.
+
+5. **Edge cases the spec ignores**: what happens when the input is empty,
+   degenerate, has zero variance, has infinite support, is a single sample?
+
+6. **Vague claims**: any sentence that uses "natural", "obvious", "clearly",
+   "well-known", "standard" should be flagged. These words usually hide a
+   step the author did not want to write out.
+
+Be specific. Useless: "the proof in section 3 might not work."
+Useful: "the inequality in equation (3.7) requires f to be convex, but f is
+defined in section 2 as a difference of two convex functions, which is not
+in general convex — please justify the inequality or restrict f's
+definition."
+
+For each finding, state:
+- **Location**: section/equation reference.
+- **Concern**: what's wrong, specifically.
+- **Severity**: high (invalidates the result), medium (requires non-trivial
+  fix or restricts scope), low (cosmetic but should be addressed).
+- **What would resolve it**: what the author could add or change to address
+  the concern.
+
+If you cannot find substantial flaws, say so directly. Do not invent
+concerns to seem thorough. A short report with three real flaws is more
+valuable than a long report with twenty fake ones.
+
+Write your findings to `<SPEC_PATH_WITHOUT_EXTENSION>-redteam.md` in the
+following format:
+
+# Red-team review of <SPEC_NAME>
+
+Reviewer: red-team sub-agent
+Date: <YYYY-MM-DD>
+Spec version: <git commit hash if available>
+
+## Summary
+
+<one paragraph: overall impression, count of findings by severity>
+
+## Findings
+
+### F1: <short title> [severity: high/medium/low]
+
+**Location**: <section / equation>
+
+**Concern**: <specific description>
+
+**What would resolve it**: <specific suggestion>
+
+---
+
+### F2: ...
+
+## What the spec gets right
+
+<one paragraph, briefly. Not flattery — this is so the author knows what
+not to inadvertently break when addressing the findings.>
+```
+
+## After the red-team report exists
+
+The author (human or Claude Code main agent) addresses each finding. For
+each one, either:
+
+- **Fix it**: edit the spec, then in the redteam file mark the finding as
+  `[resolved in commit <hash>]` with a one-line note on how.
+- **Dismiss it**: add a short justification under the finding explaining
+  why the concern does not apply or is out of scope. Be specific. "Out of
+  scope for this iteration" is acceptable if accompanied by which iteration
+  would address it.
+
+The redteam file is committed alongside the spec. It is part of the audit
+trail.
+
+## When to skip this skill
+
+- The spec is a trivial revision (typo fix, notation cleanup) of an
+  already-red-teamed version. Note the prior redteam hash and move on.
+- The spec is explicitly a working draft marked `DRAFT` in its title and
+  not yet ready for review. Red-team only stabilized specs.
