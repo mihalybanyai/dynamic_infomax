@@ -1,0 +1,51 @@
+# various discussion points
+
+- **medical test** - does this agree with intuition?
+- **anticipation**: really it’s only anticipatory in terms of the stimulus - in some way it’s post-hoc relative to the “observation” of urgency
+- **we might riff on the era of experience paper**: [https://storage.googleapis.com/deepmind-media/Era-of-Experience /The Era of Experience Paper.pdf](https://storage.googleapis.com/deepmind-media/Era-of-Experience%20/The%20Era%20of%20Experience%20Paper.pdf)
+- **what are the examples that separate observational and computational costs?**
+    - Where the two types of costs most naturally separate is tasks in which you have a finite number of tries before you die, but not spaced very tight. So basically foraging-type or experimentation-type tasks
+    - In the other direction is probably fine motor control type tasks, you can fall many times, but you have to do real-time coordination
+    - Object recognition probably goes both ways: there are split-second recognition situations, and also detection-type high-risk ones
+    - One big factor splitting the two: RISK. High-risk low-speed tasks are typically bottlenecked by observations. Low-risk high-speed ones are bottlenecked by calculations. Low-risk low-speed ones are not bottlenecked, and in high-risk high-speed ones you die.
+        - There is of course a whole literature on risk management that I didn’t want to read, but one additional point of connection is the non-EV decision making settings that came up in the BBD notes
+        - Risk is the situation when you can get to a state where you can’t get out of. Thus this is a property of your reward/transition function. On the other hand, information-constrainedness (which we call urgency but should not use as is in the final text) is a property of the environment independent from the reward/transition structure. Consequently, there are problems that are risky but not information-constrained and vice versa, while there definitely are ones that are both.
+- **what would be the unconstrained objective here?**
+    - there is probably no global optimality definable over indefinite sequences, just as in evolution
+    - some combination of the posterior and a jeffreys prior. but indeed there is no way to figure out the weighting between the two. or actually it should just be the posterior, as the jeffreys was presumably updated to it, and it doesn’t matter anyway
+- **is the tishby and polani formalism a good start for the sequential MI objective?** does it actually address observational constraints? [https://pages.jh.edu/aandreo1/735/Bibliography/PerceptionAction/Tishby_Perception-reason-action cycle Models algorithms and systems (Springer)_2010.pdf](https://pages.jh.edu/aandreo1/735/Bibliography/PerceptionAction/Tishby_Perception-reason-action%20cycle%20Models%20algorithms%20and%20systems%20(Springer)_2010.pdf)
+    - main issue: it’s actually unclear what the reward is in a density estimation task. the true reward is the KL cost, but that’s not something the agent can evaluate
+        - it could be the log-likelihood of all the previous observations. so if the state is the belief state, then it will move towards explaining all the observations so far
+            - it can include the last one as well I’m sure, but this is a technicality anyway
+        - so this is akin to the belief MDP. the transition structure is known, the reward function is not, only sampled.
+    - certainly not completely: there is an environmental component to information-to-go, and it mainly targets choice, so not learning per se
+- **number of bits in different sources**
+    - how many bits can be gained in a particular situation by using the finite-N optimal prior over the Jeffreys or over the uniform?
+    - how many bits are there in a posterior? how can one quantify this? of course it has an entropy. but again, where do those bits come from? some from the data, some from the prior that was used in the first place.
+        - in a sense, this is exactly what I want to discard
+        - I might know what Ns were so far, at least cumulatively
+            - I can take N samples from the existing model and account for those as well
+                - how do you incorporate samples into an MI objective? - as conditions - this is different from the sum of MIs I had
+                    - ok, how do I condition like this?
+                - one can always guess at some effective N, and from there everything will be the same
+        - it’s easy to see how refining a model might be warranted. maybe less so when coarse-graining becomes reasonable?
+    - so it seems there is always a number of lost bits due to the model choice, and by optimising the prior, we try to minimise this
+        - maybe even counteract losing bits due to bad variable choice via dimensionality reduction
+    - does N just imply a lambda in a dual informational-cost formulation through a Lagrangian?
+        - and vice versa? could computation be understood as flipping bits *in the environment*, and then having a limitation on checking back on those later?
+    - there is a counterintuitive aspect: the more I had learned about the latent previously, the lower its entropy, thus the fewer bits I can transfer about it, and the easier it is to overwhelm it with anticipatory information
+        - these things are not independent though, so there might be a mechanism to counteract this
+        - but this should be resolved in general
+            - entropy is about bits of uncertainty - so the possibility of surprise, negative information in some sense
+    - the sampling slight of hand here really isn’t that obvious!
+        - in order to know how much information went into the posterior, we would also have to know what the prior was
+        - e.g. if the prior was deterministic, it doesn’t matter how many observations were there, and it doesn’t make sense taking this into account. the encoded information is just 0
+        - so the amount of encoded information can be estimated as the KL between the ur-prior and the posterior. and this would have to be maintained over all updates
+            - another option is to just go with the Bayesian picture, where uncertainty is already baked into the posterior
+            - or is there a meta-Bayesian one, with a prior over what the posterior should be or something like this? this would be akin to confidence in RL
+        - and then the number of samples would have to be determined via taking into account the likelihood or something
+        - what is a reasonable mechanism that could do this?
+        - maybe there is something like a particle filter that would render this more reasonable? [https://www.dauwels.com/Papers/memoryless.pdf](https://www.dauwels.com/Papers/memoryless.pdf)
+            - and this will connect to the instances where there is no learning involved whatsoever, just the adoption of a “prior”
+            - one way this could play out is that by default there is no uncertainty, just a delta. and when the possibility of an observation appears, the delta is split, according to N
+    - experimentally, we can get around the whole thing by only considering settings in which all information comes from observation, and possibly some maxent prior or something
