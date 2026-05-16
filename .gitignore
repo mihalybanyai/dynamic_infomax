@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Environment / secrets
+.env
+.env.local
+*.key
+*.pem
+
+# Experiment outputs (big files we don't want in git)
+experiments/*/output/
+experiments/*/data/
+experiments/*/checkpoints/
+*.ckpt
+*.pt
+*.pth
+
+# Transcripts that might contain sensitive info — review before committing
+# (Comment out the next line if you want to commit transcripts by default)
+# transcripts/
