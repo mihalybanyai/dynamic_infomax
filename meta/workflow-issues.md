@@ -63,6 +63,58 @@ text) does not need it. When writing skills that touch PDFs, prefer the
 simpler path and note in the skill what to escalate to if the simple
 path fails.
 
+### Revise write-math-spec skill after first 3 specs [skills]
+
+*Opened 2026-05-17*
+
+The current `skills/write-math-spec.md` is a reasonable first guess at
+spec structure but is not yet informed by use. After three specs have
+been written and used (tested against, red-teamed, possibly implemented),
+review observations tagged `[spec-format]` in `meta/what-worked.md` and
+`meta/what-didnt.md`, then decide what to revise. Do not revise piecemeal
+in the meantime.
+
+### Evaluate status-table convention after a few specs [conventions]
+
+*Opened 2026-05-17*
+
+The status table in `skills/write-math-spec.md` requires the human to
+flip per-section status by direct table edit. After three specs have
+been reviewed under this convention, evaluate: does it actually slow
+down rubber-stamping? Or has it become an empty ritual? If the former,
+keep. If the latter, redesign.
+
+### Evaluate downstream-approval gating after a few specs [conventions]
+
+*Opened 2026-05-17*
+
+The rules in `skills/write-math-spec.md` gate test scaffolding behind
+Setup+Objective approval, property tests behind Derivation approval, and
+implementation behind Algorithm approval. These are conservative
+guesses. After three specs reach implementation, evaluate whether the
+gates were appropriate, too strict (causing workarounds), or too loose
+(letting unreviewed math drive code). Revise the skill accordingly.
+
+### Test traceability to spec sections [conventions]
+
+*Opened 2026-05-17*
+
+When a spec revision is a Correction, the affected tests need to be
+identified and marked stale. Right now this is manual. Candidate
+conventions: test docstrings that name the spec section they verify,
+or a separate `tests/SPEC_MAPPING.md`. Decide based on what actually
+hurts during the first Correction cycle, not in advance.
+
+### Experiment-to-spec-commit traceability [conventions]
+
+*Opened 2026-05-17*
+
+When a spec is revised after experiments have been run against it,
+identifying affected experiments is currently manual. Candidate
+convention: experiment READMEs record the git commit hash of each spec
+they depend on. Add this to `skills/document-experiment.md` if needed,
+based on first-cycle experience.
+
 ---
 
 ## Resolved / dismissed
