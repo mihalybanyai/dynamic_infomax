@@ -115,6 +115,27 @@ convention: experiment READMEs record the git commit hash of each spec
 they depend on. Add this to `skills/document-experiment.md` if needed,
 based on first-cycle experience.
 
+### Settle on transcript-capture conventions [conventions]
+
+*Opened 2026-05-17*
+
+Today's sessions need to be captured to `transcripts/` but the right
+mechanism hasn't been chosen. Candidates: (a) browser extension export
+to Markdown for chat.claude.ai sessions, (b) raw JSONL from
+~/.claude/projects/ for Claude Code, (c) Claude Code self-summarizing
+the previous session at the start of the next. Pick after a few
+sessions of seeing which captures actually get read back.
+
+### Codify session-end routine after a few cycles [skills]
+
+*Opened 2026-05-17*
+
+Today established a rough session-end routine: dump transcript to
+`transcripts/`, write `meta/handoff.md`, commit and push, skim
+workflow-issues for open items. After this routine has been used
+several times, consider codifying as `skills/close-session.md`. Hold
+off on writing the skill until the routine has stabilized.
+
 ---
 
 ## Resolved / dismissed
