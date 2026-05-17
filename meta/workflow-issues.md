@@ -150,6 +150,16 @@ conversation — switch tracks by closing the session and opening a new
 one with the other handoff. Revisit if a third track appears or if
 this becomes cumbersome.
 
+### Codify Claude Code session-start prompt [skills]
+
+*Opened 2026-05-18*
+
+Each Claude Code session starts with a similar wake-up prompt: read
+AGENTS.md, workflow-issues, handoff, current spec, then a specific
+task. After a few sessions, consider codifying the structure as
+`skills/start-session.md` or as a script that emits the prompt. Hold
+off until the pattern stabilises.
+
 ---
 
 ## Resolved / dismissed

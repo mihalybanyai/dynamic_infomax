@@ -97,6 +97,8 @@ of the section that no longer exists. The downstream-approval rules
 stale, implementation against the old version may be wrong, experiments
 run against the old version may need to be rerun.
 
+When Claude Code does a revision round, do them according to the > M: comments inline and add a Revision log entry categorising it as Correction/Clarification/Refinement. Then flip back the corresponding status entry to `draft`.
+
 When you flip a section back to `draft` because of a revision, add an
 entry to the revision log (see below) describing what changed and why.
 

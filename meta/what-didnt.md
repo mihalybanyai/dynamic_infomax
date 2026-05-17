@@ -11,4 +11,4 @@ in `skills/`.
 
 ## Entries
 
-<!-- Add entries below as the project progresses. -->
+
