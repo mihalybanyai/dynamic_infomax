@@ -83,6 +83,14 @@ leave the rest for later but note in your plan that you saw them.
   `.gitignore` for the default rules.)
 - The `meta/` directory is committed — it's the record of how we worked.
 
+### Spec status changes
+
+`draft → reviewed`: human only, by direct edit.
+
+`reviewed → draft` or `needs-revision → draft` after a revision: whoever makes the revision flips
+the status as part of the same edit. Claude does this automatically
+when revising a `reviewed` or or `needs-revision` section; no need to be asked.
+
 ## When you (Claude) are uncertain
 
 Say so. Producing confident-sounding wrong content is the single failure mode

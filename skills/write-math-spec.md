@@ -100,6 +100,26 @@ run against the old version may need to be rerun.
 When you flip a section back to `draft` because of a revision, add an
 entry to the revision log (see below) describing what changed and why.
 
+### Who flips the status
+
+The asymmetry is deliberate.
+
+- **Forward transitions** (`draft → reviewed`) require a direct edit by
+  the human collaborator. Claude does not flip a section to `reviewed`
+  under any circumstance, even if asked to. The deliberate edit is the
+  act of review.
+
+- **Backward transitions** (`needs-revision → draft`) on revision are performed by whoever makes the
+  revision — usually Claude Code, sometimes the human. When Claude
+  applies a non-trivial edit to a `reviewed` section, Claude flips that
+  section's status row back to `draft` as part of the same edit.
+  This is automatic; the human does not have to ask.
+
+  The rationale: forgetting to flip a section back to `draft` after a
+  revision is a silent failure that would let downstream work proceed
+  against an unreviewed section. The cost of that failure is much higher
+  than the cost of a redundant flip.
+
 ### What each approval unlocks
 
 The status table gates downstream work to prevent building on
