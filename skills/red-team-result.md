@@ -30,7 +30,11 @@ Substitute `<EXPERIMENT_DIR>` with the path.
 ```
 You are reviewing the experimental result documented in
 <EXPERIMENT_DIR>/README.md. The plan is in <EXPERIMENT_DIR>/PLAN.md.
-Relevant specs and code are referenced from the plan.
+Relevant specs and code are referenced from the plan. Provenance (the
+exact git commits, seed, and package versions used) is in
+<EXPERIMENT_DIR>/output/provenance.json — consult it if the question
+of "what version of the spec/code was this run against" matters for a
+finding.
 
 The plan states a hypothesis and the README claims a result that
 supports or refutes it. Your job is to challenge that interpretation.
@@ -92,12 +96,82 @@ For each finding:
 - **What would resolve it**: a specific additional experiment, baseline,
   control, or analysis.
 
-Write to `<EXPERIMENT_DIR>/result-redteam.md`.
+**Ordering**: list findings in order of descending severity (high first,
+then medium, then low). Within a severity level, order by the checklist
+category above (bug-as-feature first, then trivial baseline, then
+confound, etc.). Number findings F1, F2, F3, ... *after* ordering.
+
+Write to `<EXPERIMENT_DIR>/result-redteam.md`. Do not include counts of
+findings by severity in the summary.
+
+# Red-team review of experiment <EXPERIMENT_NAME>
+
+Reviewer: red-team sub-agent
+Date: <YYYY-MM-DD>
+Experiment commit: <git commit hash from provenance.json if available>
+Spec commit(s) reviewed against: <as recorded in provenance.json>
+
+## Summary
+
+<one paragraph: qualitative impression — how strongly does the result
+support the hypothesis as currently presented, what alternative
+explanations are most concerning, what would change the picture. No
+counts.>
+
+## Findings
+
+### F1: <short title> [severity: high]
+
+**Concern**: <specific alternative explanation>
+
+**What would resolve it**: <specific additional experiment / analysis>
+
+---
+
+### F2: ...
+
+## What the experiment gets right
+
+<one paragraph, briefly.>
 
 End the report with one paragraph: **If after addressing all your
 concerns the hypothesis would still be supported, state that. If your
 concerns are severe enough that the current result should not be taken
 as evidence for the hypothesis, state that, in plain language.**
+```
+
+## Annotation conventions in the redteam file
+
+Same as `skills/red-team-spec.md`: `> M:` for the human's response,
+`> C:` for the confirmation of action taken, two newlines between each.
+
+For result findings specifically, the `> C:` annotation often references
+a *follow-up experiment* directory rather than a code commit, since the
+typical resolution is to run a control or additional baseline rather
+than to edit existing code.
+
+Example:
+
+```markdown
+### F2: No random-prior baseline reported [severity: medium]
+
+**Concern**: The result shows the MI-maximising prior produces a
+particular figure shape, but the README does not show what a random
+prior produces. Without a baseline, the apparent specificity of the
+result could just be a generic property of the BA solver on this
+likelihood.
+
+**What would resolve it**: Add an experiment that runs BA with a
+random initial prior (averaged over several seeds) and compare the
+resulting figure to the MI-maximising one.
+
+> M: Apply. Run with three random initial priors as a sanity-check
+> baseline. Should not change the BA result since BA converges, but
+> it's the kind of thing reviewers will ask about.
+
+> C: Follow-up experiment created at experiments/001-random-prior-baseline/.
+> PLAN.md drafted, run pending. Original experiment README updated to
+> note this follow-up is in flight.
 ```
 
 ## After the report exists
@@ -107,17 +181,18 @@ The author either:
 - **Runs additional experiments** to address findings. Each follow-up
   experiment gets its own `experiments/NNN-*/` directory with its own
   PLAN and README. The original experiment's README links to the
-  follow-ups.
-- **Documents acceptance of the limitation** in the experiment's README,
-  explaining why the limitation does not undermine the use being made of
-  the result.
+  follow-ups. The `> C:` annotation references the follow-up
+  directory.
+- **Documents acceptance of the limitation** in the `> M:` response
+  and in the experiment's README, explaining why the limitation does
+  not undermine the use being made of the result. The `> C:`
+  annotation confirms the README was updated.
 
 For the project as a whole, a useful convention: a result is *not*
 considered established until at least the high-severity findings from its
 redteam are addressed. The experiment README should explicitly state
-"redteam findings: <N high, M medium, K low — all addressed in commits
-<hashes>" or "redteam findings: <N high outstanding — see <follow-up
-experiments>".
+the high-severity findings' resolution status and link to follow-up
+experiments where relevant.
 
 ## Caveat
 

@@ -60,6 +60,8 @@ could be wrong anyway. You should consider:
 4. **Hidden state**: does the implementation rely on global state, module
    state, RNG state that is not reset between calls? Would two
    back-to-back calls with the same input give the same output?
+   (See also `skills/manage-randomness.md` for the project's
+   no-global-RNG convention; flag any violation.)
 
 5. **Untested branches**: any `if`/`else`, exception handler, or fallback
    that is not exercised by the tests. Flag each; some may be defensive
@@ -102,30 +104,104 @@ For each finding:
 - **What would resolve it**: a specific fix, a specific additional test,
   or both.
 
-Write to `<SRC_PATH_OR_MODULE>-redteam.md`. If the implementation spans
-multiple files, write one consolidated report at
-`src/<module>-redteam.md`.
-
 Distinguish carefully between "this is a bug" and "this is a risk".
 A bug is something you can demonstrate. A risk is something you cannot
 demonstrate but think is worth flagging because the code structure
 makes it likely. Both are valuable; conflating them is not.
+
+**Ordering**: list findings in order of descending severity (high first,
+then medium, then low). Within a severity level, order bugs (demonstrable)
+before risks (speculative), and within each of those by file path then
+line number. Number findings F1, F2, F3, ... *after* ordering.
+
+Write to `<SRC_PATH_OR_MODULE>-redteam.md`. If the implementation spans
+multiple files, write one consolidated report at
+`src/<module>-redteam.md`. Do not include counts of findings by severity
+in the summary.
+
+# Red-team review of <SRC_NAME>
+
+Reviewer: red-team sub-agent
+Date: <YYYY-MM-DD>
+Implementation version: <git commit hash if available>
+Spec version reviewed against: <git commit hash if available>
+Tests version reviewed against: <git commit hash if available>
+
+## Summary
+
+<one paragraph: qualitative impression of the implementation — does it
+faithfully implement the spec, where are the most likely places for bugs,
+how much confidence in correctness do the passing tests warrant. No counts.>
+
+## Findings
+
+### F1: <short title> [severity: high]
+
+**Location**: <file:line>
+
+**Concern**: <specific description>
+
+**Evidence**: <how to demonstrate, or "speculative">
+
+**What would resolve it**: <specific fix>
+
+---
+
+### F2: ...
+
+## What the implementation gets right
+
+<one paragraph, briefly.>
+```
+
+## Annotation conventions in the redteam file
+
+Same as `skills/red-team-spec.md`: `> M:` for the human's response,
+`> C:` for the confirmation of action taken, two newlines between each.
+
+For implementation findings specifically, the `> C:` confirmation should
+note whether a test was added (proving the bug existed) before the fix
+was applied. The standard pattern is: write a failing test first, then
+fix the implementation, confirm the test passes. The `> C:` records both
+commits.
+
+Example:
+
+```markdown
+### F1: log-sum-exp without max subtraction [severity: high]
+
+**Location**: src/infomax/ba.py:42
+
+**Concern**: The line computes `np.log(np.sum(np.exp(x)))` directly,
+which overflows for large x. The standard log-sum-exp trick is missing.
+
+**Evidence**: Input with any element > ~700 produces inf.
+
+**What would resolve it**: Use `scipy.special.logsumexp` or implement
+the max-subtraction trick by hand.
+
+> M: Apply, use scipy.special.logsumexp. Add a test that exercises
+> the overflow regime first.
+
+> C: Failing test added in commit c12ab40 (test_ba_handles_large_logits
+> with x including 1000.0; fails on master with overflow). Fix applied
+> in commit d34cd71 using scipy.special.logsumexp. Test now passes.
 ```
 
 ## After the report exists
 
 For each finding that is a bug: write a test that fails for the current
 implementation (proving the bug), fix the bug, confirm the test passes.
-Commit both together.
+Commit both together (or as a paired sequence). Record both commit hashes
+in the `> C:` annotation.
 
 For each finding that is a risk: either write a test that would catch
-that class of bug (preferred), or document explicitly in the report why
-the risk is accepted.
+that class of bug (preferred), or document explicitly in the `> M:`
+response why the risk is accepted, with a `> C:` confirming no code change.
 
 ## Caveat
 
 A red-team sub-agent can produce false-positive findings — claims of bugs
 that are not actually bugs. Treat each finding as a hypothesis to verify.
-If you find that the sub-agent is wrong about a concern, write a one-line
-note in the redteam file explaining why; this is itself useful audit
-trail.
+If the sub-agent is wrong about a concern, the `> M:` response explains
+why and the `> C:` confirms no change. This is itself useful audit trail.

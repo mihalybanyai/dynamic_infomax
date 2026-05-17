@@ -66,6 +66,11 @@ For each finding, state:
 - **What would resolve it**: what the author could add or change to address
   the concern.
 
+**Ordering**: list findings in order of descending severity (high first,
+then medium, then low). Within a severity level, order by location in the
+spec (earliest section first). Number findings F1, F2, F3, ... *after*
+ordering, so F1 is the highest-severity, earliest-located finding.
+
 If you cannot find substantial flaws, say so directly. Do not invent
 concerns to seem thorough. A short report with three real flaws is more
 valuable than a long report with twenty fake ones.
@@ -81,19 +86,22 @@ Spec version: <git commit hash if available>
 
 ## Summary
 
-<one paragraph: qualitative overall impression. Do not include counts of findings by severity — the list below is the source of truth.>
+<one paragraph: qualitative overall impression of the spec — what the
+author seems to get right, where the work seems thinnest, whether the
+spec is ready for downstream work or needs substantive revision. Do
+not include counts of findings by severity; the list below is the
+source of truth, and counts produced separately tend to drift from
+the actual list.>
 
 ## Findings
 
-### F1: <short title> [severity: high/medium/low]
+### F1: <short title> [severity: high]
 
 **Location**: <section / equation>
 
 **Concern**: <specific description>
 
 **What would resolve it**: <specific suggestion>
-
-**Ordering**: list findings in order of descending severity (high first, then medium, then low). Within a severity level, order by location in the spec (earliest section first). Number them F1, F2, F3, ... after ordering, so F1 is the highest-severity, earliest-located finding.
 
 ---
 
@@ -105,34 +113,59 @@ Spec version: <git commit hash if available>
 not to inadvertently break when addressing the findings.>
 ```
 
+## Annotation conventions in the redteam file
+
+The redteam file is a living document, not a one-time report. As findings
+are processed, the file accumulates a record of how each one was resolved.
+
+**The human appends a response to each finding** with the `> M:` blockquote
+prefix (M for the human's initial; substitute as appropriate), expressing
+intent: apply (with any wording specifics), dismiss (with reason), or
+uncertain (with a question or ambiguity to discuss). Two newlines separate
+the human's response from the finding above.
+
+**Claude (or the human, when editing manually) appends a confirmation**
+with the `> C:` blockquote prefix, two newlines below the human's response,
+recording what was actually done (e.g., "> C: Applied as suggested in
+commit a3f4d12; section §1.4 status flipped to draft and revision log
+entry added.").
+
+Example after a full resolution cycle:
+
+```markdown
+### F3: Differentiability assumption unstated [severity: medium]
+
+**Location**: §1.4
+
+**Concern**: The optimisation step requires differentiability of f, but
+§1.2 defines f as a max of two functions, which is not differentiable
+everywhere.
+
+**What would resolve it**: State the assumption explicitly, or replace
+the differentiation step with a subgradient version.
+
+> M: Yes, apply the fix. Use subgradients; the max is over a finite
+> set so the subgradient is well-defined.
+
+> C: Applied as suggested in commit a3f4d12. §1.4 now uses
+> subgradient notation. Section status flipped to draft. Revision
+> log entry added as Clarification.
+```
+
+This convention makes the redteam file the audit trail for the red-team
+pass — what was flagged, what the human decided, what was done, all in
+one place. See `workflows/invoke-red-team-on-spec.md` for the full
+procedural workflow.
+
 ## After the red-team report exists
 
 The author (human or Claude Code main agent) addresses each finding. For
 each one, either:
 
-- **Fix it**: edit the spec, then in the redteam file mark the finding as
-  `[resolved in commit <hash>]` with a one-line note on how.
-- **Dismiss it**: add a short justification under the finding explaining
-  why the concern does not apply or is out of scope. Be specific. "Out of
-  scope for this iteration" is acceptable if accompanied by which iteration
-  would address it.
-
-## Annotation conventions in the redteam file
-
-The redteam file is a living document, not a one-time report. As
-findings are processed:
-
-- The human appends responses to each finding with the `> M:`
-  blockquote prefix, expressing intent (apply, dismiss, uncertain).
-- Claude (or the human, when editing manually) appends confirmations
-  with the `> C:` blockquote prefix, two newlines below the human's
-  response, recording what was done.
-
-The full conversation about each finding lives inline with the
-finding itself. This is the project's audit trail for the red-team
-pass.
-
-See `workflows/invoke-red-team-on-spec.md` for the full workflow.
+- **Fix it**: edit the spec, then in the redteam file append a `> C:`
+  confirmation referencing the commit and any status changes made.
+- **Dismiss it**: append a `> M:` response with a justification, and a
+  `> C:` confirmation that no spec change was made.
 
 The redteam file is committed alongside the spec. It is part of the audit
 trail.

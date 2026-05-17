@@ -79,15 +79,87 @@ references contain any analytically computable case (a specific
 distribution, a specific input where the answer is known in closed form),
 flag whether it is tested and recommend adding it if not.
 
-Write your findings to `<TEST_PATH_WITHOUT_EXTENSION>-redteam.md`, mirroring
-the format in `skills/red-team-spec.md`.
+**Ordering**: list findings in order of descending severity (high first,
+then medium, then low). Within a severity level, order coverage-gap
+findings (Part 1) before vacuous-test findings (Part 2), and within each
+of those order by spec section or test function name (earliest first).
+Number findings F1, F2, F3, ... *after* ordering.
+
+Write your findings to `<TEST_PATH_WITHOUT_EXTENSION>-redteam.md`,
+mirroring the format below. Do not include counts of findings by
+severity in the summary; the list is the source of truth.
+
+# Red-team review of <TEST_NAME>
+
+Reviewer: red-team sub-agent
+Date: <YYYY-MM-DD>
+Test file version: <git commit hash if available>
+Spec version reviewed against: <git commit hash if available>
+
+## Summary
+
+<one paragraph: qualitative impression of the test suite — does it
+plausibly pin down the spec's claims, where is the weakest area,
+what kind of wrong implementation would slip through. No counts.>
+
+## Findings
+
+### F1: <short title> [severity: high]
+
+**Test**: <test function name or "missing">
+
+**Concern**: <specific description, including what wrong implementation
+would pass>
+
+**What would resolve it**: <specific suggestion>
+
+---
+
+### F2: ...
+
+## What the test suite gets right
+
+<one paragraph, briefly. So the author knows what not to break.>
+```
+
+## Annotation conventions in the redteam file
+
+Same convention as `skills/red-team-spec.md`: the human appends responses
+with `> M:` (or appropriate initial) and Claude or the human appends
+confirmations with `> C:`, two newlines between each. The redteam file
+becomes the audit trail for the test red-team pass.
+
+Example after resolution:
+
+```markdown
+### F2: Monotonicity test passes for constant function [severity: high]
+
+**Test**: test_ba_iteration_is_monotonic
+
+**Concern**: The test checks that I_tau is non-decreasing, but a wrong
+implementation that always returns I_tau = 0 would pass. The test does
+not check that I_tau converges to a nontrivial value.
+
+**What would resolve it**: Add an assertion that I_tau converges to a
+value strictly greater than some lower bound (e.g., I_tau >
+log(min(m, n_theta)) / 100 for nontrivial likelihoods).
+
+> M: Apply. Use the suggested lower bound but parametrise the constant
+> via a fixture so it's not buried as a magic number.
+
+> C: Applied in commit b71f3d4. Added the lower-bound assertion and
+> moved the constant to a `NONTRIVIAL_MI_LOWER_BOUND` fixture in
+> conftest.py.
 ```
 
 ## After the report exists
 
 The author addresses findings the same way as for spec red-teaming: fix
-(by adding or sharpening tests, with a note linking the commit) or dismiss
-(with justification).
+(by adding or sharpening tests) or dismiss (with justification), with
+`> M:` and `> C:` annotations inline. Status table considerations for
+the test file (if it has one) follow the same direction-asymmetry rule
+as specs — Claude flips backwards on revision, the human flips forwards
+on re-review.
 
 ## Common dismissals that are *not* acceptable
 
