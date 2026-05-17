@@ -12,6 +12,8 @@
 | 6. Layout | draft | — |
 | 7. Deferred choices (recap) | draft | — |
 | 8. Open questions for this spec | draft | — |
+| 9. References | draft | — |
+| 10. Revision log | n/a | — |
 
 ## 0. Purpose and scope
 
@@ -409,3 +411,38 @@ dependencies we actually need. Likely `numpy`, `scipy`, `matplotlib`,
 None marked blocking. The discussion of grid choice (DC-1), atom extraction
 (DC-2), and the `Prior` protocol shape (DC-3) is the substantive content
 the lab-meeting audience should see us reasoning about live.
+
+## 9. References
+
+- Mattingly, H. H., Transtrum, M. K., Abbott, M. C., & Machta, B. B.
+  (2018). Maximizing the information learned from finite data selects a
+  simple model. *PNAS*, 115(8), 1760–1765. The headline result and the
+  figure being reproduced (Fig 1).
+- Blahut, R. E. (1972). Computation of channel capacity and rate-distortion
+  functions. *IEEE Transactions on Information Theory*, 18(4), 460–473.
+  Original BA algorithm reference.
+- Arimoto, S. (1972). An algorithm for computing the capacity of arbitrary
+  discrete memoryless channels. *IEEE Transactions on Information Theory*,
+  18(1), 14–20. The other half of the BA algorithm.
+- Bernardo, J. M. (1979). Reference posterior distributions for Bayesian
+  inference. *Journal of the Royal Statistical Society B*, 41(2),
+  113–147. Reference prior framework; Jeffreys prior is the m → ∞ limit
+  of the MI-maximising prior for regular models.
+- Jeffreys, H. (1946). An invariant form for the prior probability in
+  estimation problems. *Proc. Roy. Soc. A*, 186, 453–461. Original
+  Jeffreys prior; for the Bernoulli case `p_J(θ) = 1 / (π √(θ(1 − θ)))`.
+
+References for content that is *out of scope* for this spec but mentioned
+in passing — to be filled in when those specs are written:
+
+- [CITATION NEEDED] Mattingly et al. multiparameter results (Fig 4 in the
+  same paper) — for spec 002.
+- [CITATION NEEDED] Sequential / daisy-chain extension — for spec 001;
+  the original derivation in our Overleaf needs to be cross-checked
+  against the literature.
+
+## 10. Revision log
+
+*No revisions yet. This section is populated as the spec evolves; see
+`skills/write-math-spec.md` for the format and the
+Correction/Clarification/Refinement categorisation.*
