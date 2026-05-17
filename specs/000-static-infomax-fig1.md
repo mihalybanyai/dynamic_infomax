@@ -4,15 +4,15 @@
 |---|---|---|
 | 0. Purpose and scope | reviewed | 170526 |
 | Generative model | reviewed | 170526 |
-| 1. Mathematical statement | draft | 170526 |
+| 1. Mathematical statement | reviewed | 170526 |
 | 2. Why this objective | reviewed | 170526 |
-| 3. Computational specification | draft | 170526 |
-| 4. Test suite | draft | 170526 |
-| 5. Report | draft | 170526 |
+| 3. Computational specification | reviewed | 170526 |
+| 4. Test suite | reviewed | 170526 |
+| 5. Report | reviewed | 170526 |
 | 6. Layout | reviewed | 170526 |
 | 7. Deferred choices (recap) | reviewed | 170526 |
 | 8. Open questions for this spec | reviewed | 170526 |
-| 9. References | draft | 170526 |
+| 9. References | reviewed | 170526 |
 | 10. Revision log | n/a | — |
 
 ## 0. Purpose and scope
@@ -108,14 +108,14 @@ p*(θ) = argmax_{p(·) ∈ Δ(Θ)} I(Θ; X),
 ```
 
 where `Δ(Θ)` is the simplex of probability mass functions over the grid Θ
-(see §3.1). <span style="color:red">The objective is concave in `p`; the
+(see §3.1). The objective is concave in `p`; the
 maximum *value* `MI* = I(Θ; X; p*)` is unique and equals the *channel
 capacity* of `p(x|θ)`, and the optimal output marginal `p*(x)` is unique.
 The optimal prior `p*(θ)` is unique only on its support set: distinct
 mass distributions over the grid that map to the same `p*(x)` all
 achieve `MI*`. Tests that compare priors across runs or grids (T5 in
 particular) should therefore compare *supports* or *output marginals*,
-not pointwise mass over θ.</span> <!-- [Changed: F6] -->
+not pointwise mass over θ.
 
 ### 1.3 The optimality condition
 
@@ -133,14 +133,13 @@ support. We turn this into a test in §4.
 
 In the continuous setting, the analyticity of `f_KL − MI` in θ implies the
 support of `p*` is a finite set of points; this is the discreteness result
-that Fig 1 visualises. <span style="color:red">We assume `N_θ` is large
+that Fig 1 visualises. We assume `N_θ` is large
 enough to resolve the continuous-optimum atom spacing — by Mattingly's
 analysis the inter-atom spacing in Fisher length is `O(1)`, which for
 the Bernoulli model (`L = π√m`) translates to a θ-spacing of `~ 1/√m`.
 The condition is therefore `N_θ ≫ √m`; the default `N_θ = 1000`
-comfortably covers the sweep up to `m = 100`.</span> On a fine grid
+comfortably covers the sweep up to `m = 100`. On a fine grid
 the resolved atoms appear as one or a few adjacent grid bins each.
-<!-- [Changed: F7] -->
 
 ### 1.4 The Blahut–Arimoto update
 
@@ -170,8 +169,7 @@ Two facts we will assert against in tests:
   `MI* = log 2` nats (= 1 bit). This is the cleanest reference: with one
   flip you can encode exactly one bit about a binary outcome, achieved
   by placing the prior on the two boundary atoms.
-<span style="color:red">**[Changed: F5, F11]**</span>
-- **Jeffreys prior, m → ∞.** <span style="color:red">For *regular*
+- **Jeffreys prior, m → ∞.** For *regular*
   models — compact parameter space, identifiable parametrisation,
   continuous positive-definite Fisher information on the interior —
   Bernardo's reference prior converges to the Jeffreys prior as
@@ -180,15 +178,15 @@ Two facts we will assert against in tests:
   non-regular families — parameter-dependent support (e.g.
   Uniform(0, θ)), singular Fisher information (e.g. mixtures with
   unidentifiable components), or non-compact unbounded parameter
-  spaces — do not.</span> For Bernoulli the limit is
-  `p_J(θ) = 1 / (π √(θ(1 − θ)))`. <span style="color:red">The CDF of
+  spaces — do not. For Bernoulli the limit is
+  `p_J(θ) = 1 / (π √(θ(1 − θ)))`. The CDF of
   the atom-mass distribution (a step function with K jumps of heights
   `λ_a` at the atom centroids) should approach the CDF of `p_J`. At
   any finite m the step function cannot match the continuous CDF
   exactly; the best-case Kolmogorov–Smirnov gap is bounded below by
   `~ 1/(2 K(m))`. We assert pointwise CDF agreement at `m = 100` only
   (test T4), and show convergence across the m-sweep visually in the
-  report (§5).</span>
+  report (§5).
 
 There is no closed form for `p*` at intermediate m. The point of the BA
 implementation is precisely to fill in that range.
@@ -272,8 +270,6 @@ Then `p(x) = Σ_i p_i exp(logP[i, x])`. Use `logsumexp` for stability.
 
 ### 3.3 The prior interface
 
-<span style="color:red">**[Changed: F8 — section rewritten]**</span>
-
 To keep the door open for `AtomicPrior` and `ContinuousPrior` later (see §0),
 the prior is an abstraction over how `θ` is represented (grid cells,
 atoms, particles). Functions that need to query the likelihood or `f_KL`
@@ -306,8 +302,6 @@ The interface unifies the protocol but not the algorithm: BA monotonicity
 guarantees of each subclass, not of the abstract `updated()`.
 
 ### 3.4 BA loop
-
-<span style="color:red">**[Changed: F2, F3 — pseudocode rewritten with `I_prev` initialisation and log-space update]**</span>
 
 ```
 p       ← uniform(N_θ)
@@ -368,8 +362,6 @@ These are acceptance criteria — the implementation must pass them before
 the spec is considered fulfilled. Each test ties back to a specific claim
 in §1.
 
-<span style="color:red">**[Changed: F1 — T1 reference value and tolerances rewritten]**</span>
-
 **T1 — m=1 closed form (on the grid).** With `m=1`, after BA converges:
 - `K = 2` atoms.
 - Atom centroids at the first and last grid cells:
@@ -395,7 +387,7 @@ cells with `p_i > p_thresh`, `f_KL_i` agrees with the achieved `MI*` to
 within a relative tolerance `1e-3`. Off-support cells satisfy
 `f_KL_i ≤ MI*` (no positive violations beyond floating-point slack).
 
-<span style="color:red">**T3 — Capacity bound (decoupled from §3.5).** For every m,
+**T3 — Capacity bound (decoupled from §3.5).** For every m,
 `MI* ≤ log K_upper + tol`, where
 `K_upper = #{ i : p*_i > 1e-12 }` is a permissive count of grid cells
 with non-trivial mass after a hard floor (any real support cell
@@ -404,7 +396,7 @@ upper bound on the true atom count, and the bound `MI* ≤ log K_upper`
 holds whenever the math holds. This decouples T3 from §3.5's
 atom-extraction heuristic, which retains its role for figures and the
 results table but no longer drives the test. Use `tol = 1e-10`.
-(This is the `MI ≤ log K` bound from Mattingly Fig 3C.)</span>
+(This is the `MI ≤ log K` bound from Mattingly Fig 3C.)
 
 **T4 — Convergence to Jeffreys (qualitative).** At `m = 100`, the
 cumulative distribution function of the mass distribution agrees with the
@@ -417,11 +409,11 @@ test pins the *aggregate* shape, not pointwise convergence.)
 atom centroids agree across grids to within `3 × max(1/N_θ)` of each
 other. (i.e. atoms aren't an artefact of grid choice.)
 
-<span style="color:red">**[Changed: F10]** **T6 — BA monotonicity.** `I_τ` is
+**T6 — BA monotonicity.** `I_τ` is
 non-decreasing across iterations, up to floating-point slack (`1e-10` per
 step, absolute). The slack matches the realistic float64 rounding budget
 for a summation over `N_θ = 1000` terms
-of `|f_KL| ≲ log(m+1)`. This is the BA convergence guarantee.</span>
+of `|f_KL| ≲ log(m+1)`. This is the BA convergence guarantee.
 
 **T7 — Algorithmic sanity on a degenerate case.** If the likelihood is
 `θ`-independent (a fake "experiment that learns nothing"), then `MI* = 0`,
@@ -442,7 +434,7 @@ Output to `experiments/000-static-fig1/REPORT.md`. Contents:
    highlighted. This is our Fig 1.
 2. A second plot showing the m = 100 atom CDF overlaid on the Jeffreys
    CDF.
-3. <span style="color:red">**[Changed: F5 — new item, items 4–6 renumbered]** A convergence plot: K–S distance between the atom CDF and the Jeffreys CDF as a function of m across the sweep, with the discreteness floor `1/(2 K(m))` overlaid. Visual sanity check, not a hard assertion — small-m points are expected to sit on the floor.</span>
+3. A convergence plot: K–S distance between the atom CDF and the Jeffreys CDF as a function of m across the sweep, with the discreteness floor `1/(2 K(m))` overlaid. Visual sanity check, not a hard assertion — small-m points are expected to sit on the floor.
 4. A small results table: `m`, `K`, `MI*` in bits, atom centroids and
    weights.
 5. Test results: pass/fail status of T1–T7 with the numerical tolerances
@@ -510,12 +502,12 @@ the lab-meeting audience should see us reasoning about live.
 - Jeffreys, H. (1946). An invariant form for the prior probability in
   estimation problems. *Proc. Roy. Soc. A*, 186, 453–461. Original
   Jeffreys prior; for the Bernoulli case `p_J(θ) = 1 / (π √(θ(1 − θ)))`.
-- <span style="color:red">Clarke, B. S. & Barron, A. R. (1994).
+- Clarke, B. S. & Barron, A. R. (1994).
   Jeffreys' prior is asymptotically least favorable under entropy risk.
   *Journal of Statistical Planning and Inference*, 41(1), 37–60. DOI
   10.1016/0378-3758(94)90153-8. Regularity conditions under which
   Bernardo's reference prior reduces to Jeffreys as `m → ∞`; cited in
-  §1.5.</span>
+  §1.5.
 
 ## 10. Revision log
 
