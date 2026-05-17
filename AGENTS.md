@@ -75,6 +75,28 @@ leave the rest for later but note in your plan that you saw them.
 - Numerical code uses `numpy` / `pytorch`. Avoid framework lock-in inside
   `specs/` — keep specs framework-agnostic.
 
+### Dependencies
+
+The Python environment is managed by [uv](https://docs.astral.sh/uv/).
+The rules:
+
+- **Never run `pip install`.** Use `uv add <pkg>` for a runtime dep, or
+  `uv add --group dev <pkg>` for tooling (PDF reading, plate diagrams,
+  anything not used by the algorithms themselves). `uv add` edits
+  `pyproject.toml` and regenerates `uv.lock` atomically, so the two
+  files can never drift.
+- **Commit `pyproject.toml` and `uv.lock` together** in the same
+  commit, with a message that names what the dep is for. Never one
+  without the other.
+- **System-level installs** (`brew install X`, installer scripts,
+  anything outside the venv) that the project depends on get a line in
+  the *Local setup* section of `README.md` in the same task. If we
+  deliberately *avoid* a system install (e.g. poppler, in favour of
+  `pypdf`), say so under "What we deliberately don't install" so the
+  next person doesn't reflexively `brew install` it.
+- **Run `uv sync` before committing** any dependency change, to confirm
+  the lockfile actually resolves and the deps actually import.
+
 ### Git
 
 - One logical change per commit. Commit messages: imperative mood, first line
