@@ -10,6 +10,12 @@ dependencies = [
     "pytest",
 ]
 
+[dependency-groups]
+dev = [
+    "pypdf",      # read PDFs in resources/ without a system-level poppler install
+    "daft-pgm",   # plate-notation diagrams in diagrams/ (imports as `daft`)
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
