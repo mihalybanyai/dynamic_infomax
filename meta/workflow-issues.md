@@ -171,6 +171,29 @@ genuinely different task or after a long absence. Wake-up cost should
 be made small (pinned prompt or a session-prompt script) rather than
 made rare. Revisit when patterns are clearer after a few weeks.
 
+### Bootstrap should set up uv + pyproject.toml [bootstrap]
+
+*Opened 2026-05-18*
+
+The bootstrap script creates a project structure but doesn't initialise
+the Python environment. Decision: use `uv` (Astral) with `pyproject.toml`
++ `uv.lock` for environment reproducibility. Next bootstrap revision
+should: create a starter `pyproject.toml` with `requires-python` set,
+run `uv lock` (or leave instructions in the next-steps message for the
+user to run it), and add a "Local setup" section to the seeded README.md
+explaining the labmate workflow (`uv sync`). Pin specific Python version
+choice once we've settled on one.
+
+### Randomness/reproducibility conventions [conventions]
+
+*Opened 2026-05-18, in-progress*
+
+Skill `skills/manage-randomness.md` written in v1 form before first use,
+because the conventions govern every code-touching action and
+retrofitting would be expensive. Pending: revise after first experiment
+actually runs against the conventions. Known v1 gaps documented at the
+bottom of the skill (CUDA non-determinism, parallelism, caching).
+
 ---
 
 ## Resolved / dismissed

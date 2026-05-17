@@ -113,6 +113,26 @@ The rules:
 the status as part of the same edit. Claude does this automatically
 when revising a `reviewed` or or `needs-revision` section; no need to be asked.
 
+## Reproducibility
+
+Two non-negotiables for any code in this repo:
+
+1. **Environment via uv.** The repo declares dependencies in
+   `pyproject.toml` and pins them in `uv.lock`. Labmate setup is
+   `uv sync`. Do not use system Python; do not pip-install outside
+   the project venv.
+
+2. **No global random state, and every result is provenance-recorded.**
+   See `skills/manage-randomness.md` for the details. Summary: all
+   randomness flows through explicitly-passed generators; every
+   experiment has a recorded seed; every experiment run writes
+   `provenance.json` capturing git hash, package versions, and spec
+   commit hashes.
+
+Both conventions are strict from the start of any code, not retrofitted
+later. See workflow-issues entries on uv-in-bootstrap and randomness
+conventions.
+
 ## When you (Claude) are uncertain
 
 Say so. Producing confident-sounding wrong content is the single failure mode
