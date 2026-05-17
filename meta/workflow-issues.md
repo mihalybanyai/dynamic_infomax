@@ -211,6 +211,53 @@ Each was added to the live repo as the need was discovered. Roll into
 bootstrap together so labmates running it today get the current
 conventions. Consider this the v2 of the bootstrap.
 
+### Clarify red-team resolution workflow in skills [skills]
+
+*Opened 2026-05-18*
+
+Red-team skills (`red-team-spec.md`, etc.) specify how to *produce*
+the findings file but not how to *resolve* findings over time.
+Convention emerging: each finding gets a "Resolution" subsection
+appended once addressed or dismissed, with commit hash for addressed
+findings and reason for dismissed ones. Codify in the skills after
+the first red-team cycle has run on a spec, tests, and implementation
+— so the convention is grounded in actual use rather than my guess.
+
+### Reference handling: PDFs vs annotated bibliography [conventions]
+
+*Opened 2026-05-18*
+
+Two-tier convention adopted: (a) primary sources for active specs go
+into `resources/` as PDFs; (b) background/secondary references live
+in `resources/references.md` as an annotated bibliography with DOIs
+and links, not as PDFs. Reduces repo bloat and copyright exposure
+without sacrificing what red-teaming and review actually need.
+Revisit if the project grows large enough that `resources/`
+itself becomes unwieldy — git LFS or external paper storage may then
+be appropriate.
+
+### Skills vs. workflows: maintain the boundary [conventions]
+
+*Opened 2026-05-18*
+
+`skills/` contains procedures (what to do for a task). `workflows/`
+contains reusable prompts that orchestrate skills and conventions
+(how to trigger a session of work). Boundary signal: if a prompt to
+Claude Code or chat-Claude contains substantive content beyond "follow
+skill X on artifact Y", that content is either (a) a candidate for
+absorption into the relevant skill (preferred when the content is
+about *how* to do the procedure) or (b) a candidate for a workflow file
+(when the content is about *when* and *in what context* to invoke the
+procedure).
+
+When drafting new prompts, ask: is this prompt's content really
+something the skill should specify? If yes, fix the skill. Only after
+that, add a workflow file if the orchestration itself is reusable.
+
+Review the boundary after 5+ workflow files exist, or if any workflow
+file grows beyond ~50 lines of prompt content (suggesting it's
+absorbing what should be in skills).
+
 ---
 
 ## Resolved / dismissed
