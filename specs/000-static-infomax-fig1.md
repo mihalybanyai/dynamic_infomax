@@ -6,13 +6,13 @@
 | Generative model | reviewed | 170526 |
 | 1. Mathematical statement | reviewed | 170526 |
 | 2. Why this objective | reviewed | 170526 |
-| 3. Computational specification | draft | — |
-| 4. Test suite | draft | — |
-| 5. Report | draft | — |
-| 6. Layout | draft | — |
-| 7. Deferred choices (recap) | draft | — |
-| 8. Open questions for this spec | draft | — |
-| 9. References | draft | — |
+| 3. Computational specification | reviewed | 170526 |
+| 4. Test suite | reviewed | 170526 |
+| 5. Report | reviewed | 170526 |
+| 6. Layout | reviewed | 170526 |
+| 7. Deferred choices (recap) | reviewed | 170526 |
+| 8. Open questions for this spec | reviewed | 170526 |
+| 9. References | reviewed | 170526 |
 | 10. Revision log | n/a | — |
 
 ## 0. Purpose and scope
@@ -431,15 +431,6 @@ the lab-meeting audience should see us reasoning about live.
 - Jeffreys, H. (1946). An invariant form for the prior probability in
   estimation problems. *Proc. Roy. Soc. A*, 186, 453–461. Original
   Jeffreys prior; for the Bernoulli case `p_J(θ) = 1 / (π √(θ(1 − θ)))`.
-
-References for content that is *out of scope* for this spec but mentioned
-in passing — to be filled in when those specs are written:
-
-- [CITATION NEEDED] Mattingly et al. multiparameter results (Fig 4 in the
-  same paper) — for spec 002.
-- [CITATION NEEDED] Sequential / daisy-chain extension — for spec 001;
-  the original derivation in our Overleaf needs to be cross-checked
-  against the literature.
 
 ## 10. Revision log
 
