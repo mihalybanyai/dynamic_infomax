@@ -2,10 +2,10 @@
 
 | Section | Status | Date |
 |---|---|---|
-| 0. Purpose and scope | draft | — |
-| Generative model | draft | — |
-| 1. Mathematical statement | draft | — |
-| 2. Why this objective | draft | — |
+| 0. Purpose and scope | revewed | 170526 |
+| Generative model | needs-revision | 170526 |
+| 1. Mathematical statement | revewed | 170526 |
+| 2. Why this objective | revewed | 170526 |
 | 3. Computational specification | draft | — |
 | 4. Test suite | draft | — |
 | 5. Report | draft | — |
@@ -65,6 +65,7 @@ we are evaluating is whether the workflow produces audit-friendly artefacts.
 The latent bias θ is drawn from the (to-be-optimised) prior `p(θ)`; the m
 observed flips `x_i ∈ {0, 1}` are i.i.d. Bernoulli(θ) conditional on θ.
 For computation we use the sufficient statistic `x = Σ x_i ~ Binomial(m, θ)`.
+> M: no need to spell out the index variable in the graphical model, just having m in the corner of the plate is cleaner
 
 ## 1. Mathematical statement
 
