@@ -136,6 +136,20 @@ workflow-issues for open items. After this routine has been used
 several times, consider codifying as `skills/close-session.md`. Hold
 off on writing the skill until the routine has stabilized.
 
+### Handle parallel work tracks via separate handoffs [conventions]
+
+*Opened 2026-05-18*
+
+The project will have at least two concurrent threads: (a) the
+implementation track (currently spec 000), and (b) a more
+mathematical/conceptual sub-project (TBD which spec or note files).
+Convention: one handoff file per active track (`meta/handoff-<track>.md`),
+updated only by sessions working on that track. Start of a session
+loads the relevant handoff. Don't mix tracks within a single
+conversation — switch tracks by closing the session and opening a new
+one with the other handoff. Revisit if a third track appears or if
+this becomes cumbersome.
+
 ---
 
 ## Resolved / dismissed
