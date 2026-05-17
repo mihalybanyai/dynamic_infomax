@@ -194,6 +194,23 @@ retrofitting would be expensive. Pending: revise after first experiment
 actually runs against the conventions. Known v1 gaps documented at the
 bottom of the skill (CUDA non-determinism, parallelism, caching).
 
+### Next bootstrap revision: skills, tutorials, uv, macOS fix [bootstrap]
+
+*Updated 2026-05-18*
+
+The next revision to `bootstrap.py` should bundle:
+- Four red-team skills currently only in the live repo
+- macOS git HTTP/1.1 fix (Darwin-only, local scope)
+- uv setup (pyproject.toml, uv lock, README quickstart section)
+- The `manage-randomness.md` skill
+- The `tutorials/` directory with current four files
+- Updated `AGENTS.md` seed content (reproducibility section, status-
+  transition direction asymmetry, session-start review)
+
+Each was added to the live repo as the need was discovered. Roll into
+bootstrap together so labmates running it today get the current
+conventions. Consider this the v2 of the bootstrap.
+
 ---
 
 ## Resolved / dismissed
