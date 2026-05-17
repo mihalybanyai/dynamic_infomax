@@ -160,6 +160,17 @@ task. After a few sessions, consider codifying the structure as
 `skills/start-session.md` or as a script that emits the prompt. Hold
 off until the pattern stabilises.
 
+### Session-resume rhythm and wake-up cost [conventions]
+
+*Opened 2026-05-18*
+
+Days will involve multiple on-off periods. Convention: one chat per
+coherent task-phase, not one per day. Same chat is fine across short
+breaks (you don't close the tab); new chat when switching to a
+genuinely different task or after a long absence. Wake-up cost should
+be made small (pinned prompt or a session-prompt script) rather than
+made rare. Revisit when patterns are clearer after a few weeks.
+
 ---
 
 ## Resolved / dismissed
