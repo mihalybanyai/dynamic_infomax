@@ -12,11 +12,11 @@ import daft
 pgm = daft.PGM()
 
 pgm.add_node("theta", r"$\theta$", x=2, y=2)
-pgm.add_node("x", r"$x_i$", x=2, y=1, observed=True)
+pgm.add_node("x", r"$x$", x=2, y=1, observed=True)
 
 pgm.add_edge("theta", "x")
 
-pgm.add_plate([1.4, 0.5, 1.2, 1.0], label=r"$i = 1, \ldots, m$", position="bottom right")
+pgm.add_plate([1.4, 0.5, 1.2, 1.0], label=r"$m$", position="bottom right")
 
 pgm.render()
 pgm.savefig("diagrams/000-static-infomax-fig1-pgm.svg")

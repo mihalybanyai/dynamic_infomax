@@ -3,7 +3,7 @@
 | Section | Status | Date |
 |---|---|---|
 | 0. Purpose and scope | revewed | 170526 |
-| Generative model | needs-revision | 170526 |
+| Generative model | draft | 170526 |
 | 1. Mathematical statement | revewed | 170526 |
 | 2. Why this objective | revewed | 170526 |
 | 3. Computational specification | draft | — |
@@ -62,10 +62,9 @@ we are evaluating is whether the workflow produces audit-friendly artefacts.
 
 ![Generative model](../diagrams/000-static-infomax-fig1-pgm.svg)
 
-The latent bias θ is drawn from the (to-be-optimised) prior `p(θ)`; the m
-observed flips `x_i ∈ {0, 1}` are i.i.d. Bernoulli(θ) conditional on θ.
-For computation we use the sufficient statistic `x = Σ x_i ~ Binomial(m, θ)`.
-> M: no need to spell out the index variable in the graphical model, just having m in the corner of the plate is cleaner
+The latent bias θ is drawn from the (to-be-optimised) prior `p(θ)`; each of
+the m observed flips is i.i.d. Bernoulli(θ) conditional on θ. For computation
+we use the sufficient statistic `x ~ Binomial(m, θ)`, i.e. the head count.
 
 ## 1. Mathematical statement
 
@@ -444,6 +443,8 @@ in passing — to be filled in when those specs are written:
 
 ## 10. Revision log
 
-*No revisions yet. This section is populated as the spec evolves; see
-`skills/write-math-spec.md` for the format and the
-Correction/Clarification/Refinement categorisation.*
+- **2026-05-17 — Refinement** (Generative model). Simplified plate notation
+  in `diagrams/000-static-infomax-fig1-pgm.{py,svg}`: node renamed `x_i` →
+  `x`, plate label changed from `i = 1, …, m` to just `m` in the corner.
+  Caption prose under the diagram adjusted to match (no more `x_i`). No
+  change to the underlying generative model. Per inline review comment.
