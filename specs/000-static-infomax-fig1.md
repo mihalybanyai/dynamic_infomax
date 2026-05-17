@@ -2,10 +2,10 @@
 
 | Section | Status | Date |
 |---|---|---|
-| 0. Purpose and scope | revewed | 170526 |
-| Generative model | draft | 170526 |
-| 1. Mathematical statement | revewed | 170526 |
-| 2. Why this objective | revewed | 170526 |
+| 0. Purpose and scope | reviewed | 170526 |
+| Generative model | reviewed | 170526 |
+| 1. Mathematical statement | reviewed | 170526 |
+| 2. Why this objective | reviewed | 170526 |
 | 3. Computational specification | draft | — |
 | 4. Test suite | draft | — |
 | 5. Report | draft | — |
