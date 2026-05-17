@@ -1,0 +1,14 @@
+[project]
+name = "dynamic_infomax"
+version = "0.0.0"
+description = "Finite-observation optimal priors for sequential decision making."
+requires-python = ">=3.11"
+dependencies = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "pytest",
+]
+
+[tool.uv]
+package = false
