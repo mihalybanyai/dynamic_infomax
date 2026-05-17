@@ -15,5 +15,9 @@ def jeffreys_bernoulli_pdf(theta: np.ndarray) -> np.ndarray:
 
 
 def jeffreys_bernoulli_cdf(theta: np.ndarray) -> np.ndarray:
-    """CDF of the Jeffreys prior on the Bernoulli; used for the K-S test."""
+    """CDF of the Jeffreys prior on the Bernoulli.
+
+    Closed form: F_J(theta) = (2/pi) * arcsin(sqrt(theta)) on [0, 1].
+    Used for the K-S test in T4.
+    """
     raise NotImplementedError

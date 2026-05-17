@@ -19,14 +19,16 @@ class BAResult:
     """Output of one BA run."""
 
     prior: GridPrior
-    mi: float            # achieved MI in nats
-    f_kl: np.ndarray     # f_KL(theta_i; prior), shape (n_theta,)
-    n_iters: int         # iterations taken
-    converged: bool      # whether |I_{tau+1} - I_tau| < eps_I within tau_max
+    mi: float                  # achieved MI in nats
+    f_kl: np.ndarray           # f_KL(theta_i; prior), shape (n_theta,)
+    mi_history: np.ndarray     # I_tau for tau = 0, 1, ..., n_iters; for T6
+    n_iters: int               # iterations taken
+    converged: bool            # whether |I_{tau+1} - I_tau| < eps_I within tau_max
 
 
 def blahut_arimoto(
     log_likelihood: np.ndarray,
+    theta_grid: np.ndarray,
     *,
     eps_i: float = 1e-10,
     tau_min: int = 10,
@@ -34,14 +36,22 @@ def blahut_arimoto(
 ) -> BAResult:
     """Find the MI-maximising prior on the grid implied by `log_likelihood`.
 
+    Implements the log-space BA loop of spec §3.4 starting from a uniform
+    `GridPrior(theta_grid)`. Records `I_tau` at each step in `mi_history`
+    so T6 (monotonicity) can be checked without re-running the loop.
+
     Args:
         log_likelihood: log p(x | theta_i), shape (n_theta, n_x).
+        theta_grid: cell-centred grid, shape (n_theta,); used to construct
+            the returned `GridPrior`.
         eps_i: convergence tolerance on |I_{tau+1} - I_tau| in nats.
         tau_min: minimum iterations before checking convergence.
         tau_max: hard iteration cap.
 
-    Returns: BAResult with the converged prior, achieved MI, the final
-    f_KL(theta) vector, and convergence diagnostics.
+    Returns:
+        BAResult with the converged prior, achieved MI in nats, the final
+        f_KL(theta) vector, the full MI history, and convergence
+        diagnostics.
 
     Spec §3.4.
     """
@@ -53,6 +63,6 @@ def compute_f_kl(prior: GridPrior, log_likelihood: np.ndarray) -> np.ndarray:
 
     Used inside BA and exposed because §1.3's optimality condition
     (f_KL = MI on support, < MI off support) is asserted directly in
-    tests T2.
+    test T2.
     """
     raise NotImplementedError

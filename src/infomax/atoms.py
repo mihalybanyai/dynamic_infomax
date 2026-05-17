@@ -29,3 +29,13 @@ def extract_atoms(prior: GridPrior, p_thresh: float | None = None) -> list[Atom]
     Each detected run is reduced to (mass-weighted centroid, total mass).
     """
     raise NotImplementedError
+
+
+def count_support(prior: GridPrior, floor: float = 1e-12) -> int:
+    """Permissive count of support cells: `#{ i : p_i > floor }`.
+
+    Spec §4 T3: this is `K_upper`, an upper bound on the true atom count
+    used by the capacity-bound test. Decoupled from `extract_atoms` (and
+    its DC-2 heuristic) — `floor` is set well below any real support mass.
+    """
+    raise NotImplementedError
