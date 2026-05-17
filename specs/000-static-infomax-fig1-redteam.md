@@ -44,6 +44,12 @@ the likelihood code), or (c) compare against the analytic two-atom MI evaluated
 choice is made, DC-1 should be promoted from an aside to a numerical
 prediction.
 
+> M: good catch. let's use suggestion (c), evaluate the analytic solution on the grid, and compare to that. Does this resolves DC-1?
+
+> C: T1 rewritten in §4 of the spec to compare against `MI_ref = log 2 − H(1/(2 N_θ))` with tolerances tightened to 1e-6. The DC-1 follow-up question (whether this fix resolves DC-1 entirely) is deferred to the discussion phase.
+
+> C [follow-up]: DC-1 kept as-is per reviewer's decision; no further spec edit beyond the T1 fix above. DC-1 remains the standing caveat that the cell-centred grid never includes θ = 0 or θ = 1 exactly; tests work with the on-grid analogues as T1 now does.
+
 ---
 
 ### F2: §3.4 pseudocode references `I_{τ−1}` at τ = 0 [severity: low]
@@ -59,6 +65,9 @@ copy-pasted into the implementation.
 the test with `τ ≥ 1`. (`τ_min = 10` happens to mask the bug but only because
 `τ_min > 1`.)
 
+> M: let's just add `I_prev = −∞`
+
+> C: Added `I_prev ← −∞` before the loop in §3.4 and explicit `I_prev ← I_τ` update at end-of-step; removed the `I_{τ−1}` reference.
 ---
 
 ### F3: §3.4 pseudocode does not match the §1.4 update [severity: medium]
@@ -79,6 +88,10 @@ overflow could realistically bite at larger m).
 
 **What would resolve it**: Add a log-space variant of the BA step in §3.4,
 or remove the log-space promise from §3.2.
+
+> M: let's use the log-space variant of the BA step
+
+> C: BA step in §3.4 rewritten as `log_p_new = f_KL + log_p; log_p_new −= logsumexp(log_p_new)`; `p ← exp(log_p)` materialised at each step for downstream uses (computing `p_x`, `I_τ`).
 
 ---
 
@@ -104,6 +117,10 @@ wrong way around.
 count (e.g. count *any* cell with `p_i > 0` after a hard floor of, say,
 `1e-12`), or use a much smaller `p_thresh`, or replace the test with the
 direct algebraic check `MI* ≤ log(#{i : p*_i > 1e−12})`.
+
+> M: it's not very clear to me what makes sense here. maybe if the test fails, there should be an additional quantification of how likely is it to have failed because of such an undercounting? please advise.
+
+> C: Adopted the structural fix instead of the failure-quantification path: §4 T3 now asserts `MI* ≤ log K_upper + tol` where `K_upper = #{i : p*_i > 1e-12}` is a permissive grid-cell count direct off the converged prior (no atom-extraction heuristic in the loop). This is an honest mathematical bound — `K_upper ≥ K_true` by construction, so the bound holds whenever the math holds. The §3.5 extractor is unchanged and still drives the figure and the results table.
 
 ---
 
@@ -131,6 +148,10 @@ one; §1.5 prose should be made consistent with it.
 statement, and either tighten T4 to "m = 100 only" or compute the predicted
 KS-distance floor `~ 1/(2K(m))` and use it as the per-m tolerance.
 
+> M: do make the language consistent. otherwise it seems to me that instead of KS test at the m=100 endpoint one would want to quantify the rate of convergence to the Jeffreys as m increases. I realise that this is harder to quantify, and would basically only work as a visual sanity check. So maybe keep the test for just m=100, and then include the rest as a convergence plot in the report. 
+
+> C: §1.5's second bullet rewritten in CDF terms (no more "histogram"), with an explicit note that the KS floor `~ 1/(2 K(m))` makes the assertion m=100-only. T4 itself unchanged. §5 gained item 3: a convergence plot of KS distance vs m with the discreteness floor overlaid, framed as a visual sanity check not a hard assertion.
+
 ---
 
 ### F6: Uniqueness claim in §1.2 is unjustified [severity: medium]
@@ -153,6 +174,10 @@ implementation being wrong.
 the *output marginal* `p*(x)` is unique, but the input prior is unique only on
 its support (Csiszár 1974). Then T5 should compare per-atom *output* marginals
 or the support set, not centroids of mass within runs.
+
+> M: to me this seems like a thing that can't really cause any issues. Probably worth clarifying the language though.
+
+> C: §1.2's uniqueness sentence reworded: the maximum *value* `MI*` and the optimal output marginal `p*(x)` are unique; the prior `p*(θ)` is unique only on its support. Added a one-line guidance for cross-grid comparisons (support- or marginal-based, not pointwise mass).
 
 ---
 
@@ -180,6 +205,10 @@ that the continuous optimum's atom spacing `~1/√m` is resolved, i.e.
 the continuous atoms to within one cell." Note this then justifies `N_θ ≥
 1000` for `m ≤ 100`.
 
+> M: ok, worth clarifying the language. does not seem to me to cause a technical issue though.
+
+> C: §1.3 final paragraph extended: the fineness assumption `N_θ ≫ √m` is now stated explicitly (from Mattingly's atom-spacing scaling), with the note that `N_θ = 1000` covers `m ≤ 100`.
+
 ---
 
 ### F8: §3.3 `update` signature is incompatible with BA [severity: medium]
@@ -205,6 +234,10 @@ support, or split the protocol into a "BA-updatable" interface (for grid) and
 a "gradient-updatable" interface (for atoms). Be honest that these are
 different optimisers, not one optimiser with two backends.
 
+> M: if it's possible, I'd not have two optimisers at this point. So if we can make the interface compatible with all prior types via a callable fKL_fn, let's do that
+
+> C: §3.3 `Prior` protocol changed: `expected_data` takes a `log_likelihood_fn`, `updated` takes an `f_kl_fn`. Each `Prior` queries the callable on its own support — no grid-shaped buffer is baked into the interface. The section also acknowledges that the per-subclass `updated()` step is a different algorithm under the hood (BA for grid, gradient for atoms, SMC for particles); the interface unifies the protocol but not the algorithm. The src/infomax/prior.py stub is now stale; it will be re-aligned at the next implementation step (§3 is back to draft).
+
 ---
 
 ### F9: "the marginal `p(x) = Σ_θ p(x|θ) p(θ)` (the *expected data*)" is unusual terminology [severity: low]
@@ -219,6 +252,10 @@ when it is then summed over.
 
 **What would resolve it**: Call it "marginal distribution of X under the
 current prior" or "data marginal". Reserve "expected data" for `E[X]`.
+
+> M: I'm fine with the "expected data" notion, leave it as is
+
+> C: No spec change. Finding dismissed per reviewer's note; the terminology stays in §1.2.
 
 ---
 
@@ -240,6 +277,10 @@ already exceeds the asserted tolerance.
 or `1e-12` relative to `|I_τ|`), or change T6 to check that any per-step
 decrease is bounded by a multiple of machine epsilon times `MI*`.
 
+> M: this seems like minor issue, setting the per-step slack to 1e-10 seems fine to me if that's better for numerical reasons
+
+> C: §4 T6 slack widened from 1e-12 to 1e-10 per step, with a one-line note tying it to the realistic float64 rounding budget for `Σ` over `N_θ = 1000` terms of `|f_KL| ≲ log(m+1)`.
+
 ---
 
 ### F11: "Bernardo's reference prior in this limit is the Jeffreys prior" omits regularity conditions [severity: low]
@@ -258,6 +299,10 @@ spec 002) will inherit the mistake.
 Clarke–Barron conditions (asymptotic normality, compactness, finite Fisher
 information), Bernardo's reference prior converges to Jeffreys as m → ∞;
 Bernoulli on [0,1] satisfies these."
+
+> M: it would be even better to state what kind of model families will satisfy these criteria. Can we say this? If not, then let's just indeed state what the red team suggested.
+
+> C: Applied the proposed wording in §1.5: the regularity conditions for Bernardo → Jeffreys (compact parameter space, identifiable parametrisation, continuous positive-definite Fisher information) are now stated, with positive (regular exponential families on a compact parameter space, including Bernoulli) and negative (parameter-dependent support, singular Fisher, non-compact parameter spaces) examples. Clarke & Barron (1994), DOI 10.1016/0378-3758(94)90153-8, added to §9 References.
 
 ---
 
@@ -285,6 +330,10 @@ Bernoulli(θ)") and add one line of text saying "we work with the sufficient
 statistic for computation", or remove the plate entirely and add a single
 node labelled `x ∈ {0,…,m}` with edge labelled `Binomial(m, θ)`. The current
 intermediate state is wrong under plate semantics.
+
+> M: this doesn't seem true to me. I have never actually seen the index variable notation for plates that the first version had, and I thought that omitting it will keep it semantically unchanged. What is the reference for this plate sematics?  
+
+> C: No spec or diagram change. The bare-`x`-in-plate-with-corner-`m` convention IS the standard plate convention and means `m` i.i.d. copies of `x` — the same as the indexed `x_i` with corner `i = 1, …, m` form. References for the convention: Buntine (1994), *JAIR* 2:159–225 (original plate notation); Koller & Friedman (2009), *Probabilistic Graphical Models* §6.4 "Plate Models"; Bishop (2006), *PRML* §8.1; the PyMC and daft documentation both routinely use the bare-`x` form. The redteam was technically right that a plate around bare `x` denotes replication, and wrong to call the current diagram "neither Bernoulli nor Binomial": it IS the Bernoulli plate model. The spec's caption already states that computation uses the sufficient statistic. Finding dismissed.
 
 ## What the spec gets right
 
