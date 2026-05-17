@@ -81,7 +81,7 @@ Spec version: <git commit hash if available>
 
 ## Summary
 
-<one paragraph: overall impression, count of findings by severity>
+<one paragraph: qualitative overall impression. Do not include counts of findings by severity — the list below is the source of truth.>
 
 ## Findings
 
@@ -92,6 +92,8 @@ Spec version: <git commit hash if available>
 **Concern**: <specific description>
 
 **What would resolve it**: <specific suggestion>
+
+**Ordering**: list findings in order of descending severity (high first, then medium, then low). Within a severity level, order by location in the spec (earliest section first). Number them F1, F2, F3, ... after ordering, so F1 is the highest-severity, earliest-located finding.
 
 ---
 
@@ -114,6 +116,23 @@ each one, either:
   why the concern does not apply or is out of scope. Be specific. "Out of
   scope for this iteration" is acceptable if accompanied by which iteration
   would address it.
+
+## Annotation conventions in the redteam file
+
+The redteam file is a living document, not a one-time report. As
+findings are processed:
+
+- The human appends responses to each finding with the `> M:`
+  blockquote prefix, expressing intent (apply, dismiss, uncertain).
+- Claude (or the human, when editing manually) appends confirmations
+  with the `> C:` blockquote prefix, two newlines below the human's
+  response, recording what was done.
+
+The full conversation about each finding lives inline with the
+finding itself. This is the project's audit trail for the red-team
+pass.
+
+See `workflows/invoke-red-team-on-spec.md` for the full workflow.
 
 The redteam file is committed alongside the spec. It is part of the audit
 trail.
