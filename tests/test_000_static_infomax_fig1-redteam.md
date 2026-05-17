@@ -46,6 +46,8 @@ and `mi = Σ_i p_i f_kl_i` from `result.prior` and the cached likelihood, and
 asserts equality with `result.mi`, `result.f_kl` to ~1e-12. Run across the
 m-sweep.
 
+> M: let's do this.
+
 ---
 
 ### F2: No check that BA reaches the *global* MI, only that it is monotone and self-consistent [severity: high]
@@ -70,6 +72,8 @@ different initialisations and assert agreement of `mi` to ~1e-6. Even a
 simple "MI* grows with m" monotonicity across the sweep would catch a stuck-
 at-one-atom bug.
 
+> M: please advise on the relative merits of these suggestions. Isn't it the case that a one-atom support is stupid and we can just test if there are at least two?
+
 ---
 
 ### F3: T2 flatness check is satisfied by collapse to a single support cell [severity: high]
@@ -90,6 +94,8 @@ MI.
 where `K_expected_lower(m)` is at least 2 for m ≥ 1 (and ideally a tighter
 known bound for larger m). Alternatively, recompute `f_KL` independently
 (see F1) and require flatness against the *true* MI.
+
+> M: let's certainly test for having at least two atoms. Will this also solve F3? Is there tighter known lower bound for higher m?
 
 ---
 
@@ -117,6 +123,8 @@ prior at m = 100 is *not* the on-grid Jeffreys prior (e.g. `K << N_θ`, or
 that mass concentrates onto a small number of disjoint runs), so that
 "return Jeffreys" cannot win.
 
+> M: (a) seems easy enough, is it much of a computational overhead?
+
 ---
 
 ### F5: T5 silently ignores mismatches when atom counts differ [severity: high]
@@ -139,6 +147,8 @@ the grid spacings (e.g. `max(1/N_θ)` not `3×`), and assert each atom
 matching by nearest-neighbour distance rather than by index. Also assert
 that atom masses agree across grids (currently only positions are checked).
 
+> M: this sounds easy enough as well, let's do it.
+
 ---
 
 ### F6: T6 monotonicity does not constrain *what* `mi_history` contains [severity: high]
@@ -156,6 +166,8 @@ uniform initial prior (computable in closed form: MI of channel under
 uniform input — for Bernoulli at m=1 this is 1 − log 2 ≈ 0.3068 nats, etc.),
 and assert `history[-1] == result.mi` to high precision. Optionally assert
 strict increase for the first several steps from uniform.
+
+> M: let's implement these
 
 ---
 
@@ -178,6 +190,8 @@ uniform implementation is indistinguishable here from a correct one.
 likelihood that is θ-independent only on a subset, so the wrong-but-trivial
 implementation cannot get away.
 
+> M: the perturbation sounds useful, let's do that
+
 ---
 
 ### F8: T1 mass tolerance is not actually tight enough to detect a small constant offset [severity: medium]
@@ -198,6 +212,8 @@ on first cell with 1e-7 leak" from "atom split between cells 0 and 1".
 `[-1]` are each within 1e-6 of 0.5, and that all other masses are below
 ~1e-10. This checks the prior directly rather than the extractor output.
 
+> M: let's do this
+
 ---
 
 ### F9: T3 capacity bound is trivially loose [severity: medium]
@@ -217,6 +233,8 @@ assertion `result.mi <= np.log(m + 1) + 1e-10` (channel-capacity upper
 bound — output alphabet size). This catches MI values that are simply
 fabricated to be large.
 
+> M: i'm gonna need references for these bounds, the suggestion seems easy but I'm not confident in my understanding of it
+
 ---
 
 ### F10: Off-support check in T2 uses absolute 1e-10 tolerance, not relative [severity: medium]
@@ -233,6 +251,8 @@ sloppy slack. Asymmetric tolerance treatment between on-support (relative
 
 **What would resolve it**: use a relative or scaled tolerance off-support
 (e.g. `abs(mi) * 1e-8 + 1e-12`).
+
+> M: this is easy, let's do it
 
 ---
 
@@ -251,6 +271,8 @@ half-converged result.
 
 **What would resolve it**: re-compute `f_KL` from `result.prior` and the
 likelihood (see F1) and require equality.
+
+> M: do this
 
 ---
 
@@ -272,6 +294,8 @@ neither rules out under-atomising nor over-atomising.
 bounds taken from Mattingly's tabulated value (~25 atoms at m=100) plus
 generous slack.
 
+> M: this seems reasonable, can you construct those bounds from the paper?
+
 ---
 
 ### F13: No test for permutation/reflection symmetry of the optimum [severity: medium]
@@ -288,6 +312,8 @@ component checks while producing an asymmetric prior at other m.
 
 **What would resolve it**: at each m in the sweep, assert `result.prior`
 satisfies pointwise symmetry under the reversal `i → N_θ−1−i` to ~1e-8.
+
+> M: good idea, let's test this
 
 ---
 
@@ -307,6 +333,8 @@ again).
 `binomial_log_likelihood(np.array([0.3]), m=3)[0]` matches the hand-computed
 log-pmf values for x ∈ {0,1,2,3}.
 
+> M: do we have reference values like this from somewhere? I wouldn't actually compute stuff by hand.
+
 ---
 
 ### F15: T1 known-answer is on-grid only; continuum log 2 sanity check absent [severity: low]
@@ -320,6 +348,8 @@ silently fails to use the cell-centred convention). Cheap to add.
 
 **What would resolve it**: parametrise T1 over N_θ ∈ {100, 1000, 10000} and
 assert `(log 2 − result.mi)` shrinks like `~(log N_θ)/N_θ`.
+
+> M: let's add this
 
 ---
 
@@ -335,6 +365,8 @@ API forecloses it.
 
 **What would resolve it**: if the API gains an `init=` argument, add a
 perturbed-start variant.
+
+> M: this came up at F7 as well, and it seems useful to me. the API change seems reasonable
 
 ## What the test suite gets right
 
