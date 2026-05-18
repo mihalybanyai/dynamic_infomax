@@ -104,3 +104,6 @@ Per-test status (running individually, logging after each):
 - **T1 (m=1 closed form):** PASS — 5.6 s.
 - **T9 (continuum scaling, m=1):** PASS — 8.8 s (3 parametrised cases).
 - **T2[m=3] (flatness on support):** PASS — 42.5 s.
+- **T10 (mi/f_kl self-consistency, all 9 m values):** PASS — 11 min 44 s.
+  The tau_max-exhaustion fix removed the inconsistency. (Test still
+  triggers full BA runs across the sweep, hence runtime.)
