@@ -107,3 +107,15 @@ Per-test status (running individually, logging after each):
 - **T10 (mi/f_kl self-consistency, all 9 m values):** PASS — 11 min 44 s.
   The tau_max-exhaustion fix removed the inconsistency. (Test still
   triggers full BA runs across the sweep, hence runtime.)
+- **T5[m=2, m=5, m=10] (grid invariance of atoms):** FAIL — 8 min 11 s.
+  Centroid mismatches across `N_θ ∈ {200, 1000, 2000}`:
+  - m=2: ~0.011 vs tol 0.005
+  - m=5: ~0.011 vs tol 0.005
+  - m=10: ~0.008 vs tol 0.005
+  Same root cause: BA's run-centroid is sensitive to incomplete
+  convergence, especially on the coarse `N_θ=200` grid where the
+  atom-bearing runs cover only a handful of cells. Pending decision on
+  how to proceed (next steer: loosen T5 tolerance to `2/N_θ_min` per
+  the spec's "atom centroid sensitivity to grid choice" caveat, or push
+  tau_max harder — but at N_θ=200 the runtime per BA call is small, so
+  the bottleneck is genuine convergence stall, not iteration budget).
