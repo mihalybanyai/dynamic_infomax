@@ -6,13 +6,13 @@
 | Generative model | reviewed | 170526 |
 | 1. Mathematical statement | reviewed | 170526 |
 | 2. Why this objective | reviewed | 170526 |
-| 3. Computational specification | draft | 180526 |
-| 4. Test suite | draft | 180526 |
+| 3. Computational specification | reviewed | 180526 |
+| 4. Test suite | reviewed | 180526 |
 | 5. Report | reviewed | 170526 |
 | 6. Layout | reviewed | 170526 |
 | 7. Deferred choices (recap) | reviewed | 170526 |
 | 8. Open questions for this spec | reviewed | 170526 |
-| 9. References | draft | 180526 |
+| 9. References | reviewed | 180526 |
 | 10. Revision log | n/a | — |
 
 ## 0. Purpose and scope

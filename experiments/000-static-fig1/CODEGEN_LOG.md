@@ -15,7 +15,7 @@ leaves the repo in a clean state.
 | `src/infomax/jeffreys.py` | **done** (CDF smoke-test passes) | T4 |
 | `src/infomax/prior.py` | **done** (smoke-test passes) | all (GridPrior is the backbone) |
 | `src/infomax/atoms.py` | **done** (smoke-test passes) | T1, T4, T4b, T5 |
-| `src/infomax/ba.py` | **blocked** — needs spec-side discussion | T1, T2, T2b, T2c, T3, T3b, T4, T4b, T5, T6, T7, T7b, T8, T9, T10 |
+| `src/infomax/ba.py` | **done** (all tests passed) | T1, T2, T2b, T2c, T3, T3b, T4, T4b, T5, T6, T7, T7b, T8, T9, T10 |
 
 ## Eye test
 
@@ -90,6 +90,43 @@ and T1's 1e-6 mass budget on a shared default `tau_max`.
 4. **Add a warm-start / overrelaxation step** to BA. Smallest change,
    but deviates from the spec-mandated update.
 
+### Run 2 — 2026-05-18, option 2 trial (`eps_i = 1e-12`, `tau_max = 500_000`)
+
+Also fixes a tau_max-exhaustion bug in `ba.py`: the loop's trailing
+`p = exp(log_p)` was advancing the prior past the appended
+`(f_kl, mi)`, so when convergence wasn't reached the returned
+`BAResult` was internally inconsistent. The `else` branch on the `for`
+now recomputes `(f_kl, mi)` against the final `p` and pins
+`history[-1]`.
+
+Per-test status (running individually, logging after each):
+
+- **T1 (m=1 closed form):** PASS — 5.6 s.
+- **T9 (continuum scaling, m=1):** PASS — 8.8 s (3 parametrised cases).
+- **T2[m=3] (flatness on support):** PASS — 42.5 s.
+- **T10 (mi/f_kl self-consistency, all 9 m values):** PASS — 11 min 44 s.
+  The tau_max-exhaustion fix removed the inconsistency. (Test still
+  triggers full BA runs across the sweep, hence runtime.)
+- **T4 (Jeffreys KS at m=100):** FAIL — 9 min 20 s. KS distance 0.1617
+  (down from 0.21 at the old tau_max=200k, but still ~3× the 0.05
+  budget). Confirms the structural superatom-at-θ=0.5 problem — vanilla
+  BA doesn't separate it within practical iteration counts.
+- **T4b (atom count at m=100 in [5,50]):** PASS — same run.
+- **T5[m=2, m=5, m=10] (grid invariance of atoms):** FAIL under option-2
+  settings (vanilla BA, α=1) — 8 min 11 s.
+  Centroid mismatches across `N_θ ∈ {200, 1000, 2000}`:
+  - m=2: ~0.011 vs tol 0.005
+  - m=5: ~0.011 vs tol 0.005
+  - m=10: ~0.008 vs tol 0.005
+  Same root cause: BA's run-centroid is sensitive to incomplete
+  convergence, especially on the coarse `N_θ=200` grid where the
+  atom-bearing runs cover only a handful of cells. Pending decision on
+  how to proceed (next steer: loosen T5 tolerance to `2/N_θ_min` per
+  the spec's "atom centroid sensitivity to grid choice" caveat, or push
+  tau_max harder — but at N_θ=200 the runtime per BA call is small, so
+  the bottleneck is genuine convergence stall, not iteration budget).
+
+
 ### Run 3 — 2026-05-18, option 4 trial: overrelaxed BA (`α = 2`, line-search fallback)
 
 Spec §3.4 updated with the overrelaxation step-size parameter; §3 and
@@ -145,38 +182,3 @@ All 85 tests now pass under the reconciled tolerances. Next step:
 spec-side and tests-side cleanup and the `docs/` write-up for the T4
 loosening (per the human's direction).
 
-### Run 2 — 2026-05-18, option 2 trial (`eps_i = 1e-12`, `tau_max = 500_000`)
-
-Also fixes a tau_max-exhaustion bug in `ba.py`: the loop's trailing
-`p = exp(log_p)` was advancing the prior past the appended
-`(f_kl, mi)`, so when convergence wasn't reached the returned
-`BAResult` was internally inconsistent. The `else` branch on the `for`
-now recomputes `(f_kl, mi)` against the final `p` and pins
-`history[-1]`.
-
-Per-test status (running individually, logging after each):
-
-- **T1 (m=1 closed form):** PASS — 5.6 s.
-- **T9 (continuum scaling, m=1):** PASS — 8.8 s (3 parametrised cases).
-- **T2[m=3] (flatness on support):** PASS — 42.5 s.
-- **T10 (mi/f_kl self-consistency, all 9 m values):** PASS — 11 min 44 s.
-  The tau_max-exhaustion fix removed the inconsistency. (Test still
-  triggers full BA runs across the sweep, hence runtime.)
-- **T4 (Jeffreys KS at m=100):** FAIL — 9 min 20 s. KS distance 0.1617
-  (down from 0.21 at the old tau_max=200k, but still ~3× the 0.05
-  budget). Confirms the structural superatom-at-θ=0.5 problem — vanilla
-  BA doesn't separate it within practical iteration counts.
-- **T4b (atom count at m=100 in [5,50]):** PASS — same run.
-- **T5[m=2, m=5, m=10] (grid invariance of atoms):** FAIL under option-2
-  settings (vanilla BA, α=1) — 8 min 11 s.
-  Centroid mismatches across `N_θ ∈ {200, 1000, 2000}`:
-  - m=2: ~0.011 vs tol 0.005
-  - m=5: ~0.011 vs tol 0.005
-  - m=10: ~0.008 vs tol 0.005
-  Same root cause: BA's run-centroid is sensitive to incomplete
-  convergence, especially on the coarse `N_θ=200` grid where the
-  atom-bearing runs cover only a handful of cells. Pending decision on
-  how to proceed (next steer: loosen T5 tolerance to `2/N_θ_min` per
-  the spec's "atom centroid sensitivity to grid choice" caveat, or push
-  tau_max harder — but at N_θ=200 the runtime per BA call is small, so
-  the bottleneck is genuine convergence stall, not iteration budget).
