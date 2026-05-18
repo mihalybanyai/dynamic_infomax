@@ -102,3 +102,5 @@ now recomputes `(f_kl, mi)` against the final `p` and pins
 Per-test status (running individually, logging after each):
 
 - **T1 (m=1 closed form):** PASS — 5.6 s.
+- **T9 (continuum scaling, m=1):** PASS — 8.8 s (3 parametrised cases).
+- **T2[m=3] (flatness on support):** PASS — 42.5 s.
