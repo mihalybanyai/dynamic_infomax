@@ -15,9 +15,68 @@ leaves the repo in a clean state.
 | `src/infomax/jeffreys.py` | **done** (CDF smoke-test passes) | T4 |
 | `src/infomax/prior.py` | **done** (smoke-test passes) | all (GridPrior is the backbone) |
 | `src/infomax/atoms.py` | **done** (smoke-test passes) | T1, T4, T4b, T5 |
-| `src/infomax/ba.py` | pending | T1, T2, T2b, T2c, T3, T3b, T4, T4b, T5, T6, T7, T7b, T8, T9, T10 |
+| `src/infomax/ba.py` | **blocked** — needs spec-side discussion | T1, T2, T2b, T2c, T3, T3b, T4, T4b, T5, T6, T7, T7b, T8, T9, T10 |
 
 ## Test-suite result log
 
-(Populated after the full suite is implemented and run end-to-end.)
-</content>
+### Run 1 — 2026-05-18, partial implementation, Csiszár-gap stopping, `tau_max=200_000`
+
+Vanilla BA exhibits known slow geometric convergence on the Bernoulli
+channel at m ≥ 2 and cannot reach the prior-structure tolerances the
+test suite demands within practical iteration budgets.
+
+Observed outcomes against the full suite (`uv run pytest`):
+
+- **71 of 85 pass.** Foundation tests are clean (T6 monotonicity, T7
+  degenerate, T7b init-respecting, T8 reflection symmetry, T9
+  continuum scaling, T11 scipy reference, T2b ≥2-cell support, T2c
+  init invariance, T3 capacity bound, T3b output-alphabet bound).
+- **T1 (m=1)** fails by a hair: boundary mass = 0.4999989748, tolerance
+  is `|.5 − mass| < 1e-6`, actual diff 1.025e-6. BA converges to a
+  Csiszár gap of 1e-10 but residual interior mass leaks ~1e-6 — exactly
+  the threshold. A tighter `eps_i` (e.g. 1e-12) would fix this case.
+- **T2[m=3]** fails by ~0.1%: max rel. f_KL flatness error 1.001e-3
+  vs tolerance 1e-3. Borderline; tightens with more iterations.
+- **T4 (m=100 Jeffreys KS)** fails badly: KS distance to Jeffreys CDF
+  is 0.21–0.33 across configurations vs the 0.05 budget. At 200_000
+  iterations BA has separated only ~9 atoms (one of them an erroneous
+  "super-atom" with 42% of mass concentrated near θ = 0.5). Mattingly's
+  Fig 1 predicts ~25 atoms with a U-shaped envelope; BA has not
+  resolved them within the time budget (~90 s per call, even at this
+  iteration count).
+- **T5 (grid invariance)** fails at m ∈ {2, 5, 10}: atom centroids
+  across `N_θ ∈ {200, 1000, 2000}` disagree by 0.01 vs tolerance
+  0.005, again because BA at the coarser grids has not converged
+  enough for the run-centroid to settle into the right place.
+- **T10 (mi/f_kl self-consistency)** fails at m ≥ 2 by ~1.5e-12 (just
+  over the 1e-12 tolerance) when BA exhausts `tau_max` without
+  converging — the small residual is the per-iteration arithmetic
+  noise accumulated over many iterations between when the loop snapshot
+  `mi` and when the BAResult is constructed. (Fixed in spirit: my BA
+  now matches the test's independent recomputation formula bit-for-bit,
+  but accumulation through 50k+ iterations re-introduces a small drift.)
+
+### Root cause
+
+Vanilla BA's per-step shrinkage on the Bernoulli channel approaches 1
+asymptotically as the prior approaches the multi-atom optimum. The
+Csiszár gap halves roughly every 500 iterations after the first
+~100, which is too slow to satisfy T4's ~1e-2 prior-structure budget
+and T1's 1e-6 mass budget on a shared default `tau_max`.
+
+### Options under discussion (next session)
+
+1. **Loosen test tolerances on T4 and T5** to what vanilla BA achieves
+   in O(10⁴) iterations (KS ~0.2, centroid 0.01).
+2. **Tighten `eps_i` and bump `tau_max`** — straight extension; T4
+   may still fail because the 0.5-superatom is structural, not just
+   slow.
+3. **Switch the inner algorithm** (Frank-Wolfe with explicit atom
+   merging, or atom-position gradient à la Mattingly §S5). This is
+   a substantial spec change and effectively pre-empts the planned
+   `AtomicPrior` work (DC-2).
+4. **Add a warm-start / overrelaxation step** to BA. Smallest change,
+   but deviates from the spec-mandated update.
+
+This needs a decision before further implementation; flagged back to
+the human collaborator.
