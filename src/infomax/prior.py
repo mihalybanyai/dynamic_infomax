@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import Callable, Protocol
 
 import numpy as np
+from scipy.special import logsumexp
 
 LogLikelihoodFn = Callable[[np.ndarray], np.ndarray]
 """Maps a theta-vector of shape (k,) to log p(x | theta) of shape (k, n_x)."""
@@ -52,21 +53,30 @@ class GridPrior:
     """Prior as a PMF over a fixed cell-centred theta grid (spec §3.1)."""
 
     def __init__(self, theta_grid: np.ndarray, masses: np.ndarray) -> None:
-        raise NotImplementedError
+        theta = np.asarray(theta_grid, dtype=np.float64)
+        m = np.asarray(masses, dtype=np.float64)
+        if theta.shape != m.shape:
+            raise ValueError(
+                f"theta_grid {theta.shape} and masses {m.shape} must align"
+            )
+        self._theta_grid = theta
+        self._masses = m
 
     @classmethod
     def uniform(cls, theta_grid: np.ndarray) -> "GridPrior":
         """Uniform initialisation (spec §1.4, §3.4)."""
-        raise NotImplementedError
+        theta = np.asarray(theta_grid, dtype=np.float64)
+        return cls(theta, np.full_like(theta, 1.0 / theta.size))
 
     def support(self) -> np.ndarray:
-        raise NotImplementedError
+        return self._theta_grid
 
     def masses(self) -> np.ndarray:
-        raise NotImplementedError
+        return self._masses
 
     def expected_data(self, log_likelihood_fn: LogLikelihoodFn) -> np.ndarray:
-        raise NotImplementedError
+        log_lik = log_likelihood_fn(self._theta_grid)
+        return self._masses @ np.exp(log_lik)
 
     def updated(self, f_kl_fn: FKLFn) -> "GridPrior":
         """One Blahut-Arimoto step in log-space per spec §3.4:
@@ -74,4 +84,8 @@ class GridPrior:
             log_p_new = f_KL + log_p
             log_p_new -= logsumexp(log_p_new)
         """
-        raise NotImplementedError
+        f_kl = f_kl_fn(self._theta_grid)
+        log_p = np.log(self._masses)
+        log_p_new = f_kl + log_p
+        log_p_new = log_p_new - logsumexp(log_p_new)
+        return GridPrior(self._theta_grid, np.exp(log_p_new))
