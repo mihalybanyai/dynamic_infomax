@@ -113,6 +113,16 @@ Settled on `α = 2` (best per-step rate with zero fallbacks).
   distance to Jeffreys CDF = 0.114 (down from 0.16). Real improvement,
   still ~2× over the 0.05 budget. The super-atom is *shrinking* but
   hasn't disappeared.
+- **T5[m=2, m=5, m=10] (grid invariance):** FAIL — 9 min 37 s, with
+  centroid mismatches *identical to the α=1 case* (0.0077–0.011 vs tol
+  0.005). Conclusion: T5's failure is structural, not a BA-speed
+  issue. The atom-extraction heuristic at coarse `N_θ=200` produces
+  run-centroids whose finite-grid bias is `~2/N_θ`, larger than the
+  current tolerance `max(1/N_θ) = 0.005` (set by F5). The spec's own
+  DC-2 caveat warned about exactly this — F5 over-tightened. Suggested
+  fix: relax T5 centroid tolerance back to `2 × max(1/N_θ)` (5 ms ×
+  N_θ_min ≈ 0.010) and keep mass-agreement at 1e-3. This is a test
+  edit, not an algorithm change.
 
 ### Run 2 — 2026-05-18, option 2 trial (`eps_i = 1e-12`, `tau_max = 500_000`)
 
