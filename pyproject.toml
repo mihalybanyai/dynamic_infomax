@@ -14,6 +14,7 @@ dependencies = [
 dev = [
     "pypdf",      # read PDFs in resources/ without a system-level poppler install
     "daft-pgm",   # plate-notation diagrams in diagrams/ (imports as `daft`)
+    "code2flow>=2.5.1",
 ]
 
 [build-system]
