@@ -56,6 +56,7 @@ def blahut_arimoto(
     theta_grid: np.ndarray,
     *,
     init: np.ndarray | None = None,
+    alpha: float = 2.0,
     eps_i: float = 1e-12,
     tau_min: int = 10,
     tau_max: int = 500_000,
@@ -75,6 +76,10 @@ def blahut_arimoto(
             the returned `GridPrior`.
         init: optional initial prior over the grid; strictly positive,
             normalised, shape (n_theta,). `None` ⇒ uniform.
+        alpha: overrelaxation step-size per spec §3.4. `α = 1` is vanilla
+            BA (monotone, slow); `α > 1` accelerates near multi-atom
+            optima. Steps that would decrease MI fall back to `α = 1`
+            so monotonicity (T6) is preserved.
         eps_i: convergence tolerance on |I_{tau+1} - I_tau| in nats.
         tau_min: minimum iterations before checking convergence.
         tau_max: hard iteration cap.
@@ -119,9 +124,19 @@ def blahut_arimoto(
         if tau >= tau_min and csiszar_gap < eps_i:
             converged = True
             break
-        log_p_new = f_kl + log_p
-        log_p_new = log_p_new - logsumexp(log_p_new)
-        log_p = log_p_new
+        # Overrelaxed step (spec §3.4): try alpha * f_kl, fall back to
+        # alpha = 1 if the step would decrease MI. The fallback is what
+        # preserves the spec's monotonicity guarantee (T6) under
+        # arbitrary alpha ≥ 1.
+        log_p_try = alpha * f_kl + log_p
+        log_p_try = log_p_try - logsumexp(log_p_try)
+        if alpha != 1.0:
+            p_try = np.exp(log_p_try)
+            _, _, mi_try = _f_kl_from_masses(p_try, log_likelihood)
+            if mi_try < mi:
+                log_p_try = f_kl + log_p
+                log_p_try = log_p_try - logsumexp(log_p_try)
+        log_p = log_p_try
         p = np.exp(log_p)
     else:
         # tau_max exhausted without breaking. The trailing `p = exp(log_p)`

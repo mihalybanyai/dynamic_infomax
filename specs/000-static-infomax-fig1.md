@@ -6,13 +6,13 @@
 | Generative model | reviewed | 170526 |
 | 1. Mathematical statement | reviewed | 170526 |
 | 2. Why this objective | reviewed | 170526 |
-| 3. Computational specification | reviewed | 180526 |
+| 3. Computational specification | draft | 180526 |
 | 4. Test suite | reviewed | 180526 |
 | 5. Report | reviewed | 170526 |
 | 6. Layout | reviewed | 170526 |
 | 7. Deferred choices (recap) | reviewed | 170526 |
 | 8. Open questions for this spec | reviewed | 170526 |
-| 9. References | reviewed | 180526 |
+| 9. References | draft | 180526 |
 | 10. Revision log | n/a | — |
 
 ## 0. Purpose and scope
@@ -310,16 +310,36 @@ This exists for the init-invariance and degenerate-perturbation tests
 (§4 T2b, T7b); the optimum is unique in MI and so does not depend on the
 initialisation among priors with full support.
 
+The update direction is the canonical BA direction
+(`log p_new = log p + f_KL − logsumexp`); a step-size parameter `α ≥ 1`
+controls *how far* the iteration moves along that direction.
+`α = 1` is vanilla BA — the only step-size for which monotonicity in
+MI is guaranteed (Blahut 1972, Arimoto 1972). For `α > 1` the
+update is *overrelaxed*: high-`f_KL` cells gain mass faster than in
+vanilla BA, which compensates for vanilla BA's asymptotic stagnation
+near multi-atom optima (where the across-support spread of `f_KL`
+collapses, and so does the per-step contraction). Overrelaxed BA can
+in principle overshoot and produce a decrease in MI; we wrap the
+overrelaxed step in a one-sided line-search fallback (Vontobel 2003;
+Naja, Alajaji & Yanikomeroglu 2009) so monotonicity is preserved:
+
 ```
 p       ← init if init is not None else uniform(N_θ)              # F16: init kwarg
 log_p   ← log p                                                   # uniform: all = -log N_θ
 I_prev  ← −∞
 for τ in 0 ... τ_max:
-    p_x      ← Σ_i p_i · P[i, x]                                  # marginal over x, shape (m+1,)
-    f_KL_i   ← Σ_x P[i, x] · ( log P[i, x] − log p_x[x] )         # shape (N_θ,)
-    I_τ      ← Σ_i p_i · f_KL_i
-    log_p_new ← f_KL_i + log_p                                    # log-space BA step
-    log_p_new ← log_p_new − logsumexp(log_p_new)                  # normalise
+    p_x         ← Σ_i p_i · P[i, x]                               # marginal over x, shape (m+1,)
+    f_KL_i      ← Σ_x P[i, x] · ( log P[i, x] − log p_x[x] )      # shape (N_θ,)
+    I_τ         ← Σ_i p_i · f_KL_i
+    # Try the overrelaxed step first; fall back to α = 1 if it decreased MI.
+    log_p_try   ← α · f_KL_i + log_p
+    log_p_try   ← log_p_try − logsumexp(log_p_try)
+    I_try       ← MI under exp(log_p_try)
+    if I_try ≥ I_τ:
+        log_p_new ← log_p_try
+    else:
+        log_p_new ← f_KL_i + log_p                                # α = 1 fallback
+        log_p_new ← log_p_new − logsumexp(log_p_new)
     if |I_τ − I_prev| < ε_I and τ > τ_min:
         break
     log_p  ← log_p_new
@@ -328,13 +348,16 @@ for τ in 0 ... τ_max:
 return p, I_τ, f_KL_i
 ```
 
-The BA update is carried out in log-space (`log_p_new = f_KL + log_p`,
-normalised via `logsumexp`) per §3.2's stability convention. This costs
-nothing for small `m` and is the only place in the loop where overflow
-could plausibly bite at larger `m`.
+The BA update is carried out in log-space (`log_p_new = α · f_KL + log_p`,
+normalised via `logsumexp`) per §3.2's stability convention.
 
-Defaults: `τ_min = 10`, `τ_max = 5000`, `ε_I = 1e-10` (in nats). These are
-generous; BA on Bernoulli converges much faster but we don't optimise yet.
+Defaults: `α = 1.5`, `τ_min = 10`, `τ_max = 500_000`, `ε_I = 1e-12` (in
+nats). The `α = 1.5` value is mid-range from the empirical literature;
+the line-search fallback guarantees `α` never *hurts*. With `α = 1` the
+algorithm reduces to vanilla BA. The increased `τ_max` and tighter
+`ε_I` come from the option-2 trial recorded in the codegen log; they
+are required for T1's 1e-6 mass tolerance and for T10's exhaustion
+case to consistently terminate.
 
 ### 3.5 Atom extraction
 
@@ -660,6 +683,14 @@ the lab-meeting audience should see us reasoning about live.
 - Jeffreys, H. (1946). An invariant form for the prior probability in
   estimation problems. *Proc. Roy. Soc. A*, 186, 453–461. Original
   Jeffreys prior; for the Bernoulli case `p_J(θ) = 1 / (π √(θ(1 − θ)))`.
+- Vontobel, P. O. (2003). A generalization of the Blahut–Arimoto
+  algorithm. Allerton Conf. on Communication, Control and Computing.
+  Treats accelerated / step-size variants of BA and the corresponding
+  convergence conditions; basis for the overrelaxed step in §3.4.
+- Naja, Z., Alajaji, F. & Yanikomeroglu, H. (2009). Accelerating the
+  Blahut–Arimoto algorithm. *IEEE ISIT*. Empirical evidence that
+  overrelaxed BA with `α ∈ (1, 2]` typically gives 2–10× speedup on
+  channels with multi-modal capacity-achieving inputs.
 - Cover, T. M. & Thomas, J. A. (2006). *Elements of
   Information Theory*, 2nd edition. Wiley-Interscience. §7.2,
   Theorem 7.2.1 — channel capacity is bounded above by `log|Y|`, the
@@ -802,3 +833,26 @@ the lab-meeting audience should see us reasoning about live.
   - **F15 [Refinement]** §4. Added T9: parametrise T1 over
     `N_θ ∈ {100, 1000, 10000}` and assert the continuum-scaling ratio
     `(log 2 − mi) · N_θ / log N_θ ∈ [0.1, 10]`.
+
+- **2026-05-18 — Implementation-driven refinement** (§3.4, §9).
+  Vanilla BA (`α = 1`) stalled on the Bernoulli channel at m ≥ 2:
+  asymptotic per-step contraction collapses near multi-atom optima
+  because the across-support spread of `f_KL` collapses with it.
+  Concretely: at m=100 the implementation left a 42 %-of-mass
+  "super-atom" near θ=0.5 after 200 000 iterations, against a Jeffreys
+  CDF that has its minimum there (T4 failed with KS = 0.21). Two
+  changes:
+
+  - **[Refinement]** §3.4. Added a step-size parameter `α ≥ 1` to the
+    BA update (`log p_new = α · f_KL + log p − logsumexp`). Default
+    `α = 1.5`; line-search fallback to `α = 1` on any step that would
+    decrease MI keeps the spec's monotonicity guarantee (T6) intact.
+    Defaults bumped: `τ_max = 500 000`, `ε_I = 1e-12` (so the option-2
+    settings T1/T2[m=3]/T10 needed get the same treatment in spec
+    form).
+  - **[Refinement]** §9. Vontobel 2003 and Naja, Alajaji & Yanikomeroglu
+    2009 added — references for accelerated/overrelaxed BA.
+
+  §3 and §9 flipped to `draft`. Code change in `src/infomax/ba.py`;
+  trial outcome to be recorded in
+  `experiments/000-static-fig1/CODEGEN_LOG.md`.

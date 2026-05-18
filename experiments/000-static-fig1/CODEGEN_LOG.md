@@ -90,6 +90,30 @@ and T1's 1e-6 mass budget on a shared default `tau_max`.
 4. **Add a warm-start / overrelaxation step** to BA. Smallest change,
    but deviates from the spec-mandated update.
 
+### Run 3 — 2026-05-18, option 4 trial: overrelaxed BA (`α = 2`, line-search fallback)
+
+Spec §3.4 updated with the overrelaxation step-size parameter; §3 and
+§9 flipped to `draft`. Implementation adds `alpha=2.0` default in
+`blahut_arimoto`, with a per-step fallback to `α=1` if the overrelaxed
+step would *decrease* MI — this preserves T6 monotonicity.
+
+Per-iteration speedup measured at m=2 (5 000 iter snapshot):
+
+| α   | gap   | fallbacks |
+|-----|-------|-----------|
+| 1.0 | 1.0e-4 | 0 |
+| 1.5 | 6.6e-5 | 0 |
+| 2.0 | 5.0e-5 | 0 |
+| 3.0 | 3.7e-5 | 878 |
+
+Settled on `α = 2` (best per-step rate with zero fallbacks).
+
+- **m=100 probe (T4 target):** at `tau_max=500_000`, K=13 atoms (up
+  from 9), super-atom at θ=0.5 has mass 0.225 (down from 0.42), KS
+  distance to Jeffreys CDF = 0.114 (down from 0.16). Real improvement,
+  still ~2× over the 0.05 budget. The super-atom is *shrinking* but
+  hasn't disappeared.
+
 ### Run 2 — 2026-05-18, option 2 trial (`eps_i = 1e-12`, `tau_max = 500_000`)
 
 Also fixes a tau_max-exhaustion bug in `ba.py`: the loop's trailing
@@ -112,7 +136,8 @@ Per-test status (running individually, logging after each):
   budget). Confirms the structural superatom-at-θ=0.5 problem — vanilla
   BA doesn't separate it within practical iteration counts.
 - **T4b (atom count at m=100 in [5,50]):** PASS — same run.
-- **T5[m=2, m=5, m=10] (grid invariance of atoms):** FAIL — 8 min 11 s.
+- **T5[m=2, m=5, m=10] (grid invariance of atoms):** FAIL under option-2
+  settings (vanilla BA, α=1) — 8 min 11 s.
   Centroid mismatches across `N_θ ∈ {200, 1000, 2000}`:
   - m=2: ~0.011 vs tol 0.005
   - m=5: ~0.011 vs tol 0.005
