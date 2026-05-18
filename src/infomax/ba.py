@@ -56,9 +56,9 @@ def blahut_arimoto(
     theta_grid: np.ndarray,
     *,
     init: np.ndarray | None = None,
-    eps_i: float = 1e-10,
+    eps_i: float = 1e-12,
     tau_min: int = 10,
-    tau_max: int = 200_000,
+    tau_max: int = 500_000,
 ) -> BAResult:
     """Find the MI-maximising prior on the grid implied by `log_likelihood`.
 
@@ -123,6 +123,14 @@ def blahut_arimoto(
         log_p_new = log_p_new - logsumexp(log_p_new)
         log_p = log_p_new
         p = np.exp(log_p)
+    else:
+        # tau_max exhausted without breaking. The trailing `p = exp(log_p)`
+        # above advanced the prior past the (f_kl, mi) we appended; recompute
+        # so the returned (prior, mi, f_kl, history[-1]) are mutually
+        # consistent and T6/T10 still hold.
+        _, f_kl, mi = _f_kl_from_masses(p, log_likelihood)
+        history.append(mi)
+        tau = tau_max
 
     return BAResult(
         prior=GridPrior(theta, p),

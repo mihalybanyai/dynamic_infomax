@@ -90,5 +90,15 @@ and T1's 1e-6 mass budget on a shared default `tau_max`.
 4. **Add a warm-start / overrelaxation step** to BA. Smallest change,
    but deviates from the spec-mandated update.
 
-This needs a decision before further implementation; flagged back to
-the human collaborator.
+### Run 2 — 2026-05-18, option 2 trial (`eps_i = 1e-12`, `tau_max = 500_000`)
+
+Also fixes a tau_max-exhaustion bug in `ba.py`: the loop's trailing
+`p = exp(log_p)` was advancing the prior past the appended
+`(f_kl, mi)`, so when convergence wasn't reached the returned
+`BAResult` was internally inconsistent. The `else` branch on the `for`
+now recomputes `(f_kl, mi)` against the final `p` and pins
+`history[-1]`.
+
+Per-test status (running individually, logging after each):
+
+- **T1 (m=1 closed form):** PASS — 5.6 s.
