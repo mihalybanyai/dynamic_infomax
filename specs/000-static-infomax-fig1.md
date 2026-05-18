@@ -369,6 +369,32 @@ These are acceptance criteria — the implementation must pass them before
 the spec is considered fulfilled. Each test ties back to a specific claim
 in §1.
 
+### Eye test (manual gate before the full suite)
+
+Before running the full automated suite, a single eye test must pass
+manual review. It is a sanity check that the implementation is producing
+qualitatively the right object — a smaller failure mode than the
+quantitative-tolerance issues T1–T11 chase, but the one a human catches
+faster than any KS-distance check.
+
+- **Configuration:** `m = 2`, `N_θ = 21`, BA run for 10 000 iterations
+  from the uniform initialisation. No special convergence flag — just
+  fixed iteration count.
+- **Output:** a stem plot of the converged prior masses `p*(θ_i)` vs
+  `θ_i`, saved as a PNG under `experiments/000-static-fig1/figures/`.
+- **Acceptance:** approved by direct human review against the
+  three-atom expectation for the Bernoulli m=2 capacity-achieving prior
+  (a central atom plus two roughly-symmetric off-centre atoms).
+  No quantitative tolerance — the reviewer inspects the plot and
+  approves or sends back for iteration.
+- **Outcome of review** is recorded in
+  `experiments/000-static-fig1/CODEGEN_LOG.md` (alongside the path to
+  the generated figure). The flag goes from *pending review* to
+  *approved* or *not approved* by direct edit.
+- **Gating:** the full automated test suite is only run after the eye
+  test is approved (unless the team actively decides that running the
+  full suite is the most useful debugging step).
+
 ### Properties-to-tests table
 
 Per `skills/derive-test-suite.md`, each property of the spec is mapped to

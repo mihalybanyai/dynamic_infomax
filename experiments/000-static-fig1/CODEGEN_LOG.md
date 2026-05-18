@@ -17,6 +17,18 @@ leaves the repo in a clean state.
 | `src/infomax/atoms.py` | **done** (smoke-test passes) | T1, T4, T4b, T5 |
 | `src/infomax/ba.py` | **blocked** — needs spec-side discussion | T1, T2, T2b, T2c, T3, T3b, T4, T4b, T5, T6, T7, T7b, T8, T9, T10 |
 
+## Eye test
+
+| # | Configuration | Figure | Status |
+|---|---|---|---|
+| 1 | m=2, N_θ=100, 1 000 BA iters from uniform | (superseded) | revised |
+| 2 | m=2, N_θ=21, 10 000 BA iters from uniform | `experiments/000-static-fig1/figures/eye_test_m2_n21.png` | **accepted** (on 2026-05-18) |
+
+Quick numerics from run 2: MI ≈ 0.6616 nats, max grid-cell mass
+0.4722. Expected qualitative shape: three atoms — one central, two
+roughly-symmetric off-centre — for the Bernoulli m=2
+capacity-achieving prior. Reviewer to confirm or reject.
+
 ## Test-suite result log
 
 ### Run 1 — 2026-05-18, partial implementation, Csiszár-gap stopping, `tau_max=200_000`
