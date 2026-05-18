@@ -82,6 +82,11 @@ above.
 
 > M: Dismiss. This is covered implicitly by F1's test once F1 is
 > applied.
+
+> M?: I don't have a feel for whether the suggested subgradient
+> step is genuinely equivalent to the original differentiation, or
+> only equivalent in the non-degenerate case. Need to understand
+> this before I can apply or dismiss.
 ```
 
 Conventions for `> M:` responses:
@@ -92,6 +97,14 @@ Conventions for `> M:` responses:
   becomes audit trail.
 - **Uncertain**: ask a question, or state the ambiguity. These will
   be discussed before resolution.
+- **Not equipped to evaluate**: prefix with `> M?:` (note the
+  question mark) rather than `> M:`. Use this when the finding
+  touches math you don't yet command well enough to apply or
+  dismiss in good conscience. This is distinct from "uncertain"
+  (which means you understand the question but don't know the
+  answer): `> M?:` means you're not sure you understand the
+  question. Findings annotated `> M?:` will be discussed in chat
+  in stage 3a before any `> C:` resolution is recorded.
 
 There's no required template — natural prose works. The `> M:`
 prefix is just for greppability and visual separation.
@@ -122,6 +135,20 @@ Wherever I expressed uncertainty or a question in my response, come
 back to me here with your opinion. We will resolve these one by
 one, then you'll describe the updates we converge to as `> C:`
 comments under mine in the redteam file.
+
+For findings annotated `> M?:` (with the question mark), do not
+propose a `> C:` action. Instead, come back to chat to explain the
+relevant math at the level needed to evaluate the finding. The goal
+is for me to be able to make a substantive `> M:` annotation in
+good conscience, not for you to make the decision. Calibrate the
+explanation to what I'd need to evaluate *this finding* — not a
+generic tutorial. If the same concept comes up a second time across
+findings or across red-team passes, flag that explicitly so we can
+consider promoting the explanation to `tutorials/`.
+
+Once the explanation has landed and I've responded with a `> M:`
+annotation (no question mark), proceed as you would for any other
+confident-instruction finding.
 
 Do not edit the spec or the test file yet. This step is only
 deciding and recording the decisions in the redteam file.
@@ -223,6 +250,28 @@ Default to option 1 (inline HTML span) unless a revision is large
 enough to warrant a callout. The red marking is removed in stage
 3c after the human re-reviews; the revision log preserves the
 audit trail.
+
+## Notes on math explanations triggered by `> M?:`
+
+The first time a `> M?:` is raised on a concept, the explanation
+lives in the chat session. If a `> M:` annotation in the redteam
+file references the explanation (e.g., "after the chat explanation
+of Lagrangian duality, apply"), the audit trail remains complete —
+the chat is ephemeral but the decision lives in the redteam file.
+
+The second time the *same concept* is raised across findings or
+red-team passes, promote the explanation to a file in `tutorials/`,
+calibrated to this project's specific uses. The trigger is "this
+came up twice", not "this seems important" — the former is data,
+the latter is forecasting. A 1-page calibrated tutorial against the
+project's own derivations is more valuable than a generic
+textbook-style chapter; resist the temptation to be comprehensive.
+
+Tutorial files belong in `tutorials/` alongside the existing
+infrastructural notes, with names like `lagrangian-duality.md`,
+`mutual-information-decompositions.md`, etc. The file should say
+at the top which red-team finding(s) prompted it, so the audit
+trail back to the originating decision is preserved.
 
 ## What this does
 

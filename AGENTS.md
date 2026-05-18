@@ -32,6 +32,16 @@ Three commitments follow from that:
    for math). If a labmate would need a diagram to understand something, we
    make the diagram.
 
+4. **Honest review.** When a suggestion or finding touches mathematics
+   the human collaborator does not yet command, the right response is
+   to flag the gap rather than wave the suggestion through. Reviewing
+   what you don't understand is not review; it is delegation in
+   review's clothing. The `> M?:` annotation in red-team workflows and any other review of LLM-generated content by a human
+   (see `workflows/`) is the mechanism for flagging these gaps
+   explicitly. A premise of this project is that growing the human's
+   command of the mathematics is itself one of the goals, not a
+   side-effect.
+
 ### Session start
 
 At the start of a substantial session, skim `meta/workflow-issues.md` for
@@ -167,6 +177,13 @@ this project is designed to avoid. If a spec is ambiguous, ask. If a result
 seems too good, double-check. If a paper citation is needed and you're not
 sure of the exact reference, mark it `[CITATION NEEDED]` rather than
 inventing one.
+
+The mirror of this for the human: if a Claude- or red-team-generated
+suggestion is in a region you can't evaluate, flag it (`> M?:` in
+red-team files) rather than passing judgement you don't have grounds
+for. Claude can then generate a math-explainer in the chat session
+(or, for concepts that recur, in `tutorials/`) calibrated to what
+you actually need to evaluate the suggestion.
 
 If you notice a workflow-level issue mid-session — something we should
 change about how we work, not about the immediate task — add it to
