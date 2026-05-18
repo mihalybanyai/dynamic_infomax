@@ -6,13 +6,13 @@
 | Generative model | reviewed | 170526 |
 | 1. Mathematical statement | reviewed | 170526 |
 | 2. Why this objective | reviewed | 170526 |
-| 3. Computational specification | reviewed | 170526 |
-| 4. Test suite | reviewed | 170526 |
+| 3. Computational specification | reviewed | 180526 |
+| 4. Test suite | reviewed | 180526 |
 | 5. Report | reviewed | 170526 |
 | 6. Layout | reviewed | 170526 |
 | 7. Deferred choices (recap) | reviewed | 170526 |
 | 8. Open questions for this spec | reviewed | 170526 |
-| 9. References | reviewed | 170526 |
+| 9. References | reviewed | 180526 |
 | 10. Revision log | n/a | — |
 
 ## 0. Purpose and scope
@@ -303,9 +303,16 @@ guarantees of each subclass, not of the abstract `updated()`.
 
 ### 3.4 BA loop
 
+The BA entry point takes an optional `init` argument: a strictly-positive
+probability vector of shape `(N_θ,)` that overrides the default uniform
+initialisation. `init = None` (the default) reproduces the prior behaviour.
+This exists for the init-invariance and degenerate-perturbation tests
+(§4 T2b, T7b); the optimum is unique in MI and so does not depend on the
+initialisation among priors with full support.
+
 ```
-p       ← uniform(N_θ)
-log_p   ← log p                                                   # all = -log N_θ
+p       ← init if init is not None else uniform(N_θ)              # F16: init kwarg
+log_p   ← log p                                                   # uniform: all = -log N_θ
 I_prev  ← −∞
 for τ in 0 ... τ_max:
     p_x      ← Σ_i p_i · P[i, x]                                  # marginal over x, shape (m+1,)
@@ -362,12 +369,44 @@ These are acceptance criteria — the implementation must pass them before
 the spec is considered fulfilled. Each test ties back to a specific claim
 in §1.
 
+### Properties-to-tests table
+
+Per `skills/derive-test-suite.md`, each property of the spec is mapped to
+the test (or tests) that verifies it. Test functions live in
+`tests/test_000_static_infomax_fig1.py`.
+
+| # | Property (spec §) | Verified by |
+|---|---|---|
+| P1 | m=1 closed-form atoms at the grid boundary, masses ½ each, `MI = MI_ref(N_θ)` (§1.5, T1) | `test_t1_m1_closed_form` |
+| P2 | KKT flatness of `f_KL` on `p*`'s support; dominance off support (§1.3, T2) | `test_t2_fkl_flatness_on_support` |
+| P3 | Support has ≥ 2 cells at every m (§4 T2b, defends against one-atom collapse) | `test_t2b_support_has_at_least_two_cells` |
+| P4 | Initialisation invariance: uniform vs perturbed init agree in `mi` (§4 T2c) | `test_t2c_init_invariance` |
+| P5 | `MI* ≤ log K_upper` with `K_upper = #{p*_i > 1e-12}` (§4 T3, Mattingly Fig 3C) | `test_t3_capacity_bound` |
+| P6 | `MI* ≤ log(m+1)` channel-capacity bound (§4 T3b, Cover & Thomas §7.2) | `test_t3b_output_alphabet_bound` |
+| P7 | Atom-CDF agrees with Jeffreys CDF in KS distance on a dense θ-grid at m=100 (§1.5, T4) | `test_t4_converges_to_jeffreys` |
+| P8 | Atom count at m=100 is in `[5, 50]` (§4 T4b, defends against under/over-atomisation) | `test_t4b_atom_count_at_m100` |
+| P9 | Grid invariance: atom centroids and masses match across `N_θ ∈ {200, 1000, 2000}` (§3.1, T5) | `test_t5_grid_invariance_of_atoms` |
+| P10 | BA monotonicity of `I_τ`; `history[0]` = MI under uniform; `history[-1] == result.mi` (§1.4, T6) | `test_t6_ba_monotonicity` |
+| P11 | Degenerate likelihood → `MI*=0`, `f_KL≡0`, prior stays uniform (§4 T7) | `test_t7_degenerate_likelihood` |
+| P12 | Degenerate likelihood + perturbed init → BA restores uniform (§4 T7b) | `test_t7b_degenerate_restores_uniform_from_perturbation` |
+| P13 | Reflection symmetry `p*_i = p*_{N_θ−1−i}` at every m (§4 T8) | `test_t8_reflection_symmetry` |
+| P14 | T1 deficit scales like `(log N_θ)/N_θ` across `N_θ ∈ {100, 1000, 10000}` (§4 T9) | `test_t9_t1_continuum_scaling` |
+| P15 | `result.mi` and `result.f_kl` match an independent recomputation from `result.prior` (§4 T10) | `test_t10_mi_fkl_self_consistency` |
+| P16 | `binomial_log_likelihood` matches `scipy.stats.binom.logpmf` on a small mixed sample (§4 T11) | `test_t11_binomial_log_likelihood_matches_scipy` |
+| — | Atom-extraction heuristic (§3.5) | *no unit test; exercised indirectly via T1, T4, T4b, T5, and visualised in §5 figures* |
+| — | `MI ≈ (3/4) log K` scaling law | *not tested; deferred to spec 002 per §4* |
+| — | Higher-dimensional Θ | *not tested; out of scope per §0* |
+
 **T1 — m=1 closed form (on the grid).** With `m=1`, after BA converges:
 - `K = 2` atoms.
 - Atom centroids at the first and last grid cells:
   `θ_a ∈ {1/(2 N_θ), 1 − 1/(2 N_θ)}` within `0.5 / N_θ` (half a cell).
 - Atom masses within `1e-6` of `0.5` each (exact by the θ ↔ 1−θ symmetry
   of the optimum; the tolerance is just BA convergence slack).
+- **(F8)** Direct prior-mass checks bypassing the §3.5 extractor:
+  `p*_0` and `p*_{N_θ−1}` each within `1e-6` of `0.5`; all interior
+  cells below `1e-10`. Catches mass-leak bugs that the run-sum
+  aggregation in `extract_atoms` would otherwise hide.
 - `MI*` within `1e-6` nats of the **analytic two-atom MI evaluated at the
   grid endpoints**:
 
@@ -385,7 +424,21 @@ in §1.
 **T2 — f_KL flatness on support.** For every m in the sweep: at all grid
 cells with `p_i > p_thresh`, `f_KL_i` agrees with the achieved `MI*` to
 within a relative tolerance `1e-3`. Off-support cells satisfy
-`f_KL_i ≤ MI*` (no positive violations beyond floating-point slack).
+`f_KL_i ≤ MI*` **(F10)** up to a *relative* floating-point
+slack `abs(MI*) * 1e-8 + 1e-12` (no longer the asymmetric absolute `1e-10`),
+matching the on-support tolerance treatment and scaling sensibly with
+`MI* ~ log(m+1)`.
+
+**T2b — Support has at least two cells (F2/F3).** At every m in the
+sweep, `#{i : p*_i > p_thresh} ≥ 2`. Rules out a stuck-at-one-atom
+stationary point, which would otherwise satisfy the flatness condition
+trivially (one cell, scalar `f_KL`).
+
+**T2c — Initialisation invariance (F2).** Run BA twice at the same m:
+once from uniform init, once from a perturbed init (strictly positive,
+normalised — see §3.4's `init=` kwarg). The reported `mi` agrees across
+runs to ~`1e-6`. Defends against non-degenerate suboptimal fixed points
+that pass T2/T2b/T6 yet sit below capacity.
 
 **T3 — Capacity bound (decoupled from §3.5).** For every m,
 `MI* ≤ log K_upper + tol`, where
@@ -398,16 +451,45 @@ atom-extraction heuristic, which retains its role for figures and the
 results table but no longer drives the test. Use `tol = 1e-10`.
 (This is the `MI ≤ log K` bound from Mattingly Fig 3C.)
 
+**T3b — Output-alphabet capacity bound (F9).** For every m in the
+sweep, `MI* ≤ log(m+1) + 1e-10`. The Binomial likelihood has output
+alphabet `X ∈ {0, …, m}`, and the channel capacity of any discrete
+memoryless channel is bounded above by `log|Y|` (Cover & Thomas, *Elements
+of Information Theory* 2e, §7.2, Theorem 7.2.1). Catches a `result.mi`
+that is simply fabricated to be large, which T3 by itself would miss
+whenever the implementation also returns a spread-out prior.
+
 **T4 — Convergence to Jeffreys (qualitative).** At `m = 100`, the
 cumulative distribution function of the mass distribution agrees with the
 CDF of the Jeffreys prior `p_J(θ)` in Kolmogorov–Smirnov distance below
 `0.05`. (Generous, because at finite m we still see discreteness; this
 test pins the *aggregate* shape, not pointwise convergence.)
 
+**(F4)** KS distance is evaluated on a *dense* θ-grid (10⁴ points)
+rather than at atom locations only: the step-CDF of the converged atom
+masses is computed via `np.searchsorted` against the sorted atom
+centroids, and compared to the analytic Jeffreys CDF
+`F_J(θ) = (2/π) arcsin(√θ)`. Atom-only evaluation underestimates KS
+distance because the worst-case gap of a step CDF against a smooth one
+is achieved *between* jump points.
+
+**T4b — Atom count is in the right ballpark at m=100 (F12).**
+After atom extraction at m=100, `5 ≤ K ≤ 50`. Lower bound rules out
+under-atomisation (e.g., the m=1 degenerate collapse persisting). Upper
+bound, combined with the implicit `K ≪ N_θ = 1000` constraint, rules out
+the "return on-grid Jeffreys" failure mode that would pass the KS check
+trivially. The interval is chosen to be conservative around the Jeffreys
+scaling `K(m) ~ √m`; the headline-run K at m=100 from Mattingly Fig 1 sits
+comfortably inside it.
+
 **T5 — Grid invariance of atom locations.** Re-run at `N_θ = 200` and
 `N_θ = 2000`. For each m in `{1, 2, 5, 10}`, detected atom counts agree;
-atom centroids agree across grids to within `3 × max(1/N_θ)` of each
-other. (i.e. atoms aren't an artefact of grid choice.)
+**(F5)** atom centroids agree across grids to within
+`max(1/N_θ)` (tightened from the previous `3 × max(1/N_θ)`), matched
+by *nearest-neighbour distance* (not `zip`-by-index, which silently
+masks reordered or symmetric mismatches). Atom *masses* also agree
+across grids to ~`1e-3` absolute. (i.e. atoms aren't an artefact of grid
+choice, and their weights aren't either.)
 
 **T6 — BA monotonicity.** `I_τ` is
 non-decreasing across iterations, up to floating-point slack (`1e-10` per
@@ -415,9 +497,55 @@ step, absolute). The slack matches the realistic float64 rounding budget
 for a summation over `N_θ = 1000` terms
 of `|f_KL| ≲ log(m+1)`. This is the BA convergence guarantee.
 
+**(F6)** Also pin the endpoints of `mi_history`:
+`history[0]` must equal the MI under the uniform initial prior (computed
+independently from the likelihood matrix via the same formula §1.2
+defines); `history[-1]` must equal `result.mi` to ~`1e-12`. Together
+these rule out fabricated monotone-but-arbitrary histories.
+
 **T7 — Algorithmic sanity on a degenerate case.** If the likelihood is
 `θ`-independent (a fake "experiment that learns nothing"), then `MI* = 0`,
 `f_KL ≡ 0`, and `p* = p_0` (uniform). Optional but cheap.
+
+**T7b — Degenerate likelihood restores uniformity from a perturbed
+init (F7).** Same θ-independent likelihood, but pass a slightly perturbed
+strictly-positive initial prior via §3.4's `init=` kwarg. BA must drive
+the prior back to uniform (atol ~`1e-10` on the converged masses), and
+the final `mi` is still 0. Distinguishes a correct BA from an "early-out
+/ identity on uniform" implementation that T7 alone cannot tell apart.
+
+**T8 — Reflection symmetry (F13).** The Bernoulli likelihood satisfies
+`p(x | θ) = p(m−x | 1−θ)`, so the MI objective is invariant under
+`θ ↔ 1−θ` and the optimal prior inherits the symmetry on the
+cell-centred grid: `p*_i = p*_{N_θ−1−i}` to ~`1e-8`. Parametrised across
+the m-sweep. A wrong update that breaks symmetry (asymmetric numerical
+drift, off-by-one in indexing) passes T1's per-side checks but fails
+here at m > 1.
+
+**T9 — Continuum scaling of the T1 deficit (F15).** Parametrise T1
+over `N_θ ∈ {100, 1000, 10000}`. The deficit `log 2 − result.mi` must
+shrink like `(log N_θ) / N_θ` (leading order of `H(1/(2 N_θ))` for
+small p): assert the ratio `deficit · N_θ / log(N_θ)` stays in `[0.1, 10]`
+across the sweep. Catches an implementation that hard-codes `MI_ref` or
+silently drops the cell-centred convention.
+
+**T10 — MI / f_KL self-consistency on the returned prior (F1, F11).**
+For every m in the sweep: recompute `p_x = Σ_i p*_i exp(logP[i,x])`,
+`f_kl_i = Σ_x p(x|θ_i)[logP[i,x] − log p_x[x]]`, and
+`mi = Σ_i p*_i f_kl_i` from `result.prior` and the cached likelihood
+matrix. Assert equality with `result.mi` and `result.f_kl` to ~`1e-12`.
+This is the single tightest defence against a wrong implementation that
+returns a converged prior alongside a fabricated, stale, or
+previous-iterate `mi`/`f_kl` — every other §4 test consumes those fields
+as ground truth.
+
+**T11 — `binomial_log_likelihood` matches an independent reference
+(F14).** A small known-answer check decoupled from the BA loop:
+`binomial_log_likelihood(θ, m)` agrees with `scipy.stats.binom.logpmf`
+at a mixed test point (e.g. θ ∈ {0.1, 0.3, 0.5, 0.7, 0.9}, m = 3,
+x ∈ {0,1,2,3}) to atol `1e-12`. Catches likelihood-side bugs (swapped
+`log θ` / `log(1−θ)`, dropped binomial coefficient) that the T7
+θ-independent likelihood is symmetric enough to miss.
 
 We do **not** test:
 
@@ -502,6 +630,11 @@ the lab-meeting audience should see us reasoning about live.
 - Jeffreys, H. (1946). An invariant form for the prior probability in
   estimation problems. *Proc. Roy. Soc. A*, 186, 453–461. Original
   Jeffreys prior; for the Bernoulli case `p_J(θ) = 1 / (π √(θ(1 − θ)))`.
+- Cover, T. M. & Thomas, J. A. (2006). *Elements of
+  Information Theory*, 2nd edition. Wiley-Interscience. §7.2,
+  Theorem 7.2.1 — channel capacity is bounded above by `log|Y|`, the
+  log of the output alphabet size. Cited in §4 T3b for the
+  `MI* ≤ log(m+1)` bound.
 - Clarke, B. S. & Barron, A. R. (1994).
   Jeffreys' prior is asymptotically least favorable under entropy risk.
   *Journal of Statistical Planning and Inference*, 41(1), 37–60. DOI
@@ -587,3 +720,55 @@ the lab-meeting audience should see us reasoning about live.
     statistic. No change.
   - **F1 follow-up [unchanged]** DC-1 kept as-is per reviewer's note;
     no spec edit beyond the T1 fix already recorded above.
+
+- **2026-05-18 — Post-test-red-team revisions** (§3.4, §4, §9). Findings
+  triaged in `tests/test_000_static_infomax_fig1-redteam.md`. Sections
+  §3 (for §3.4), §4, and §9 flipped back to `draft`; modifications
+  highlighted inline in red. Each change is tied to its red-team finding
+  ID. Tests will be regenerated against this revision as a follow-up
+  step.
+
+  - **F1, F11 [Refinement]** §4. Added T10 (MI/f_KL self-consistency
+    on the returned prior) — the single tightest defence against a
+    fabricated or stale `mi`/`f_kl` adjacent to a correct converged
+    prior. Subsumes F11 (stale-iterate `f_kl` detection).
+  - **F2, F3 [Refinement]** §4. T2 split into T2 (existing flatness),
+    T2b (`#{support} ≥ 2`, which dissolves the one-atom collapse mode
+    and obviates a tighter per-m K-lower-bound), and T2c
+    (initialisation-invariance, using the new `init=` kwarg from F16).
+  - **F4, F12 [Correction]** §4 T4. KS evaluation moved to a dense
+    θ-grid via `np.searchsorted` (atom-only evaluation underestimates
+    the true KS distance). Added T4b: `5 ≤ K ≤ 50` at m=100, ruling
+    out both under-atomisation and the "return on-grid Jeffreys"
+    failure mode.
+  - **F5 [Refinement]** §4 T5. Centroid tolerance tightened from
+    `3 × max(1/N_θ)` to `max(1/N_θ)`; matching switched to
+    nearest-neighbour from `zip`-by-index; atom *masses* now also
+    compared across grids to ~`1e-3` absolute.
+  - **F6 [Refinement]** §4 T6. Endpoint pins on `mi_history`:
+    `history[0]` equals the independently-recomputed MI under the
+    uniform initial prior; `history[-1] == result.mi` to ~`1e-12`.
+    Closes the "monotone-but-fabricated history" loophole.
+  - **F7, F16 [Refinement]** §3.4, §4 T7. `blahut_arimoto` gains an
+    optional `init` keyword argument (uniform default preserved). T7b
+    added: under a θ-independent likelihood with a perturbed init, BA
+    must drive the prior back to uniform. Distinguishes a correct BA
+    from an "early-out / identity on uniform" implementation.
+  - **F8 [Refinement]** §4 T1. Added direct prior-mass checks on the
+    boundary cells (within `1e-6` of `0.5`) and the interior (below
+    `1e-10`), bypassing the §3.5 extractor's run-sum aggregation.
+  - **F9 [Refinement]** §4, §9. Added T3b: `MI* ≤ log(m+1)` from the
+    discrete-channel output-alphabet bound (Cover & Thomas 2e, §7.2,
+    Theorem 7.2.1). Cover & Thomas added to §9 References.
+  - **F10 [Correction]** §4 T2. Off-support tolerance is now relative
+    (`abs(MI*) * 1e-8 + 1e-12`); symmetric with the on-support treatment
+    and scales with `MI* ~ log(m+1)`.
+  - **F13 [Refinement]** §4. Added T8 reflection symmetry
+    (`p*_i = p*_{N_θ−1−i}` to ~`1e-8`) across the m-sweep.
+  - **F14 [Refinement]** §4. Added T11: `binomial_log_likelihood`
+    agrees with `scipy.stats.binom.logpmf` on a small mixed sample to
+    atol `1e-12`. Catches likelihood-side bugs that T7's symmetric
+    input cannot detect.
+  - **F15 [Refinement]** §4. Added T9: parametrise T1 over
+    `N_θ ∈ {100, 1000, 10000}` and assert the continuum-scaling ratio
+    `(log 2 − mi) · N_θ / log N_θ ∈ [0.1, 10]`.

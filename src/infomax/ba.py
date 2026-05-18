@@ -30,20 +30,26 @@ def blahut_arimoto(
     log_likelihood: np.ndarray,
     theta_grid: np.ndarray,
     *,
+    init: np.ndarray | None = None,
     eps_i: float = 1e-10,
     tau_min: int = 10,
     tau_max: int = 5000,
 ) -> BAResult:
     """Find the MI-maximising prior on the grid implied by `log_likelihood`.
 
-    Implements the log-space BA loop of spec §3.4 starting from a uniform
-    `GridPrior(theta_grid)`. Records `I_tau` at each step in `mi_history`
+    Implements the log-space BA loop of spec §3.4. When `init is None`
+    (the default), starts from a uniform `GridPrior(theta_grid)`;
+    otherwise uses the supplied strictly-positive probability vector as
+    the starting prior (used by tests T2c init-invariance and T7b
+    perturbed-degenerate). Records `I_tau` at each step in `mi_history`
     so T6 (monotonicity) can be checked without re-running the loop.
 
     Args:
         log_likelihood: log p(x | theta_i), shape (n_theta, n_x).
         theta_grid: cell-centred grid, shape (n_theta,); used to construct
             the returned `GridPrior`.
+        init: optional initial prior over the grid; strictly positive,
+            normalised, shape (n_theta,). `None` ⇒ uniform.
         eps_i: convergence tolerance on |I_{tau+1} - I_tau| in nats.
         tau_min: minimum iterations before checking convergence.
         tau_max: hard iteration cap.
