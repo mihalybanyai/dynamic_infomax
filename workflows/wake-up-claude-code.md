@@ -40,6 +40,8 @@ After reading, summarise your understanding in two short paragraphs:
 Wait for me to confirm before taking any action.
 
 Then today's task is: [[TASK_DESCRIPTION]]
+
+All work should be done on the main branch, and no other branch or worktree should be created without explicit instruction by the human. If there is a worktree auto-created by the harness at session start, before you do anything, switch back to the main branch and tear down the worktree.
 ```
 
 ## When something is stale
