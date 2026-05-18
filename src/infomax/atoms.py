@@ -28,7 +28,30 @@ def extract_atoms(prior: GridPrior, p_thresh: float | None = None) -> list[Atom]
 
     Each detected run is reduced to (mass-weighted centroid, total mass).
     """
-    raise NotImplementedError
+    theta_grid = prior.support()
+    masses = prior.masses()
+    n_theta = theta_grid.size
+    if p_thresh is None:
+        p_thresh = 1.0 / (10.0 * n_theta)
+
+    above = masses > p_thresh
+    if not np.any(above):
+        return []
+
+    # Find runs of consecutive True indices by detecting edges.
+    padded = np.concatenate(([False], above, [False]))
+    edges = np.diff(padded.astype(np.int8))
+    starts = np.flatnonzero(edges == 1)
+    ends = np.flatnonzero(edges == -1)  # exclusive
+
+    atoms: list[Atom] = []
+    for s, e in zip(starts, ends):
+        run_theta = theta_grid[s:e]
+        run_mass = masses[s:e]
+        total = float(run_mass.sum())
+        centroid = float(np.dot(run_theta, run_mass) / total)
+        atoms.append(Atom(theta=centroid, mass=total))
+    return atoms
 
 
 def count_support(prior: GridPrior, floor: float = 1e-12) -> int:
@@ -38,4 +61,4 @@ def count_support(prior: GridPrior, floor: float = 1e-12) -> int:
     used by the capacity-bound test. Decoupled from `extract_atoms` (and
     its DC-2 heuristic) — `floor` is set well below any real support mass.
     """
-    raise NotImplementedError
+    return int(np.sum(prior.masses() > floor))
