@@ -11,7 +11,8 @@ import numpy as np
 
 def jeffreys_bernoulli_pdf(theta: np.ndarray) -> np.ndarray:
     """p_J(theta) = 1 / (pi * sqrt(theta * (1 - theta))) on (0, 1)."""
-    raise NotImplementedError
+    theta = np.asarray(theta, dtype=np.float64)
+    return 1.0 / (np.pi * np.sqrt(theta * (1.0 - theta)))
 
 
 def jeffreys_bernoulli_cdf(theta: np.ndarray) -> np.ndarray:
@@ -20,4 +21,5 @@ def jeffreys_bernoulli_cdf(theta: np.ndarray) -> np.ndarray:
     Closed form: F_J(theta) = (2/pi) * arcsin(sqrt(theta)) on [0, 1].
     Used for the K-S test in T4.
     """
-    raise NotImplementedError
+    theta = np.asarray(theta, dtype=np.float64)
+    return (2.0 / np.pi) * np.arcsin(np.sqrt(np.clip(theta, 0.0, 1.0)))

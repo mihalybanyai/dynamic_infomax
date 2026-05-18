@@ -12,7 +12,7 @@ leaves the repo in a clean state.
 | File | State | Targeted tests |
 |---|---|---|
 | `src/infomax/likelihood.py` | **done** (T11 passing) | T1, T11 directly; foundation for all others |
-| `src/infomax/jeffreys.py` | pending | T4 |
+| `src/infomax/jeffreys.py` | **done** (CDF smoke-test passes) | T4 |
 | `src/infomax/prior.py` | pending | all (GridPrior is the backbone) |
 | `src/infomax/atoms.py` | pending | T1, T4, T4b, T5 |
 | `src/infomax/ba.py` | pending | T1, T2, T2b, T2c, T3, T3b, T4, T4b, T5, T6, T7, T7b, T8, T9, T10 |
