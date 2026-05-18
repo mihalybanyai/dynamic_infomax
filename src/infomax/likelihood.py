@@ -5,6 +5,7 @@ Spec: specs/000-static-infomax-fig1.md §1.1, §3.2.
 from __future__ import annotations
 
 import numpy as np
+import scipy.stats
 
 
 def cell_centred_grid(n_theta: int) -> np.ndarray:
@@ -14,7 +15,7 @@ def cell_centred_grid(n_theta: int) -> np.ndarray:
     Avoids the endpoints 0 and 1 where the Bernoulli log-likelihood is
     singular for some x.
     """
-    raise NotImplementedError
+    return (np.arange(n_theta, dtype=np.float64) + 0.5) / n_theta
 
 
 def binomial_log_likelihood(theta_grid: np.ndarray, m: int) -> np.ndarray:
@@ -22,9 +23,12 @@ def binomial_log_likelihood(theta_grid: np.ndarray, m: int) -> np.ndarray:
 
     Returns an array of shape (n_theta, m + 1) in nats.
 
-    Spec §3.2.
+    Spec §3.2. Implementation goes through `scipy.stats.binom.logpmf`,
+    which uses gammaln internally for numerical stability at large m.
     """
-    raise NotImplementedError
+    theta = np.asarray(theta_grid, dtype=np.float64)
+    x = np.arange(m + 1)
+    return scipy.stats.binom.logpmf(x[np.newaxis, :], m, theta[:, np.newaxis])
 
 
 def binomial_likelihood(theta_grid: np.ndarray, m: int) -> np.ndarray:
@@ -32,4 +36,4 @@ def binomial_likelihood(theta_grid: np.ndarray, m: int) -> np.ndarray:
 
     Returns an array of shape (n_theta, m + 1).
     """
-    raise NotImplementedError
+    return np.exp(binomial_log_likelihood(theta_grid, m))

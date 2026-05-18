@@ -436,14 +436,15 @@ def test_t7_degenerate_likelihood(theta_grid: np.ndarray, n_theta: int) -> None:
 def test_t7b_degenerate_restores_uniform_from_perturbation(
     theta_grid: np.ndarray, n_theta: int
 ) -> None:
-    """T7b (P12) — Degenerate likelihood + perturbed init → uniform.
+    """T7b (P12) — Degenerate likelihood + perturbed init: BA respects init.
 
-    Spec §4 T7b. T7 alone cannot distinguish a correct BA from an
-    "early-out / identity on uniform" implementation, because the BA
-    update is the identity on the uniform initialisation under a
-    θ-independent likelihood. Starting from a strictly-positive
-    perturbed init (literal seed per `manage-randomness` rule 3) and
-    asserting BA drives the prior *back* to uniform closes that gap.
+    Spec §4 T7b (revised). Under a θ-independent likelihood `f_KL ≡ 0`
+    and the BA update is the identity, so every prior is a fixed point
+    of MI=0. The defensive intent of F7 was to catch an
+    "identity-on-uniform / always-uses-uniform" bug: we assert that BA
+    returns the init unchanged (rather than collapsing to uniform).
+    Perturbed init uses a literal hardcoded seed per `manage-randomness`
+    rule 3.
     """
     rng = np.random.default_rng(20260518)
     perturbation = 1.0 + 0.1 * rng.standard_normal(n_theta)
@@ -458,9 +459,9 @@ def test_t7b_degenerate_restores_uniform_from_perturbation(
         f"MI ≠ 0 from perturbed init under degenerate likelihood: {result.mi}"
     )
     masses = result.prior.masses()
-    assert np.allclose(masses, 1.0 / n_theta, atol=1e-10), (
-        f"BA did not restore uniform from perturbation: "
-        f"max|p_i − 1/N| = {float(np.max(np.abs(masses - 1.0 / n_theta))):.3e}"
+    assert np.allclose(masses, init, atol=1e-12), (
+        f"BA did not preserve the init under degenerate likelihood: "
+        f"max|p_i − init_i| = {float(np.max(np.abs(masses - init))):.3e}"
     )
 
 

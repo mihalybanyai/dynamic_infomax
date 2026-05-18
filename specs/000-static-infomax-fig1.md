@@ -388,7 +388,7 @@ the test (or tests) that verifies it. Test functions live in
 | P9 | Grid invariance: atom centroids and masses match across `N_θ ∈ {200, 1000, 2000}` (§3.1, T5) | `test_t5_grid_invariance_of_atoms` |
 | P10 | BA monotonicity of `I_τ`; `history[0]` = MI under uniform; `history[-1] == result.mi` (§1.4, T6) | `test_t6_ba_monotonicity` |
 | P11 | Degenerate likelihood → `MI*=0`, `f_KL≡0`, prior stays uniform (§4 T7) | `test_t7_degenerate_likelihood` |
-| P12 | Degenerate likelihood + perturbed init → BA restores uniform (§4 T7b) | `test_t7b_degenerate_restores_uniform_from_perturbation` |
+| P12 | Degenerate likelihood + perturbed init → BA preserves the init (§4 T7b) | `test_t7b_degenerate_restores_uniform_from_perturbation` |
 | P13 | Reflection symmetry `p*_i = p*_{N_θ−1−i}` at every m (§4 T8) | `test_t8_reflection_symmetry` |
 | P14 | T1 deficit scales like `(log N_θ)/N_θ` across `N_θ ∈ {100, 1000, 10000}` (§4 T9) | `test_t9_t1_continuum_scaling` |
 | P15 | `result.mi` and `result.f_kl` match an independent recomputation from `result.prior` (§4 T10) | `test_t10_mi_fkl_self_consistency` |
@@ -507,12 +507,16 @@ these rule out fabricated monotone-but-arbitrary histories.
 `θ`-independent (a fake "experiment that learns nothing"), then `MI* = 0`,
 `f_KL ≡ 0`, and `p* = p_0` (uniform). Optional but cheap.
 
-**T7b — Degenerate likelihood restores uniformity from a perturbed
-init (F7).** Same θ-independent likelihood, but pass a slightly perturbed
-strictly-positive initial prior via §3.4's `init=` kwarg. BA must drive
-the prior back to uniform (atol ~`1e-10` on the converged masses), and
-the final `mi` is still 0. Distinguishes a correct BA from an "early-out
-/ identity on uniform" implementation that T7 alone cannot tell apart.
+**T7b — Degenerate likelihood: BA respects `init=` (F7, revised
+2026-05-18).** Same θ-independent likelihood, but pass a slightly
+perturbed strictly-positive initial prior via §3.4's `init=` kwarg.
+Under a θ-independent likelihood `f_KL ≡ 0` and the BA update is the
+identity, so *every* prior is a fixed point of `MI = 0`. Assert that
+BA returns `result.prior.masses() == init` (atol `1e-12`) and
+`result.mi == 0`. This catches an implementation that ignores the
+`init=` argument and always uses uniform — the "identity-on-uniform"
+bug F7 was reaching for — without making a mathematically false claim
+about BA restoring uniformity.
 
 **T8 — Reflection symmetry (F13).** The Bernoulli likelihood satisfies
 `p(x | θ) = p(m−x | 1−θ)`, so the MI objective is invariant under
