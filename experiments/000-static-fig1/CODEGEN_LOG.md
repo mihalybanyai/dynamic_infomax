@@ -107,6 +107,11 @@ Per-test status (running individually, logging after each):
 - **T10 (mi/f_kl self-consistency, all 9 m values):** PASS — 11 min 44 s.
   The tau_max-exhaustion fix removed the inconsistency. (Test still
   triggers full BA runs across the sweep, hence runtime.)
+- **T4 (Jeffreys KS at m=100):** FAIL — 9 min 20 s. KS distance 0.1617
+  (down from 0.21 at the old tau_max=200k, but still ~3× the 0.05
+  budget). Confirms the structural superatom-at-θ=0.5 problem — vanilla
+  BA doesn't separate it within practical iteration counts.
+- **T4b (atom count at m=100 in [5,50]):** PASS — same run.
 - **T5[m=2, m=5, m=10] (grid invariance of atoms):** FAIL — 8 min 11 s.
   Centroid mismatches across `N_θ ∈ {200, 1000, 2000}`:
   - m=2: ~0.011 vs tol 0.005
