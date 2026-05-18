@@ -48,6 +48,8 @@ m-sweep.
 
 > M: let's do this.
 
+> C: Adding `test_mi_fkl_self_consistency` to the test suite — parametrised over the m-sweep, recomputes `p_x`, `f_kl`, and `mi` from `result.prior` and the cached log-likelihood and asserts agreement with `result.mi` / `result.f_kl` to 1e-12. No spec change required.
+
 ---
 
 ### F2: No check that BA reaches the *global* MI, only that it is monotone and self-consistent [severity: high]
@@ -74,6 +76,8 @@ at-one-atom bug.
 
 > M: please advise on the relative merits of these suggestions. Isn't it the case that a one-atom support is stupid and we can just test if there are at least two?
 
+> C: Two-pronged fix. (i) Add `assert on_support.sum() >= 2` inside T2 across the full m-sweep — kills the one-atom collapse mode (and dissolves F3). (ii) Add a new `test_ba_init_invariance` that runs BA from a perturbed initial prior (built on top of F16's new `init=` argument) and asserts `mi` agrees with the uniform-init run to ~1e-6, guarding against non-trivial suboptimal stationary points. No "MI grows with m" check — the cost/benefit didn't pencil out.
+
 ---
 
 ### F3: T2 flatness check is satisfied by collapse to a single support cell [severity: high]
@@ -96,6 +100,8 @@ known bound for larger m). Alternatively, recompute `f_KL` independently
 (see F1) and require flatness against the *true* MI.
 
 > M: let's certainly test for having at least two atoms. Will this also solve F3? Is there tighter known lower bound for higher m?
+
+> C: Dissolved by F2's `on_support.sum() >= 2` assertion in T2. No tighter K-lower-bound asserted per-m: we hold K ≥ 2 universally and let T4 (with F12's revisions) pin the Jeffreys-shape at m=100, rather than encoding paper-derived K(m) bounds we don't have a confident reference for.
 
 ---
 
@@ -125,6 +131,8 @@ that mass concentrates onto a small number of disjoint runs), so that
 
 > M: (a) seems easy enough, is it much of a computational overhead?
 
+> C: Negligible (milliseconds). Rewriting T4 to evaluate KS distance on a dense θ-grid of 10⁴ points: compute the step-CDF of the converged atom masses via `np.searchsorted`, the analytic Jeffreys CDF via `(2/π) arcsin(√θ)`, take `max|Δ|`. Also adding F4(b) defence: assert `K << N_θ` (concretely `K < N_θ / 5`) so "return the on-grid Jeffreys prior" cannot pass T4. Spec §4 T4 updated accordingly.
+
 ---
 
 ### F5: T5 silently ignores mismatches when atom counts differ [severity: high]
@@ -149,6 +157,8 @@ that atom masses agree across grids (currently only positions are checked).
 
 > M: this sounds easy enough as well, let's do it.
 
+> C: Updating T5: centroid tolerance tightened from `3 × max(1/N_θ)` to `max(1/N_θ)`; atom matching becomes nearest-neighbour (not `zip`-by-index); atom masses also compared across grids to ~1e-3 absolute. Spec §4 T5 updated to match.
+
 ---
 
 ### F6: T6 monotonicity does not constrain *what* `mi_history` contains [severity: high]
@@ -168,6 +178,8 @@ and assert `history[-1] == result.mi` to high precision. Optionally assert
 strict increase for the first several steps from uniform.
 
 > M: let's implement these
+
+> C: Updating T6: also asserts `history[0]` equals the MI of the uniform initial prior (recomputed independently from the likelihood via the same helper used by F1's test) and `history[-1] == result.mi` to ~1e-12. Spec §4 T6 updated to reflect the endpoint pins.
 
 ---
 
@@ -192,6 +204,8 @@ implementation cannot get away.
 
 > M: the perturbation sounds useful, let's do that
 
+> C: Adding a variant test `test_t7_degenerate_restores_uniform_from_perturbation`: builds a slightly perturbed initial prior (still strictly positive, normalised) and asserts BA under a θ-independent likelihood drives it back to uniform to ~1e-10. Requires F16's `init=` argument. Spec §4 T7 extended to mention the perturbed variant.
+
 ---
 
 ### F8: T1 mass tolerance is not actually tight enough to detect a small constant offset [severity: medium]
@@ -214,6 +228,8 @@ on first cell with 1e-7 leak" from "atom split between cells 0 and 1".
 
 > M: let's do this
 
+> C: Updating T1: in addition to the extractor-based atom checks, assert directly that `result.prior.masses()[0]` and `[-1]` are each within 1e-6 of 0.5, and that all other masses are below ~1e-10. Catches mass-leak bugs that the centroid+run-sum aggregation hides. Spec §4 T1 updated.
+
 ---
 
 ### F9: T3 capacity bound is trivially loose [severity: medium]
@@ -235,6 +251,8 @@ fabricated to be large.
 
 > M: i'm gonna need references for these bounds, the suggestion seems easy but I'm not confident in my understanding of it
 
+> C: Reference: Cover & Thomas, *Elements of Information Theory* (2nd ed., 2006), §7.2, Theorem 7.2.1 — for a discrete memoryless channel, capacity `C ≤ log|Y|` where `Y` is the output alphabet. Here `X ∈ {0, …, m}` so `|Y| = m+1`, hence `MI* ≤ log(m+1)`. Adding a companion assertion to T3: `result.mi <= np.log(m+1) + 1e-10`. Spec §4 T3 gains the bound + Cover & Thomas added to §9 References.
+
 ---
 
 ### F10: Off-support check in T2 uses absolute 1e-10 tolerance, not relative [severity: medium]
@@ -253,6 +271,8 @@ sloppy slack. Asymmetric tolerance treatment between on-support (relative
 (e.g. `abs(mi) * 1e-8 + 1e-12`).
 
 > M: this is easy, let's do it
+
+> C: Updating T2: off-support slack becomes relative — `fp_slack = abs(result.mi) * 1e-8 + 1e-12`. Symmetric with the on-support relative tolerance and scales sensibly with `MI* ~ log(m+1)`. Spec §4 T2 updated.
 
 ---
 
@@ -273,6 +293,8 @@ half-converged result.
 likelihood (see F1) and require equality.
 
 > M: do this
+
+> C: Subsumed by F1's `test_mi_fkl_self_consistency`: independent recomputation of `f_KL` from `result.prior` and the likelihood enforces consistency with the *returned* prior, ruling out a stale-iterate `result.f_kl`. No separate test needed; noted in the F1 test docstring.
 
 ---
 
@@ -296,6 +318,8 @@ generous slack.
 
 > M: this seems reasonable, can you construct those bounds from the paper?
 
+> C: Using conservative bounds informed by the Jeffreys-scaling argument K(m) ~ √m rather than pulling from the paper: assert `5 ≤ K ≤ 50` at m=100 in T4. Wide enough to be robust to extractor heuristics, narrow enough to rule out K=2 (under-atomising) and K≈N_θ (over-atomising / on-grid-Jeffreys). The lower edge of the bound is also the F4(b) "K << N_θ" guard. Spec §4 T4 updated accordingly.
+
 ---
 
 ### F13: No test for permutation/reflection symmetry of the optimum [severity: medium]
@@ -314,6 +338,8 @@ component checks while producing an asymmetric prior at other m.
 satisfies pointwise symmetry under the reversal `i → N_θ−1−i` to ~1e-8.
 
 > M: good idea, let's test this
+
+> C: Adding T8 — `test_t8_reflection_symmetry`, parametrised over the m-sweep, asserts `result.prior.masses()` equals its reverse to atol=1e-8. Spec §4 gains T8 in the acceptance criteria list.
 
 ---
 
@@ -335,6 +361,8 @@ log-pmf values for x ∈ {0,1,2,3}.
 
 > M: do we have reference values like this from somewhere? I wouldn't actually compute stuff by hand.
 
+> C: Use `scipy.stats.binom.logpmf` as the independent reference — it's already a project dependency, mature, and has a completely different internal implementation from our `binomial_log_likelihood`. Adding a new test `test_binomial_log_likelihood_matches_scipy` that compares our output to `scipy.stats.binom.logpmf` at a small mixed sample (e.g. θ ∈ {0.1, 0.3, 0.5, 0.7, 0.9}, m=3, x ∈ {0,1,2,3}) at atol=1e-12. No spec change needed (the likelihood is already specified analytically in §3.2).
+
 ---
 
 ### F15: T1 known-answer is on-grid only; continuum log 2 sanity check absent [severity: low]
@@ -350,6 +378,8 @@ silently fails to use the cell-centred convention). Cheap to add.
 assert `(log 2 − result.mi)` shrinks like `~(log N_θ)/N_θ`.
 
 > M: let's add this
+
+> C: Adding T9 — `test_t9_t1_continuum_scaling`, parametrised over `N_θ ∈ {100, 1000, 10000}` at m=1, asserts the deficit `log 2 − result.mi` scales like `(log N_θ) / N_θ` (ratio in [0.1, 10] across the sweep). Catches a hard-coded `MI_ref` or a silent regression on the cell-centred convention. Spec §4 gains T9 in the acceptance criteria list.
 
 ---
 
@@ -367,6 +397,8 @@ API forecloses it.
 perturbed-start variant.
 
 > M: this came up at F7 as well, and it seems useful to me. the API change seems reasonable
+
+> C: API change: `blahut_arimoto` gains an `init: np.ndarray | None = None` keyword argument; `None` preserves the current uniform-init default. Spec §3.4 pseudocode prologue updated ("p ← init if given else uniform(N_θ)"). The new test from F7 (`test_t7_degenerate_restores_uniform_from_perturbation`) consumes this argument; the F2 `test_ba_init_invariance` does too. No change to the `Prior` protocol — `init` is a one-off entry point, not part of the long-term interface.
 
 ## What the test suite gets right
 
