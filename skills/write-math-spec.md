@@ -44,6 +44,9 @@ to any particular tensor shape convention. It describes the math.
    - **Properties to verify** — what an implementation should satisfy. These
      become the test suite. Be specific: "the loss is invariant under
      permutation of the batch dimension" is good; "it should work" is not.
+     - **Eye test** - A figure (or small set of figures) whose qualitative features can be
+inspected by a human to confirm the implementation is roughly correct
+before the full quantitative test suite is run. 
    - **Open questions** — anything you're unsure about. Mark with `[?]`.
    - **References** — papers, prior work. Use `[CITATION NEEDED]` if unsure.
    - **Revision log** — appended below as the spec is revised. See

@@ -133,3 +133,24 @@ update is committed together with the new test file. The spec status
 table is *not* changed by this step — adding a coverage table is not a
 revision to any reviewed section, just an addition reflecting the new
 test artifact.
+
+### Eye test file
+
+The eye test specified in the spec gets its own file:
+`tests/test_NNN_short_name_eyetest.py`, sibling to the main test file
+`tests/test_NNN_short_name.py`. The eye-test file is structurally
+different from the main test file:
+
+- It does *not* contain pytest assertions. It is a standalone script.
+- It is runnable as `python tests/test_NNN_*_eyetest.py` and produces
+  one or more figures, saved to `tests/figures/NNN_short_name/`.
+- It prints to stdout a short reminder that human approval is required
+  before the full test suite runs.
+- It is *not* picked up by pytest in CI. Either name it without the
+  `test_` prefix and use a redirecting filename, or add it to the
+  pytest ignore list — pick whichever is cleaner in the project's
+  current pytest configuration.
+
+The eye test file uses the same randomness conventions as the rest of
+the suite (literal hardcoded seed at the top), so reruns are
+reproducible without rerunning the implementation.

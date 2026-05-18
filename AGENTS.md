@@ -66,6 +66,33 @@ leave the rest for later but note in your plan that you saw them.
 4. **One artifact per concern.** Don't mix data processing and visualization
    in one script. Don't mix spec and code in one file.
 
+### Test gates
+
+Test artifacts are gated, not run all-at-once. From spec design through
+implementation verification, the order is:
+
+1. **Spec written**, including a per-spec **eye test** (a figure that a
+   human inspects for qualitative correctness — see
+   `skills/write-math-spec.md`).
+2. **Test suite derived** from the spec, including a property-to-test
+   table and a standalone eye-test file (see
+   `skills/derive-test-suite.md`).
+3. **Test suite red-teamed** before any implementation is written.
+4. **Implementation written** against the red-teamed tests.
+5. **Eye test run and human-approved** before the full quantitative
+   suite runs. If the eye test fails, debugging takes precedence over
+   the full suite — though running the full suite as a debugging aid
+   is an option, it should be an active choice, not the default.
+6. **Full test suite run** only after the eye test passes.
+
+The eye-test gate exists because quantitative tests can all pass while
+the implementation is qualitatively wrong (e.g. optimising the right
+objective along the wrong dimension). A human glance at a figure is
+the cheapest way to catch this class of bug.
+
+The workflow that orchestrates these gates is in `workflows/`
+(forthcoming `invoke-test-suite.md` will cover steps 5–6).
+
 ### Code style
 
 - Python 3.11+. Type hints required for any function that crosses module
