@@ -31,6 +31,21 @@ cd dynamic_infomax
   read or run the code. Install with `brew install gh` on macOS and then
   `gh auth login`.
 
+### Editor (optional)
+
+VSCode can render the Mermaid diagram in `meta/workflow-overview.md`
+inline via the **Markdown Preview Mermaid Support** extension (by
+Matt Bierner — search the extension marketplace, or install from
+[the page](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid)).
+Once installed, opening any `.md` file containing a fenced
+`mermaid` code block and triggering the markdown preview
+(`Cmd+Shift+V` on macOS, `Ctrl+Shift+V` elsewhere) renders the
+diagram in place.
+
+Not strictly required — the diagram's source is human-readable, and
+GitHub's web view renders mermaid blocks natively when browsing the
+repo online. The extension just makes local reading nicer.
+
 ### Python environment
 
 From the repo root:
@@ -48,15 +63,6 @@ the `dev` group used for project tooling (`pypdf` for reading PDFs in
 Run commands inside the env with `uv run …` (e.g. `uv run pytest`,
 `uv run python diagrams/000-static-infomax-fig1-pgm.py`), or activate
 the venv with `source .venv/bin/activate`.
-
-### What we deliberately *don't* install
-
-- **poppler / pdftotext / pdftoppm.** PDF text extraction in this repo
-  goes through `pypdf` (pure Python, no system deps). Poppler is a
-  heavy Homebrew install with a long dependency chain and is only
-  worth it if you need raster page rendering. See
-  `meta/workflow-issues.md` → "Default to lightweight PDF tools in
-  skills".
 
 ## For collaborators
 
