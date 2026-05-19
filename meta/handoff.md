@@ -1,150 +1,83 @@
-# Handoff — 2026-05-18
+# Handoff — 2026-05-19
 
 ## Where we left off
 
-The first spec has gone all the way through: spec written and
-red-teamed, test suite derived and red-teamed (including the new
-test red-team workflow we formalised today), implementation
-written, eye test passed, full test suite passing, and documentation
-written. The implementation red-team sub-agent has now run on the
-code + docs and produced a report — that's the next thing to
-process.
+The implementation red-team report (`docs/000-static-infomax-fig1/redteam-impl.md`)
+has been fully processed. All 11 findings are annotated with `> M:` (your
+responses) and `> C:` (what was done). Changes have been applied across
+code, spec, and docs; the test suite is re-passing with 85 tests.
 
-Today's session also produced a meaningful expansion of the
-workflow infrastructure: the test red-team workflow file, the eye
-test convention, the `> M?:` annotation for math gaps, a math
-explainer for KKT, the workflow overview document with embedded
-Mermaid diagram, and the README setup section gaining a VSCode
-extension entry.
+## Changes made this session
 
-## Recent decisions worth remembering
+### redteam-impl.md
+All 11 findings annotated with `> C:` notes directly under the `> M:` responses.
+One nuance captured there: the F10 `GridPrior.__init__` check uses non-negative
+(not strictly positive) because BA legitimately produces `exp(log_p) = 0.0` via
+float64 underflow for cells far from atoms.
 
-- **Test red-team workflow:** `workflows/invoke-red-team-on-tests.md`
-  formalises the three-step decide / update-spec / regenerate-tests
-  pattern. Differs from spec red-team in three substantive ways:
-  findings can touch spec, tests, or both; pushback on `> M:` is
-  explicit; stage 3c bundles red-marking removal with first-time
-  property-to-test table addition.
-- **Eye test convention:** every spec from 002 onward includes an
-  eye-test subsection (smallest run, expected qualitative features,
-  human approval). Eye-test file is its own `tests/test_NNN_*_eyetest.py`,
-  not picked up by pytest, runnable as a standalone script. Eye-test
-  gate sits between implementation and full test suite.
-- **`> M?:` annotation:** sibling to `> M:` for findings the human
-  can't evaluate due to a math gap. Distinct from "uncertain"
-  (`> M:` with a question) — `> M?:` means "I'm not sure I understand
-  the question." Triggers a calibrated math explainer from Claude
-  Code; promotes to `tutorials/math/` on the second occurrence of
-  the same concept.
-- **Math explainer pattern:** new third pattern in `tutorials/README.md`,
-  living in `tutorials/math/` subfolder. Scope discipline: calibrated
-  to the project's use, not the general theory. First example is
-  `tutorials/math/kkt.md`, triggered by red-team findings on
-  spec 001.
-- **Workflow overview doc:** `meta/workflow-overview.md` contains
-  the bird's-eye-view diagram (Mermaid swimlanes: human, Claude Code,
-  sub-agent) plus minimal prose. Embedded mermaid block, no
-  separate `.mermaid` source file — single source of truth.
-- **Honest review commitment:** added as fourth commitment in
-  `AGENTS.md` "How we work". States that reviewing what you don't
-  understand is delegation in review's clothing; `> M?:` is the
-  mechanism for flagging gaps explicitly. Premise: growing the
-  human's command of the mathematics is itself a project goal.
-- **Implementation red-team prompt:** one-shot prompt rather than a
-  new skill file. Discover-under-load applied to skills themselves —
-  the shape that worked will get extracted into
-  `skills/red-team-implementation.md` after this first pass.
+### src/infomax/ba.py
+- **F1**: `init` validation added (strict positivity, finiteness, normalisation to 1±1e-8). Raises `ValueError`.
+- **F2/F7**: `BAResult.mi_history` field comment updated (len = n_iters+1 normally, n_iters+2 on exhaustion). `converged` comment updated to name Csiszár gap.
+- **F3**: `P = np.exp(log_likelihood)` precomputed once in `blahut_arimoto`, threaded into `_f_kl_from_masses` as third parameter. `compute_f_kl` computes P before its single call. Private API change only.
+- **F5/F11**: `eps_i` docstring rewritten to describe Csiszár gap and cross-reference DD3. All kwarg defaults added to Args section.
+
+### src/infomax/prior.py
+- **F1/F10**: `GridPrior.__init__` validates non-negativity, finiteness, and normalisation (sum within 1e-8 of 1). Non-negative (not strict) because underflowed cells are legitimately 0.
+- **F9**: `updated()` removed from both `Prior` protocol and `GridPrior`. Unused `FKLFn` type alias and `logsumexp` import removed. Module docstring updated to explain the architectural reason and reserve `updated()` for future self-contained prior types.
+
+### specs/000-static-infomax-fig1.md
+- **F4**: §3.4 defaults line updated from `α = 1.5` to `α = 2.0` (changed text marked red). Revision log entry added (2026-05-19). §3 status flipped to `draft`.
+
+### docs/000-static-infomax-fig1/README.md
+- **F4/F6**: DD8 added — "Default α = 2.0 (overrelaxation)", citing Run 3.
+- **F7**: DD4 updated to note `mi_history` length is n_iters+2 on exhaustion.
+- **F8**: Call graph preamble updated to mention AST supplementary pass.
+- **F9**: DD9 added — documents that `Prior.updated()` is not declared and the BA update is owned by `blahut_arimoto`, with the architectural reason.
+- Call graph mermaid block regenerated: atoms and jeffreys subgraphs now appear (AST pass), dangling `GridPrior.updated` edge removed.
+
+### docs/000-static-infomax-fig1/_make_call_graph.py
+- **F8**: Added `_ast_top_level_functions()` helper (AST-based), added `ast` and `hashlib` imports, and an AST merge step in `main()` that adds subgraphs for any module with zero code2flow nodes.
 
 ## Open threads
 
-- **Implementation red-team report is the immediate next step.**
-  Evaluate findings using the `> M:` / `> M?:` / dismiss annotation
-  convention, then process per the test red-team workflow shape
-  (decide / update upstream / regenerate downstream — though here
-  "upstream" might be the spec or tests, and "downstream" is the
-  implementation and docs).
-- **Implementation red-team skill extraction.** After the report is
-  fully processed, extract the durable shape into
-  `skills/red-team-implementation.md`. Likely candidates for what
-  transfers: five-category structure, doc-type-specific review
-  criteria, `[test-gap]` and `[spec-implication]` cross-workflow
-  routing tags, "read docs before code" convention. The exact
-  severity calibration probably won't transfer.
-- **Implementation-test workflow formalisation.** The three-step
-  decide/update-upstream/regenerate-downstream shape will now have
-  been used for spec, tests, and implementation red-teams. Worth
-  considering whether the shape should be abstracted into a shared
-  workflow primitive rather than three separate workflow files. The
-  workflow-issues entry from the test workflow named this as the
-  trigger ("third instance shows whether the abstraction is real").
-- **Documentation we built has not been red-teamed in isolation.**
-  The implementation red-team includes doc review, but if a future
-  spec produces docs without an implementation alongside (unlikely
-  but possible), the doc-review criteria might need their own home.
-- Transcript capture is still TBD as of the last handoff; the chat
-  session that produced today's workflow infrastructure has design
-  rationale not captured anywhere else.
-- Per-section approval rules and status-table convention have now
-  been pressure-tested on one spec end-to-end. The post-three-specs
+- **Implementation red-team skill extraction** is still pending. The shape
+  that worked: `> C:` notes directly under `> M:` in the report; one-by-one
+  resolution in chat for uncertain items before writing `> C:`; nuance
+  captured inline in the `> C:` note (e.g. non-negative vs strictly positive).
+  Extract to `skills/red-team-implementation.md`.
+- **Implementation-test workflow formalisation.** This is now the third
+  red-team instance (spec, tests, implementation). The three-step
+  decide/update-upstream/regenerate-downstream shape holds for all three.
+  Check `meta/workflow-issues.md` for the entry on this; it's the moment
+  to consider abstracting the shape into a shared primitive.
+- **Post-mortem for spec 000.** First end-to-end pass complete. Worth a
+  short entry in `meta/what-worked.md`. Candidates: the eye test gate
+  was effective; `> M?:` was not triggered (no math gaps, which is a
+  finding in itself); the doc red-team found real issues the doc author
+  missed (F4, F6, F7, F8 all doc findings that landed changes).
+- Per-section approval rules and status-table convention have now been
+  pressure-tested on one spec end-to-end. The post-three-specs
   review moment is still upcoming.
+- Transcript capture is still TBD.
 
 ## Next session — start here
 
-1. Skim `meta/workflow-issues.md` for any items opened today or
-   that the implementation red-team might touch.
-2. Read the implementation red-team report
-   (`meta/redteam-impl-001.md` or wherever Code put it).
-3. Annotate the report with `> M:` / `> M?:` / dismiss reactions
-   for each finding, working top-down by severity. The `[test-gap]`
-   and `[spec-implication]` tags from the prompt route findings to
-   the other workflows — flag in chat when you hit them rather than
-   acting on them here.
-4. Once annotated, run the three-step processing (decide / update
-   upstream / regenerate downstream) following the test red-team
-   workflow shape, adapted for code + docs as the downstream
-   artifacts.
-5. After the report is fully processed and changes are committed,
-   extract the durable shape into
-   `skills/red-team-implementation.md`. Then formalise the
-   implementation-test workflow: this is the "third instance" check
-   on whether the three-step shape deserves abstraction into a
-   shared primitive.
+1. Skim `meta/workflow-issues.md` for open items.
+2. Extract `skills/red-team-implementation.md` from the shape that worked
+   in this session. Keep it short (spec and test skill files are short).
+3. Decide on the implementation-test workflow abstraction: is the
+   three-step shape ready to be a shared primitive?
+4. Write the spec 000 post-mortem entry in `meta/what-worked.md`.
+5. Begin spec 001.
 
-## Notes to self
+## Recent decisions worth remembering (carried forward)
 
-- This is the first end-to-end pass on a spec. Worth a post-mortem
-  entry in `meta/what-worked.md` or `what-didnt.md` once the
-  implementation red-team is fully processed, ahead of the
-  post-three-specs review. The candidates worth flagging now: the
-  eye test catching anything the quantitative tests didn't, the
-  `> M?:` annotation actually getting used (or not — its absence
-  would also be a finding), and the doc red-team criteria turning
-  up findings the doc author missed.
-- The implementation red-team is the first new red-team type since
-  spec and tests. Pay attention while processing to which parts of
-  the prompt felt right and which felt awkward — that's the
-  material the skill extraction will use. The five-category
-  structure in particular is opinionated and might not survive
-  contact.
-- The temptation when extracting the skill will be to over-specify.
-  Resist. The skills for spec and tests are short; this one should
-  be too. Move durable structure into the skill, leave calibration
-  to the per-instance workflow prompt.
-
-## Prompt for the next chat-Claude session
-
-Paste this at the start of tomorrow's conversation with Claude on
-claude.ai (not Claude Code — Claude Code reads the repo
-automatically):
-
-> Continuing work on dynamic_infomax. Repo is at
-> https://github.com/mihalybanyai/dynamic_infomax. Please read
-> AGENTS.md, meta/workflow-issues.md, meta/handoff.md, and the
-> implementation red-team report at meta/redteam-impl-001.md (or
-> wherever Code put it). The immediate task is to process the
-> report — annotate, decide, apply — following the shape of the
-> test red-team workflow at workflows/invoke-red-team-on-tests.md,
-> adapted for code + docs as the downstream artifacts. After
-> processing is complete, we'll extract the durable shape into
-> skills/red-team-implementation.md and consider formalising the
-> implementation-test workflow.
+- **Test red-team workflow:** `workflows/invoke-red-team-on-tests.md`.
+- **Eye test convention:** standalone `tests/test_NNN_*_eyetest.py`, gate between implementation and full suite.
+- **`> M?:` annotation:** for math gaps the human can't evaluate.
+- **Math explainer pattern:** `tutorials/math/`, calibrated to project use.
+- **Workflow overview doc:** `meta/workflow-overview.md`.
+- **Honest review commitment:** fourth commitment in `AGENTS.md`.
+- **Implementation red-team `> C:` pattern:** write `> C:` note directly under `> M:` in the report, with nuance captured inline. Resolve uncertain items in chat before writing the note.
+- **`GridPrior` validation nuance:** uses non-negative (not strict positivity) because BA underflows cells far from atoms to 0.0 legitimately.
+- **`Prior.updated()` removed:** BA update is owned by `blahut_arimoto`; `updated()` reserved for future self-contained prior types. DD9 in README documents this.

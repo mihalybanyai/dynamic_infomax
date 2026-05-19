@@ -17,28 +17,36 @@ Generated from `src/infomax/` with `code2flow` (see
 `_make_call_graph.py` in this directory; re-run when the package
 changes). Only intra-package calls picked up by code2flow's static
 analysis are shown — calls into NumPy / SciPy and a few instance-method
-edges that code2flow doesn't trace are omitted.
+edges that code2flow doesn't trace are omitted. A supplementary AST pass
+ensures that modules with no intra-package call edges (e.g. `atoms.py`)
+still appear as subgraphs with their public functions as nodes.
 
 ```mermaid
 flowchart LR
+    subgraph atoms["atoms.py"]
+        ast_11bd6dc7["extract_atoms"]
+        ast_58b96031["count_support"]
+    end
     subgraph ba["ba.py"]
-        node_26c33f56["_f_kl_from_masses"]
-        node_9130046b["blahut_arimoto"]
-        node_d9e6f299["compute_f_kl"]
+        node_4a4a0f40["_f_kl_from_masses"]
+        node_575e676e["blahut_arimoto"]
+        node_5c131e50["compute_f_kl"]
+    end
+    subgraph jeffreys["jeffreys.py"]
+        ast_fcc7e3d2["jeffreys_bernoulli_pdf"]
+        ast_9d71ca70["jeffreys_bernoulli_cdf"]
     end
     subgraph likelihood["likelihood.py"]
-        node_a6cf55fa["binomial_likelihood"]
-        node_737b4a31["binomial_log_likelihood"]
+        node_5f744e2d["binomial_likelihood"]
+        node_5d3043e9["binomial_log_likelihood"]
     end
     subgraph prior["prior.py"]
-        node_64a45e98["GridPrior.__init__"]
-        node_6712a076["GridPrior.updated"]
+        node_95457e4e["GridPrior.__init__"]
     end
-    node_9130046b --> node_26c33f56
-    node_9130046b --> node_64a45e98
-    node_d9e6f299 --> node_26c33f56
-    node_a6cf55fa --> node_737b4a31
-    node_6712a076 --> node_64a45e98
+    node_575e676e --> node_4a4a0f40
+    node_575e676e --> node_95457e4e
+    node_5c131e50 --> node_4a4a0f40
+    node_5f744e2d --> node_5d3043e9
 ```
 
 ## Data flow through the BA iteration
@@ -132,8 +140,10 @@ implementation, not after.
 - **DD4 — `BAResult` dataclass layout.** Spec §3.4 returns
   `(p, I_τ, f_KL_i)`; the implementation returns a frozen dataclass
   with `prior`, `mi`, `f_kl`, `mi_history`, `n_iters`, `converged`.
-  `mi_history` is the inner-loop snapshot of `I_τ` per iteration
-  (consumed by T6's monotonicity and endpoint-pinning checks);
+  `mi_history` is the inner-loop snapshot of `I_τ` per iteration,
+  with length `n_iters + 1` on convergence and `n_iters + 2` on
+  `tau_max` exhaustion (the extra entry is the recompute appended by
+  the `for/else` branch — see DD6);
   `n_iters` and `converged` are diagnostic fields used by the eye
   test and the convergence figure script.
 
@@ -161,6 +171,24 @@ implementation, not after.
   loop (e.g. the T6 helper that computes MI under the uniform
   prior). Strict-protocol-only callers can construct
   `GridPrior(theta_grid, np.full_like(theta_grid, 1/n_θ))`.
+
+- **DD8 — Default α = 2.0 (overrelaxation).** Spec §3.4 originally
+  stated `α = 1.5` as a mid-range value from the empirical literature
+  (Vontobel 2003). Run 3 in `experiments/000-static-fig1/CODEGEN_LOG.md`
+  found `α = 2.0` gave materially faster convergence on the Bernoulli
+  channel; the line-search fallback (DD3) prevents any overshoot from
+  decreasing MI. The spec default has been updated to `α = 2.0` in
+  lockstep (see revision log 2026-05-19).
+
+- **DD9 — `Prior.updated()` not declared; BA update owned by `blahut_arimoto`.**
+  Spec §3.3 drafted a per-subclass `updated()` method as the hook the BA
+  loop would drive. For `GridPrior`, the loop requires direct access to
+  `log_p` arrays, line-search state, and the MI history that do not fit
+  through a callable interface. `updated()` has therefore been removed
+  from both the `Prior` protocol and `GridPrior`; the update logic lives
+  in `blahut_arimoto`. The method will be reintroduced for future prior
+  types (e.g. `AtomicPrior`) where the update step is self-contained and
+  can plug into a shared loop driver.
 
 ## Testing notes
 

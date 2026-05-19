@@ -53,6 +53,8 @@ otherwise. Mention the contract in the docstring.
 
 > M: easy and doesn't modify existing code. should do it.
 
+> C: Adding positivity, finiteness, and normalisation checks to `blahut_arimoto`'s `init` arg (strictly positive + normalised, since user-supplied inits must be valid priors). Adding non-negativity, finiteness, and normalisation checks to `GridPrior.__init__` (non-negative rather than strictly positive — BA legitimately produces `exp(log_p) = 0.0` via float64 underflow for cells far from atoms). Both raise `ValueError`. Updating the `init` arg docstring to state the contract. F10's `GridPrior.__init__` validation is handled jointly here.
+
 ---
 
 ### F2: `BAResult.n_iters` and the `mi_history` length comment are off-by-one on `tau_max` exhaustion [severity: low]
@@ -81,6 +83,8 @@ field comment to match.
 **Touches**: code
 
 > M: certainly don't drop the recompute-append. I'm not sure we want to make any change to the code here, sounds like it would break something. The comment should change though.
+
+> C: Agreed — no code change. Fixing the `mi_history` field comment in `BAResult` to state `len = n_iters+1` normally, `n_iters+2` on `tau_max` exhaustion, cross-referencing DD6. `converged` field comment updated in lockstep to name the Csiszár gap rather than `|ΔI|`.
 
 ---
 
@@ -111,6 +115,8 @@ inside `blahut_arimoto` and pass it into `_f_kl_from_masses` alongside
 
 > M: this seems like a major performance sink. We should certainly change it according to the suggestion if you don't think it will break something.
 
+> C: Won't break anything — purely internal. Precomputing `P = np.exp(log_likelihood)` once in `blahut_arimoto` and threading it into `_f_kl_from_masses` as a third parameter. Private signature change only; public `compute_f_kl` interface unchanged (it computes P before the single call).
+
 ---
 
 ### F4: spec default `α = 1.5` no longer matches code default `α = 2.0` [severity: medium] [tag: spec-implication]
@@ -137,6 +143,8 @@ prose already implies α > 1; one of the two has to give.
 
 > M: this sounds like the thing to update is the spec. 
 
+> C: Updating spec §3.4 defaults line from `α = 1.5` to `α = 2.0` (changed text marked red), adding a revision log entry dated 2026-05-19, and flipping §3 status to `draft`. DD8 added to README (see F6 below).
+
 ---
 
 ### F5: `eps_i` docstring describes the spec criterion, not the implemented Csiszár-gap criterion [severity: low]
@@ -162,6 +170,8 @@ describe Csiszár's gap, and cross-reference DD3 in the README.
 
 > M: yes update the docstring
 
+> C: Rewriting the `eps_i` parameter docstring in `blahut_arimoto` to describe the Csiszár gap criterion and cross-reference DD3. Also updating the `eps_i` line in the Args section to add the default value (F11 covers all kwarg defaults jointly).
+
 ---
 
 ### F6: README design decisions list does not document the `α = 2.0` choice [severity: low]
@@ -185,6 +195,8 @@ F4.
 
 > M: add this
 
+> C: Adding DD8 — "Default α = 2.0 (overrelaxation)" — to the README design decisions list, citing Run 3 in the codegen log and the line-search fallback. Paired with the spec update in F4.
+
 ---
 
 ### F7: README design decisions claim `mi_history` is `I_τ` per iteration; on exhaustion it has one extra entry [severity: low]
@@ -207,6 +219,8 @@ field comment in `BAResult` in lockstep.
 **Touches**: docs (and the inline field comment in `ba.py`)
 
 > M: make the doc and comment consistent with what the code does
+
+> C: Amending DD4 in README to note the extra `mi_history` entry on `tau_max` exhaustion (cross-referencing DD6). `BAResult.mi_history` field comment fixed in lockstep (covered under F2 above).
 
 ---
 
@@ -234,6 +248,8 @@ intra-package edges still appear.
 **Touches**: docs
 
 > M: yeah the call graph was kinda fishy, I waved it through as a placeholder mostly, but I shouldn't have, it should have real information. Let's try to make it more complete
+
+> C: Extending `_make_call_graph.py` with an AST-based symbol-discovery pass: modules that code2flow produces zero nodes for (like `atoms.py`, whose functions have only instance-method calls to `prior.support()`/`prior.masses()`) still appear as subgraphs with their public top-level functions as nodes. Adding a note to the README call-graph preamble about this. Regenerating the call graph block after both this change and the F9 removal of `GridPrior.updated`.
 
 ---
 
@@ -269,6 +285,8 @@ because the discrepancy is invisible to anyone reading the docs.
 
 > M: this has the potential to bite into asses later. Can the specified prior abstraction be saved so that future implementation can plug into it coherently? If not, we should just remove the updated() function, and at least be clear about that having to happen in the BA loop instead
 
+> C: Cannot be saved for `GridPrior` cheaply — the BA loop requires direct access to `log_p` arrays, line-search state, and history bookkeeping that do not fit through the `updated()` callable interface. Removing `updated()` from both the `Prior` protocol and `GridPrior`. Updating the `prior.py` module docstring to note that the BA update is owned by `blahut_arimoto`; `updated()` is reserved for future prior types (e.g. `AtomicPrior`) where the update step is self-contained and pluggable. Adding a note to the README that the `Prior` protocol no longer declares `updated()` and explaining the architectural reason.
+
 ---
 
 ### F10: `GridPrior.__init__` does not enforce the documented "sums to 1" invariant [severity: low]
@@ -295,6 +313,8 @@ concern (it isn't, at `N_θ ≤ 10000`).
 
 > M: this check should be added
 
+> C: Handled jointly with F1 — positivity and normalisation validation added to `GridPrior.__init__`.
+
 ---
 
 ### F11: Default `α` is not documented in the BA docstring's "Args" section [severity: low]
@@ -315,6 +335,8 @@ docstring, especially `alpha`, `tau_max`, and `eps_i`.
 **Touches**: code (docstring)
 
 > M: add this to the docstring
+
+> C: Adding default values to all kwarg entries in the `blahut_arimoto` docstring Args section (`alpha`, `eps_i`, `tau_min`, `tau_max`).
 
 ---
 

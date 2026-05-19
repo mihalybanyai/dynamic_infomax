@@ -6,7 +6,7 @@
 | Generative model | reviewed | 170526 |
 | 1. Mathematical statement | reviewed | 170526 |
 | 2. Why this objective | reviewed | 170526 |
-| 3. Computational specification | reviewed | 180526 |
+| 3. Computational specification | draft | 190526 |
 | 4. Test suite | reviewed | 180526 |
 | 5. Report | reviewed | 170526 |
 | 6. Layout | reviewed | 170526 |
@@ -351,12 +351,14 @@ return p, I_τ, f_KL_i
 The BA update is carried out in log-space (`log_p_new = α · f_KL + log_p`,
 normalised via `logsumexp`) per §3.2's stability convention.
 
-Defaults: `α = 1.5`, `τ_min = 10`, `τ_max = 500_000`, `ε_I = 1e-12` (in
-nats). The `α = 1.5` value is mid-range from the empirical literature;
-the line-search fallback guarantees `α` never *hurts*. With `α = 1` the
-algorithm reduces to vanilla BA. The increased `τ_max` and tighter
-`ε_I` come from the option-2 trial recorded in the codegen log; they
-are required for T1's 1e-6 mass tolerance and for T10's exhaustion
+Defaults: <span style="color:red">`α = 2.0`</span>, `τ_min = 10`, `τ_max = 500_000`, `ε_I = 1e-12` (in
+nats). <span style="color:red">The `α = 2.0` default was established empirically in Run 3 of the
+codegen log (see DD8 in `docs/000-static-infomax-fig1/README.md`); the original
+spec value of `1.5` was mid-range from the empirical literature but converged
+more slowly on the Bernoulli channel.</span> The line-search fallback guarantees `α`
+never *hurts*. With `α = 1` the algorithm reduces to vanilla BA. The increased
+`τ_max` and tighter `ε_I` come from the option-2 trial recorded in the codegen
+log; they are required for T1's 1e-6 mass tolerance and for T10's exhaustion
 case to consistently terminate.
 
 ### 3.5 Atom extraction
@@ -897,3 +899,14 @@ the lab-meeting audience should see us reasoning about live.
   §3 and §9 flipped to `draft`. Code change in `src/infomax/ba.py`;
   trial outcome to be recorded in
   `experiments/000-static-fig1/CODEGEN_LOG.md`.
+
+- **2026-05-19 — Implementation red-team resolution** (§3.4). Processing
+  findings from `docs/000-static-infomax-fig1/redteam-impl.md`.
+
+  - **[Correction]** §3.4. Default `α` updated from `1.5` to `2.0` to
+    match the code default established in Run 3 of the codegen log. The
+    `1.5` value was never tested; Run 3 chose `2.0` empirically and the
+    spec was not updated in lockstep. A DD8 entry in
+    `docs/000-static-infomax-fig1/README.md` documents the choice.
+
+  §3 flipped to `draft`.

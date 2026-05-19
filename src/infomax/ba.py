@@ -22,13 +22,13 @@ class BAResult:
     prior: GridPrior
     mi: float                  # achieved MI in nats
     f_kl: np.ndarray           # f_KL(theta_i; prior), shape (n_theta,)
-    mi_history: np.ndarray     # I_tau for tau = 0, 1, ..., n_iters; for T6
+    mi_history: np.ndarray     # I_tau per iter; len = n_iters+1 normally, n_iters+2 on tau_max exhaustion (DD6); for T6
     n_iters: int               # iterations taken
-    converged: bool            # whether |I_{tau+1} - I_tau| < eps_I within tau_max
+    converged: bool            # whether Csiszar gap max(f_kl) - mi < eps_i within tau_max
 
 
 def _f_kl_from_masses(
-    masses: np.ndarray, log_likelihood: np.ndarray
+    masses: np.ndarray, log_likelihood: np.ndarray, P: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray, float]:
     """Return (log_p_x, f_KL_i, I_τ) for a prior of given masses.
 
@@ -42,8 +42,10 @@ def _f_kl_from_masses(
     normalised masses with full support this is numerically clean, and it
     matches the per-bit arithmetic the test's independent recomputation
     uses (T10 demands 1e-12 agreement).
+
+    `P` = exp(log_likelihood) is precomputed by the caller and passed in
+    to avoid recomputing it on every iteration of the BA loop.
     """
-    P = np.exp(log_likelihood)
     p_x = masses @ P
     log_p_x = np.log(p_x)
     f_kl = np.einsum("ix,ix->i", P, log_likelihood - log_p_x)
@@ -75,14 +77,18 @@ def blahut_arimoto(
         theta_grid: cell-centred grid, shape (n_theta,); used to construct
             the returned `GridPrior`.
         init: optional initial prior over the grid; strictly positive,
-            normalised, shape (n_theta,). `None` ⇒ uniform.
-        alpha: overrelaxation step-size per spec §3.4. `α = 1` is vanilla
-            BA (monotone, slow); `α > 1` accelerates near multi-atom
-            optima. Steps that would decrease MI fall back to `α = 1`
-            so monotonicity (T6) is preserved.
-        eps_i: convergence tolerance on |I_{tau+1} - I_tau| in nats.
-        tau_min: minimum iterations before checking convergence.
-        tau_max: hard iteration cap.
+            normalised, shape (n_theta,). `None` ⇒ uniform. Raises
+            `ValueError` if not finite, strictly positive, and normalised
+            (sum within 1e-8 of 1).
+        alpha: overrelaxation step-size per spec §3.4 (default 2.0). `α = 1`
+            is vanilla BA (monotone, slow); `α > 1` accelerates near
+            multi-atom optima. Steps that would decrease MI fall back to
+            `α = 1` so monotonicity (T6) is preserved.
+        eps_i: convergence tolerance on the Csiszar gap max_i(f_KL_i) − I_τ
+            in nats (default 1e-12). See DD3 in docs/ for why this is
+            stricter than the spec's |ΔI| criterion.
+        tau_min: minimum iterations before checking convergence (default 10).
+        tau_max: hard iteration cap (default 500_000).
 
     Returns:
         BAResult with the converged prior, achieved MI in nats, the final
@@ -101,6 +107,13 @@ def blahut_arimoto(
             raise ValueError(
                 f"init shape {p.shape} does not match grid {(n_theta,)}"
             )
+        if not (np.isfinite(p).all() and np.all(p > 0)):
+            raise ValueError("init must be strictly positive and finite")
+        if abs(p.sum() - 1.0) > 1e-8:
+            raise ValueError(
+                f"init must sum to 1 within 1e-8 (got {p.sum():.6g})"
+            )
+    P = np.exp(log_likelihood)  # precomputed once; passed into _f_kl_from_masses
     log_p = np.log(p)
 
     history: list[float] = []
@@ -118,7 +131,7 @@ def blahut_arimoto(
     # the spec's looser criterion is a candidate for a follow-up
     # refinement.
     for tau in range(tau_max + 1):
-        _, f_kl, mi = _f_kl_from_masses(p, log_likelihood)
+        _, f_kl, mi = _f_kl_from_masses(p, log_likelihood, P)
         history.append(mi)
         csiszar_gap = float(np.max(f_kl)) - mi
         if tau >= tau_min and csiszar_gap < eps_i:
@@ -132,7 +145,7 @@ def blahut_arimoto(
         log_p_try = log_p_try - logsumexp(log_p_try)
         if alpha != 1.0:
             p_try = np.exp(log_p_try)
-            _, _, mi_try = _f_kl_from_masses(p_try, log_likelihood)
+            _, _, mi_try = _f_kl_from_masses(p_try, log_likelihood, P)
             if mi_try < mi:
                 log_p_try = f_kl + log_p
                 log_p_try = log_p_try - logsumexp(log_p_try)
@@ -143,7 +156,7 @@ def blahut_arimoto(
         # above advanced the prior past the (f_kl, mi) we appended; recompute
         # so the returned (prior, mi, f_kl, history[-1]) are mutually
         # consistent and T6/T10 still hold.
-        _, f_kl, mi = _f_kl_from_masses(p, log_likelihood)
+        _, f_kl, mi = _f_kl_from_masses(p, log_likelihood, P)
         history.append(mi)
         tau = tau_max
 
@@ -164,5 +177,6 @@ def compute_f_kl(prior: GridPrior, log_likelihood: np.ndarray) -> np.ndarray:
     (f_KL = MI on support, < MI off support) is asserted directly in
     test T2.
     """
-    _, f_kl, _ = _f_kl_from_masses(prior.masses(), log_likelihood)
+    P = np.exp(log_likelihood)
+    _, f_kl, _ = _f_kl_from_masses(prior.masses(), log_likelihood, P)
     return f_kl
