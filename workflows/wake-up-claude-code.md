@@ -26,6 +26,8 @@ stale" below).
 ## The prompt
 
 ```
+First make sure that you are an Opus 4.7 instance. If not, stop and let me know.
+
 Continuing work on dynamic_infomax. Read in order:
 
 1. AGENTS.md — current conventions for this project.
