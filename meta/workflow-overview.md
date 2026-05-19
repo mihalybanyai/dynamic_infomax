@@ -1,173 +1,218 @@
-# Workflow overview
+# Workflow structure
 
-> Bird's-eye view of how artifacts flow through this project, and
-> which agent (human, Claude Code, sub-agent) is responsible at each
-> stage. Read this if you're new to the project, returning after a
-> break, or wondering where a given task fits in the larger shape.
+> Abstract diagrams of the project's workflow patterns. Companion to
+> `meta/workflow-overview.md`, which shows the concrete impl phase in
+> full detail. This file answers the prior question — "what *kind* of
+> process is this?" — at the level that generalises across all four
+> phases.
 
-The workflow is **under construction.** Sections shown with dashed
-borders below are forthcoming; they reflect structural intent, not
-implemented procedure.
+The project's work happens in four phases (spec, tests,
+implementation, result). Each phase runs a variant of a single
+cycle: **inputs → generate → review → resolve**, repeated until no
+further changes are needed. The red-team is a structurally similar
+cycle that enters at *review* rather than *generate*. The four
+diagrams below show, in order: the phases, the cycle, the red-team
+variant, and the table that maps the abstract cycle onto each
+phase's concrete artifacts.
 
-## The diagram
+## 1. The four phases
+
+The project as a whole is a pipeline from notes to results, with
+each phase consuming the previous phase's stable output and
+producing its own.
 
 ```mermaid
-flowchart TD
+flowchart LR
+    classDef phase fill:#f8f8f8,stroke:#333,color:#000
+    classDef future fill:#f8f8f8,stroke:#999,color:#666,stroke-dasharray: 4 2
+    classDef artifact fill:none,stroke:none,color:#555,font-style:italic
 
-    subgraph HUMAN["Human"]
-        direction TB
-        H_write[Write/refine spec<br/>section by section]
-        H_review_spec[Review spec sections<br/>flip draft → reviewed]
-        H_annotate_spec_rt["Annotate spec redteam<br/>> M: / > M?: / dismiss"]
-        H_review_tests[Review derived tests<br/>+ property-to-test table]
-        H_annotate_tests_rt["Annotate tests redteam<br/>> M: / > M?: / dismiss"]
-        H_eye_test[Inspect eye-test figure<br/>approve or reject]
-        H_review_impl[Review implementation]
-        H_annotate_impl_rt[/"Annotate impl redteam<br/>(forthcoming)"/]
-        H_annotate_result_rt[/"Annotate result redteam<br/>(forthcoming)"/]
-    end
+    P1[Spec phase]
+    P2[Tests phase]
+    P3[Impl phase]
+    P4[Result phase]
 
-    subgraph CODE["Claude Code (main)"]
-        direction TB
-        C_draft_spec[Draft spec sections<br/>flip back to draft on revision]
-        C_derive_tests[Derive test suite<br/>+ eye-test file]
-        C_apply_spec_fixes["Apply spec redteam fixes<br/>(stage 3 of workflow)"]
-        C_apply_test_fixes["Apply test redteam fixes<br/>regenerate tests, update spec"]
-        C_implement[Write implementation]
-        C_apply_impl_fixes[/"Apply impl redteam fixes<br/>(forthcoming)"/]
-        C_run_full_suite[Run full test suite]
-    end
+    A1[/spec/]
+    A2[/spec + tests/]
+    A3[/spec + tests + code + docs/]
+    A4[/spec + tests + code + docs + result/]
 
-    subgraph SUB["Claude sub-agent (fresh context)"]
-        direction TB
-        S_redteam_spec[Red-team spec<br/>find math errors, drift, gaps]
-        S_redteam_tests[Red-team tests<br/>find coverage gaps, vacuous tests]
-        S_redteam_impl[/"Red-team impl<br/>(forthcoming)"/]
-        S_redteam_result[/"Red-team result<br/>(forthcoming)"/]
-        S_explain_math[Calibrated math explainer<br/>triggered by > M?:]
-    end
+    P1 --> A1 --> P2 --> A2 --> P3 --> A3 --> P4 --> A4
 
-    H_write --> C_draft_spec
-    C_draft_spec --> H_review_spec
-    H_review_spec -->|all sections reviewed| S_redteam_spec
-    S_redteam_spec --> H_annotate_spec_rt
-    H_annotate_spec_rt --> C_apply_spec_fixes
-    C_apply_spec_fixes --> H_review_spec
-
-    H_review_spec -->|spec stable<br/>post red-team| C_derive_tests
-    C_derive_tests --> H_review_tests
-    H_review_tests -->|tests complete| S_redteam_tests
-    S_redteam_tests --> H_annotate_tests_rt
-    H_annotate_tests_rt --> C_apply_test_fixes
-    C_apply_test_fixes --> H_review_tests
-
-    H_review_tests -->|tests stable<br/>post red-team| C_implement
-    C_implement --> H_review_impl
-    H_review_impl -->|impl drafted| S_redteam_impl
-    S_redteam_impl --> H_annotate_impl_rt
-    H_annotate_impl_rt --> C_apply_impl_fixes
-    C_apply_impl_fixes --> H_eye_test
-
-    H_eye_test -->|approved| C_run_full_suite
-    H_eye_test -->|rejected| C_implement
-    C_run_full_suite --> S_redteam_result
-    S_redteam_result --> H_annotate_result_rt
-
-    H_annotate_spec_rt -.->|"> M?: raised"| S_explain_math
-    H_annotate_tests_rt -.->|"> M?: raised"| S_explain_math
-    H_annotate_impl_rt -.->|"> M?: raised"| S_explain_math
-    S_explain_math -.->|resolves to > M:| H_annotate_spec_rt
-    S_explain_math -.->|resolves to > M:| H_annotate_tests_rt
-    S_explain_math -.->|resolves to > M:| H_annotate_impl_rt
-
-    classDef forthcoming stroke-dasharray: 5 5,opacity:0.7
-    class H_annotate_impl_rt,H_annotate_result_rt,C_apply_impl_fixes,S_redteam_impl,S_redteam_result forthcoming
-
-    classDef humanNode fill:#fef3c7,stroke:#b45309,color:#000
-    class H_write,H_review_spec,H_annotate_spec_rt,H_review_tests,H_annotate_tests_rt,H_eye_test,H_review_impl,H_annotate_impl_rt,H_annotate_result_rt humanNode
-
-    classDef codeNode fill:#dbeafe,stroke:#1e40af,color:#000
-    class C_draft_spec,C_derive_tests,C_apply_spec_fixes,C_apply_test_fixes,C_implement,C_apply_impl_fixes,C_run_full_suite codeNode
-
-    classDef subNode fill:#ede9fe,stroke:#6d28d9,color:#000
-    class S_redteam_spec,S_redteam_tests,S_redteam_impl,S_redteam_result,S_explain_math subNode
-
-    linkStyle default stroke-width:2px
+    class P1,P2,P3 phase
+    class P4 future
+    class A1,A2,A3,A4 artifact
 ```
 
-## How to read it
+Each phase's output is the *cumulative* state of the repository
+after that phase, not just the new artifact. This is the
+accumulation property that `workflow-overview.md` makes concrete
+for the impl phase: nothing is intermediate, every phase adds to
+the durable record. The result phase is dashed because it doesn't
+yet have a workflow file — its design space is anchored by
+diagram 4 below.
 
-Three lanes for the three agents: **human** (amber), **Claude Code
-main agent** (blue), **Claude sub-agent with fresh context**
-(purple). An artifact's home lane is the agent responsible for it
-at that stage; arrows cross lanes when responsibility shifts.
+## 2. The generic cycle
 
-Solid arrows are the primary flow. Dashed arrows show the
-math-explainer side-cycle: when the human raises a `> M?:`
-annotation on a red-team finding (meaning "I don't yet command this
-math well enough to evaluate the finding"), the sub-agent produces
-a calibrated explanation, and the cycle resolves when the human can
-annotate `> M:` (a substantive decision) in good conscience.
+Every phase instantiates this cycle. The verbs are deliberately
+abstract; diagram 4 shows what each one becomes in each phase.
 
-Dashed-bordered nodes are forthcoming. The implementation and
-result red-team passes follow the same structural pattern as the
-spec and test red-teams but haven't been exercised yet.
+```mermaid
+flowchart LR
+    classDef step fill:#f8f8f8,stroke:#333,color:#000
+    classDef decision fill:#fff4cc,stroke:#b8860b,color:#000
+    classDef terminal fill:#d5e8d4,stroke:#1f4e79,color:#000
+    classDef upstream fill:#fadbd8,stroke:#922b21,color:#000
 
-## What's load-bearing
+    IN([inputs])
+    G[generate]
+    R[review]
+    D{resolve<br/>each finding}
+    A[apply]
+    DI[dismiss]
+    UP[(route<br/>upstream)]
+    DONE([done])
 
-Three structural choices worth naming, since they're not obvious
-from the diagram alone:
+    IN --> G --> R --> D
+    D -- apply --> A --> G
+    D -- dismiss --> DI --> R2{any<br/>findings<br/>left?}
+    D -- route --> UP
+    R2 -- yes --> D
+    R2 -- no, all clear --> DONE
+    R -. no findings .-> DONE
 
-**Status flows asymmetrically.** Only Claude Code flips section
-status *backwards* (`reviewed → draft`) on revision; only the human
-flips it *forwards* (`draft → reviewed`) on re-review. This
-prevents the obvious failure mode where Code self-certifies that
-its own edits are reviewed.
+    class IN,DONE terminal
+    class G,R,A,DI step
+    class D,R2 decision
+    class UP upstream
+```
 
-**Sub-agent context isolation is the point.** The red-team passes
-exist because a fresh sub-agent without the main agent's anchoring
-will see things the main agent won't. Collapsing the sub-agent
-lane into the Code lane would erase the reason red-team works.
+The three structural features worth seeing here:
 
-**The human is on every closure.** Every loop in the diagram routes
-through the human lane. This is intentional, not vestigial: the
-project's value proposition is auditable scientific work, and
-auditability requires that judgement-bearing transitions are made
-by a person who can be questioned about them.
+- **The loop.** `apply → generate` is the cycle's heartbeat. The
+  cycle ends when a review pass surfaces no findings.
+- **Three resolutions per finding.** Apply (re-enter the cycle),
+  dismiss (record reason, finding closed), or route upstream
+  (this phase can't fix it; the relevant earlier-phase workflow
+  picks it up). The routing arrow is what keeps the cycle
+  honest — without it, a finding that doesn't belong here would
+  either be force-fixed (wrong) or silently dropped (worse).
+- **No "always proceed" arrow.** The cycle continues until no
+  findings remain. Exiting the cycle prematurely is not a
+  shortcut available in the abstract pattern, even though
+  individual phases may have additional gates (eye-test approval,
+  human re-review) layered on top.
 
-## What's not in the diagram
+## 3. The red-team cycle
 
-- **Chat-Claude.** Design conversations (including the one that
-  produced this document) happen alongside the workflow but aren't
-  part of the artifact flow. The audit trail of those conversations
-  lives in `transcripts/`.
-- **Git operations.** Commits happen at sensible boundaries; the
-  diagram is silent on this because git is everywhere and showing
-  it would dilute the workflow-specific content.
-- **The eye test specification step.** The eye test is *specified*
-  in the spec (where it lives as a subsection) and *executed* in
-  the diagram (the `Inspect eye-test figure` node). The specifying
-  is folded into "Draft spec sections" rather than getting its own
-  node.
+A red-team is the same cycle with a different entry point: an
+artifact already exists, and a fresh-context reviewer enters
+the cycle directly at *review*. The first generate step is
+skipped; everything downstream is identical.
 
-## Related documents
+```mermaid
+flowchart LR
+    classDef step fill:#f8f8f8,stroke:#333,color:#000
+    classDef decision fill:#fff4cc,stroke:#b8860b,color:#000
+    classDef terminal fill:#d5e8d4,stroke:#1f4e79,color:#000
+    classDef upstream fill:#fadbd8,stroke:#922b21,color:#000
+    classDef entry fill:#e8d5e8,stroke:#7d3c98,color:#000
 
-- `AGENTS.md` — the project handbook, including the test-gates
-  convention this diagram visualises.
-- `skills/` — the procedures the agents follow at each stage.
-- `workflows/` — the orchestration prompts that trigger sessions
-  of the workflow.
-- `meta/workflow-issues.md` — the open and resolved questions
-  about how the workflow itself should evolve.
+    EXISTING([existing artifact])
+    SUB[red-team<br/>sub-agent]
+    R[review]
+    D{resolve<br/>each finding}
+    REGEN[regenerate]
+    DI[dismiss]
+    UP[(route<br/>upstream)]
+    DONE([done])
 
-## Maintenance
+    EXISTING --> SUB --> R --> D
+    D -- apply --> REGEN --> R
+    D -- dismiss --> DI --> R2{any<br/>findings<br/>left?}
+    D -- route --> UP
+    R2 -- yes --> D
+    R2 -- no, all clear --> DONE
+    R -. no findings .-> DONE
 
-The diagram is revised when the workflow changes structurally —
-new artifact type, new gate, new lane, removed step. Stylistic
-edits to skill files don't trigger a diagram revision. The trigger
-is "the diagram now misrepresents the workflow," judged by reading
-it cold.
+    class EXISTING,DONE terminal
+    class R,REGEN,DI step
+    class SUB entry
+    class D,R2 decision
+    class UP upstream
+```
 
+The differences from the generic cycle:
+
+- **Entry at review, not generate.** The red-team is invoked
+  *because* an artifact is finished; its job is to find what's
+  wrong with it. There is no initial generate step.
+- **The reviewer is a sub-agent**, not the human. This is the
+  load-bearing design feature: a fresh-context reviewer breaks
+  the anchoring bias the author's context carries. The human's
+  role moves to triage — annotating findings, deciding apply /
+  dismiss / route. Diagram 2's "review" step is human-led;
+  diagram 3's is sub-agent-led.
+- **Routing upstream is more common.** A red-team finding can
+  reveal that the *previous* phase's artifact was wrong, not
+  this one's. The impl red-team can route findings to the test
+  or spec red-team queue; the test red-team can route findings
+  to the spec red-team. The generic cycle has the routing arrow
+  too, but in the red-team it carries more traffic.
+
+## 4. How each phase specialises the cycle
+
+The table below maps the abstract verbs onto each phase's
+concrete artifacts and actions. Reading across a row gives the
+phase's full cycle; reading down a column shows what each
+abstract step looks like across phases.
+
+| Phase | Inputs | Generate | Review | Resolve |
+|---|---|---|---|---|
+| **Spec** | Project notes, references, prior specs | Write spec section-by-section, status `draft` | Human reads each section, flips status to `reviewed` or `needs-revision` | Revise section, re-flip to `draft`, log revision; or accept |
+| **Tests** | Reviewed spec | Write test file covering each "Properties to verify" entry | Human reviews tests against spec; property-to-test table is the checklist | Add / sharpen / drop tests; update property-to-test table |
+| **Impl** | Reviewed spec, red-teamed tests | Codegen file-by-file → eye-test figure → full suite → docs | Human approves eye-test figure; walks per-test results; reads docs | Edit code / spec / tests / eye-test definition / docs case by case; flip codegen log statuses; record decisions in testing notes |
+| **Result** | Reviewed spec + tests + code + docs (post-red-team) | *(forthcoming — likely: run experiment, produce figures, write result notes)* | *(likely: human inspects figures and conclusions against spec's claimed properties)* | *(likely: edit experiment config / re-run / revise result notes / route upstream if a claim doesn't hold)* |
+| **Spec red-team** | Reviewed spec | *(entry at review — no initial generate)* | Sub-agent reviews spec; produces redteam file | Annotate `> M:` / decide `> C:` / edit spec with red text + revision log + status flip back to draft |
+| **Tests red-team** | Reviewed spec + complete test file | *(entry at review)* | Sub-agent reviews tests against spec; produces redteam file | Annotate / decide; edit spec or tests or both; regenerate test file |
+| **Impl red-team** | Reviewed spec + passing tests + code + docs | *(entry at review)* | Sub-agent reviews code + docs against spec; produces redteam file | Annotate / decide; edit spec or code or docs or helper scripts; flip codegen-log files to pending-tests; re-run eye test + full suite; flip back to done |
+
+Three things this table makes visible that the diagrams alone
+don't:
+
+- **The result phase's missing rows are a design surface, not a
+  gap.** The italicised entries are best guesses; the actual
+  result workflow will refine them. Anchoring them here means
+  the design conversation has a starting point ("does 'review'
+  in the result phase really mean inspecting figures, or
+  something else?").
+- **Resolution always touches at least two artifacts.** The
+  resolve column never lists a single edit — it's always
+  "edit X and update Y," where Y is typically a log or status
+  table or revision entry. This is the accumulation property
+  showing up at the per-cycle level: every change leaves a
+  trace.
+- **Red-team phases are not extra phases; they're variants of
+  their parent phase's cycle.** The bottom three rows are
+  indented under their parents conceptually — the spec red-team
+  is the spec phase's cycle re-entered at review with a
+  sub-agent reviewer. Treating red-teams as separate phases
+  would suggest the project has seven phases, which is the
+  wrong mental model. It has four phases and three red-team
+  cycles, all instantiating the same abstract pattern.
+
+## Related
+
+- `meta/workflow-overview.md` — concrete detail diagram for the
+  impl phase. Where this file is a Rosetta stone, that one is a
+  reference manual for a single phase.
+- `workflows/implement-spec.md`,
+  `workflows/invoke-red-team-on-spec.md`,
+  `workflows/invoke-red-team-on-tests.md`,
+  `workflows/invoke-red-team-on-impl.md` — the concrete
+  workflows that instantiate the abstract cycles above.
+- `AGENTS.md` — the section that names the four phases and the
+  red-teaming convention this file abstracts.
 
 # The implementation and documentation phase
 
