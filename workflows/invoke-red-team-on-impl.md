@@ -298,17 +298,24 @@ the helper-script re-run, which produces the regenerated call graph
 or similar. Splitting them across commits would obscure the unit of
 change.
 
-## Stage 3d — Re-run the test suite one-by-one
+## Stage 3d — Re-run the eye test and the test suite
 
 Once stage 3c is complete, paste:
 
 ```
-Re-run the test suite one-by-one. After each test passes, edit the
-codegen log at experiments/<EXPERIMENT_ID>/CODEGEN_LOG.md with a
-table that states the commit hash that identifies the code version
-that last passed each test. If any test fails, come back to me
-with a report about that failure — do not attempt to fix it
-yourself. We'll decide jointly.
+First, re-run the eye test from
+experiments/<EXPERIMENT_ID>/CODEGEN_LOG.md (the test file named in
+the eye test status row). Show me where the regenerated figure
+went and flip the eye test row's status to `pending review`. Wait
+for my approval before continuing.
+
+Once I've confirmed the eye test still passes, flip the eye test
+row's status to `passed (<initial>, <date>)`, then re-run the
+full test suite one-by-one. After each test passes, edit
+experiments/<EXPERIMENT_ID>/CODEGEN_LOG.md with the commit hash
+that identifies the code version that last passed that test. If
+any test fails, come back to me with a report about that failure
+— do not attempt to fix it yourself. We'll decide jointly.
 
 Once all tests pass and the per-test hashes are updated, flip the
 status of every code file currently at `pending-tests` (set in
@@ -316,15 +323,23 @@ stage 3c) back to `done`. Then commit the changes together with a
 message referencing the redteam pass.
 ```
 
+The eye test runs first because it's the cheap human-judgement
+check: if the red-team edits broke something visually obvious, you
+want to catch that before walking the full suite. If the eye test
+fails on the rerun, the failure routes the same way as a test
+failure (see the test-failure branch below) — the rerun is paused,
+the cause is decided jointly, the fix is applied, and the rerun
+restarts from the eye test.
+
 The one-by-one rerun is intentional. A bulk rerun would tell you
 *that* something broke but not give you a per-test commit hash to
 bisect against. The `CODEGEN_LOG.md` per-test hash is the audit
 trail for which code version last verified each property; it lets
 future regressions be located precisely.
 
-If a test fails on the rerun, the failure is reported back and
-decided jointly. The failure can mean three things and the workflow
-does not pre-commit to which:
+If a test (eye test or full-suite test) fails on the rerun, the
+failure is reported back and decided jointly. The failure can mean
+three things and the workflow does not pre-commit to which:
 
 - The edit was wrong. Return to the relevant `> C:` and re-decide;
   the redteam file gets a follow-up `> M:` and `> C:` recording the
@@ -336,7 +351,9 @@ does not pre-commit to which:
   test red-team queue, same routing as during the original triage.
 
 Whichever branch, the resolution is recorded in the redteam file
-and the rerun is restarted from the failed test once the fix lands.
+and the rerun is restarted — from the eye test if it was the eye
+test that failed, or from the failed test if it was a full-suite
+test.
 
 ## Notes on red marking
 
@@ -376,7 +393,9 @@ The five stages produce, in order:
 3c. Code edits, doc edits, doc helper script edits, regenerated
    artifacts from those scripts, and modified code files flipped
    to status `pending-tests` in `CODEGEN_LOG.md`.
-3d. A test rerun with per-test commit hashes logged in
+3d. An eye-test rerun (when an eye test is defined for the
+    experiment) re-approved by the human, a full test suite rerun
+    with per-test commit hashes logged in
     `experiments/<EXPERIMENT_ID>/CODEGEN_LOG.md`, modified code
     files flipped back to status `done` once all tests pass, and
     a single commit bundling the revision.
