@@ -34,7 +34,7 @@ from infomax.likelihood import binomial_log_likelihood, cell_centred_grid
 DEFAULT_N_THETA: int = 1000
 """Headline grid resolution per spec §3.1."""
 
-M_SWEEP: tuple[int, ...] = (1, 2, 3, 4, 5, 10, 20, 50, 100)
+M_SWEEP: tuple[int, ...] = (1, 2, 5, 20, 100)
 """Sample budgets covered by the m-sweep per spec §3.6."""
 
 N_THETA_GRID_INVARIANCE: tuple[int, ...] = (200, 1000, 2000)

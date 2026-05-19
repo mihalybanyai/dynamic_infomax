@@ -182,3 +182,71 @@ All 85 tests now pass under the reconciled tolerances. Next step:
 spec-side and tests-side cleanup and the `docs/` write-up for the T4
 loosening (per the human's direction).
 
+### Run 5 — 2026-05-19, per-test provenance after implementation red-team edits
+
+Following the red-team-impl processing and the DD10 `M_SWEEP` reduction
+to `(1, 2, 5, 20, 100)`, all 53 tests are re-run individually to
+establish per-test provenance. The table below records the commit hash
+that produced the most recent passing run for each test. Future code
+changes should update affected rows.
+
+Code under test: BA with `P = exp(log_likelihood)` precomputed (F3),
+`init` validation (F1), `GridPrior.__init__` non-negativity + sum check
+(F10), `GridPrior.updated()` removed (F9), spec `α = 2.0` default (F4),
+README DD8/DD9/DD10 added.
+
+| Test | Last passing commit |
+|------|---------------------|
+| `test_t1_m1_closed_form` | 1f8339e |
+| `test_t2_fkl_flatness_on_support[m=1]` | 1f8339e |
+| `test_t2_fkl_flatness_on_support[m=2]` | 1f8339e |
+| `test_t2_fkl_flatness_on_support[m=5]` | 1f8339e |
+| `test_t2_fkl_flatness_on_support[m=20]` | 1f8339e |
+| `test_t2_fkl_flatness_on_support[m=100]` | 1f8339e |
+| `test_t2b_support_has_at_least_two_cells[m=1]` | 1f8339e |
+| `test_t2b_support_has_at_least_two_cells[m=2]` | 1f8339e |
+| `test_t2b_support_has_at_least_two_cells[m=5]` | 1f8339e |
+| `test_t2b_support_has_at_least_two_cells[m=20]` | 1f8339e |
+| `test_t2b_support_has_at_least_two_cells[m=100]` | 1f8339e |
+| `test_t2c_init_invariance[m=1]` | 1f8339e |
+| `test_t2c_init_invariance[m=2]` | 1f8339e |
+| `test_t2c_init_invariance[m=5]` | 1f8339e |
+| `test_t2c_init_invariance[m=20]` | 1f8339e |
+| `test_t2c_init_invariance[m=100]` | 1f8339e |
+| `test_t3_capacity_bound[m=1]` | 1f8339e |
+| `test_t3_capacity_bound[m=2]` | 1f8339e |
+| `test_t3_capacity_bound[m=5]` | 1f8339e |
+| `test_t3_capacity_bound[m=20]` | 1f8339e |
+| `test_t3_capacity_bound[m=100]` | 1f8339e |
+| `test_t3b_output_alphabet_bound[m=1]` | 1f8339e |
+| `test_t3b_output_alphabet_bound[m=2]` | 1f8339e |
+| `test_t3b_output_alphabet_bound[m=5]` | 1f8339e |
+| `test_t3b_output_alphabet_bound[m=20]` | 1f8339e |
+| `test_t3b_output_alphabet_bound[m=100]` | 1f8339e |
+| `test_t4_converges_to_jeffreys` | 1f8339e |
+| `test_t4b_atom_count_at_m100` | 1f8339e |
+| `test_t5_grid_invariance_of_atoms[1]` | 1f8339e |
+| `test_t5_grid_invariance_of_atoms[2]` | 1f8339e |
+| `test_t5_grid_invariance_of_atoms[5]` | 1f8339e |
+| `test_t5_grid_invariance_of_atoms[10]` | 1f8339e |
+| `test_t6_ba_monotonicity[m=1]` | 1f8339e |
+| `test_t6_ba_monotonicity[m=2]` | 1f8339e |
+| `test_t6_ba_monotonicity[m=5]` | 1f8339e |
+| `test_t6_ba_monotonicity[m=20]` | 1f8339e |
+| `test_t6_ba_monotonicity[m=100]` | 1f8339e |
+| `test_t7_degenerate_likelihood` | 1f8339e |
+| `test_t7b_degenerate_restores_uniform_from_perturbation` | 1f8339e |
+| `test_t8_reflection_symmetry[m=1]` | 1f8339e |
+| `test_t8_reflection_symmetry[m=2]` | 1f8339e |
+| `test_t8_reflection_symmetry[m=5]` | 1f8339e |
+| `test_t8_reflection_symmetry[m=20]` | 1f8339e |
+| `test_t8_reflection_symmetry[m=100]` | 1f8339e |
+| `test_t9_t1_continuum_scaling[100]` | 1f8339e |
+| `test_t9_t1_continuum_scaling[1000]` | 1f8339e |
+| `test_t9_t1_continuum_scaling[10000]` | 1f8339e |
+| `test_t10_mi_fkl_self_consistency[m=1]` | 1f8339e |
+| `test_t10_mi_fkl_self_consistency[m=2]` | 1f8339e |
+| `test_t10_mi_fkl_self_consistency[m=5]` | 1f8339e |
+| `test_t10_mi_fkl_self_consistency[m=20]` | 1f8339e |
+| `test_t10_mi_fkl_self_consistency[m=100]` | 1f8339e |
+| `test_t11_binomial_log_likelihood_matches_scipy` | 1f8339e |

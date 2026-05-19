@@ -190,6 +190,19 @@ implementation, not after.
   types (e.g. `AtomicPrior`) where the update step is self-contained and
   can plug into a shared loop driver.
 
+- **DD10 — Sparser `M_SWEEP` in the test suite.** The original
+  parametrised sweep `(1, 2, 3, 4, 5, 10, 20, 50, 100)` produced 85
+  tests and a wall-clock runtime that was excessive for routine
+  per-test provenance recording — neighbouring values (e.g. `m = 3`
+  vs `m = 4`, or `m = 20` vs `m = 50`) exercise the same code paths
+  with negligible additional coverage of the m-dependent behaviour.
+  `M_SWEEP` in `tests/test_000_static_infomax_fig1.py` has been
+  reduced to `(1, 2, 5, 20, 100)`: small (m=1, the closed form),
+  small-but-multi-atom (m=2), low-mid (m=5), mid-high (m=20),
+  high (m=100, the Mattingly Fig 1 target). Spec §3.6's qualitative
+  m-coverage requirement is preserved; what is dropped is redundant
+  fine-grained sampling. Test count drops from 85 to 53.
+
 ## Testing notes
 
 ### T4 — KS distance to Jeffreys at m=100, loosened from 0.05 to 0.15
