@@ -6,7 +6,7 @@
 | Generative model | reviewed | 170526 |
 | 1. Mathematical statement | reviewed | 170526 |
 | 2. Why this objective | reviewed | 170526 |
-| 3. Computational specification | draft | 190526 |
+| 3. Computational specification | reviewed | 190526 |
 | 4. Test suite | reviewed | 180526 |
 | 5. Report | reviewed | 170526 |
 | 6. Layout | reviewed | 170526 |
@@ -351,11 +351,11 @@ return p, I_τ, f_KL_i
 The BA update is carried out in log-space (`log_p_new = α · f_KL + log_p`,
 normalised via `logsumexp`) per §3.2's stability convention.
 
-Defaults: <span style="color:red">`α = 2.0`</span>, `τ_min = 10`, `τ_max = 500_000`, `ε_I = 1e-12` (in
-nats). <span style="color:red">The `α = 2.0` default was established empirically in Run 3 of the
+Defaults: `α = 2.0`, `τ_min = 10`, `τ_max = 500_000`, `ε_I = 1e-12` (in
+nats). The `α = 2.0` default was established empirically in Run 3 of the
 codegen log (see DD8 in `docs/000-static-infomax-fig1/README.md`); the original
 spec value of `1.5` was mid-range from the empirical literature but converged
-more slowly on the Bernoulli channel.</span> The line-search fallback guarantees `α`
+more slowly on the Bernoulli channel. The line-search fallback guarantees `α`
 never *hurts*. With `α = 1` the algorithm reduces to vanilla BA. The increased
 `τ_max` and tighter `ε_I` come from the option-2 trial recorded in the codegen
 log; they are required for T1's 1e-6 mass tolerance and for T10's exhaustion
