@@ -51,6 +51,8 @@ otherwise. Mention the contract in the docstring.
 
 **Touches**: code
 
+> M: easy and doesn't modify existing code. should do it.
+
 ---
 
 ### F2: `BAResult.n_iters` and the `mi_history` length comment are off-by-one on `tau_max` exhaustion [severity: low]
@@ -77,6 +79,8 @@ trailing iteration that already appended. Either way, update the
 field comment to match.
 
 **Touches**: code
+
+> M: certainly don't drop the recompute-append. I'm not sure we want to make any change to the code here, sounds like it would break something. The comment should change though.
 
 ---
 
@@ -105,6 +109,8 @@ inside `blahut_arimoto` and pass it into `_f_kl_from_masses` alongside
 
 **Touches**: code
 
+> M: this seems like a major performance sink. We should certainly change it according to the suggestion if you don't think it will break something.
+
 ---
 
 ### F4: spec default `α = 1.5` no longer matches code default `α = 2.0` [severity: medium] [tag: spec-implication]
@@ -129,6 +135,8 @@ prose already implies α > 1; one of the two has to give.
 
 **Touches**: both
 
+> M: this sounds like the thing to update is the spec. 
+
 ---
 
 ### F5: `eps_i` docstring describes the spec criterion, not the implemented Csiszár-gap criterion [severity: low]
@@ -152,6 +160,8 @@ describe Csiszár's gap, and cross-reference DD3 in the README.
 
 **Touches**: code (docstring)
 
+> M: yes update the docstring
+
 ---
 
 ### F6: README design decisions list does not document the `α = 2.0` choice [severity: low]
@@ -173,6 +183,8 @@ F4.
 
 **Touches**: docs
 
+> M: add this
+
 ---
 
 ### F7: README design decisions claim `mi_history` is `I_τ` per iteration; on exhaustion it has one extra entry [severity: low]
@@ -193,6 +205,8 @@ appended in the `tau_max`-exhaustion branch (see DD6)". Fix the inline
 field comment in `BAResult` in lockstep.
 
 **Touches**: docs (and the inline field comment in `ba.py`)
+
+> M: make the doc and comment consistent with what the code does
 
 ---
 
@@ -218,6 +232,8 @@ isolated nodes), and add a one-line note that nodes with no
 intra-package edges still appear.
 
 **Touches**: docs
+
+> M: yeah the call graph was kinda fishy, I waved it through as a placeholder mostly, but I shouldn't have, it should have real information. Let's try to make it more complete
 
 ---
 
@@ -251,6 +267,8 @@ because the discrepancy is invisible to anyone reading the docs.
 
 **Touches**: both
 
+> M: this has the potential to bite into asses later. Can the specified prior abstraction be saved so that future implementation can plug into it coherently? If not, we should just remove the updated() function, and at least be clear about that having to happen in the BA loop instead
+
 ---
 
 ### F10: `GridPrior.__init__` does not enforce the documented "sums to 1" invariant [severity: low]
@@ -275,6 +293,8 @@ concern (it isn't, at `N_θ ≤ 10000`).
 
 **Touches**: code
 
+> M: this check should be added
+
 ---
 
 ### F11: Default `α` is not documented in the BA docstring's "Args" section [severity: low]
@@ -293,6 +313,8 @@ defaults in the docstring (e.g. `alpha: overrelaxation step-size
 docstring, especially `alpha`, `tau_max`, and `eps_i`.
 
 **Touches**: code (docstring)
+
+> M: add this to the docstring
 
 ---
 
