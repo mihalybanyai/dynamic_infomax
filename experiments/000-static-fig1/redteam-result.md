@@ -35,6 +35,8 @@ arithmetic bugs.
 
 **Touches**: both
 
+> M: I actually like that the reproduction is not 1-to-1. it makes it more obvious that the implementation is general. so leave this as is
+
 ---
 
 ### F2: f_KL right-axis units (nats) inconsistent with title's MI* (bits) within each panel [severity: medium] [doc-inaccuracy]
@@ -46,6 +48,8 @@ arithmetic bugs.
 **What would resolve it**: Either plot `f_kl / log(2)` and the dashed line at `mi / log(2)` so the axis matches the title, or relabel the right axis "$f_{KL}(θ)$ (nats)" and add a parenthetical to the title like "$MI^* = 0.994$ bits = $0.689$ nats". The former is cleaner.
 
 **Touches**: code
+
+> M: it seems to me that we could just have every informational quantity in nats, and this ivolves just changing labels. true?
 
 ---
 
@@ -59,6 +63,8 @@ arithmetic bugs.
 
 **Touches**: code
 
+> M: not sure if this a genuine perf issue, as this is just the experiment code. If it saves less than 10s wall clock time in this experiment, leave it
+
 ---
 
 ### F4: m=1 atom-CDF KS-to-Jeffreys value (0.486) is reported as a data point but never explained [severity: low] [doc-omission]
@@ -70,6 +76,8 @@ arithmetic bugs.
 **What would resolve it**: One added sentence in §3 contrasting m=1 (BA converged, KS reflects K=2 being far from the continuum) with m=100 (BA not at strict-tolerance convergence, KS reflects super-atom + positioning).
 
 **Touches**: docs
+
+> M: add the explanation
 
 ---
 
@@ -83,6 +91,8 @@ arithmetic bugs.
 
 **Touches**: both
 
+> M: yeah just make a note of this in the report and that's it
+
 ---
 
 ### F6: Headline test results in §5 list only T1, T2, T4, T5, T6, T7 — six of twelve [severity: low] [doc-omission]
@@ -94,6 +104,8 @@ arithmetic bugs.
 **What would resolve it**: Add rows to §5 for T3/T3b (capacity bounds at every m, tolerance), T8 (symmetry tolerance achieved), T10 (MI/f_KL self-consistency tolerance achieved). T9 and T11 can be one line each.
 
 **Touches**: docs
+
+> M: we don't actually need to recapitualte the test suite in the report. so only the ones that have very direct relevance to something here should be mentioned. do you think the existing section should be modified in either positive or negative direction in this light?
 
 ---
 
@@ -107,6 +119,8 @@ arithmetic bugs.
 
 **Touches**: both
 
+> M: clarify this in the doc
+
 ---
 
 ### F8: m=1 row in the §4 table has K=2 but the report's panel commentary says "two atoms at the grid boundary, masses 0.5 each" — actually masses are 0.49999999992816 each [severity: low] [doc-omission]
@@ -118,6 +132,8 @@ arithmetic bugs.
 **What would resolve it**: Either round-trip the prose ("masses ≈ 0.5 each, within 1e-10") or leave it but reference the T1 tolerance in §5 as the formal claim.
 
 **Touches**: docs
+
+> M: dude c'mon. Ok, let's make note of the approximate equality using the curly equation sign
 
 ---
 
@@ -131,6 +147,8 @@ arithmetic bugs.
 
 **Touches**: both
 
+> M: good idea, let's do this
+
 ---
 
 ### F10: `K_upper` (T3) and `K` (extracted) are not both reported, so the report's K column is the extractor's K only [severity: low] [doc-omission]
@@ -142,6 +160,8 @@ arithmetic bugs.
 **What would resolve it**: Add a `K_upper` column to `results_table.json` and the §4 table; cite it once in §5 alongside T3.
 
 **Touches**: both
+
+> M: let's include this
 
 ---
 
@@ -155,6 +175,8 @@ arithmetic bugs.
 
 **Touches**: code
 
+> M: how much of a computational burden would this be? in either case there shouldn't be a mismatch between the spec and the code
+
 ---
 
 ### F12: `n` shadowing / off-by-one risk in `make_panels_figure` for `n_panels = len(panel_ms) + 1` vs. axes flattening [severity: low] [latent-risk]
@@ -166,6 +188,8 @@ arithmetic bugs.
 **What would resolve it**: `assert len(panel_ms) + 1 <= rows * cols` after the geometry is decided, or compute geometry as `cols = min(3, n); rows = int(np.ceil(n / cols))`.
 
 **Touches**: code
+
+> M: this is patently unreadable for me. does it has something to do with plot panel layouts?
 
 ---
 
@@ -179,6 +203,8 @@ arithmetic bugs.
 
 **Touches**: docs
 
+> M: yes, let's differentiate between the cell-centered and continuum options explicitly in text, and fix the lables
+
 ---
 
 ### F14: Status header references commit `1f8339e` but the current HEAD is `447bbee` [severity: low] [doc-inaccuracy]
@@ -190,6 +216,8 @@ arithmetic bugs.
 **What would resolve it**: Update the hash to `447bbee` (or generalise the wording to "the current HEAD" with a `git rev-parse HEAD` footnote). Better: have `run.py` write the current commit into `results_table.json`'s metadata and have the report read it.
 
 **Touches**: docs
+
+> M: ok so usually there will be legitimately multiple commits between the last test-passing code and the report. I don't think this is much of an issue, the commit hash is to identify the version of _the code_ that was used, regardless of version changes in any other file. what do you think would be the most informative?
 
 ---
 
