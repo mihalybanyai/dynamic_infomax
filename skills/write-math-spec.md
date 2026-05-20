@@ -44,9 +44,17 @@ to any particular tensor shape convention. It describes the math.
    - **Properties to verify** — what an implementation should satisfy. These
      become the test suite. Be specific: "the loss is invariant under
      permutation of the batch dimension" is good; "it should work" is not.
-     - **Eye test** - A figure (or small set of figures) whose qualitative features can be
-inspected by a human to confirm the implementation is roughly correct
-before the full quantitative test suite is run. 
+     - **Eye test** — A figure (or small set of figures) whose qualitative features can be
+       inspected by a human to confirm the implementation is roughly correct
+       before the full quantitative test suite is run.
+     - **Sweep design** — every choice the test code will need to make
+       about *what values are tested* is pinned here, not in the test
+       file. See "Sweep design" below.
+   - **Report** — what the experiment script (`experiments/NNN-*/run.py`)
+     will produce: figures, tables, files. The Report section is the
+     spec's contract with the experiment script: every choice the
+     script will make about *what to plot, at what density, with what
+     formatting* is pinned here. See "Report" below.
    - **Open questions** — anything you're unsure about. Mark with `[?]`.
    - **References** — papers, prior work. Use `[CITATION NEEDED]` if unsure.
    - **Revision log** — appended below as the spec is revised. See
@@ -216,6 +224,111 @@ A diagram earns its place when:
 A spec without a single diagram is a yellow flag: probabilistic content
 without a plate diagram is usually under-specified, and an algorithm
 without a flow diagram is often hiding a step.
+
+## Sweep design
+
+Any test that varies a quantity across runs — parameter sweeps, grid
+resolution sweeps, sample-size sweeps, seed sweeps — implicitly
+chooses *which values to test at*. Those choices are part of the
+spec's contract with the test code. If they live only in the test
+file, the spec cannot be reviewed against the property it actually
+asserts: a sparser sweep tests a weaker property than a dense one.
+
+Every property in "Properties to verify" that involves a sweep must
+state, in the spec:
+
+- **Variable swept** — name, in the notation of the Setup section.
+- **Values** — the explicit tuple (e.g. `m ∈ {1, 2, 5, 20, 100}`) or
+  a deterministic generator (e.g. "logarithmically spaced, 8 points,
+  from 1 to 100").
+- **Why this density** — one line. "Captures the small-m discrete
+  regime, the mid-range, and the asymptotic regime"; or "Mattingly
+  Fig 1 uses exactly these values"; or "denser than `{1, 10, 100}`
+  was needed to see the K(m) growth". The reason matters because it
+  is the criterion a reviewer applies when asking whether the sweep
+  is dense enough.
+- **Coverage relative to other sweeps in the spec** — if the
+  experiment script (§ Report) runs a denser or different sweep,
+  state explicitly that the test sweep is a subset, and why a
+  smaller subset suffices for the property.
+- **Randomness** — for any test that draws random values (perturbed
+  initialisations, random inputs), the seed and the distribution
+  parameters live in the spec, not the test file. "perturbation
+  drawn from `1 + 0.1 · N(0, 1)`, seed 20260518" is a complete
+  spec-side description; "a small random perturbation" is not.
+
+A sweep choice that the human collaborator did not explicitly make
+is an *auto-decision*. Auto-decisions are not forbidden — they are
+often fine — but they must be marked explicitly in the spec, e.g.
+`(auto-chosen by codegen; please confirm)`. The spec review then
+either ratifies them or sends them back. Codegen must not write a
+test file containing a sweep that has no corresponding entry in this
+subsection.
+
+The cost of skipping this subsection is exactly the failure mode
+that motivated it: a test passes, results land, and only retrospect
+reveals that the sweep was too sparse to detect the bug, or too
+dense to be worth the compute. Both are recoverable if the choice is
+visible; neither is if it is buried in the test file.
+
+## Report
+
+The Report section is the spec's contract with the experiment
+script (`experiments/NNN-short-name/run.py`). Its purpose is
+specifically to pin the choices that, if left implicit in the
+script, would force a future reviewer to read `run.py` to
+understand what the experiment measured. That set of choices is
+small and reasonably well-defined; the section should be too.
+
+What belongs in Report:
+
+- **Outputs.** A flat list naming each artefact the script
+  produces — figures, tables, the report file itself — with a
+  one-line description of content. Paths relative to
+  `experiments/NNN-*/`.
+
+- **Sweep coverage per output.** For each output, whether it uses
+  the full sweep defined in the spec or a subset. If a subset,
+  *which* subset and *why* a smaller one suffices. The default is
+  that the experiment uses the same sweep as the spec — naming a
+  subset is the deviation that needs justification.
+
+- **Auxiliary grids and reference curves.** Any evaluation grid,
+  query grid, or analytic reference curve that the script uses
+  *beyond* the swept variable. Density and bounds. (For a CDF
+  comparison: the query grid size. For an analytic limit overlay:
+  what is being plotted and what range.) These count because they
+  determine what comparison is actually being made; they are spec
+  decisions, not styling decisions.
+
+- **Table schema.** For each persisted table (`results_table.json`
+  or similar): the list of columns, one row's worth of meaning,
+  and — importantly — *what is computed but not persisted*. The
+  decision to drop bulky intermediates from a saved table is a
+  spec decision because it determines what later analysis can
+  re-derive without re-running the experiment.
+
+What does not belong in Report:
+
+- Figure dimensions, DPI, layout grids, marker sizes, colour
+  choices, axis-tick formatting, legend placement, alpha values.
+  These are properties of the script, not of the experiment.
+- Reproductions of figure captions, or word-by-word descriptions
+  of what a panel "shows". A one-line "what is being plotted"
+  description per figure is enough; specifics belong in the
+  script and in `REPORT.md` itself.
+- File-format minutiae (PNG vs SVG, indent level of the JSON)
+  unless a specific choice is load-bearing for downstream use.
+
+The test of whether a Report subsection is at the right level: a
+reviewer reading it should be able to tell whether the
+*experiment* is well-designed — sweep wide enough, density of any
+secondary grid fine enough, table columns sufficient — without
+forming any opinion about whether the *figures will look nice*.
+
+Auto-decisions in the Report section are flagged the same way as
+in Sweep design: `(auto-chosen by codegen; please confirm)`. The
+same review-and-ratify rule applies.
 
 ## Revision log
 

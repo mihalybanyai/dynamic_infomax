@@ -420,6 +420,90 @@ faster than any KS-distance check.
   test is approved (unless the team actively decides that running the
   full suite is the most useful debugging step).
 
+### Sweep design
+ 
+The test suite below makes choices about which values to sweep
+over: m, N_θ, seeds, query-grid resolutions. Those choices live
+here, not in `tests/test_000_static_infomax_fig1.py`, so that
+spec review covers them. The values listed are the values
+currently present as module-level constants in the test file;
+this subsection retrofits them after the fact (see the revision
+log entry for 2026-05-20).
+ 
+**m-sweep used by the test suite.** `m ∈ {1, 2, 5, 20, 100}`. This
+is a five-point *subset* of the nine-point experiment sweep
+defined in §3.6 (`{1, 2, 3, 4, 5, 10, 20, 50, 100}`). The subset
+covers: the m=1 closed-form check (T1), an intermediate-K case
+(m=2 with three atoms, well separated from the K=2 boundary case),
+two mid-range cases (m=5, m=20), and the headline Jeffreys-limit
+case (m=100). The full nine-point sweep is reserved for the
+experiment script in §5, where the additional points feed the
+KS-vs-m convergence curve; for the per-m property tests T2, T2b,
+T3, T3b, T8, T10 a five-point sweep is sufficient because each
+test asserts a per-m property and adjacent m-values do not
+materially change what is being checked.
+ 
+**Per-test sweep restrictions.**
+ 
+- **T5 (grid invariance)** uses `m ∈ {1, 2, 5, 10}` — a
+  four-point subset that drops m=20 and m=100 because the
+  three-grid comparison (`N_θ ∈ {200, 1000, 2000}`) at large m
+  triples a `τ_max = 500 000` BA run and makes the test minutes
+  long.
+- **T9 (continuum scaling)** uses `m = 1` only, because T9
+  derives from the T1 closed-form deficit which is m=1-specific.
+- **T4 and T4b (Jeffreys convergence)** use `m = 100` only.
+- **T1 (m=1 closed form)** uses `m = 1`.
+- All other tests (T2, T2b, T2c, T3, T3b, T6, T7, T7b, T8, T10,
+  T11) parametrise over the full five-point `M_SWEEP` above.
+**N_θ-sweep used by the test suite.**
+ 
+- Default headline grid: `N_θ = 1000` (matches §3.1).
+- T5 grid-invariance check: `N_θ ∈ {200, 1000, 2000}` (matches the
+  values cited in T5 prose).
+- T9 continuum-scaling check: `N_θ ∈ {100, 1000, 10000}` (matches
+  the values cited in T9 prose).
+**KS evaluation grid for T4.** The KS distance in T4 is evaluated
+on a dense θ-grid of `10 000` points, uniform in [0, 1]. The
+post-F4 prose pins the dense-grid evaluation; this subsection
+pins the density. 10 000 points is comfortably finer than the
+atom spacing at m=100 (atom spacing scales as `~ 1/√m ≈ 0.1`;
+4 000 was the alternative considered and is also fine, 10 000
+gives headroom).
+ 
+**Atom-count bracket for T4b.** `5 ≤ K ≤ 50` at m=100. See the
+T4b prose for the rationale; the values themselves are pinned
+here.
+ 
+**K-upper floor for T3.** `K_upper = #{ i : p*_i > 1e-12 }`. The
+threshold `1e-12` is pinned here.
+ 
+**Randomness.**
+ 
+BA itself is fully deterministic (deterministic likelihood matrix,
+deterministic fixed-point update) and so no RNG is threaded
+through the public API — see the `manage-randomness` skill, rule 7.
+ 
+Two tests construct a perturbed initial prior via the
+`init=` kwarg of §3.4:
+ 
+- **T2c (initialisation invariance).** Perturbation is
+  `1 + 0.1 · N(0, 1)` applied elementwise to the uniform vector
+  and re-normalised. Seed: `np.random.default_rng(20260518)`. The
+  perturbation magnitude (`0.1`) is small enough that the
+  positivity constraint holds with very high probability across
+  N_θ ≤ 10⁴, and large enough that a buggy implementation that
+  ignores `init=` is reliably detected.
+- **T7b (degenerate-likelihood init-respect).** Identical
+  perturbation and identical seed. The seed is shared because the
+  two tests measure different things about the same kind of
+  perturbed init, and a shared seed makes the behaviour
+  reproducible across CI runs.
+The seed `20260518` is a literal hardcoded date stamp per the
+`manage-randomness` skill, rule 3. If either test is rewritten to
+sweep over multiple perturbations the seed becomes a seed
+*sequence*; that change requires a spec edit here.
+
 ### Properties-to-tests table
 
 Per `skills/derive-test-suite.md`, each property of the spec is mapped to
@@ -622,24 +706,103 @@ We do **not** test:
 - Any property of the higher-dimensional case.
 
 ## 5. Report
-
-Output to `experiments/000-static-fig1/REPORT.md`. Contents:
-
-1. The figure(s): for each m, a plot showing `p*(θ)` (stems at detected
-   atoms) and `f_KL(θ)` on the same axes; the horizontal line at `MI*`
-   highlighted. This is our Fig 1.
-2. A second plot showing the m = 100 atom CDF overlaid on the Jeffreys
-   CDF.
-3. A convergence plot: K–S distance between the atom CDF and the Jeffreys CDF as a function of m across the sweep, with the discreteness floor `1/(2 K(m))` overlaid. Visual sanity check, not a hard assertion — small-m points are expected to sit on the floor.
-4. A small results table: `m`, `K`, `MI*` in bits, atom centroids and
-   weights.
-5. Test results: pass/fail status of T1–T7 with the numerical tolerances
-   actually achieved.
-6. Notes section: anything that went wrong, was surprising, or differs
-   from the spec. Including DC-1 and DC-2 caveats.
-
-The report should be self-contained enough that a lab-meeting attendee can
-follow it without the spec, but should reference the spec for the maths.
+ 
+The report lives at `experiments/000-static-fig1/REPORT.md` and is
+generated by `experiments/000-static-fig1/run.py`. It is
+self-contained enough that a lab-meeting attendee can follow it
+without the spec, but references the spec for the maths.
+ 
+This section pins the experiment-side decisions about *which
+sweep points feed which output*, *what auxiliary grids are used*,
+and *what the persisted tables contain*. Visual styling of
+figures (DPI, layout, colours, marker sizes) is left to `run.py`.
+ 
+### 5.1 Outputs
+ 
+Under `experiments/000-static-fig1/`:
+ 
+- `figures/fig1_panels.png` — multi-panel reproduction of
+  Mattingly Fig 1: per panel, the atoms of `p*(θ)`, the
+  `f_KL(θ)` profile, and the `MI*` line. Plus an
+  analytic-Jeffreys reference panel.
+- `figures/m100_atom_cdf_vs_jeffreys.png` — at m=100, the atom
+  step CDF overlaid on the analytic Jeffreys CDF.
+- `figures/ks_vs_m.png` — KS distance to the Jeffreys CDF as a
+  function of m, with the discreteness floor overlaid.
+- `results_table.json` — per-m summary; schema in §5.3.
+- `convergence.json` — per-m convergence diagnostics; schema in
+  §5.3.
+- `REPORT.md` — the report body itself; contents listed in §5.4.
+### 5.2 Sweep coverage
+ 
+The full m-sweep of §3.6 (`m ∈ {1, 2, 3, 4, 5, 10, 20, 50, 100}`)
+feeds `results_table.json`, `convergence.json`, and
+`ks_vs_m.png`.
+ 
+`fig1_panels.png` uses a four-point subset of the full sweep —
+`m ∈ {1, 5, 20, 100}` — plus the analytic Jeffreys (m → ∞) as a
+fifth reference panel. The subset spans the small-K boundary case,
+two intermediate cases, and the large-m Jeffreys-limit case,
+matching the four-panel layout of Mattingly Fig 1. The full sweep
+is not shown panel-by-panel because the additional points
+(m ∈ {2, 3, 4, 10, 50}) add no qualitative regime; they feed the
+table and the convergence curve, where the additional resolution
+matters.
+ 
+`m100_atom_cdf_vs_jeffreys.png` uses `m = 100` only by
+definition.
+ 
+### 5.3 Auxiliary grids and table schemas
+ 
+**KS-distance evaluation grid.** Both the per-m KS distance
+recorded in `results_table.json` and the curve plotted in
+`ks_vs_m.png` are computed against a dense θ-grid of 4 001
+uniform points over [0, 1] — separate from T4's testing grid of
+10 000 points (§4 Sweep design). 4 001 is enough to resolve the
+step-CDF features at m=100 (atom spacing `~ 1/√m ≈ 0.1`).
+ 
+**Jeffreys analytic reference.** Where the analytic Jeffreys
+density or CDF is overlaid, it is evaluated on a 1 000-point grid
+linear in θ over `[1e-4, 1 − 1e-4]`. The endpoint exclusion
+avoids the integrable singularity of `p_J` at 0 and 1.
+ 
+**`results_table.json` — per-m headline summary.** One row per m
+in the full sweep, with columns:
+ 
+- `m` (int) — sample budget.
+- `K` (int) — atom count from §3.5 extractor.
+- `mi_nats`, `mi_bits` (float) — achieved MI in nats and bits.
+- `csiszar_gap` (float, nats) — `max(f_kl) − mi`, the KKT gap.
+- `n_iters` (int), `converged` (bool) — from the BA loop §3.4.
+- `atom_theta`, `atom_mass` (list[float], sorted by θ).
+- `ks_to_jeffreys` (float) — dense-grid KS distance.
+- `ks_floor` (float) — `1 / (2K)`, the discreteness floor.
+Computed but **not persisted to the table**: the full-grid arrays
+(`grid`, `prior_masses`, `f_kl`, each of length `N_θ` per m).
+They live only in memory during the script run, used by the
+figure code. The reasoning: they are large
+(`N_θ × |sweep| = 9 000` floats per array) and any consumer that
+needs them can re-run the experiment cheaply.
+ 
+**`convergence.json` — per-m convergence diagnostics.** A
+trimmed copy with columns `m`, `n_iters`, `converged`,
+`csiszar_gap`. Kept separately as a small file so future
+regression checks can read only these columns without parsing
+the full atom lists.
+ 
+### 5.4 Report body
+ 
+The report body (`REPORT.md`) contains, in order:
+ 
+1. The Fig 1 reproduction.
+2. The m=100 Jeffreys CDF overlay.
+3. The KS-vs-m convergence plot.
+4. A small table embedding the `m`, `K`, `MI*` (bits), and
+   `ks_to_jeffreys` columns from `results_table.json`.
+5. Test results: pass/fail status of T1–T11 with the achieved
+   numerical tolerances.
+6. Notes: anything surprising or differing from the spec,
+   including DC-1 and DC-2 caveats.
 
 ## 6. Layout
 
@@ -910,3 +1073,14 @@ the lab-meeting audience should see us reasoning about live.
     `docs/000-static-infomax-fig1/README.md` documents the choice.
 
   §3 flipped to `draft`.
+
+- **2026-05-20 — Test sweep design retrofitted into §4**
+  (§4). After the workflow-issue
+  `meta/workflow-issues.md#sweep-density-auto-decided` was
+  raised, the values that determine *which sweep points T1–T11
+  actually run at* were lifted out of
+  `tests/test_000_static_infomax_fig1.py` and into a new "Sweep
+  design" subsection at the top of §4. The values themselves are
+  unchanged; this is a Clarification, not a Correction. No test
+  code change is implied. §4 flipped from `reviewed` to `draft`
+  pending review of the new subsection.
