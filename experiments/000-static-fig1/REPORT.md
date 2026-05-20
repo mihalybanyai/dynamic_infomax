@@ -187,6 +187,26 @@ are headlined here; the full per-test record is in CODEGEN_LOG.md.
   report loop with all conventions exercised, including the
   implementation red-team.
 
+## Appendix: raw grid `p*(θ_i)` without atom extraction
+
+For each panel `m`, the BA fixed point plotted directly per grid cell —
+no §3.5 atom-extraction heuristic applied. This is the object BA
+actually converged to; the §1 panels are this object after the
+extraction step collapses each cluster of adjacent positive cells into
+a single atom.
+
+![Raw per-cell p* on the grid](figures/fig1_panels_raw_grid.png)
+
+The m=1 and m=5 panels show clean isolated peaks at single cells (the
+extraction step is essentially a no-op). The m=20 and m=100 panels show
+the characteristic structure that motivates the §3.5 heuristic and the
+DC-2 `AtomicPrior` caveat: small clusters of adjacent cells share mass
+around each notional atom location, with the m=100 super-atom visible
+as the broad cluster near θ = 0.5 rather than a single spike. `K_upper`
+in the §4 table counts every cell with mass above 1e-12 (so it picks
+up the cluster halos as well as the atoms proper), which is why
+`K_upper` runs well above the extracted `K`.
+
 ## 7. Provenance
 
 - Spec: `specs/000-static-infomax-fig1.md` (§3 currently `draft` after the

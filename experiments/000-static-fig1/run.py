@@ -15,6 +15,9 @@ Outputs (under `experiments/000-static-fig1/`):
   with the discreteness floor `1/(2 K(m))` overlaid.
 - `figures/mi_history.png` — per-m BA `mi_history` traces on a shared
   log-x axis; visual confirmation of T6 monotonicity.
+- `figures/fig1_panels_raw_grid.png` — appendix figure: raw per-cell
+  `p*(θ_i)` on the grid for each panel m, without the §3.5 atom
+  extraction heuristic.
 - `results_table.json` — per-m summary: K, K_upper, MI* (nats and bits),
   atom positions and weights. Loaded by `REPORT.md`'s embedded values.
 - `convergence.json` — per-m convergence diagnostics (Csiszar gap,
@@ -197,6 +200,45 @@ def make_m100_cdf_figure(result_100: dict) -> None:
     plt.close(fig)
 
 
+def make_grid_panels_figure(results: list[dict]) -> None:
+    """Raw grid-based `p*(θ)` for each PANELS_M, no atom extraction.
+
+    Mirrors `make_panels_figure` but plots `result.prior.masses()` per
+    grid cell directly — the BA fixed point without the §3.5 extraction
+    heuristic. Useful to see where mass actually sits on the grid (e.g.
+    the super-atom at m=100 as a cluster of adjacent cells, rather than
+    a single extracted atom).
+    """
+    panel_ms = PANELS_M
+    by_m = {r["m"]: r for r in results}
+
+    n = len(panel_ms)
+    cols = 2 if n <= 4 else 3
+    rows = int(np.ceil(n / cols))
+    fig, axes = plt.subplots(rows, cols, figsize=(11, 3.0 * rows),
+                             constrained_layout=True)
+    axes = np.atleast_2d(axes).ravel()
+
+    for ax, m in zip(axes, panel_ms):
+        r = by_m[m]
+        grid = np.asarray(r["grid"])
+        masses = np.asarray(r["prior_masses"])
+
+        ax.fill_between(grid, masses, step="mid", alpha=0.4, color="C0")
+        ax.plot(grid, masses, color="C0", linewidth=0.8, drawstyle="steps-mid")
+        ax.set_xlim(-0.02, 1.02)
+        ax.set_ylim(0, max(masses.max() * 1.15, 1e-3))
+        ax.set_xlabel(r"$\theta$")
+        ax.set_ylabel(r"$p_\star(\theta_i)$ (per-cell mass)")
+        ax.set_title(f"$m = {m}$ ($N_\\theta = {len(grid)}$, raw grid)")
+
+    for ax in axes[n:]:
+        ax.set_visible(False)
+
+    fig.savefig(FIGURE_DIR / "fig1_panels_raw_grid.png", dpi=140)
+    plt.close(fig)
+
+
 def make_mi_history_figure(results: list[dict]) -> None:
     """Per-m `mi_history` traces on a shared log-x axis.
 
@@ -278,6 +320,7 @@ def main() -> None:
 
     print("Generating figures...")
     make_panels_figure(results)
+    make_grid_panels_figure(results)
     make_m100_cdf_figure(next(r for r in results if r["m"] == 100))
     make_ks_vs_m_figure(results)
     make_mi_history_figure(results)
