@@ -1,8 +1,9 @@
 # Spec 000 — Static infomax prior: Mattingly Fig 1 reproduction
 
-**Status:** generated 2026-05-19; based on the test-suite-passing
-implementation at commit `1f8339e` plus the experiment driver
-[`run.py`](run.py).
+**Status:** generated 2026-05-20; `src/infomax`
+code under test at commit `1f8339e` (unchanged since the implementation
+red-team pass); experiment driver [`run.py`](run.py) and this report
+regenerated at the current HEAD.
 
 Reproduces, qualitatively, Figure 1 of Mattingly et al. (2018) — the
 MI-maximising prior `p*(θ)` for the Bernoulli channel as a function of
@@ -21,6 +22,11 @@ Outputs land in this directory: `figures/*.png`, `results_table.json`,
 at `N_θ = 1000`, runs `blahut_arimoto` from uniform initialisation with
 the spec defaults (α = 2.0, τ_max = 500 000, ε_I = 1e-12 on the Csiszár
 gap; see DD3, DD8 in [docs/000-static-infomax-fig1/README.md](../../docs/000-static-infomax-fig1/README.md)).
+All informational quantities below are reported
+in nats; `log 2 ≈ 0.693` nats = 1 bit as a unit anchor. The spec §3.1
+multi-grid stability check (`N_θ ∈ {200, 500, 2000}`) is exercised by
+test T5 at `N_θ ∈ {200, 1000, 2000}` rather than reproduced in this
+driver.
 
 ## 1. The figure
 
@@ -39,8 +45,11 @@ sits side-by-side with the paper's original below.
 
 The qualitative features match the paper:
 
-- **`m = 1`**: two atoms at the grid boundary, masses 0.5 each. `f_KL(θ)`
-  is U-shaped, equal to `MI* = 1 bit` exactly at the two atom locations
+- **`m = 1`**: two atoms at the grid boundary, masses
+  ≈ 0.5 each (to within 1e-10; T1 tolerance is 1e-6). `f_KL(θ)`
+  is U-shaped, equal to `MI*` (0.689 nats on the
+  cell-centred grid; the continuum optimum is `log 2 ≈ 0.693` nats —
+  see DC-1) at the two atom locations
   (the cell-centred grid means "exactly" means "within `1/(2 N_θ)` of
   the boundary"; see DC-1 in the spec).
 - **`m = 5`, `m = 20`**: a small number of well-separated atoms grow in
@@ -85,6 +94,14 @@ monotonically with m, but neither is fully eliminated within the
 500 k-iteration budget at the high-m end. The proper fix is the
 `AtomicPrior` work flagged in DC-2 — once atom positions are explicit
 parameters, the super-atom cannot occur.
+The two endpoints of the curve reflect different
+regimes: at `m = 1` BA has converged exactly to the closed-form ½/½
+optimum (T1 passes at 1e-6), and the 0.486 KS is the *structural*
+distance from a two-atom prior to the continuous Jeffreys density —
+not BA-convergence slack. At `m = 100`, by contrast, BA exhausts
+`τ_max` without strict-tolerance convergence, and the residual KS
+reflects super-atom mass + atom mis-positioning rather than the
+finite-K floor (which is at `1/26 ≈ 0.038`).
 
 ## 4. Results table
 
@@ -92,25 +109,37 @@ The exact values from `results_table.json` (re-run the experiment to
 refresh). The first three columns are the headline summary; the atom
 list shows only the first few atoms by mass for compactness.
 
-| m | K | MI* (bits) | KS to Jeffreys | Csiszár gap | converged |
-|---|---|------------|----------------|-------------|-----------|
-| 1 | 2 | 0.9938 | 0.4858 | 9.99e-13 | True |
-| 2 | 3 | 1.0800 | 0.4272 | 1.39e-07 | False |
-| 3 | 3 | 1.2380 | 0.3802 | 4.70e-08 | False |
-| 4 | 3 | 1.3607 | 0.3554 | 1.46e-07 | False |
-| 5 | 4 | 1.4453 | 0.3358 | 4.35e-07 | False |
-| 10 | 5 | 1.7607 | 0.2621 | 4.02e-07 | False |
-| 20 | 7 | 2.1187 | 0.1990 | 4.96e-07 | False |
-| 50 | 11 | 2.6429 | 0.1335 | 5.04e-07 | False |
-| 100 | 13 | 3.0697 | 0.1144 | 4.94e-07 | False |
+
+
+| m | K | K_upper | MI* (nats) | KS to Jeffreys | Csiszár gap | converged |
+|---|---|---------|------------|----------------|-------------|-----------|
+| 1 | 2 | 4 | 0.6888 | 0.4858 | 9.99e-13 | True |
+| 2 | 3 | 10 | 0.7486 | 0.4272 | 1.39e-07 | False |
+| 3 | 3 | 8 | 0.8581 | 0.3802 | 4.70e-08 | False |
+| 4 | 3 | 10 | 0.9432 | 0.3554 | 1.46e-07 | False |
+| 5 | 4 | 34 | 1.0018 | 0.3358 | 4.35e-07 | False |
+| 10 | 5 | 34 | 1.2204 | 0.2621 | 4.02e-07 | False |
+| 20 | 7 | 90 | 1.4685 | 0.1990 | 4.96e-07 | False |
+| 50 | 11 | 438 | 1.8319 | 0.1335 | 5.04e-07 | False |
+| 100 | 13 | 720 | 2.1278 | 0.1144 | 4.94e-07 | False |
+
+
 
 `converged = False` for m ≥ 2 means BA exhausted `τ_max = 500_000`
 without the Csiszár gap dropping below `ε_I = 1e-12`; the gap *did*
 fall to ~5e-7, six orders of magnitude tighter than the spec's looser
 |ΔI| criterion would demand (DD3). The Csiszár gap directly bounds
 distance-to-optimum in MI, so the achieved `MI*` is reliable to
-well past the precision of the bits column. The "convergence flag"
+well past the precision of the nats column. The "convergence flag"
 in the table is the strict-tolerance signal, not a correctness signal.
+The "Csiszár gap" column shown above is
+post-hoc recomputed from the returned prior via `compute_f_kl(prior,
+log_lik)`, not pulled from BA's internal convergence-test state; the
+two agreeing to float64 slack is itself a (T10-flavoured) self-consistency
+check rather than the convergence flag. `K_upper = #{p*_i > 1e-12}` is
+the strict-support count that bounds `MI*` per spec §4 T3: `MI* ≤
+log K_upper` holds with substantial slack at every m (e.g. at m=100,
+`log 720 ≈ 6.58 nats` vs achieved `MI* = 2.13 nats`).
 
 The complete atom list (θ, mass) is in `results_table.json`.
 
@@ -118,8 +147,9 @@ The complete atom list (θ, mass) is in `results_table.json`.
 
 All 53 tests in `tests/test_000_static_infomax_fig1.py` pass against the
 implementation under commit `1f8339e`. Per-test provenance is recorded
-in the [Run 5 section of CODEGEN_LOG.md](CODEGEN_LOG.md). Headline
-tolerances achieved:
+in the [Run 5 section of CODEGEN_LOG.md](CODEGEN_LOG.md). Only the
+tests whose tolerances are load-bearing for the figures and table above
+are headlined here; the full per-test record is in CODEGEN_LOG.md.
 
 - **T1 (m=1 closed form)**: boundary mass agreement to 1e-6, MI to 1e-6
   nats against the on-grid analytic reference `log 2 − H(1/(2 N_θ))`.
@@ -128,14 +158,12 @@ tolerances achieved:
 - **T4 (Jeffreys KS at m=100)**: the spec-relaxed bound of 0.15 is met
   (achieved ~0.11). The original 0.05 bound is not met by vanilla BA;
   the caveat is documented in [Testing notes — T4](../../docs/000-static-infomax-fig1/README.md).
-- **T5 (atom grid invariance, m ∈ {2, 5, 10})**: passes with the
-  post-implementation centroid tolerance `3 × max(1/N_θ)` and mass
-  tolerance 5e-3 (see CODEGEN_LOG Run 4).
 - **T6 (BA monotonicity)**: holds at every step; the line-search
-  fallback to α=1 (DD3) is what keeps T6 sound under α > 1.
-- **T7 (degenerate likelihood)**: BA leaves the uniform prior
-  un-changed when `f_KL ≡ 0` everywhere; T7b confirms the same from a
-  perturbed init.
+  fallback to α=1 (DD3) is what keeps T6 sound under α > 1. The per-m
+  `mi_history` traces below visualise this — each curve is monotone
+  non-decreasing across all 500 k iterations.
+
+![BA mi_history per m](figures/mi_history.png)
 
 ## 6. Notes
 
@@ -164,7 +192,11 @@ tolerances achieved:
 - Spec: `specs/000-static-infomax-fig1.md` (§3 currently `draft` after the
   red-team `α = 2.0` correction).
 - Implementation: `src/infomax/{ba.py,prior.py,atoms.py,likelihood.py,jeffreys.py}`
-  at commit `1f8339e`.
+  — code under test at commit `1f8339e` (unchanged since
+  the implementation red-team pass; the result red-team made no `src/`
+  edits). Experiment driver `run.py` and this report were regenerated at
+  the current HEAD; see the workflow-issues entry on automating the
+  hash-to-metadata wiring.
 - Tests: `tests/test_000_static_infomax_fig1.py`, 53 cases at
   `M_SWEEP = (1, 2, 5, 20, 100)` (DD10 reduction).
 - Codegen log (per-test provenance, runs 1-5): [`CODEGEN_LOG.md`](CODEGEN_LOG.md).

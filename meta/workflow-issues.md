@@ -23,6 +23,22 @@ address what's cheap, file what's not.
 
 ## Open
 
+### Wire experiment commit hashes through to the report automatically [conventions]
+
+*Opened 2026-05-20*
+
+The result red-team (F14 in `experiments/000-static-fig1/redteam-result.md`)
+flagged that REPORT.md's commit-hash claim drifts: the hash named in the
+header (`1f8339e`) identified the test-suite-passing implementation, but
+the report itself was regenerated at a later HEAD. We resolved the
+specific instance by relabelling the header to distinguish "code under
+test" (`src/infomax` hash) from "report regenerated at" (current HEAD).
+The general fix is to have `run.py` record both `git rev-parse HEAD` and
+`git rev-parse HEAD:src/infomax` into `results_table.json` metadata at
+run time, and have REPORT.md cite the JSON-recorded values rather than a
+hand-edited hash. Worth applying to spec 002's experiment driver from
+the start rather than retrofitting.
+
 ### Add red-team skills to bootstrap.py [bootstrap]
 
 *Opened 2026-05-16*

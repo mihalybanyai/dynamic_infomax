@@ -37,6 +37,8 @@ arithmetic bugs.
 
 > M: I actually like that the reproduction is not 1-to-1. it makes it more obvious that the implementation is general. so leave this as is
 
+> C: No change. The divergence from Mattingly's panels is left intentional; it signals the implementation's generality rather than a 1-to-1 reproduction.
+
 ---
 
 ### F2: f_KL right-axis units (nats) inconsistent with title's MI* (bits) within each panel [severity: medium] [doc-inaccuracy]
@@ -50,6 +52,8 @@ arithmetic bugs.
 **Touches**: code
 
 > M: it seems to me that we could just have every informational quantity in nats, and this ivolves just changing labels. true?
+
+> C: Yes — switching all informational-quantity labels to nats in `run.py` (panel titles and m=100 CDF title) and in REPORT.md (§4 table column changes from bits to nats; §1 gains a one-sentence note that all informational quantities are reported in nats, with `log 2 ≈ 0.693` nats = 1 bit as a unit anchor). The `mi_bits` field stays in `results_table.json` for back-compatibility.
 
 ---
 
@@ -65,6 +69,8 @@ arithmetic bugs.
 
 > M: not sure if this a genuine perf issue, as this is just the experiment code. If it saves less than 10s wall clock time in this experiment, leave it
 
+> C: No change. Total wall-clock cost of the for-loop across the sweep is well under 10 s (~10001 query points × ~13 atoms × 9 m-values, all small Python work).
+
 ---
 
 ### F4: m=1 atom-CDF KS-to-Jeffreys value (0.486) is reported as a data point but never explained [severity: low] [doc-omission]
@@ -78,6 +84,8 @@ arithmetic bugs.
 **Touches**: docs
 
 > M: add the explanation
+
+> C: Adding one sentence in REPORT.md §3 contrasting m=1 (BA exactly converged per T1; the 0.486 KS reflects K=2 being structurally far from the continuum) with larger m (residual KS reflects super-atom + positioning).
 
 ---
 
@@ -93,6 +101,8 @@ arithmetic bugs.
 
 > M: yeah just make a note of this in the report and that's it
 
+> C: Adding one line under REPORT.md §1 noting that spec §3.1's multi-grid stability check is exercised by test T5 at `N_θ ∈ {200, 1000, 2000}` rather than reproduced by the experiment driver.
+
 ---
 
 ### F6: Headline test results in §5 list only T1, T2, T4, T5, T6, T7 — six of twelve [severity: low] [doc-omission]
@@ -106,6 +116,8 @@ arithmetic bugs.
 **Touches**: docs
 
 > M: we don't actually need to recapitualte the test suite in the report. so only the ones that have very direct relevance to something here should be mentioned. do you think the existing section should be modified in either positive or negative direction in this light?
+
+> C: Trimming REPORT.md §5 to T1, T2, T4, T6 — the load-bearing claims the report's narrative actually leans on. Dropping the T5 and T7 lines (T5 is now referenced via the F5 note, and T7 is a sanity check unrelated to the figures shown).
 
 ---
 
@@ -121,6 +133,8 @@ arithmetic bugs.
 
 > M: clarify this in the doc
 
+> C: Adding one sentence in REPORT.md §4 below the table noting that the "Csiszár gap" column is post-hoc recomputed from the returned prior via `compute_f_kl`, and its agreement with BA's internal convergence test is itself a (T10-flavoured) self-consistency check rather than the convergence flag.
+
 ---
 
 ### F8: m=1 row in the §4 table has K=2 but the report's panel commentary says "two atoms at the grid boundary, masses 0.5 each" — actually masses are 0.49999999992816 each [severity: low] [doc-omission]
@@ -134,6 +148,8 @@ arithmetic bugs.
 **Touches**: docs
 
 > M: dude c'mon. Ok, let's make note of the approximate equality using the curly equation sign
+
+> C: Replacing "masses 0.5 each" with "masses ≈ 0.5 each" (`\approx`) in REPORT.md §1's m=1 bullet.
 
 ---
 
@@ -149,6 +165,8 @@ arithmetic bugs.
 
 > M: good idea, let's do this
 
+> C: Adding `make_mi_history_figure` to `run.py` plotting `mi_history` for all m on a shared log-x axis (one curve per m, with the achieved `MI*` as a horizontal anchor), and embedding the figure in REPORT.md §5 under the T6 line.
+
 ---
 
 ### F10: `K_upper` (T3) and `K` (extracted) are not both reported, so the report's K column is the extractor's K only [severity: low] [doc-omission]
@@ -162,6 +180,8 @@ arithmetic bugs.
 **Touches**: both
 
 > M: let's include this
+
+> C: Adding a `K_upper = #{p*_i > 1e-12}` column to `results_table.json` and the REPORT.md §4 table, with one sentence under the table noting `MI* ≤ log K_upper` (T3) holds with slack at every m.
 
 ---
 
@@ -177,6 +197,8 @@ arithmetic bugs.
 
 > M: how much of a computational burden would this be? in either case there shouldn't be a mismatch between the spec and the code
 
+> C: Bumping `query = np.linspace(0.0, 1.0, 10001)` in both call sites (`run_one` and `make_m100_cdf_figure`) to match the spec's "10⁴ query points". Computational cost is sub-second across the sweep.
+
 ---
 
 ### F12: `n` shadowing / off-by-one risk in `make_panels_figure` for `n_panels = len(panel_ms) + 1` vs. axes flattening [severity: low] [latent-risk]
@@ -190,6 +212,8 @@ arithmetic bugs.
 **Touches**: code
 
 > M: this is patently unreadable for me. does it has something to do with plot panel layouts?
+
+> C: No change. The geometry is contained to one file, the failure mode only fires for `len(PANELS_M) > 5`, and adding a defensive assert here wouldn't buy clarity.
 
 ---
 
@@ -205,6 +229,8 @@ arithmetic bugs.
 
 > M: yes, let's differentiate between the cell-centered and continuum options explicitly in text, and fix the lables
 
+> C: Updating REPORT.md §1's m=1 bullet to read "equal to `MI*` (0.689 nats on the cell-centred grid; the continuum optimum is `log 2 ≈ 0.693` nats — see DC-1)". Units throughout §1 align with the F2 nats switch; the panel title already shows the cell-centred value.
+
 ---
 
 ### F14: Status header references commit `1f8339e` but the current HEAD is `447bbee` [severity: low] [doc-inaccuracy]
@@ -218,6 +244,8 @@ arithmetic bugs.
 **Touches**: docs
 
 > M: ok so usually there will be legitimately multiple commits between the last test-passing code and the report. I don't think this is much of an issue, the commit hash is to identify the version of _the code_ that was used, regardless of version changes in any other file. what do you think would be the most informative?
+
+> C: Relabelling REPORT.md's header and §7 to distinguish "`src/infomax` code under test: commit `1f8339e`" from "experiment driver and report regenerated at commit `<new HEAD>`". The deeper fix — having `run.py` write both hashes to `results_table.json` metadata and have REPORT.md read them — gets a workflow-issues entry rather than landing in this pass.
 
 ---
 

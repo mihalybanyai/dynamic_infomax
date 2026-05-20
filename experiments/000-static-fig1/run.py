@@ -13,8 +13,10 @@ Outputs (under `experiments/000-static-fig1/`):
   analytic Jeffreys CDF.
 - `figures/ks_vs_m.png` — KS distance to Jeffreys CDF as a function of m,
   with the discreteness floor `1/(2 K(m))` overlaid.
-- `results_table.json` — per-m summary: K, MI* (bits), atom positions
-  and weights. Loaded by `REPORT.md`'s embedded values.
+- `figures/mi_history.png` — per-m BA `mi_history` traces on a shared
+  log-x axis; visual confirmation of T6 monotonicity.
+- `results_table.json` — per-m summary: K, K_upper, MI* (nats and bits),
+  atom positions and weights. Loaded by `REPORT.md`'s embedded values.
 - `convergence.json` — per-m convergence diagnostics (Csiszar gap,
   iterations, whether the convergence flag was set).
 
@@ -67,17 +69,23 @@ def run_one(m: int) -> dict:
     atom_thetas_sorted = atom_thetas[sort_idx]
     atom_masses_sorted = atom_masses[sort_idx]
     atom_cdf_at_atoms = np.cumsum(atom_masses_sorted)
-    # Query at a dense set: atom positions ± a midpoint scheme.
-    query = np.linspace(0.0, 1.0, 4001)
+    # Query at a dense set (spec §5 item 3: 10⁴ points).
+    query = np.linspace(0.0, 1.0, 10001)
     atom_cdf_query = np.zeros_like(query)
     for i, q in enumerate(query):
         atom_cdf_query[i] = atom_masses_sorted[atom_thetas_sorted <= q].sum()
     jeffreys_cdf_query = jeffreys_bernoulli_cdf(query)
     ks = float(np.max(np.abs(atom_cdf_query - jeffreys_cdf_query)))
 
+    # K_upper: spec §4 T3 bound — number of strictly positive cells in
+    # the returned prior, decoupled from the §3.5 atom-extraction K.
+    prior_masses = result.prior.masses()
+    k_upper = int(np.sum(prior_masses > 1e-12))
+
     return {
         "m": m,
         "K": len(atoms),
+        "K_upper": k_upper,
         "mi_nats": float(result.mi),
         "mi_bits": float(result.mi / np.log(2.0)),
         "csiszar_gap": float(np.max(f_kl) - result.mi),
@@ -90,12 +98,13 @@ def run_one(m: int) -> dict:
         # can do against a continuous reference (the worst point is
         # halfway between two atoms).
         "ks_floor": 1.0 / (2.0 * max(len(atoms), 1)),
-        # Storing the prior masses and f_kl on the grid for the figure
-        # generators. These are bulky (N_θ floats); kept here so the
-        # plotting code is decoupled from re-running BA.
+        # Storing the prior masses, f_kl, and mi_history for the figure
+        # generators. These are bulky; kept here so the plotting code is
+        # decoupled from re-running BA. Dropped from the JSON dumps.
         "grid": grid.tolist(),
-        "prior_masses": result.prior.masses().tolist(),
+        "prior_masses": prior_masses.tolist(),
         "f_kl": f_kl.tolist(),
+        "mi_history": result.mi_history.tolist(),
     }
 
 
@@ -136,7 +145,7 @@ def make_panels_figure(results: list[dict]) -> None:
         ax.set_ylim(0, max(atom_mass.max() * 1.15, 1e-3))
         ax.set_xlabel(r"$\theta$")
         ax.set_ylabel(r"$p_\star(\theta)$ (atom mass)")
-        ax.set_title(f"$m = {m}$ ($K = {r['K']}$, $MI^* = {r['mi_bits']:.3f}$ bits)")
+        ax.set_title(f"$m = {m}$ ($K = {r['K']}$, $MI^* = {r['mi_nats']:.3f}$ nats)")
 
         # f_KL overlay on a right axis. Drawn at every grid cell.
         ax_r = ax.twinx()
@@ -168,8 +177,8 @@ def make_panels_figure(results: list[dict]) -> None:
 def make_m100_cdf_figure(result_100: dict) -> None:
     atom_theta = np.asarray(result_100["atom_theta"])
     atom_mass = np.asarray(result_100["atom_mass"])
-    # Step CDF: cumsum, evaluated on a fine query grid.
-    query = np.linspace(0.0, 1.0, 4001)
+    # Step CDF: cumsum, evaluated on a fine query grid (spec §5 item 3).
+    query = np.linspace(0.0, 1.0, 10001)
     atom_cdf_query = np.array(
         [atom_mass[atom_theta <= q].sum() for q in query]
     )
@@ -185,6 +194,34 @@ def make_m100_cdf_figure(result_100: dict) -> None:
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     fig.savefig(FIGURE_DIR / "m100_atom_cdf_vs_jeffreys.png", dpi=140)
+    plt.close(fig)
+
+
+def make_mi_history_figure(results: list[dict]) -> None:
+    """Per-m `mi_history` traces on a shared log-x axis.
+
+    Visual confirmation of T6 (BA monotonicity in MI) across the sweep.
+    The horizontal dashed lines mark the achieved `MI*` per m.
+    """
+    fig, ax = plt.subplots(figsize=(7, 4.5), constrained_layout=True)
+    cmap = plt.get_cmap("viridis")
+    n = len(results)
+    for i, r in enumerate(results):
+        history = np.asarray(r["mi_history"])
+        # x is iteration index τ, starting at 0; log-x needs τ ≥ 1, so
+        # plot from τ=1 onward and add the τ=0 point as a marker.
+        taus = np.arange(len(history))
+        colour = cmap(i / max(n - 1, 1))
+        ax.plot(taus[1:], history[1:], color=colour, linewidth=1.0,
+                label=f"m={r['m']}")
+        ax.scatter([1], [history[0]], color=colour, s=12, marker="o")
+    ax.set_xscale("log")
+    ax.set_xlabel(r"BA iteration $\tau$")
+    ax.set_ylabel(r"$I_\tau$ (nats)")
+    ax.set_title("BA mutual-information history (monotone increasing)")
+    ax.legend(loc="lower right", ncol=2, fontsize=8)
+    ax.grid(True, which="both", linewidth=0.3, alpha=0.5)
+    fig.savefig(FIGURE_DIR / "mi_history.png", dpi=140)
     plt.close(fig)
 
 
@@ -213,7 +250,7 @@ def main() -> None:
         print(f"  m={m} ... ", end="", flush=True)
         r = run_one(m)
         print(
-            f"K={r['K']}, MI*={r['mi_bits']:.4f} bits, "
+            f"K={r['K']}, K_upper={r['K_upper']}, MI*={r['mi_nats']:.4f} nats, "
             f"KS={r['ks_to_jeffreys']:.3f}, iter={r['n_iters']}, "
             f"conv={r['converged']}"
         )
@@ -223,7 +260,10 @@ def main() -> None:
     # keep them only in the convergence dump.
     table_rows = []
     for r in results:
-        row = {k: v for k, v in r.items() if k not in ("grid", "prior_masses", "f_kl")}
+        row = {
+            k: v for k, v in r.items()
+            if k not in ("grid", "prior_masses", "f_kl", "mi_history")
+        }
         table_rows.append(row)
     (EXPERIMENT_DIR / "results_table.json").write_text(json.dumps(table_rows, indent=2))
     (EXPERIMENT_DIR / "convergence.json").write_text(
@@ -240,6 +280,7 @@ def main() -> None:
     make_panels_figure(results)
     make_m100_cdf_figure(next(r for r in results if r["m"] == 100))
     make_ks_vs_m_figure(results)
+    make_mi_history_figure(results)
     print(f"Figures in {FIGURE_DIR}")
 
 
