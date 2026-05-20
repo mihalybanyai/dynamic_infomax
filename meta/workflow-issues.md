@@ -258,6 +258,36 @@ Review the boundary after 5+ workflow files exist, or if any workflow
 file grows beyond ~50 lines of prompt content (suggesting it's
 absorbing what should be in skills).
 
+### Naming convention is inconsistent across the repo [conventions]
+
+*Opened 2026-05-20*
+
+Hyphens vs underscores vary across filenames, directory names, and
+path elements with no apparent rule, and the same basename appears
+under different paths in some cases (e.g. `experiments/000-static-fig1/run.py`
+will collide once a second experiment lands). Cross-references already
+drift — spec 000 §6 Layout lists `tests/test_static_infomax.py` while
+the actual file is `tests/test_000_static_infomax_fig1.py`. The cost
+is that filename references in specs, codegen logs, and revision logs
+are not stable permalinks and have to be checked by humans.
+
+A draft `AGENTS.md` section was sketched with three rules — `snake_case`
+everywhere except externally-fixed names, globally-unique basenames
+enforced by a CI check, path-prefix for files whose role isn't clear
+from the basename alone — plus a "new and touched files only" migration
+policy to avoid a flag-day rename pass. Deferred because the carve-outs
+(kebab for diagrams? for URL-facing markdown?), the migration cadence
+(reactive on touch vs scheduled passes), and the question of whether
+to rename `run.py` proactively before experiment 001 lands all need
+more thought than the rest of the session allowed. Draft text and the
+discussion live in the chat of 2026-05-20.
+
+Action: revisit when the second experiment is about to land (the
+`run.py` collision forces a decision), when any unrelated `AGENTS.md`
+revision is in flight (chance to land the section in the same edit),
+or when a cross-reference breakage is found that basename uniqueness
+would have caught.
+
 ---
 
 ## Resolved / dismissed
