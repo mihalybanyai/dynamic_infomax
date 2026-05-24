@@ -39,46 +39,6 @@ run time, and have REPORT.md cite the JSON-recorded values rather than a
 hand-edited hash. Worth applying to spec 002's experiment driver from
 the start rather than retrofitting.
 
-### Add red-team skills to bootstrap.py [bootstrap]
-
-*Opened 2026-05-16*
-
-The bootstrap script currently seeds `skills/` with three procedural
-skills (`write-math-spec`, `derive-test-suite`, `document-experiment`).
-The four red-team skills (`red-team-spec`, `red-team-tests`,
-`red-team-implementation`, `red-team-result`) were drafted later in the
-same session but only dropped into the live repo, not added to the
-bootstrap. A labmate running `bootstrap.py` today would not get them.
-
-Action: add them to `SEED_FILES` in `bootstrap.py`, and when they're
-added also add a corresponding `## Red-teaming` section to the
-`AGENTS_MD` seed content describing when to invoke each.
-
-### Add macOS git HTTP/1.1 fix to bootstrap.py [bootstrap]
-
-*Opened 2026-05-16*
-
-On macOS with Apple's bundled git (2.39.2), HTTPS pushes to GitHub stall
-during object upload due to an HTTP/2 issue. Fix: `git config http.version
-HTTP/1.1` (local scope). Should be applied automatically by bootstrap.py
-when running on Darwin, with a printed note explaining what was done.
-Suggest also printing a brief note about the issue in the bootstrap output
-on all platforms so labmates have a reference if they encounter related
-push problems on other systems.
-
-### Default to lightweight PDF tools in skills [skills]
-
-*Opened 2026-05-16*
-
-When skills involve PDF processing, default to Claude's built-in PDF
-reading or to pure-Python libraries (`pypdf`, `pymupdf`, `pdfplumber`).
-Avoid system-level dependencies like poppler unless rasterization is
-actually needed — Homebrew installs of poppler can take many minutes
-due to dependency chains, and the typical research task (reading paper
-text) does not need it. When writing skills that touch PDFs, prefer the
-simpler path and note in the skill what to escalate to if the simple
-path fails.
-
 ### Revise write-math-spec skill after first 3 specs [skills]
 
 *Opened 2026-05-17*
@@ -166,40 +126,6 @@ conversation — switch tracks by closing the session and opening a new
 one with the other handoff. Revisit if a third track appears or if
 this becomes cumbersome.
 
-### Codify Claude Code session-start prompt [skills]
-
-*Opened 2026-05-18*
-
-Each Claude Code session starts with a similar wake-up prompt: read
-AGENTS.md, workflow-issues, handoff, current spec, then a specific
-task. After a few sessions, consider codifying the structure as
-`skills/start-session.md` or as a script that emits the prompt. Hold
-off until the pattern stabilises.
-
-### Session-resume rhythm and wake-up cost [conventions]
-
-*Opened 2026-05-18*
-
-Days will involve multiple on-off periods. Convention: one chat per
-coherent task-phase, not one per day. Same chat is fine across short
-breaks (you don't close the tab); new chat when switching to a
-genuinely different task or after a long absence. Wake-up cost should
-be made small (pinned prompt or a session-prompt script) rather than
-made rare. Revisit when patterns are clearer after a few weeks.
-
-### Bootstrap should set up uv + pyproject.toml [bootstrap]
-
-*Opened 2026-05-18*
-
-The bootstrap script creates a project structure but doesn't initialise
-the Python environment. Decision: use `uv` (Astral) with `pyproject.toml`
-+ `uv.lock` for environment reproducibility. Next bootstrap revision
-should: create a starter `pyproject.toml` with `requires-python` set,
-run `uv lock` (or leave instructions in the next-steps message for the
-user to run it), and add a "Local setup" section to the seeded README.md
-explaining the labmate workflow (`uv sync`). Pin specific Python version
-choice once we've settled on one.
-
 ### Randomness/reproducibility conventions [conventions]
 
 *Opened 2026-05-18, in-progress*
@@ -209,35 +135,6 @@ because the conventions govern every code-touching action and
 retrofitting would be expensive. Pending: revise after first experiment
 actually runs against the conventions. Known v1 gaps documented at the
 bottom of the skill (CUDA non-determinism, parallelism, caching).
-
-### Next bootstrap revision: skills, tutorials, uv, macOS fix [bootstrap]
-
-*Updated 2026-05-18*
-
-The next revision to `bootstrap.py` should bundle:
-- Four red-team skills currently only in the live repo
-- macOS git HTTP/1.1 fix (Darwin-only, local scope)
-- uv setup (pyproject.toml, uv lock, README quickstart section)
-- The `manage-randomness.md` skill
-- The `tutorials/` directory with current four files
-- Updated `AGENTS.md` seed content (reproducibility section, status-
-  transition direction asymmetry, session-start review)
-
-Each was added to the live repo as the need was discovered. Roll into
-bootstrap together so labmates running it today get the current
-conventions. Consider this the v2 of the bootstrap.
-
-### Clarify red-team resolution workflow in skills [skills]
-
-*Opened 2026-05-18*
-
-Red-team skills (`red-team-spec.md`, etc.) specify how to *produce*
-the findings file but not how to *resolve* findings over time.
-Convention emerging: each finding gets a "Resolution" subsection
-appended once addressed or dismissed, with commit hash for addressed
-findings and reason for dismissed ones. Codify in the skills after
-the first red-team cycle has run on a spec, tests, and implementation
-— so the convention is grounded in actual use rather than my guess.
 
 ### Reference handling: PDFs vs annotated bibliography [conventions]
 
@@ -304,8 +201,110 @@ revision is in flight (chance to land the section in the same edit),
 or when a cross-reference breakage is found that basename uniqueness
 would have caught.
 
+### Bootstrap still ships pre-evolution copies of three procedural skills [bootstrap]
+
+*Opened 2026-05-24*
+
+The v2 bootstrap pass landed updated AGENTS.md, the four red-team
+skills, manage-randomness, the tutorials, uv setup, and the macOS
+git fix — but the three original procedural skills
+(`write-math-spec.md`, `derive-test-suite.md`,
+`document-experiment.md`) were carried over verbatim from the v1
+bootstrap because they were not part of the regeneration pass and
+have plausibly evolved in the live repo since. A labmate running
+`bootstrap.py` today gets these three at their original v1 content,
+which is likely behind the live versions (the AGENTS.md test-gates
+section already implies a richer derive-test-suite that mentions
+property-to-test tables and eye-test files, neither of which is in
+the seeded copy).
+
+Action: compare the live `skills/{write-math-spec,derive-test-suite,document-experiment}.md`
+against the strings `ORIG_SKILL_WRITE_MATH_SPEC`,
+`ORIG_SKILL_DERIVE_TEST_SUITE`, `ORIG_SKILL_DOCUMENT_EXPERIMENT` in
+`bootstrap.py`. For each one that has drifted, update the embedded
+string. Wait until the existing workflow-issues entry on revising
+`write-math-spec` after three specs has resolved before doing the
+write-math-spec one, so the revision and the bootstrap pickup land
+together.
+
 ---
 
 ## Resolved / dismissed
 
 <!-- Entries move here when closed, with a one-line resolution note. -->
+
+### Default to lightweight PDF tools in skills [skills]
+
+*Opened 2026-05-16, dismissed 2026-05-24* 
+
+Deemed unimportant by the human.
+
+### Session-resume rhythm and wake-up cost [conventions]
+
+*Opened 2026-05-18, dismissed 2026-05-24*
+
+Other issues basically cover this.
+
+### Codify Claude Code session-start prompt [skills]
+
+*Opened 2026-05-18, resolved 2026-05-24*
+
+This has been done in a worflow file.
+
+### Clarify red-team resolution workflow in skills [skills]
+
+*Opened 2026-05-18, resolved 2026-05-24*
+
+This has been done.
+
+### Add red-team skills to bootstrap.py [bootstrap]
+
+*Opened 2026-05-16, resolved 2026-05-24*
+
+Resolved in the v2 bootstrap pass on 2026-05-24. All four red-team
+skills (`red-team-spec`, `red-team-tests`, `red-team-implementation`,
+`red-team-result`) are now seeded by `bootstrap.py`. The originally
+proposed `## Red-teaming` section in `AGENTS.md` was not added as a
+separate section; the test-gates section and the explicit references
+to red-team skills throughout the conventions and reproducibility
+sections cover the same ground.
+
+### Add macOS git HTTP/1.1 fix to bootstrap.py [bootstrap]
+
+*Opened 2026-05-16, resolved 2026-05-24*
+
+Resolved in the v2 bootstrap pass on 2026-05-24. `bootstrap.py` now
+calls `git config http.version HTTP/1.1` on Darwin after `git init`,
+with a printed note explaining the workaround on macOS and a
+shorter explanatory note on other platforms.
+
+### Bootstrap should set up uv + pyproject.toml [bootstrap]
+
+*Opened 2026-05-18, resolved 2026-05-24*
+
+Resolved in the v2 bootstrap pass on 2026-05-24. `bootstrap.py` now
+seeds a minimal `pyproject.toml` (project name, `requires-python =
+">=3.11"`, empty `dependencies`, `dev` dependency group with `pytest`
+and `ruff`) and invokes `uv sync` at the end of bootstrap. If `uv` is
+not on PATH the script prints an install pointer and continues; if
+`uv sync` fails (e.g. no Python 3.11 available) the script reports
+the error and continues, leaving the labmate to fix the issue and
+re-run `uv sync` themselves. Specific Python version pinning remains
+at `>=3.11`; tighter pinning can wait for a concrete reason.
+
+### Next bootstrap revision: skills, tutorials, uv, macOS fix [bootstrap]
+
+*Updated 2026-05-18, resolved 2026-05-24*
+
+Resolved in the v2 bootstrap pass on 2026-05-24. All bundled items
+landed: red-team skills, macOS git fix, uv setup, the
+`manage-randomness.md` skill, the `tutorials/` directory (`README.md`,
+`uv.md`, `gh.md`, `rng-passing.md`, and the `math/kkt.md` math
+explainer), and the current `AGENTS.md` seed content (which already
+includes the reproducibility section, the iron-rules section, the
+test-gates section, the dependencies/uv section, and the
+status-transition direction asymmetry). The original three procedural
+skills (`write-math-spec`, `derive-test-suite`, `document-experiment`)
+were not refreshed in this pass and have been split off into their
+own follow-up entry; see "Bootstrap still ships pre-evolution copies
+of three procedural skills" under Open.
