@@ -1,9 +1,10 @@
 # Skill: red-team-result
 
-> Use this skill after an experiment in `experiments/NNN-*/` has been run
-> and its `README.md` has been written. The goal is to find alternative
-> explanations for the result before claiming the result supports the
-> hypothesis.
+> Use this skill after an experiment in `experiments/NNN-*/` has been run,
+> its figures and report (`REPORT.md`) have been written, and the relevant
+> spec, tests, and implementation are all already at their post-red-team
+> states. The goal is to find alternative explanations for the result
+> before claiming it supports the hypothesis.
 
 ## Why this exists
 
@@ -13,31 +14,54 @@ explained by something other than the hypothesis. Common sources:
 
 - A bug that happens to produce hypothesis-consistent results.
 - A confound in the experimental design.
-- A trivial baseline that explains the result without the proposed
+- A trivial baseline that would explain the result without the proposed
   mechanism.
 - A statistical artifact from how the metric is computed.
 - Overfitting to the specific seed / dataset / configuration.
+- A figure that, read as a hostile reviewer would read it, says something
+  weaker (or different) than the report claims.
 
-A red-team sub-agent reading only the spec, the experiment plan, and the
-result — without the development context — is well-placed to ask "what
-else could explain this?"
+A red-team sub-agent reading only the spec, the experiment plan, the
+code, the figures, and the report — without the development context —
+is well-placed to ask "what else could explain this?"
+
+This is also the *last* red-team in the pipeline. All upstream artifacts
+(spec, tests, implementation) have already been red-teamed and the
+implementation passes the post-red-team test suite. So this red-team
+faces a particular routing question that the earlier ones do not: a
+finding can, in principle, send the workflow back to any earlier stage.
+The skill names the four destinations and the workflow handles the
+dispatch.
 
 ## How to invoke
 
-Use the `Task` tool to spawn a sub-agent with the following prompt template.
-Substitute `<EXPERIMENT_DIR>` with the path.
+Use the `Task` tool to spawn a sub-agent with the following prompt
+template. Substitute `<EXPERIMENT_DIR>` with the path (e.g.,
+`experiments/000-static-fig1`).
 
 ```
 You are reviewing the experimental result documented in
-<EXPERIMENT_DIR>/README.md. The plan is in <EXPERIMENT_DIR>/PLAN.md.
-Relevant specs and code are referenced from the plan. Provenance (the
-exact git commits, seed, and package versions used) is in
-<EXPERIMENT_DIR>/output/provenance.json — consult it if the question
-of "what version of the spec/code was this run against" matters for a
-finding.
+<EXPERIMENT_DIR>/REPORT.md. The plan is in <EXPERIMENT_DIR>/PLAN.md.
+The experiment code is at <EXPERIMENT_DIR>/run.py (or as named in the
+plan). Relevant specs and code modules are referenced from the plan.
+Provenance — the exact git commits, seed, and package versions used —
+is in <EXPERIMENT_DIR>/output/provenance.json. Consult it whenever
+"what version of the spec/code/tests was this run against?" matters
+for a finding; the spec, code, or tests may have moved on since the
+result was produced.
 
-The plan states a hypothesis and the README claims a result that
-supports or refutes it. Your job is to challenge that interpretation.
+Context: the spec is at status `reviewed` across all relevant
+sections, the test suite has been red-teamed, the implementation
+passes the red-teamed test suite, and the implementation has itself
+been red-teamed. So you are NOT auditing the math (settled), NOT
+auditing test coverage against the spec (settled), and NOT auditing
+the implementation against the spec (settled). Your job is the gap
+between "the code ran cleanly and produced numbers/figures" and "the
+result, as written up in the report, actually supports the claim the
+report makes." Read the spec and the plan first, then the report
+(including its figures), and only then the code. The "report first,
+code second" order is deliberate — if you form a code-first picture
+you will unconsciously correct for report inaccuracies and miss them.
 
 ## Alternative-explanation checklist
 
@@ -47,84 +71,142 @@ For each result claim, ask:
    What is the simplest wrong implementation that would produce this
    exact result? Is there a test that would distinguish?
 
-2. **Trivial baseline**: what does the simplest possible baseline produce
-   on this task? If the baseline is not reported, that is a finding.
-   Common skipped baselines: random predictor, constant predictor,
-   nearest-neighbor with no learning, the input passed through unchanged.
+2. **Trivial baseline**: what does the simplest possible baseline
+   produce on this task? If the baseline is not reported, that is a
+   finding. Common skipped baselines: random predictor, constant
+   predictor, nearest-neighbor with no learning, the input passed
+   through unchanged.
 
 3. **Confound**: is there a feature of the data or the protocol that
-   could produce this result without the mechanism the hypothesis claims?
-   Common confounds: class imbalance, leakage between train and test, a
-   correlated nuisance variable, an unintended ordering in the data.
+   could produce this result without the mechanism the hypothesis
+   claims? Common confounds: class imbalance, leakage between train
+   and test, a correlated nuisance variable, an unintended ordering
+   in the data.
 
-4. **Statistical artifact**: how does the metric behave under the null?
-   If the result is a correlation, what is the correlation expected from
-   noise alone given the sample size? If the result is an accuracy, what
-   is the accuracy expected from chance, and is the gap large compared
-   to the standard error?
+4. **Statistical artifact**: how does the metric behave under the
+   null? If the result is a correlation, what is the correlation
+   expected from noise alone given the sample size? If the result is
+   an accuracy, what is the accuracy expected from chance, and is the
+   gap large compared to the standard error?
 
-5. **Seed / configuration sensitivity**: was the experiment run with a
-   single seed? Single dataset split? Single hyperparameter? If yes, the
-   result has unknown variance. Flag this and recommend the minimum
-   robustness check (e.g., 3-5 seeds at a minimum).
+5. **Seed / configuration sensitivity**: was the experiment run with
+   a single seed? Single dataset split? Single hyperparameter? If
+   yes, the result has unknown variance. Flag this and recommend the
+   minimum robustness check (e.g., 3–5 seeds at a minimum).
 
 6. **Cherry-picking risk**: how many configurations were tried before
    this one was reported? Is there a paper trail (in the experiment
-   directory or elsewhere) of the failed configurations? If not, flag
-   the multiple-comparisons risk.
+   directory, the codegen log, or elsewhere) of the failed
+   configurations? If not, flag the multiple-comparisons risk.
 
-7. **Plot artifacts**: if a figure is the main result, examine it as a
-   hostile reviewer would. Are axes truncated? Is the y-axis log-scale
-   when linear would tell a different story (or vice versa)? Are error
-   bars present and do they reflect what they appear to reflect (within-
-   run variance vs. between-run variance vs. confidence interval)?
+7. **Plot artifacts**: if a figure is the main result, examine it as
+   a hostile reviewer would. Are axes truncated? Is the y-axis
+   log-scale when linear would tell a different story (or vice
+   versa)? Are error bars present and do they reflect what they
+   appear to reflect (within-run variance vs. between-run variance
+   vs. confidence interval)? Does the legend/caption say something
+   the data does not support?
 
-8. **Sanity checks not run**: list checks the experiment did not run but
-   should have. Common missing checks: does the model overfit a small
-   dataset (basic capacity check)? Does the loss go down (basic training
-   check)? Does the model behave reasonably on a held-out example you
-   manually understand?
+8. **Report-vs-result mismatch**: does the prose in the report claim
+   more than the figures and numbers actually show? Common drifts:
+   "X improves over Y" when the improvement is within noise,
+   "robust" when only one or two conditions were tested, "scales"
+   from two data points, qualitative reads of figures that the
+   figures do not support.
+
+9. **Sanity checks not run**: list checks the experiment did not run
+   but should have. Common missing checks: does the model overfit a
+   small dataset (basic capacity check)? Does the loss go down
+   (basic training check)? Does the model behave reasonably on a
+   held-out example you manually understand?
+
+NOT in scope for the sub-agent:
+
+- Style/formatting issues in the report (the human owns those).
+- Suggestions for the next experiment unconnected to defending this
+  one. Wishlist items are out of scope; only flag follow-up
+  experiments that would resolve a specific concern about *this*
+  result.
+- Re-auditing the math, the test coverage, or the implementation
+  against the spec. If a finding actually points at a problem in one
+  of those upstream artifacts, tag it (see "Routing tags" below)
+  rather than acting on it.
+
+## Routing tags
+
+The result red-team is the last in the pipeline, so a finding can in
+principle imply that an earlier artifact was wrong. Tag findings
+accordingly so the routing happens at discovery time, not on read:
+
+- `[spec-implication]` — the result reveals that the spec is wrong,
+  incomplete, or ambiguous in a way that mattered for the result.
+  Routes to the spec red-team workflow rather than being acted on
+  here.
+- `[test-gap]` — the result reveals a class of bug that the test
+  suite, even at its post-red-team state, would not catch. Routes
+  to the test red-team workflow.
+- `[code-implication]` — the result reveals a bug or mis-implementation
+  in the code that the test suite happened to miss but that is
+  scoped to the code, not the spec or tests. Routes back to the
+  implementation red-team workflow (or directly to a code edit,
+  per the human's judgement).
+- (Untagged) — the finding is scoped to this experiment: a report
+  edit, a code edit in the experiment's own `run.py`, a regenerated
+  figure, an additional baseline run, or an acceptance note in the
+  report.
+
+A finding can carry at most one routing tag; if it implies issues at
+multiple levels, pick the highest-leverage one and note the others
+in the concern paragraph.
 
 ## Format
 
 For each finding:
 - **Concern**: a specific alternative explanation or risk.
-- **Severity**: high (the result might not support the hypothesis at all),
-  medium (the result needs an additional control to support the
-  hypothesis cleanly), low (a check that should be added for
-  defensibility, even if you do not expect it to change the conclusion).
-- **What would resolve it**: a specific additional experiment, baseline,
-  control, or analysis.
+- **Severity**: high (the result might not support the hypothesis at
+  all), medium (the result needs an additional control to support
+  the hypothesis cleanly), low (a check that should be added for
+  defensibility, even if you do not expect it to change the
+  conclusion).
+- **Routing tag**: one of the above, or none.
+- **What would resolve it**: a specific additional experiment,
+  baseline, control, analysis, code edit, or report edit. If
+  resolution requires touching an upstream artifact (spec, tests,
+  implementation), say so.
 
-**Ordering**: list findings in order of descending severity (high first,
-then medium, then low). Within a severity level, order by the checklist
-category above (bug-as-feature first, then trivial baseline, then
-confound, etc.). Number findings F1, F2, F3, ... *after* ordering.
+**Ordering**: list findings in order of descending severity (high
+first, then medium, then low). Within a severity level, order by
+the checklist category above (bug-as-feature first, then trivial
+baseline, then confound, etc.). Number findings F1, F2, F3, …
+*after* ordering. Do not include counts of findings by severity in
+the summary — the list below is the source of truth, and counts
+produced separately tend to drift from the actual list.
 
-Write to `<EXPERIMENT_DIR>/result-redteam.md`. Do not include counts of
-findings by severity in the summary.
+Write the report to `<EXPERIMENT_DIR>/redteam-result.md`. Suggested
+top-level structure:
 
 # Red-team review of experiment <EXPERIMENT_NAME>
 
 Reviewer: red-team sub-agent
 Date: <YYYY-MM-DD>
-Experiment commit: <git commit hash from provenance.json if available>
+Experiment commit: <git commit hash from provenance.json>
 Spec commit(s) reviewed against: <as recorded in provenance.json>
 
 ## Summary
 
-<one paragraph: qualitative impression — how strongly does the result
-support the hypothesis as currently presented, what alternative
-explanations are most concerning, what would change the picture. No
-counts.>
+<one paragraph: qualitative impression — how strongly does the
+result support the hypothesis as currently presented, what
+alternative explanations are most concerning, what would change the
+picture. No counts.>
 
 ## Findings
 
-### F1: <short title> [severity: high]
+### F1: <short title> [severity: high] [routing: none | spec-implication | test-gap | code-implication]
 
 **Concern**: <specific alternative explanation>
 
-**What would resolve it**: <specific additional experiment / analysis>
+**What would resolve it**: <specific additional experiment / edit
+/ analysis>
 
 ---
 
@@ -135,68 +217,138 @@ counts.>
 <one paragraph, briefly.>
 
 End the report with one paragraph: **If after addressing all your
-concerns the hypothesis would still be supported, state that. If your
-concerns are severe enough that the current result should not be taken
-as evidence for the hypothesis, state that, in plain language.**
+concerns the hypothesis would still be supported, state that. If
+your concerns are severe enough that the current result should not
+be taken as evidence for the hypothesis, state that, in plain
+language.**
 ```
 
 ## Annotation conventions in the redteam file
 
-Same as `skills/red-team-spec.md`: `> M:` for the human's response,
-`> C:` for the confirmation of action taken, two newlines between each.
+The redteam file is a living document, not a one-time report. After
+the sub-agent writes it, the human and Claude Code annotate it in
+place, so that the file at the end of the workflow is a complete
+audit trail of which findings were applied, dismissed, or routed,
+and why. The conventions match the other red-team skills:
 
-For result findings specifically, the `> C:` annotation often references
-a *follow-up experiment* directory rather than a code commit, since the
-typical resolution is to run a control or additional baseline rather
-than to edit existing code.
+- The human's first-pass reaction goes on a blank line two newlines
+  below each finding, prefixed `> M:` (initial-of-author colon).
+- A `> M:` annotation can be a confident *apply* instruction, a
+  confident *dismiss* explanation, or an explicit *uncertain*
+  question. The same prefix covers all three; the content
+  disambiguates.
+- For findings where the human cannot evaluate the suggestion well
+  enough to apply or dismiss in good conscience — because the
+  finding turns on statistical reasoning, mathematics, or
+  experimental-design concepts the human does not yet command —
+  use `> M?:` (note the question mark) rather than `> M:`. This is
+  distinct from "uncertain" (`> M:` with a question): `> M?:` means
+  "I'm not sure I understand the question." Findings annotated
+  `> M?:` will be discussed in chat before any `> C:` resolution
+  is recorded; Claude responds with a calibrated math/stats
+  explainer, and the human upgrades the annotation to `> M:` once
+  they can evaluate the finding. See
+  `workflows/invoke-red-team-on-result.md` stage 3a for the
+  promotion-to-tutorial rule.
+- Claude Code's resolution goes on a blank line two newlines below
+  the `> M:` annotation, prefixed `> C:`. Each `> C:` records
+  *which artifact(s)* the change touches — the report, the
+  experiment code, a figure (regenerated), an upstream artifact via
+  a routing tag, or none (dismissed / accepted as limitation). When
+  multiple artifacts are touched, list them all.
 
 Example:
 
-```markdown
-### F2: No random-prior baseline reported [severity: medium]
-
-**Concern**: The result shows the MI-maximising prior produces a
-particular figure shape, but the README does not show what a random
-prior produces. Without a baseline, the apparent specificity of the
-result could just be a generic property of the BA solver on this
-likelihood.
-
-**What would resolve it**: Add an experiment that runs BA with a
-random initial prior (averaged over several seeds) and compare the
-resulting figure to the MI-maximising one.
-
-> M: Apply. Run with three random initial priors as a sanity-check
-> baseline. Should not change the BA result since BA converges, but
-> it's the kind of thing reviewers will ask about.
-
-> C: Follow-up experiment created at experiments/001-random-prior-baseline/.
-> PLAN.md drafted, run pending. Original experiment README updated to
-> note this follow-up is in flight.
 ```
+### F3: No constant-predictor baseline reported [severity: medium] [routing: none]
+
+**Concern**: The reported accuracy of 0.62 is treated as evidence the
+model has learned the structure, but the class distribution is
+imbalanced (0.55 majority class). The gap to the constant predictor
+is therefore 0.07, not 0.62, and the report does not make this
+gap explicit.
+
+**What would resolve it**: Run the constant-predictor baseline,
+report the gap, and rewrite the relevant paragraph in REPORT.md.
+
+> M: Confirmed, this is a real omission. Add the constant baseline
+> to run.py, rerun, and reword the "Results" paragraph to lead with
+> the gap-to-baseline rather than the raw accuracy.
+
+> C: Applied. Added `_constant_baseline()` to run.py (touches
+> experiment code), reran the experiment, regenerated Fig 2
+> (touches figure), and rewrote the "Results" paragraph in
+> REPORT.md (touches report). Commit <hash>.
+```
+
+For a routed finding the `> C:` records the routing rather than an
+in-place edit:
+
+```
+> C: Routed. This is a [test-gap]: the test suite would not catch
+> the off-by-one in the windowing function that produced the
+> spurious correlation. Filed under the test red-team queue; no
+> changes to this experiment until the test gap is resolved
+> upstream.
+```
+
+For a finding that forces a return to an earlier stage of the
+workflow, the `> C:` says so explicitly, and the in-experiment
+processing pauses until the upstream artifact has been re-stabilised.
+See the workflow file's stage 3a for the discussion convention.
 
 ## After the report exists
 
-The author either:
+The redteam file is processed via `workflows/invoke-red-team-on-result.md`.
+The workflow's stage 3 has four sub-stages, in order:
 
-- **Runs additional experiments** to address findings. Each follow-up
-  experiment gets its own `experiments/NNN-*/` directory with its own
-  PLAN and README. The original experiment's README links to the
-  follow-ups. The `> C:` annotation references the follow-up
-  directory.
-- **Documents acceptance of the limitation** in the `> M:` response
-  and in the experiment's README, explaining why the limitation does
-  not undermine the use being made of the result. The `> C:`
-  annotation confirms the README was updated.
+1. **Stage 3a — Decide.** First, ask the global question: do *any*
+   findings, in aggregate or individually, force a return to an
+   earlier stage of the workflow (spec / tests / implementation /
+   docs)? If yes, surface that in chat before per-finding processing.
+   If no, walk each finding top-down by severity, propose a `> C:`
+   for confident `> M:` items, push back where you disagree, ask
+   the human where they were uncertain, and respond with a
+   calibrated explainer for `> M?:` items.
+2. **Stage 3b — Update upstream artifacts (if applicable).** For
+   findings tagged `[spec-implication]`, `[test-gap]`, or
+   `[code-implication]` that were accepted, hand off to the
+   corresponding upstream workflow rather than acting in place. In
+   the simplest case (stage 3a determined no upstream return is
+   needed and all routing tags were rejected) this stage is empty.
+3. **Stage 3c — Apply.** Make the in-experiment edits to `run.py`,
+   regenerate the affected figures by re-running the experiment,
+   and edit the report text. As with the other red-team workflows,
+   apply red colouring to changed regions of the report so the
+   human can see the diff visually on re-read.
+4. **Stage 3d — Finalise.** After the human has re-read the report
+   and approved, remove the red colouring and commit the revision
+   as a single commit.
 
-For the project as a whole, a useful convention: a result is *not*
-considered established until at least the high-severity findings from its
-redteam are addressed. The experiment README should explicitly state
-the high-severity findings' resolution status and link to follow-up
-experiments where relevant.
+If no high-severity findings remain unresolved (either applied or
+explicitly accepted with a documented justification in the report),
+the result is considered established. Per project convention, the
+report should explicitly state the high-severity findings' resolution
+status and link to follow-up experiments where any apply.
 
 ## Caveat
 
-This is the red-team skill most prone to producing speculative concerns
-that are not really problems. Treat findings as questions to investigate,
-not verdicts. The point is to make sure these questions were asked, not
-to manufacture an answer of "the result is wrong."
+This is the red-team skill most prone to producing speculative
+concerns that are not really problems — the broader the question,
+the more space for hypothetical alternatives. Treat findings as
+questions to investigate, not verdicts. The point is to make sure
+these questions were asked, not to manufacture an answer of "the
+result is wrong." Use the pushback license on `> M:` confident
+applies liberally if a finding is genuinely a wishlist item dressed
+as a concern.
+
+## Provenance
+
+The annotation conventions, the routing tags
+(`[spec-implication]` / `[test-gap]` / `[code-implication]`), the
+"return to earlier stage" first-pass check, and the four-sub-stage
+processing shape were all decided during the first result red-team
+session (experiment `000-static-fig1`); see the corresponding
+transcript in `transcripts/` for the original reasoning. This skill
+codifies them so subsequent result red-teams don't rediscover the
+shape.
