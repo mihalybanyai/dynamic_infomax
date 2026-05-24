@@ -201,31 +201,21 @@ revision is in flight (chance to land the section in the same edit),
 or when a cross-reference breakage is found that basename uniqueness
 would have caught.
 
-### Bootstrap still ships pre-evolution copies of three procedural skills [bootstrap]
+### AGENTS.md should mention red teaming in a dedicated section [conventions]
 
-*Opened 2026-05-24*
+*Opened 2026-05-20*
 
-The v2 bootstrap pass landed updated AGENTS.md, the four red-team
-skills, manage-randomness, the tutorials, uv setup, and the macOS
-git fix — but the three original procedural skills
-(`write-math-spec.md`, `derive-test-suite.md`,
-`document-experiment.md`) were carried over verbatim from the v1
-bootstrap because they were not part of the regeneration pass and
-have plausibly evolved in the live repo since. A labmate running
-`bootstrap.py` today gets these three at their original v1 content,
-which is likely behind the live versions (the AGENTS.md test-gates
-section already implies a richer derive-test-suite that mentions
-property-to-test tables and eye-test files, neither of which is in
-the seeded copy).
+Claude thought this before running out of tokens:
 
-Action: compare the live `skills/{write-math-spec,derive-test-suite,document-experiment}.md`
-against the strings `ORIG_SKILL_WRITE_MATH_SPEC`,
-`ORIG_SKILL_DERIVE_TEST_SUITE`, `ORIG_SKILL_DOCUMENT_EXPERIMENT` in
-`bootstrap.py`. For each one that has drifted, update the embedded
-string. Wait until the existing workflow-issues entry on revising
-`write-math-spec` after three specs has resolved before doing the
-write-math-spec one, so the revision and the bootstrap pickup land
-together.
+Now let me think about what the red-teaming section should say. It should:
+
+Name the four red-team stages and what each is for
+Point at the four skills and four workflows
+State the rule that each red-team runs once per pipeline pass and is required before downstream work proceeds
+Mention the annotation conventions (> M:, > M?:, > C:) by reference, not in detail
+Be short — same level of compression as the Reproducibility section (under 30 lines)
+
+The updated AGENTS.md should go into the bootstrap.py as well.
 
 ---
 
@@ -308,3 +298,9 @@ skills (`write-math-spec`, `derive-test-suite`, `document-experiment`)
 were not refreshed in this pass and have been split off into their
 own follow-up entry; see "Bootstrap still ships pre-evolution copies
 of three procedural skills" under Open.
+
+### Bootstrap still ships pre-evolution copies of three procedural skills [bootstrap]
+
+*Opened 2026-05-24, resolved 2026-05-24*
+
+Resolved manually.
