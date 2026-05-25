@@ -2,6 +2,12 @@
 
 Research project on [one-line description here].
 
+## Artifacts in need of action
+
+- specs/001-infomax-betting.md: review from 1.2 onward
+- notes/infomax_aprv_seed.md: review and generate spec
+- notes/real_world_analogues.md: review and decide if implies action
+
 ## Quick start
 
 ```bash
