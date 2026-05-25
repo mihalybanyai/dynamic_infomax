@@ -67,7 +67,7 @@ g̅(π_true, 2 π̂ − 1)   =   log 2  −  H_B(π_true)  −  D_KL( Bern(π_tr
 = log 2 − H_B(π_true) − D_KL(Bern(π_true) ‖ Bern(π̂))`. It is the
 hinge of the whole experiment — see the next section.)
 
-The same machinery applies to Part 2 with `π̂ = r̂_n(p, k, ω)` (the
+The same machinery applies to Part 2 with `π̂ = r̂_n(p, h, ω)` (the
 posterior predictive probability of the pattern) and `π_true =
 θ^{k₊}` (the true probability of all-heads under `θ`), per spec
 §1.5. The Kelly fraction is again `f = 2 π̂ − 1`, the bet is again
@@ -162,21 +162,21 @@ this is
 π̂  =  P_p(X_{n+1} = 1 | X_{1:n})
     =  E_{p(θ | X_{1:n})}[ P(X_{n+1} = 1 | θ) ]
     =  E_{p(θ | X_{1:n})}[ θ ]
-    =  μ̂_n(p, k_n).
+    =  μ̂_n(p, h_n).
 ```
 
 The bet uses *only* the posterior mean. Two priors that induce the
-same posterior-mean function `k ↦ μ̂_n(p, k)` give identical
+same posterior-mean function `h ↦ μ̂_n(p, h)` give identical
 expected log-wealth for every `θ`, against every nature `q`. This
 is why spec §0 says Part 1 "isolates whether `p*`'s posterior-mean
 function is better calibrated than the Beta priors'" — there is
 *nothing else* of the posterior the bet can see.
 
 This also explains a possible non-result: if `p*`'s posterior-mean
-function turns out to be approximately Beta-shaped (affine in `k`,
+function turns out to be approximately Beta-shaped (affine in `h`,
 which is what Beta posteriors give), Part 1 will not distinguish
 the priors much. The advantage, if any, has to come from
-*non-affineness* of `k ↦ μ̂_n(p*, k)`. That is an empirical
+*non-affineness* of `h ↦ μ̂_n(p*, h)`. That is an empirical
 question the spec is set up to answer, not a property of the
 posterior-mean derivation itself.
 
@@ -190,7 +190,7 @@ of the pattern,
 π̂  =  P_p(X_{n+1:n+k₊} = (1, …, 1) | X_{1:n})
     =  E_{p(θ | X_{1:n})}[ P(all heads | θ) ]
     =  E_{p(θ | X_{1:n})}[ θ^{k₊} ]
-    =  r̂_n(p, k_n, ω).
+    =  r̂_n(p, h_n, ω).
 ```
 
 The bet now uses the *`k₊`-th raw posterior moment*. Two priors

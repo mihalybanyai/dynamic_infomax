@@ -132,26 +132,25 @@ We follow spec 000's conventions for the Bernoulli model, with two
 differences: (a) sample budgets are denoted `n` (per the note and the
 betting literature), and the corresponding spec-000 variable `m` is the
 same object; (b) the data is presented to the agent as the sufficient
-statistic `k_n = Σ X_i ∼ Binomial(n, θ)`.
+statistic <span style="color:red">`h_n = Σ X_i ∼ Binomial(n, θ)` (the
+*heads count*; renamed from `k_n` to keep `k`-letters reserved for
+indices and to avoid collision with `k₊`)</span>.
 
 | Symbol | Meaning |
 |---|---|
 | `θ ∈ [0,1]` | Probability of heads on a Bernoulli toss. |
 | `n` | Sample budget (number of observed tosses before the bet). |
-| `k_n ∈ {0, …, n}` | Number of heads observed; sufficient statistic. |
-|| > M: the above should be h_n instead of k_n, there are too many ks already. change everywhere|
+| <span style="color:red">`h_n ∈ {0, …, n}`</span> | <span style="color:red">Number of heads observed in the training data; sufficient statistic for `θ`.</span> |
 | `k₊` | Number of *future* tosses the Part-2 bet is on. |
 | `ω ∈ {0,1}^{k₊}` | The pattern bet on in Part 2. Fixed `ω = (1,…,1)` in the headline runs (see DC-2). |
 | `p(θ)` | Agent's prior on `θ`. |
-| `p_U`, `p_J` | `Beta(1,1)` (uniform) and `Beta(½, ½)` (Jeffreys). |
-|| > M: Let's have a reference for the Jeffreys being this Beta distribution here|
+| `p_U`, `p_J` | `Beta(1,1)` (uniform) and `Beta(½, ½)` (Jeffreys). <span style="color:red">For the Bernoulli model the Jeffreys prior has density `p_J(θ) = 1/(π √(θ(1−θ)))`, which equals `Beta(½, ½)` since the latter's normalising constant is `B(½, ½) = π`; see Jeffreys (1946) and spec 000 §1.5.</span> |
 | `p*_n` | The info-optimal prior for budget `n` (spec 000). Discrete, on the BA grid. |
 | `p_MM` | Moment-matched Beta with the same mean and variance as `p*_n` (Part 2 only). |
-| `μ̂_n(p, k)` | Posterior mean of `θ` given `k_n = k` under prior `p`. |
-| `r̂_n(p, k, ω)` | Posterior predictive probability of pattern `ω` given `k_n = k` under `p`. For `ω = (1,…,1)` this is the `k₊`-th raw posterior moment. |
+| <span style="color:red">`μ̂_n(p, h)`</span> | <span style="color:red">Posterior mean of `θ` given `h_n = h` under prior `p`.</span> |
+| <span style="color:red">`r̂_n(p, h, ω)`</span> | <span style="color:red">Posterior predictive probability of pattern `ω` given `h_n = h` under `p`. For `ω = (1,…,1)` this is the `k₊`-th raw posterior moment.</span> |
 | `q(θ)` | A draw from the hyperprior over Beta mixtures (§1.6); the data-generating density. |
-| `M_{r,s}(q)` | `∫₀¹ θ^r (1−θ)^s q(θ) dθ`. Generalised moment of `q`; closed form for Beta mixtures (§1.7). |
-|| >M: what are r and s? what will this be used for?|
+| `M_{r,s}(q)` | `∫₀¹ θ^r (1−θ)^s q(θ) dθ`. Generalised moment of `q`; closed form for Beta mixtures (§1.7). <span style="color:red">`r, s ∈ ℤ_{≥0}` are non-negative integer exponents; the specific `(r, s)` pairs the experiment evaluates are pinned in §1.4 (Part 1) and §1.5 (Part 2), and the moments enter the closed-form `V̄₁`/`V̄₂` expressions there.</span> |
 | `G₁`, `G₂` | Realised log-wealth growth for Parts 1 and 2 (§1.4, §1.5). |
 | `V₁`, `V₂` | Expectation of `G` over `X_{1:n}` given `θ`. |
 | `V̄₁`, `V̄₂` | Expectation of `V` over `θ ∼ q`. The headline quantity. |
@@ -221,18 +220,18 @@ optimality is the immediate consequence: `g̅` is maximised at `π̂ =
 ### 1.4 Part 1: one-shot bet on toss `n+1`
 
 The agent's predictive probability of heads on toss `n+1` is the
-posterior mean `μ̂ = μ̂_n(p, k_n)`. So `π_true = θ`, `π̂ = μ̂_n(p, k_n)`,
+posterior mean `μ̂ = μ̂_n(p, h_n)`. So `π_true = θ`, `π̂ = μ̂_n(p, h_n)`,
 and the realised growth is
 
 ```
-G₁(θ, p, X_{1:n})   =   g̅( θ,  μ̂_n(p, k_n) ).
+G₁(θ, p, X_{1:n})   =   g̅( θ,  μ̂_n(p, h_n) ).
 ```
 
-`X_{1:n}` enters only through `k_n ∼ Binomial(n, θ)`; the expectation
+`X_{1:n}` enters only through `h_n ∼ Binomial(n, θ)`; the expectation
 over data is a finite sum:
 
 ```
-V₁(θ, p, n)   =   Σ_{k=0}^{n}  C(n,k) θ^k (1−θ)^{n−k} · g̅( θ, μ̂_n(p, k) ).
+V₁(θ, p, n)   =   Σ_{h=0}^{n}  C(n,h) θ^h (1−θ)^{n−h} · g̅( θ, μ̂_n(p, h) ).
 ```
 
 Expanding `g̅`:
@@ -240,19 +239,19 @@ Expanding `g̅`:
 ```
 V₁(θ, p, n)
      =  log 2
-        +  Σ_{k=0}^{n} C(n,k) θ^k (1−θ)^{n−k} ·
-              [  θ · log μ̂_n(p,k)  +  (1−θ) · log(1 − μ̂_n(p,k)) ].
+        +  Σ_{h=0}^{n} C(n,h) θ^h (1−θ)^{n−h} ·
+              [  θ · log μ̂_n(p,h)  +  (1−θ) · log(1 − μ̂_n(p,h)) ].
 ```
 
-For each `(p, k)` the quantities `log μ̂_n(p,k)` and `log(1 − μ̂_n(p,k))`
+For each `(p, h)` the quantities `log μ̂_n(p,h)` and `log(1 − μ̂_n(p,h))`
 are constants in `θ`. So averaging over `θ ∼ q`:
 
 ```
 V̄₁(p, n, q)
      =  log 2
-        + Σ_{k=0}^{n} C(n,k) [
-              log μ̂_n(p,k)        · M_{k+1, n−k}(q)
-            + log(1 − μ̂_n(p,k))   · M_{k,   n−k+1}(q)
+        + Σ_{h=0}^{n} C(n,h) [
+              log μ̂_n(p,h)        · M_{h+1, n−h}(q)
+            + log(1 − μ̂_n(p,h))   · M_{h,   n−h+1}(q)
           ].
 ```
 
@@ -264,15 +263,15 @@ posterior-mean function `μ̂_n(p, ·)`.
 
 The bet is on `ω = (1, …, 1) ∈ {0,1}^{k₊}` materialising over tosses
 `n+1, …, n+k₊`. The agent's predictive probability of `ω` is `r̂_n(p,
-k_n, ω) = E_{p(θ | k_n)}[ θ^{k₊} ]`, i.e. the `k₊`-th raw posterior
+h_n, ω) = E_{p(θ | h_n)}[ θ^{k₊} ]`, i.e. the `k₊`-th raw posterior
 moment. The truth's probability of `ω` given `θ` is `r(θ) = θ^{k₊}`.
 
-Same derivation as Part 1, with `π̂ = r̂_n(p, k_n, ω)` and `π_true =
+Same derivation as Part 1, with `π̂ = r̂_n(p, h_n, ω)` and `π_true =
 r(θ)`:
 
 ```
 V₂(θ, p, n, k₊)
-     = Σ_{k=0}^{n}  C(n,k) θ^k (1−θ)^{n−k} · g̅( θ^{k₊}, r̂_n(p,k,ω) ).
+     = Σ_{h=0}^{n}  C(n,h) θ^h (1−θ)^{n−h} · g̅( θ^{k₊}, r̂_n(p,h,ω) ).
 ```
 
 Decomposing `g̅` and averaging over `θ ∼ q`:
@@ -280,14 +279,14 @@ Decomposing `g̅` and averaging over `θ ∼ q`:
 ```
 V̄₂(p, n, q, k₊)
      =  log 2
-        + Σ_{k=0}^{n}  C(n,k) [
-              log r̂_n(p,k)         · M_{k+k₊, n−k}(q)
-            + log(1 − r̂_n(p,k))    · ( M_{k, n−k}(q) − M_{k+k₊, n−k}(q) )
+        + Σ_{h=0}^{n}  C(n,h) [
+              log r̂_n(p,h)         · M_{h+k₊, n−h}(q)
+            + log(1 − r̂_n(p,h))    · ( M_{h, n−h}(q) − M_{h+k₊, n−h}(q) )
           ].
 ```
 
-Exact for Beta-mixture `q`. Note that `M_{k, n−k}(q) − M_{k+k₊, n−k}(q)
-= E_q[ θ^k (1−θ)^{n−k} (1 − θ^{k₊}) ]`, which is non-negative by
+Exact for Beta-mixture `q`. Note that `M_{h, n−h}(q) − M_{h+k₊, n−h}(q)
+= E_q[ θ^h (1−θ)^{n−h} (1 − θ^{k₊}) ]`, which is non-negative by
 construction (each term is a probability against a non-negative
 integrand).
 
@@ -300,22 +299,22 @@ type enters `V̄₁` or `V̄₂`.
 **Beta `Beta(α, β)`:**
 
 ```
-μ̂_n(Beta(α,β), k)               =   (α + k) / (α + β + n).
-r̂_n(Beta(α,β), k, ω = 1^{k₊})   =   Π_{j=0}^{k₊−1}  (α + k + j) / (α + β + n + j),
-                                 =   B(α + k + k₊, β + n − k) / B(α + k, β + n − k).
+μ̂_n(Beta(α,β), h)               =   (α + h) / (α + β + n).
+r̂_n(Beta(α,β), h, ω = 1^{k₊})   =   Π_{j=0}^{k₊−1}  (α + h + j) / (α + β + n + j),
+                                 =   B(α + h + k₊, β + n − h) / B(α + h, β + n − h).
 ```
 
 **Discrete `p* = Σ_a π_a δ_{θ_a}` (used for `p*_n` via the BA grid):**
 
 ```
-w_a(k)         =   π_a · θ_a^{k} · (1 − θ_a)^{n − k}                  (unnormalised),
-π'_a(k)        =   w_a(k) / Σ_{a'} w_{a'}(k),
+w_a(h)         =   π_a · θ_a^{h} · (1 − θ_a)^{n − h}                  (unnormalised),
+π'_a(h)        =   w_a(h) / Σ_{a'} w_{a'}(h),
 
-μ̂_n(p*, k)     =   Σ_a θ_a · π'_a(k),
-r̂_n(p*, k, ω) =   Σ_a θ_a^{|ω|} (1 − θ_a)^{k₊ − |ω|} · π'_a(k).
+μ̂_n(p*, h)     =   Σ_a θ_a · π'_a(h),
+r̂_n(p*, h, ω) =   Σ_a θ_a^{|ω|} (1 − θ_a)^{k₊ − |ω|} · π'_a(h).
 ```
 
-For `ω = (1,…,1)`, `r̂_n(p*, k, ω) = Σ_a θ_a^{k₊} · π'_a(k)` — the
+For `ω = (1,…,1)`, `r̂_n(p*, h, ω) = Σ_a θ_a^{k₊} · π'_a(h)` — the
 `k₊`-th raw posterior moment under the discrete posterior. The discrete
 formulas are evaluated in log-space to avoid underflow (see §3.4).
 
@@ -415,11 +414,11 @@ The two parts of the experiment expose different kinds of structure:
 
 - **Part 1 (mean only):** the bet uses only the posterior mean, so any
   advantage of `p*` over Beta priors must come from the mean function
-  `k ↦ μ̂_n(p*, k)` being better calibrated than the Beta posterior
-  means `k ↦ (α+k)/(α+β+n)`. The Beta priors' mean functions are
-  *affine in k* — `p*` can give a non-affine, possibly piecewise
+  `h ↦ μ̂_n(p*, h)` being better calibrated than the Beta posterior
+  means `h ↦ (α+h)/(α+β+n)`. The Beta priors' mean functions are
+  *affine in h* — `p*` can give a non-affine, possibly piecewise
   function (because the discrete posterior puts varying weight on
-  different atoms as `k` varies). Whether non-affineness helps in
+  different atoms as `h` varies). Whether non-affineness helps in
   expectation against `q` is the empirical question.
 
 - **Part 2 (higher moment):** the bet payoff depends on `E[θ^{k₊}]`,
@@ -450,23 +449,23 @@ work lives in new modules listed in §3.2.
 
 ### 3.2 New modules
 
-`src/infomax/posteriors.py` — closed-form `μ̂_n(p, k)` and `r̂_n(p, k,
+`src/infomax/posteriors.py` — closed-form `μ̂_n(p, h)` and `r̂_n(p, h,
 k₊)` for Beta and discrete priors. Public API:
 
 ```
-def beta_posterior_mean(alpha: float, beta: float, k: int, n: int) -> float
+def beta_posterior_mean(alpha: float, beta: float, h: int, n: int) -> float
 def beta_posterior_pattern_prob(alpha: float, beta: float,
-                                k: int, n: int, k_plus: int) -> float
+                                h: int, n: int, k_plus: int) -> float
 def discrete_posterior_mean(thetas: NDArray, log_weights: NDArray,
-                            log_likelihood_k: NDArray) -> float
+                            log_likelihood_h: NDArray) -> float
 def discrete_posterior_pattern_prob(thetas: NDArray, log_weights: NDArray,
-                                    log_likelihood_k: NDArray,
+                                    log_likelihood_h: NDArray,
                                     k_plus: int) -> float
 ```
 
 The discrete versions take `log_weights = log π_a` and
-`log_likelihood_k = (log θ_a) * k + (log(1−θ_a)) * (n−k)` (shape
-`(|atoms|,)`) so the per-`k` computation is one logsumexp + one mean
+`log_likelihood_h = (log θ_a) * h + (log(1−θ_a)) * (n−h)` (shape
+`(|atoms|,)`) so the per-`h` computation is one logsumexp + one mean
 without re-evaluating logs. `r̂` for `ω ≠ (1,…,1)` is *out of scope*
 for this spec (DC-2).
 
@@ -487,7 +486,7 @@ def moment_match_beta(mean: float, variance: float) -> tuple[float, float]
 ```
 
 `beta_mixture_moment` is the log-space implementation of §1.7 — no
-factorial overflow at large `n + k`. `moment_match_beta` returns
+factorial overflow at large `n + h`. `moment_match_beta` returns
 `(α, β)` per §1.8; raises `ValueError` if `variance ≥ mean(1−mean)`.
 
 `src/infomax/hyperprior.py` — samplers for H1, H2, H3. Public API:
@@ -511,15 +510,15 @@ KELLY_CLIP_EPSILON: float = 1e-12
 
 def kelly_fraction(pi_hat: float) -> float                       # f = clip(2π̂ − 1, ±(1 − ε_f))
 def expected_log_growth(pi_true: float, pi_hat: float) -> float  # g̅
-def v_bar_1(posterior_mean_of_k: NDArray, n: int, q: BetaMixture) -> float
-def v_bar_2(posterior_pattern_of_k: NDArray, n: int, k_plus: int,
+def v_bar_1(posterior_mean_of_h: NDArray, n: int, q: BetaMixture) -> float
+def v_bar_2(posterior_pattern_of_h: NDArray, n: int, k_plus: int,
             q: BetaMixture) -> float
 def v_bar_1_oracle(q: BetaMixture) -> float                       # §1.10
 def v_bar_2_oracle(q: BetaMixture, k_plus: int) -> float          # §1.10
 ```
 
-`posterior_mean_of_k` and `posterior_pattern_of_k` are pre-computed
-length-`(n+1)` arrays of `μ̂_n(p, k)` and `r̂_n(p, k, k₊)` respectively
+`posterior_mean_of_h` and `posterior_pattern_of_h` are pre-computed
+length-`(n+1)` arrays of `μ̂_n(p, h)` and `r̂_n(p, h, k₊)` respectively
 — see §3.3 for the precomputation step.
 
 `src/infomax/betting_driver.py` — orchestrator that ties the
@@ -566,7 +565,7 @@ Two reasons:
 1. **Faithfulness.** The grid masses are the actual BA output. The
    extracted atoms inherit DC-2's grid-bias (~`1/N_θ` in centroid
    position; ~`1/N_θ` in mass) for no gain in the betting computation —
-   we never need atom locations, only `Σ_a θ_a^j π'_a(k)`, which is
+   we never need atom locations, only `Σ_a θ_a^j π'_a(h)`, which is
    identical when computed over the full grid versus over centroid
    clusters up to the DC-2 bias.
 
@@ -592,8 +591,8 @@ Compute p*_n via BA (cached across cells sharing n):
    p_star_masses ← ba_result.prior.masses()
 
 Precompute posterior-mean / pattern arrays for each prior:
-   mu_hat[p, k]  for p in {p_star, p_J, p_U}, k in 0..n
-   r_hat[p, k]   for p in {p_star, p_J, p_U, p_MM (Part 2)}, k in 0..n
+   mu_hat[p, h]  for p in {p_star, p_J, p_U}, h in 0..n
+   r_hat[p, h]   for p in {p_star, p_J, p_U, p_MM (Part 2)}, h in 0..n
 
 For s in 0..S_q − 1:
    q_s           ← sample_q(hyperprior, K, rng)
@@ -607,21 +606,21 @@ Return BettingResult.
 ```
 
 **Precomputation details.** For Part 1, the only `(r, s)` pairs needed
-are `(k+1, n−k)` and `(k, n−k+1)` for `k = 0, …, n` (`2(n+1)`
-moments). For Part 2 they are `(k+k₊, n−k)` and `(k, n−k)` for
-`k = 0, …, n` (`2(n+1)` moments). Total `≤ 4(n+1)` moment evaluations
+are `(h+1, n−h)` and `(h, n−h+1)` for `h = 0, …, n` (`2(n+1)`
+moments). For Part 2 they are `(h+k₊, n−h)` and `(h, n−h)` for
+`h = 0, …, n` (`2(n+1)` moments). Total `≤ 4(n+1)` moment evaluations
 per `q`-sample, all closed form.
 
 **Log-space evaluation of `r̂`.** For the discrete `r̂` formula the
-naive expression `Σ_a θ_a^{k+k₊} (1−θ_a)^{n−k}` underflows at large
+naive expression `Σ_a θ_a^{h+k₊} (1−θ_a)^{n−h}` underflows at large
 `n` or `k₊` for grid cells near the endpoints. The implementation
 computes everything in log-space:
 
 ```
-log w_a(k)         =   log π_a  +  k · log θ_a  +  (n − k) · log(1 − θ_a)
-log Z(k)           =   logsumexp_a log w_a(k)
-log π'_a(k)        =   log w_a(k) − log Z(k)
-log r̂_n(p*, k, k₊) =   logsumexp_a [ k₊ · log θ_a + log π'_a(k) ]
+log w_a(h)         =   log π_a  +  h · log θ_a  +  (n − h) · log(1 − θ_a)
+log Z(h)           =   logsumexp_a log w_a(h)
+log π'_a(h)        =   log w_a(h) − log Z(h)
+log r̂_n(p*, h, k₊) =   logsumexp_a [ k₊ · log θ_a + log π'_a(h) ]
                        (because (1 − θ_a)^0 = 1 for ω = all-heads)
 ```
 
@@ -800,7 +799,7 @@ Per `skills/derive-test-suite.md`. Test functions live in
 | P10 | `sample_q` returns a valid `BetaMixture`: `K` components, non-negative weights summing to 1, all shape parameters in the hyperprior's support, across H1/H2/H3 and `K ∈ {1, 2, 3}`. | `test_t10_sample_q_validity` |
 | P11 | Cell-stream snapshot: enumerating cells under the §3.5 sweep yields a list whose `(cell, stream_seed)` pairs match a frozen JSON snapshot (`tests/data/001_cell_streams.json`). Defends against silent re-ordering that would break reproducibility. | `test_t11_cell_stream_snapshot` |
 | P12 | For `q = Beta(1, 1)` (uniform), `V̄₁(p_U, n, q) = log 2 − E_q[H_B(θ)]` to atol `1e-10` — i.e. for uniform `q`, the uniform prior is the oracle. Direct algebraic check using `H_B(θ) = −θ log θ − (1−θ) log(1−θ)`. | `test_t12_uniform_q_uniform_p_is_oracle` |
-| P13 | Discrete posterior mean / pattern prob agree with a naïve dense-Bayes-rule reference: posterior over atoms computed by direct normalisation of `π_a · θ_a^k (1−θ_a)^{n−k}` matches the log-space code path to atol `1e-12` (no MC). | `test_t13_discrete_posterior_naive_vs_logspace` |
+| P13 | Discrete posterior mean / pattern prob agree with a naïve dense-Bayes-rule reference: posterior over atoms computed by direct normalisation of `π_a · θ_a^h (1−θ_a)^{n−h}` matches the log-space code path to atol `1e-12` (no MC). | `test_t13_discrete_posterior_naive_vs_logspace` |
 | P14 | Eye-test smoke: running the eye-test script with the spec's pinned config completes without exception and writes a non-empty PNG. (Not a correctness test; catches script-level breakage in CI.) | `test_t14_eyetest_smoke` |
 
 We do **not** test:
@@ -945,7 +944,7 @@ comparison-prior)` cell.** Same columns plus `k_plus`. The
 - `vbar_p_star`, `vbar_p_J`, `vbar_p_U`, `vbar_p_MM` (Part 2 only),
   `vbar_oracle` — all in nats.
 
-Computed but **not persisted**: the per-prior, per-`k`,
+Computed but **not persisted**: the per-prior, per-`h`,
 posterior-mean / pattern-prob arrays (length `n + 1` each). They are
 recomputed cheaply by `run.py` from `p*_n` + the closed-form Beta
 formulas; storing them per sample would balloon the JSONL with
@@ -1143,3 +1142,48 @@ textual content on the second pass.
   ("two `> M?:` occurrences") was overridden by the human reviewer
   on first occurrence, since Kelly recurs throughout §1–§8 and the
   second occurrence was visible at review time.
+
+### 2026-05-25 — Clarification (§1.1 Setup and notation)
+
+Post-review revisions for §1.1 addressing three inline `> M:`
+comments from the human reviewer. All three are Clarifications: no
+math changes, no algorithmic changes, no test-property changes.
+Only the *introductory clarifications* in §1.1 are wrapped in red
+`<span>` markup; the resulting global rename is mechanical
+follow-through from the §1.1 definition and is left in plain text
+to keep §1–§5 readable (red-painting ~70 substitution sites would
+obscure the spec). The rename's scope is the durable record below.
+
+- **§1.1 sufficient-statistic symbol.** Renamed `k_n → h_n` for the
+  heads-count random variable, and propagated the rename to every
+  use of `k` as a value of the sufficient statistic throughout
+  §1–§5: summation indices `Σ_{k=0}^{n} → Σ_{h=0}^{n}`, binomial
+  coefficients `C(n,k) → C(n,h)`, posterior-mean / pattern-prob
+  function arguments (`μ̂_n(p, k) → μ̂_n(p, h)`, `r̂_n(p, k, ω) →
+  r̂_n(p, h, ω)`), Beta closed forms (`(α+k)/(α+β+n) →
+  (α+h)/(α+β+n)`), discrete-prior log-space arithmetic in §3.4
+  (`log w_a(k) → log w_a(h)` etc.), moment subscripts entering
+  `V̄₁` and `V̄₂` (`M_{k+1, n−k} → M_{h+1, n−h}`,
+  `M_{k+k₊, n−k} → M_{h+k₊, n−h}`), §2 commentary about the mean
+  function (`k ↦ μ̂_n(p*, k) → h ↦ μ̂_n(p*, h)`), §3.2 Python
+  identifiers (`beta_posterior_mean(..., k, n) → ..., h, n`;
+  `posterior_mean_of_k → posterior_mean_of_h`;
+  `log_likelihood_k → log_likelihood_h`), §3.4 pseudocode array
+  indices (`mu_hat[p, k] → mu_hat[p, h]`), and §4 / §5 references.
+  `k₊` (number of *future* tosses) and `K` (mixture-component
+  count for `q`) are deliberately *not* renamed — they are
+  semantically distinct from the heads count, and `k₊`'s
+  collision-prone status with `k_n` was the original motivation
+  for the rename. The Kelly tutorial
+  (`tutorials/math/kelly.md`) was updated in parallel for
+  consistency.
+- **§1.1 Jeffreys reference.** Added inline justification for
+  `p_J = Beta(½, ½)`: the density of `Beta(½, ½)` equals
+  `1 / (π √(θ(1 − θ)))` because the normalising constant
+  `B(½, ½) = π`. Pointer to Jeffreys (1946) and spec 000 §1.5,
+  both already in the §9 References section.
+- **§1.1 `M_{r,s}` clarification.** Added explicit type
+  (`r, s ∈ ℤ_{≥0}`) and the forward pointer to §1.4 (Part 1) and
+  §1.5 (Part 2) where the specific `(r, s)` pairs are pinned and
+  the moments are consumed by the closed-form `V̄₁` / `V̄₂`
+  expressions.
