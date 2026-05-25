@@ -132,25 +132,25 @@ We follow spec 000's conventions for the Bernoulli model, with two
 differences: (a) sample budgets are denoted `n` (per the note and the
 betting literature), and the corresponding spec-000 variable `m` is the
 same object; (b) the data is presented to the agent as the sufficient
-statistic <span style="color:red">`h_n = Σ X_i ∼ Binomial(n, θ)` (the
-*heads count*; renamed from `k_n` to keep `k`-letters reserved for
-indices and to avoid collision with `k₊`)</span>.
+statistic `h_n = Σ X_i ∼ Binomial(n, θ)` (the *heads count*;
+renamed from `k_n` to keep `k`-letters reserved for indices and to
+avoid collision with `k₊`).
 
 | Symbol | Meaning |
 |---|---|
 | `θ ∈ [0,1]` | Probability of heads on a Bernoulli toss. |
 | `n` | Sample budget (number of observed tosses before the bet). |
-| <span style="color:red">`h_n ∈ {0, …, n}`</span> | <span style="color:red">Number of heads observed in the training data; sufficient statistic for `θ`.</span> |
+| `h_n ∈ {0, …, n}` | Number of heads observed in the training data; sufficient statistic for `θ`. |
 | `k₊` | Number of *future* tosses the Part-2 bet is on. |
 | `ω ∈ {0,1}^{k₊}` | The pattern bet on in Part 2. Fixed `ω = (1,…,1)` in the headline runs (see DC-2). |
 | `p(θ)` | Agent's prior on `θ`. |
-| `p_U`, `p_J` | `Beta(1,1)` (uniform) and `Beta(½, ½)` (Jeffreys). <span style="color:red">For the Bernoulli model the Jeffreys prior has density `p_J(θ) = 1/(π √(θ(1−θ)))`, which equals `Beta(½, ½)` since the latter's normalising constant is `B(½, ½) = π`; see Jeffreys (1946) and spec 000 §1.5.</span> |
+| `p_U`, `p_J` | `Beta(1,1)` (uniform) and `Beta(½, ½)` (Jeffreys). For the Bernoulli model the Jeffreys prior has density `p_J(θ) = 1/(π √(θ(1−θ)))`, which equals `Beta(½, ½)` since the latter's normalising constant is `B(½, ½) = π`; see Jeffreys (1946) and spec 000 §1.5. |
 | `p*_n` | The info-optimal prior for budget `n` (spec 000). Discrete, on the BA grid. |
 | `p_MM` | Moment-matched Beta with the same mean and variance as `p*_n` (Part 2 only). |
-| <span style="color:red">`μ̂_n(p, h)`</span> | <span style="color:red">Posterior mean of `θ` given `h_n = h` under prior `p`.</span> |
-| <span style="color:red">`r̂_n(p, h, ω)`</span> | <span style="color:red">Posterior predictive probability of pattern `ω` given `h_n = h` under `p`. For `ω = (1,…,1)` this is the `k₊`-th raw posterior moment.</span> |
+| `μ̂_n(p, h)` | Posterior mean of `θ` given `h_n = h` under prior `p`. |
+| `r̂_n(p, h, ω)` | Posterior predictive probability of pattern `ω` given `h_n = h` under `p`. For `ω = (1,…,1)` this is the `k₊`-th raw posterior moment. |
 | `q(θ)` | A draw from the hyperprior over Beta mixtures (§1.6); the data-generating density. |
-| `M_{r,s}(q)` | `∫₀¹ θ^r (1−θ)^s q(θ) dθ`. Generalised moment of `q`; closed form for Beta mixtures (§1.7). <span style="color:red">`r, s ∈ ℤ_{≥0}` are non-negative integer exponents; the specific `(r, s)` pairs the experiment evaluates are pinned in §1.4 (Part 1) and §1.5 (Part 2), and the moments enter the closed-form `V̄₁`/`V̄₂` expressions there.</span> |
+| `M_{r,s}(q)` | `∫₀¹ θ^r (1−θ)^s q(θ) dθ`. Generalised moment of `q`; closed form for Beta mixtures (§1.7). `r, s ∈ ℤ_{≥0}` are non-negative integer exponents; the specific `(r, s)` pairs the experiment evaluates are pinned in §1.4 (Part 1) and §1.5 (Part 2), and the moments enter the closed-form `V̄₁`/`V̄₂` expressions there. |
 | `G₁`, `G₂` | Realised log-wealth growth for Parts 1 and 2 (§1.4, §1.5). |
 | `V₁`, `V₂` | Expectation of `G` over `X_{1:n}` given `θ`. |
 | `V̄₁`, `V̄₂` | Expectation of `V` over `θ ∼ q`. The headline quantity. |
