@@ -2,8 +2,8 @@
 
 | Section | Status | Date |
 |---|---|---|
-| 0. Purpose and scope | draft | — |
-| Generative model | draft | — |
+| 0. Purpose and scope | reviewed | 250526 |
+| Generative model | reviewed | 250526 |
 | 1. Mathematical statement | draft | — |
 | 2. Why this question | draft | — |
 | 3. Computational specification | draft | — |
@@ -44,19 +44,29 @@ Two parts:
   mean. *Only the posterior mean enters the bet*, so this part isolates
   whether `p*`'s posterior-mean function is better calibrated than the
   Beta priors'.
-- **Part 2 (one-shot bet on a `k₊`-toss all-heads pattern).** The bet
-  payoff depends on the predictive probability of `ω = (1,…,1)`, which
-  is the `k₊`-th raw posterior moment. This part exposes higher-moment
-  / shape-level structure of `p*` that Part 1 cannot.
+- **Part 2 (one-shot bet on a `k₊`-toss all-heads pattern).** Let
+  `ω ∈ {0,1}^{k₊}` denote a fixed binary pattern over the `k₊` tosses
+  immediately following the training data — i.e. tosses
+  `n+1, …, n+k₊`. The agent bets even-money on the realised pattern
+  equalling `ω`. The headline runs specialise to `ω = (1, …, 1)`
+  ("all heads"); general `ω` is supported by the same math (§1.5) but
+  deferred at the implementation level (DC-2 in §7). The bet payoff
+  depends on the predictive probability of `ω`, which for the
+  all-heads specialisation is the `k₊`-th raw posterior moment. This
+  part exposes higher-moment / shape-level structure of `p*` that
+  Part 1 cannot.
 
 **In scope**
 
 - Reuse spec 000's `blahut_arimoto` to compute `p*_n` on a grid; treat
   the converged grid masses as a discrete prior (no atom extraction
   needed for the betting computation, see §3.3).
-- Closed-form computation of expected log-wealth `V̄₁` and `V̄₂`
-  (the bet expectation reduces to a finite sum of Beta moments — see
-  §1.4 and §1.5; no Monte-Carlo over `X_{1:n}` or `θ`).
+- Closed-form computation of expected log-wealth `V̄₁` — the
+  expected log-wealth from the Part-1 single-toss Kelly bet (one
+  bet, one outcome) — and `V̄₂` — the expected log-wealth from the
+  Part-2 `k₊`-toss pattern bet (one bet on a single `k₊`-long
+  outcome sequence). Both reduce to a finite sum of Beta moments —
+  see §1.4 and §1.5; no Monte-Carlo over `X_{1:n}` or `θ` is needed.
 - A `q`-sampler for three hyperpriors (endpoint-favouring,
   interior-favouring, agnostic), each producing Beta-mixture samples
   with closed-form moments.
@@ -88,6 +98,17 @@ info-optimal prior help at task X" questions.
 ## Generative model
 
 ![Generative model](../diagrams/001-infomax-betting-pgm.svg)
+
+This diagram describes the *external environment* — the
+data-generating process the experiment uses to simulate "nature".
+It is *not* what the agent assumes. The agent never sees `q` or
+`𝓗`; it observes only `X_{1:n}` and reasons about `θ` through a
+fixed prior `p ∈ {p*_n, p_J, p_U, p_MM}` chosen as a function of
+the sample budget `n` alone (see the bottom of this section). The
+marginal of `θ` under this generative model — i.e. the realised
+`q_s` — is in general different from the agent's `p`. That
+mismatch (agent ≠ nature) is the whole point of the experiment;
+matching them by construction would make the comparison trivial.
 
 Two stacked plates capture the simulation. The outer plate (`s = 1, …,
 S_q`) is over independent samples of `q`: for each sample, a Beta-mixture
@@ -151,6 +172,11 @@ of `p*_n` computed directly from the grid masses; it is the unique Beta
 with those moments (closed form in §1.8).
 
 ### 1.3 Kelly fraction and realised log-growth
+
+(See `tutorials/math/kelly.md` for a calibrated explainer of the
+underlying Kelly identity and why log-utility is what bridges
+posterior quality to measurable betting payoff. The derivation
+below uses the result; the tutorial motivates it.)
 
 In Parts 1 and 2 the bet is even-money on a binary outcome `Y ∈ {0,1}`:
 the agent's belief gives `P(Y = 1) = π̂` for some `π̂` derived from
@@ -1062,4 +1088,55 @@ imported as-is.
 
 ## 10. Revision log
 
-*(empty — first draft)*
+### 2026-05-25 — Clarification (§0 Purpose and scope, Generative model)
+
+Post-review revisions for §0 addressing five inline `> M:` comments
+from the human reviewer, applied across two passes. All are
+Clarifications: no math changes, no algorithmic changes, no test
+changes. Section text moved from latent / ambiguous to explicit.
+Modifications were first marked inline with red `<span>` wrappers;
+the wrappers were stripped after the human reviewer accepted the
+textual content on the second pass.
+
+- **§0 Part 2 bullet.** `ω` was used (`ω = (1,…,1)`) before being
+  defined. Added a sentence introducing `ω ∈ {0,1}^{k₊}` as a fixed
+  binary pattern over the `k₊` post-training tosses, and pinned the
+  all-heads specialisation with a forward reference to DC-2.
+- **§0 in-scope bullet on `V̄₁` / `V̄₂`.** The two symbols were named
+  but not distinguished. Added inline gloss: `V̄₁` is the Part-1
+  single-toss-bet expected log-wealth, `V̄₂` is the Part-2
+  `k₊`-toss-pattern-bet expected log-wealth.
+- **§Generative model.** Added an opening paragraph stating
+  explicitly that the diagram is the generative model of the
+  external environment (nature), *not* the agent's belief. The
+  agent's prior `p` is fixed and in general differs from the
+  realised `q_s` — the mismatch is the experimental design's whole
+  point.
+- **§Generative model — diagram.** Rebuilt
+  `diagrams/001-infomax-betting-pgm.{py,svg}`. Three concrete fixes,
+  in order of when each was applied: (a) reversed plate add-order so
+  the outer `S_q` plate doesn't paint over the inner plate with its
+  white fill (the previous inner plate was geometrically present but
+  visually invisible); (b) enlarged the inner plate's margins inside
+  the outer so both borders render distinctly; (c) moved the inner
+  plate's `n + k_+` label to the *bottom-right* corner so it sits
+  *below* `x` (an earlier pass put it at top-right, above `x`, but
+  that placement clashed with the θ→x arrow; the bottom-right
+  placement keeps the label clear of both `x` and the incoming
+  arrow). `𝓗` is kept outside the outer plate, reflecting that the
+  hyperprior is fixed across `q`-samples.
+- **Kelly math explainer.** Created `tutorials/math/kelly.md` per
+  `tutorials/tutorial-readme.md`, calibrated to this spec. Covers:
+  (i) the bet in the even-money-Bernoulli form §1.3 uses;
+  (ii) why Kelly specifically — the
+  `g̅ = log 2 − H_B(π_true) − D_KL(π_true ‖ π̂)` identity that
+  ties expected log-wealth to KL from belief to truth, which is the
+  bridge between `p*`'s information-theoretic optimality and a
+  measurable downstream task; (iii) what that bridge means for spec
+  001's structure (Part 1 mean-only, Part 2 `k₊`-th moment, OQ-3
+  shape-beyond-moments); (iv) even-money vs general-odds extension
+  (DC-1 in §7); (v) red-team failure modes specific to Kelly
+  derivations. The tutorial-readme's normal trigger
+  ("two `> M?:` occurrences") was overridden by the human reviewer
+  on first occurrence, since Kelly recurs throughout §1–§8 and the
+  second occurrence was visible at review time.
