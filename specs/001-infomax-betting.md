@@ -139,16 +139,19 @@ statistic `k_n = Σ X_i ∼ Binomial(n, θ)`.
 | `θ ∈ [0,1]` | Probability of heads on a Bernoulli toss. |
 | `n` | Sample budget (number of observed tosses before the bet). |
 | `k_n ∈ {0, …, n}` | Number of heads observed; sufficient statistic. |
+|| > M: the above should be h_n instead of k_n, there are too many ks already. change everywhere|
 | `k₊` | Number of *future* tosses the Part-2 bet is on. |
 | `ω ∈ {0,1}^{k₊}` | The pattern bet on in Part 2. Fixed `ω = (1,…,1)` in the headline runs (see DC-2). |
 | `p(θ)` | Agent's prior on `θ`. |
 | `p_U`, `p_J` | `Beta(1,1)` (uniform) and `Beta(½, ½)` (Jeffreys). |
+|| > M: Let's have a reference for the Jeffreys being this Beta distribution here|
 | `p*_n` | The info-optimal prior for budget `n` (spec 000). Discrete, on the BA grid. |
 | `p_MM` | Moment-matched Beta with the same mean and variance as `p*_n` (Part 2 only). |
 | `μ̂_n(p, k)` | Posterior mean of `θ` given `k_n = k` under prior `p`. |
 | `r̂_n(p, k, ω)` | Posterior predictive probability of pattern `ω` given `k_n = k` under `p`. For `ω = (1,…,1)` this is the `k₊`-th raw posterior moment. |
 | `q(θ)` | A draw from the hyperprior over Beta mixtures (§1.6); the data-generating density. |
 | `M_{r,s}(q)` | `∫₀¹ θ^r (1−θ)^s q(θ) dθ`. Generalised moment of `q`; closed form for Beta mixtures (§1.7). |
+|| >M: what are r and s? what will this be used for?|
 | `G₁`, `G₂` | Realised log-wealth growth for Parts 1 and 2 (§1.4, §1.5). |
 | `V₁`, `V₂` | Expectation of `G` over `X_{1:n}` given `θ`. |
 | `V̄₁`, `V̄₂` | Expectation of `V` over `θ ∼ q`. The headline quantity. |
