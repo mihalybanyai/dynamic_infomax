@@ -8,6 +8,7 @@ Research project on [one-line description here].
 - notes/infomax_aprv_seed.md: review and generate spec
 - notes/real_world_analogues.md: review and decide if implies action
 - notes/daisy_chain_derivation.md: review and resolve
+- notes/daisy_chain_causal_discovery.md: read and reconsider
 
 ## Quick start
 
