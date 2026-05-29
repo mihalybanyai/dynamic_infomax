@@ -60,11 +60,11 @@ growth drops below this maximum by *exactly* the KL divergence from
 the truth to the belief:
 
 ```
-g̅(π_true, 2 π̂ − 1)   =   log 2  −  H_B(π_true)  −  D_KL( Bern(π_true) ‖ Bern(π̂) ).
+g̅(π_true, 2 π̂ − 1)   =   log 2  −  H_B(π_true)  −  D_KL( Bernoulli(π_true) ‖ Bernoulli(π̂) ).
 ```
 
 (This is the identity spec §1.3 records on the line `g̅(π_true, π̂)
-= log 2 − H_B(π_true) − D_KL(Bern(π_true) ‖ Bern(π̂))`. It is the
+= log 2 − H_B(π_true) − D_KL(Bernoulli(π_true) ‖ Bernoulli(π̂))`. It is the
 hinge of the whole experiment — see the next section.)
 
 The same machinery applies to Part 2 with `π̂ = r̂_n(p, h, ω)` (the

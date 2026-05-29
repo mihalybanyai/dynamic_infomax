@@ -37,7 +37,8 @@ to any particular tensor shape convention. It describes the math.
    - **Generative model** (if applicable) — a plate-notation diagram for any
      probabilistic content. See "Visuals" below.
    - **Objective** — the formal objective function or property of interest.
-   - **Derivation** — the math, with steps a reader can verify.
+   - **Derivation** — the math, with steps a reader can verify. Format
+     equations per "Math typesetting" below.
    - **Algorithm** — pseudocode. Use plain numbered steps with mathematical
      notation. If a data-flow or control-flow diagram would clarify the
      algorithm, include one (see "Visuals").
@@ -150,6 +151,118 @@ unexamined foundations:
 
 Downstream work is permitted but not automatic. Always confirm with the
 human before starting the next stage.
+
+## Math typesetting
+
+A math spec's equations are its core content, so their formatting is a
+convention, not a free choice. The rules below apply from spec 001
+onward; spec 000 predates them and uses plain code-fence ASCII math, so
+do not take it as the model.
+
+### Displayed equations use LaTeX, not code fences
+
+Every *displayed* equation goes in a `$$…$$` LaTeX block so it renders
+as real math in Obsidian, VSCode preview, and GitHub/MathJax:
+
+```markdown
+$$
+f(\hat\pi) \;=\; 2\,\hat\pi - 1. \tag{1.3.1}
+$$
+```
+
+Do **not** put displayed equations in fenced code blocks. Code fences
+are reserved for things that are actually code: pseudocode in the
+Algorithm section, and API signatures / type stubs in the Computational
+specification. The "no code fences" rule is scoped to the mathematical
+sections (Setup, Objective, Derivation) — it does not turn
+implementation pseudocode into LaTeX.
+
+Inline symbols in prose and in the Setup notation table may stay as
+backticked code (`θ`, `μ̂_n`, `k₊`). That keeps prose readable and is
+accepted style; the LaTeX rule is about *displayed* equations. Don't
+mix within one displayed block — a `$$…$$` equation is always full
+LaTeX, never half-backtick.
+
+Render named distributions and operators upright with `\mathrm{}`
+(`\mathrm{Bernoulli}`, `\mathrm{Beta}`, `\mathrm{Binomial}`,
+`D_{\mathrm{KL}}`) rather than as italic juxtaposed letters, and use
+`\hat{}` / `\bar{}` for estimates and expectations (`\hat\mu_n`,
+`\bar V_1`). Spell names out — write `\mathrm{Bernoulli}`, not `Bern` —
+so the displayed math reads the same as the prose.
+
+### Equation numbering is section-scoped
+
+Every displayed equation carries a `\tag{X.Y.Z}`:
+
+- `X.Y` is the subsection number (e.g. `1.3`).
+- `Z` counts equations within that subsection, from 1.
+
+So the first three equations in §1.3 are `(1.3.1)`, `(1.3.2)`,
+`(1.3.3)`; the first in §1.4 is `(1.4.1)`.
+
+Section-scoped numbering is deliberate, not cosmetic: inserting or
+deleting an equation in one subsection during a review round does not
+renumber equations in every later subsection. Global sequential
+numbering (`(1)`, `(2)`, …) is rejected for exactly this reason — it
+makes every cross-reference fragile under the section-by-section review
+cycle. A multi-line equation gets **one** tag for the whole block,
+placed after `\end{aligned}`, not one tag per line.
+
+### Referencing equations
+
+Refer to an equation by its number in parentheses: "the second equality
+substitutes the Kelly fraction (1.3.1)", or "eq. (1.5.2)". Once an
+equation is numbered, do not call it "the equation above/below" — the
+number survives reordering and is unambiguous in a `> M:` review
+comment.
+
+### Breaking long equations across lines
+
+An equation that overflows one rendered line is broken with an
+`aligned` environment inside the `$$…$$`, aligned on the relational
+operator (`&=`) and broken with `\\`. One `\tag` for the whole block.
+Break at natural points rather than mid-term.
+
+Chained equalities — one `=` per line:
+
+```markdown
+$$
+\begin{aligned}
+\hat r_n(\dots)
+  &= \prod_{j=0}^{k_+ - 1} \frac{\alpha + h + j}{\alpha + \beta + n + j} \\
+  &= \frac{B(\alpha + h + k_+,\; \beta + n - h)}{B(\alpha + h,\; \beta + n - h)}.
+\end{aligned}
+\tag{1.6.2}
+$$
+```
+
+A sum split from a long summand — continuation led by `&\qquad \times`:
+
+```markdown
+$$
+\begin{aligned}
+V_1(\theta, p, n)
+  &= \log 2 + \sum_{h=0}^{n} \binom{n}{h}\, \theta^h (1-\theta)^{n-h} \\
+  &\qquad \times \Big[\, \theta \log \hat\mu_n(p,h) + (1-\theta)\log\big(1 - \hat\mu_n(p,h)\big) \Big].
+\end{aligned}
+\tag{1.4.3}
+$$
+```
+
+A two-term bracketed sum — split the inner `+` onto a continuation line,
+indented under the opening bracket with `&\qquad\qquad +`. Equations
+that fit comfortably on one line stay on one line; don't wrap a short
+equation in `aligned` for uniformity.
+
+### Renderer compatibility
+
+These render in MathJax (Obsidian's default) and on GitHub/VSCode, where
+`\tag` is supported. For maximum portability prefer one `$$…$$` block
+with a single `\tag` per equation over an `align` environment with
+per-line `\tag`s, which KaTeX and MathJax handle differently. When a
+spec first adopts these conventions, sanity-check that `\tag` renders in
+the target viewer — it diverges from spec 000's code-fence style, so a
+reviewer may be seeing it for the first time.
 
 ## Visuals
 

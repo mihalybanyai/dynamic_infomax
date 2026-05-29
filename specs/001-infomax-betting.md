@@ -4,7 +4,16 @@
 |---|---|---|
 | 0. Purpose and scope | reviewed | 250526 |
 | Generative model | reviewed | 250526 |
-| 1. Mathematical statement | draft | — |
+| 1.1 Setup and notation | reviewed | 290526 |
+| 1.2 Reusing p*_n from spec 000 | reviewed | 290526 |
+| 1.3 Kelly fraction and realised log-growth | reviewed | 290526 |
+| 1.4 Part 1: one-shot bet on toss n+1 | draft | — |
+| 1.5 Part 2: k₊-toss all-heads pattern bet | draft | — |
+| 1.6 Posterior-mean / posterior-pattern formulas per prior | draft | — |
+| 1.7 Beta-mixture moments | draft | — |
+| 1.8 Moment-matched Beta (p_MM) | draft | — |
+| 1.9 The hyperprior 𝓗 over q | draft | — |
+| 1.10 Optimality reference (p_oracle) | draft | — |
 | 2. Why this question | draft | — |
 | 3. Computational specification | draft | — |
 | 4. Test suite | draft | — |
@@ -180,41 +189,50 @@ underlying Kelly identity and why log-utility is what bridges
 posterior quality to measurable betting payoff. The derivation
 below uses the result; the tutorial motivates it.)
 
-In Parts 1 and 2 the bet is even-money on a binary outcome `Y ∈ {0,1}`:
-the agent's belief gives `P(Y = 1) = π̂` for some `π̂` derived from
-`p(θ | X_{1:n})`. The Kelly fraction is
+This subsection sets up the Kelly quantities in their *general*
+form; §1.4 and §1.5 then concretise them for the two specific bets
+this experiment runs. For that reason the generic placeholders used
+here — the bet outcome `Y`, the agent's belief `π̂`, and the true
+event probability `π_true` — are local to this derivation and are
+deliberately absent from the §1.1 symbol table: §1.4 binds them to
+`(π_true, π̂) = (θ, μ̂_n)` and §1.5 to `(θ^{k₊}, r̂_n)`.
+In Parts 1 and 2 the bet is even-money on a binary outcome `Y ∈
+{0,1}` — the indicator of whether the bet-on event occurs (`Y = 1`)
+or not (`Y = 0`)</span>: the agent's belief gives `P(Y = 1) = π̂` for some
+`π̂` derived from `p(θ | X_{1:n})`. The Kelly fraction is
 
-```
-f(π̂)  =  clip( 2 π̂ − 1,  −1 + ε_f,  1 − ε_f ).
-```
+$$
+f(\hat\pi) \;=\; 2\,\hat\pi - 1. \tag{1.3.1}
+$$
 
-The clip with a small `ε_f = 10⁻¹² ` is a numerical safety net. Without
-it `π̂ ∈ {0, 1}` produces `log 0`. The clip is a tighter version of the
-"do nothing if `π̂ ∈ {0,1}`" rule that betting analyses sometimes use;
-it is structurally never triggered by the implementation in this spec
-because `π̂` is a Bayesian posterior expectation under a prior with full
-support on `(0, 1)` (Beta with positive shape parameters, or BA-output
-mixture of cell-centred grid points strictly inside `(0,1)` — none of
-which can return `0` or `1`). It exists as a guard against future
-extensions.
+The realised log-growth depends only on the actual outcome `Y` and
+the belief `π̂` (it does *not* involve `π_true`, which enters only
+when we average over outcomes, below):
+$$
+\begin{aligned}
+g(Y, \hat\pi)
+  &= Y \cdot \log\!\big(1 + f(\hat\pi)\big) + (1 - Y)\cdot \log\!\big(1 - f(\hat\pi)\big) \\
+  &= Y \cdot \log(2\,\hat\pi) + (1 - Y)\cdot \log\!\big(2(1 - \hat\pi)\big),
+\end{aligned}
+\tag{1.3.2}
+$$
 
-Realised log-growth against truth `Y` with probability `π_true`:
+where the second equality substitutes the Kelly fraction (1.3.1),
+giving `1 + f = 2 π̂` and `1 − f = 2(1 − π̂)`.
+The outcome `Y` equals `1` with the true probability `π_true`, so
+averaging `g(Y, π̂)` over `Y` gives the expected log-growth:
+$$
+\begin{aligned}
+\bar g(\pi_{\text{true}}, \hat\pi)
+  &= \pi_{\text{true}}\cdot \log(2\,\hat\pi) + (1 - \pi_{\text{true}})\cdot \log\!\big(2(1 - \hat\pi)\big) \\
+  &= \log 2 \;-\; H_B(\pi_{\text{true}}) \;-\; D_{\mathrm{KL}}\!\big(\mathrm{Bernoulli}(\pi_{\text{true}}) \,\big\|\, \mathrm{Bernoulli}(\hat\pi)\big),
+\end{aligned}
+\tag{1.3.3}
+$$
 
-```
-g(Y, π̂)   =   Y · log(1 + f(π̂))  +  (1 − Y) · log(1 − f(π̂))
-           =   Y · log(2 π̂)        +  (1 − Y) · log(2 (1 − π̂)),
-```
-
-where the second equality uses `1 + f = 2 π̂` and `1 − f = 2 (1 − π̂)`
-(modulo the clip). Expected log-growth against `π_true`:
-
-```
-g̅(π_true, π̂)   =   π_true · log(2 π̂)  +  (1 − π_true) · log(2 (1 − π̂))
-                =   log 2  −  H_B(π_true)  −  D_KL( Bern(π_true) ‖ Bern(π̂) ),
-```
-
-where `H_B(p) = −p log p − (1−p) log(1−p)` is the binary entropy. Kelly
-optimality is the immediate consequence: `g̅` is maximised at `π̂ =
+where `H_B(p) = −p log p − (1−p) log(1−p)` is the entropy of a
+`Bernoulli(p)` (the binary entropy function).
+Kelly optimality is the immediate consequence: `g̅` is maximised at `π̂ =
 π_true`, with maximum `log 2 − H_B(π_true)`.
 
 ### 1.4 Part 1: one-shot bet on toss `n+1`
@@ -223,37 +241,39 @@ The agent's predictive probability of heads on toss `n+1` is the
 posterior mean `μ̂ = μ̂_n(p, h_n)`. So `π_true = θ`, `π̂ = μ̂_n(p, h_n)`,
 and the realised growth is
 
-```
-G₁(θ, p, X_{1:n})   =   g̅( θ,  μ̂_n(p, h_n) ).
-```
+$$
+G_1(\theta, p, X_{1:n}) \;=\; \bar g\big(\theta,\; \hat\mu_n(p, h_n)\big). \tag{1.4.1}
+$$
 
 `X_{1:n}` enters only through `h_n ∼ Binomial(n, θ)`; the expectation
 over data is a finite sum:
 
-```
-V₁(θ, p, n)   =   Σ_{h=0}^{n}  C(n,h) θ^h (1−θ)^{n−h} · g̅( θ, μ̂_n(p, h) ).
-```
+$$
+V_1(\theta, p, n) \;=\; \sum_{h=0}^{n} \binom{n}{h}\, \theta^h (1-\theta)^{n-h} \cdot \bar g\big(\theta,\, \hat\mu_n(p, h)\big). \tag{1.4.2}
+$$
 
 Expanding `g̅`:
 
-```
-V₁(θ, p, n)
-     =  log 2
-        +  Σ_{h=0}^{n} C(n,h) θ^h (1−θ)^{n−h} ·
-              [  θ · log μ̂_n(p,h)  +  (1−θ) · log(1 − μ̂_n(p,h)) ].
-```
+$$
+\begin{aligned}
+V_1(\theta, p, n)
+  &= \log 2 + \sum_{h=0}^{n} \binom{n}{h}\, \theta^h (1-\theta)^{n-h} \\
+  &\qquad \times \Big[\, \theta \log \hat\mu_n(p,h) + (1-\theta)\log\big(1 - \hat\mu_n(p,h)\big) \Big].
+\end{aligned}
+\tag{1.4.3}
+$$
 
 For each `(p, h)` the quantities `log μ̂_n(p,h)` and `log(1 − μ̂_n(p,h))`
 are constants in `θ`. So averaging over `θ ∼ q`:
 
-```
-V̄₁(p, n, q)
-     =  log 2
-        + Σ_{h=0}^{n} C(n,h) [
-              log μ̂_n(p,h)        · M_{h+1, n−h}(q)
-            + log(1 − μ̂_n(p,h))   · M_{h,   n−h+1}(q)
-          ].
-```
+$$
+\begin{aligned}
+\bar V_1(p, n, q)
+  &= \log 2 + \sum_{h=0}^{n} \binom{n}{h} \Big[\, \log \hat\mu_n(p,h)\cdot M_{h+1,\,n-h}(q) \\
+  &\qquad\qquad + \log\big(1 - \hat\mu_n(p,h)\big)\cdot M_{h,\,n-h+1}(q) \Big].
+\end{aligned}
+\tag{1.4.4}
+$$
 
 This is the closed-form Part-1 expression. It is *exact* (no
 Monte-Carlo) given the Beta-mixture parameters of `q` and the
@@ -269,21 +289,20 @@ moment. The truth's probability of `ω` given `θ` is `r(θ) = θ^{k₊}`.
 Same derivation as Part 1, with `π̂ = r̂_n(p, h_n, ω)` and `π_true =
 r(θ)`:
 
-```
-V₂(θ, p, n, k₊)
-     = Σ_{h=0}^{n}  C(n,h) θ^h (1−θ)^{n−h} · g̅( θ^{k₊}, r̂_n(p,h,ω) ).
-```
+$$
+V_2(\theta, p, n, k_+) = \sum_{h=0}^{n} \binom{n}{h}\, \theta^h (1-\theta)^{n-h} \cdot \bar g\big(\theta^{k_+},\, \hat r_n(p,h,\omega)\big). \tag{1.5.1}
+$$
 
 Decomposing `g̅` and averaging over `θ ∼ q`:
 
-```
-V̄₂(p, n, q, k₊)
-     =  log 2
-        + Σ_{h=0}^{n}  C(n,h) [
-              log r̂_n(p,h)         · M_{h+k₊, n−h}(q)
-            + log(1 − r̂_n(p,h))    · ( M_{h, n−h}(q) − M_{h+k₊, n−h}(q) )
-          ].
-```
+$$
+\begin{aligned}
+\bar V_2(p, n, q, k_+)
+  &= \log 2 + \sum_{h=0}^{n} \binom{n}{h} \Big[\, \log \hat r_n(p,h)\cdot M_{h+k_+,\,n-h}(q) \\
+  &\qquad\qquad + \log\big(1 - \hat r_n(p,h)\big)\cdot \big(M_{h,\,n-h}(q) - M_{h+k_+,\,n-h}(q)\big) \Big].
+\end{aligned}
+\tag{1.5.2}
+$$
 
 Exact for Beta-mixture `q`. Note that `M_{h, n−h}(q) − M_{h+k₊, n−h}(q)
 = E_q[ θ^h (1−θ)^{n−h} (1 − θ^{k₊}) ]`, which is non-negative by
@@ -298,21 +317,36 @@ type enters `V̄₁` or `V̄₂`.
 
 **Beta `Beta(α, β)`:**
 
-```
-μ̂_n(Beta(α,β), h)               =   (α + h) / (α + β + n).
-r̂_n(Beta(α,β), h, ω = 1^{k₊})   =   Π_{j=0}^{k₊−1}  (α + h + j) / (α + β + n + j),
-                                 =   B(α + h + k₊, β + n − h) / B(α + h, β + n − h).
-```
+$$
+\hat\mu_n\big(\mathrm{Beta}(\alpha,\beta),\, h\big) \;=\; \frac{\alpha + h}{\alpha + \beta + n}. \tag{1.6.1}
+$$
+
+$$
+\begin{aligned}
+\hat r_n\big(\mathrm{Beta}(\alpha,\beta),\, h,\, \omega = 1^{k_+}\big)
+  &= \prod_{j=0}^{k_+ - 1} \frac{\alpha + h + j}{\alpha + \beta + n + j} \\
+  &= \frac{B(\alpha + h + k_+,\; \beta + n - h)}{B(\alpha + h,\; \beta + n - h)}.
+\end{aligned}
+\tag{1.6.2}
+$$
 
 **Discrete `p* = Σ_a π_a δ_{θ_a}` (used for `p*_n` via the BA grid):**
 
-```
-w_a(h)         =   π_a · θ_a^{h} · (1 − θ_a)^{n − h}                  (unnormalised),
-π'_a(h)        =   w_a(h) / Σ_{a'} w_{a'}(h),
+$$
+\begin{aligned}
+w_a(h) &\;=\; \pi_a \cdot \theta_a^{\,h}\,(1 - \theta_a)^{\,n - h} \qquad \text{(unnormalised)}, \\
+\pi'_a(h) &\;=\; w_a(h) \Big/ \sum_{a'} w_{a'}(h).
+\end{aligned}
+\tag{1.6.3}
+$$
 
-μ̂_n(p*, h)     =   Σ_a θ_a · π'_a(h),
-r̂_n(p*, h, ω) =   Σ_a θ_a^{|ω|} (1 − θ_a)^{k₊ − |ω|} · π'_a(h).
-```
+$$
+\begin{aligned}
+\hat\mu_n(p^*, h) &\;=\; \sum_a \theta_a \cdot \pi'_a(h), \\
+\hat r_n(p^*, h, \omega) &\;=\; \sum_a \theta_a^{\,|\omega|}\,(1 - \theta_a)^{\,k_+ - |\omega|} \cdot \pi'_a(h).
+\end{aligned}
+\tag{1.6.4}
+$$
 
 For `ω = (1,…,1)`, `r̂_n(p*, h, ω) = Σ_a θ_a^{k₊} · π'_a(h)` — the
 `k₊`-th raw posterior moment under the discrete posterior. The discrete
@@ -322,10 +356,13 @@ formulas are evaluated in log-space to avoid underflow (see §3.4).
 
 For `q(θ) = Σ_j w_j · Beta(θ; a_j, b_j)`:
 
-```
-M_{r,s}( Beta(a,b) )   =   B(a+r, b+s) / B(a, b),       r, s ≥ 0,
-M_{r,s}(q)             =   Σ_j w_j · B(a_j+r, b_j+s) / B(a_j, b_j).
-```
+$$
+M_{r,s}\big(\mathrm{Beta}(a,b)\big) \;=\; \frac{B(a+r,\; b+s)}{B(a, b)}, \qquad r, s \ge 0. \tag{1.7.1}
+$$
+
+$$
+M_{r,s}(q) \;=\; \sum_j w_j \cdot \frac{B(a_j+r,\; b_j+s)}{B(a_j, b_j)}. \tag{1.7.2}
+$$
 
 Evaluated in log-space via `scipy.special.betaln` to avoid the Beta
 function overflowing at large shape parameters: `log M_{r,s}(Beta(a,b))
@@ -339,11 +376,14 @@ Given a prior `p̃` (in our use, `p̃ = p*_n`) with mean `μ` and variance
 `σ²` strictly inside `(0, ¼)`, the unique Beta distribution with the
 same first two moments has
 
-```
-ν   =   μ (1 − μ) / σ²   −   1,
-α   =   μ · ν,
-β   =   (1 − μ) · ν.
-```
+$$
+\begin{aligned}
+\nu &\;=\; \frac{\mu(1 - \mu)}{\sigma^2} - 1, \\
+\alpha &\;=\; \mu \cdot \nu, \\
+\beta &\;=\; (1 - \mu) \cdot \nu.
+\end{aligned}
+\tag{1.8.1}
+$$
 
 The constraint `σ² < μ(1−μ)` is necessary for `ν > 0` and is satisfied
 by any non-degenerate distribution on `[0,1]` (it is the bound saturated
@@ -379,10 +419,13 @@ in Part 1 and `π̂ = θ_★^{k₊}` in Part 2, giving expected log-growth
 `log 2 − H_B(θ_★)` resp. `log 2 − H_B(θ_★^{k₊})`. Averaging against
 `q`:
 
-```
-V̄₁^oracle(q)        =   log 2  −  E_q[ H_B(θ) ],
-V̄₂^oracle(q, k₊)    =   log 2  −  E_q[ H_B(θ^{k₊}) ].
-```
+$$
+\bar V_1^{\,\text{oracle}}(q) \;=\; \log 2 \,-\, \mathbb{E}_q\big[H_B(\theta)\big]. \tag{1.10.1}
+$$
+
+$$
+\bar V_2^{\,\text{oracle}}(q, k_+) \;=\; \log 2 \,-\, \mathbb{E}_q\big[H_B(\theta^{k_+})\big]. \tag{1.10.2}
+$$
 
 `V̄^oracle` is the *upper bound* that `V̄(p, n, q)` approaches as `n →
 ∞` (the posterior concentrates and `μ̂ → θ`). It is reported as a
@@ -517,6 +560,17 @@ def v_bar_1_oracle(q: BetaMixture) -> float                       # §1.10
 def v_bar_2_oracle(q: BetaMixture, k_plus: int) -> float          # §1.10
 ```
 
+`kelly_fraction` clips its output to `±(1 − ε_f)` with `ε_f =
+KELLY_CLIP_EPSILON = 10⁻¹²`. This is purely a numerical safety net
+for the `log` in `g̅`: without it a belief `π̂ ∈ {0, 1}` would make
+`expected_log_growth` evaluate `log 0`. It is structurally never
+triggered by this spec, because every `π̂` is a Bayesian posterior
+expectation under a prior with full support on `(0, 1)` (a Beta with
+positive shape parameters, or a mixture of cell-centred BA grid
+points strictly inside `(0, 1)`), none of which can return `0` or
+`1`. The clip exists only as a guard for future extensions; within
+this spec the exact Kelly fraction is `f = 2π̂ − 1` (§1.3, eq.
+1.3.1).
 `posterior_mean_of_h` and `posterior_pattern_of_h` are pre-computed
 length-`(n+1)` arrays of `μ̂_n(p, h)` and `r̂_n(p, h, k₊)` respectively
 — see §3.3 for the precomputation step.
@@ -1187,3 +1241,63 @@ obscure the spec). The rename's scope is the durable record below.
   §1.5 (Part 2) where the specific `(r, s)` pairs are pinned and
   the moments are consumed by the closed-form `V̄₁` / `V̄₂`
   expressions.
+
+### 2026-05-29 — Refinement & Clarification (§1.2–§1.3; equation formatting across §1)
+
+Post-review revisions for §1.2–§1.3 addressing the inline `> M:`
+comments from the human reviewer (all in §1.3; §1.2 drew no
+comments). One cross-cutting **Refinement** (equation reformatting
+across all of §1), one further Refinement (clip relocation), several
+**Clarifications**, and one **Correction** (the `π_true` placement).
+Only the substantive §1.3 prose changes and the relocated §3.2 clip
+note are wrapped in red `<span>` markup; the mechanical code→LaTeX
+reformatting is left unpainted to keep §1 readable, with its full
+scope recorded below.
+
+- **Equation formatting across §1 (Refinement).** All 14
+  code-fenced equation blocks in §1.1–§1.10 converted to LaTeX
+  `$$…$$` display math with section-scoped `\tag{}` numbers
+  (`1.3.1`, `1.3.2`, `1.3.3`; `1.4.1`–`1.4.4`; `1.5.1`, `1.5.2`;
+  `1.6.1`–`1.6.4`; `1.7.1`, `1.7.2`; `1.8.1`; `1.10.1`, `1.10.2` —
+  18 numbered equations). The reviewer chose LaTeX-with-section-tags
+  over global sequential numbering; section-scoped tags stay stable
+  when other subsections gain or lose equations. This diverges from
+  spec 000, which uses code fences for all displayed math and no
+  equation numbers. Inline backtick symbols in prose and the §1.1
+  notation table are left as code, consistent with the style the
+  reviewer accepted in the §1.1 round; the directive "nothing in
+  §1 should be formatted as code" is read as scoped to the displayed
+  equation blocks it was attached to.
+- **§1.3 general-vs-specific framing (Clarification).** Added an
+  opening paragraph stating that §1.3 introduces the Kelly
+  quantities in general form and §1.4 / §1.5 concretise them, which
+  is why the placeholders `Y`, `π̂`, `π_true` are local to the
+  derivation and absent from the §1.1 symbol table (§1.4 binds them
+  to `(θ, μ̂_n)`, §1.5 to `(θ^{k₊}, r̂_n)`).
+- **§1.3 clip relocation (Refinement).** Removed the clip from the
+  Kelly-fraction definition — eq. (1.3.1) is now `f = 2π̂ − 1` — and
+  moved the clip rationale (`ε_f = 10⁻¹²`, the never-triggered
+  argument, the future-extension guard) to §3.2 alongside
+  `src/infomax/kelly.py` / `KELLY_CLIP_EPSILON`, where the
+  implementation lives. Addresses the two comments that the clip
+  belongs in the implementation section, not the math statement.
+- **§1.3 outcome `Y` (Clarification).** `Y` appeared without a
+  definition. Defined `Y ∈ {0,1}` inline as the indicator of whether
+  the bet-on event occurs (`Y = 1`) or not (`Y = 0`), making it
+  self-contained in the spec (it is intentionally not a symbol the
+  Kelly tutorial uses).
+- **§1.3 `π_true` placement (Correction).** The realised-growth
+  lead-in read "against truth `Y` with probability `π_true`", which
+  implies `g(Y, π̂)` depends on `π_true`; it does not. Reworded so
+  realised growth (1.3.2) depends only on the outcome `Y` and the
+  belief `π̂`, and `π_true` is introduced only at the
+  expectation step (1.3.3), where `Y` is averaged out.
+- **§1.3 equation cross-reference (Clarification).** The
+  "second equality" sentence now references eq. (1.3.1) by number
+  and drops the "(modulo the clip)" aside (the clip no longer
+  appears in §1.3).
+- **§1.3 Bernoulli naming (Clarification).** `Bern(·)` →
+  `Bernoulli(·)` in the KL term of (1.3.3); `H_B` is now described
+  as "the entropy of a `Bernoulli(p)` (the binary entropy
+  function)" rather than just "the binary entropy".
+  `tutorials/math/kelly.md` updated in parallel for consistency.
