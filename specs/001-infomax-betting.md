@@ -4,23 +4,14 @@
 |---|---|---|
 | [0. Purpose and scope](#0-purpose-and-scope) | reviewed | 250526 |
 | [Generative model](#generative-model) | reviewed | 250526 |
-| [1.1 Setup and notation](#11-setup-and-notation) | reviewed | 290526 |
-| [1.2 Reusing p*_n from spec 000](#12-reusing-pn-from-spec-000) | reviewed | 290526 |
-| [1.3 Kelly fraction and realised log-growth](#13-kelly-fraction-and-realised-log-growth) | reviewed | 290526 |
-| [1.4 Part 1: one-shot bet on toss n+1](#14-part-1-one-shot-bet-on-toss-n1) | reviewed | 290526 |
-| [1.5 Part 2: k₊-toss all-heads pattern bet](#15-part-2-one-shot-bet-on-the-k%E2%82%8A-toss-all-heads-pattern) | reviewed | 290526 |
-| [1.6 Posterior-mean / posterior-pattern formulas per prior](#16-posterior-mean--posterior-pattern-formulas-per-prior) | reviewed | 290526 |
-| [1.7 Beta-mixture moments](#17-beta-mixture-moments-mrsq) | reviewed | 290526 |
-| [1.8 Moment-matched Beta (p_MM)](#18-moment-matched-beta-pmm-part-2-only) | reviewed | 290526 |
-| [1.9 The hyperprior 𝓗 over q](#19-the-hyperprior-%F0%9D%93%97-over-q) | reviewed | 290526 |
-| [1.10 Optimality reference (p_oracle)](#110-optimality-reference-poracle-diagnostic-only) | reviewed | 290526 |
-| [2. Computational specification](#2-computational-specification) | draft | — |
-| [3. Test suite](#3-test-suite) | draft | — |
-| [4. Report](#4-report) | draft | — |
-| [5. Layout](#5-layout) | draft | — |
-| [6. Deferred choices](#6-deferred-choices) | draft | — |
-| [7. Open questions](#7-open-questions) | draft | — |
-| [8. References](#8-references) | draft | — |
+| [1. Mathematical statement](#11-setup-and-notation) | reviewed | 290526 |
+| [2. Computational specification](#2-computational-specification) | reviewed | 300526 |
+| [3. Test suite](#3-test-suite) | reviewed | 300526 |
+| [4. Report](#4-report) | reviewed | 300526 |
+| [5. Layout](#5-layout) | reviewed | 300526 |
+| [6. Deferred choices](#6-deferred-choices) | reviewed | 300526 |
+| [7. Open questions](#7-open-questions) | reviewed | 300526 |
+| [8. References](#8-references) | reviewed | 300526 |
 | [9. Derivations](#9-derivations) | reviewed | 290526 |
 | [10. Revision log](#10-revision-log) | n/a | — |
 
@@ -764,38 +755,94 @@ T11 (snapshot of the cell list with their stream-index seeds).
 
 ## 3. Test suite
 
-### Eye test (manual gate before the full suite)
+### 3.1 Eye test (manual gate before the full suite)
 
 Before running the full automated suite a single eye test must pass
-direct human review. Its purpose is to catch implementations that pass
-every per-tolerance check but produce qualitatively absurd output (e.g.
-`V̄` curves that are flat or that put `p*` indistinguishable from
-`p_U`).
+direct human review. Its purpose is to
+confirm, against a *known* reference shape, that the foundational Kelly
+log-growth machinery (`kelly.py`'s `expected_log_growth` and
+`kelly_fraction`, eq. (1.3.2)–(1.3.3)) is qualitatively correct before
+the full quantitative suite runs. We deliberately do *not* eye-test the
+headline `Δ(p*, p′)` distribution: its expected shape is unknown —
+whether `p*` wins is the experiment's open question (§0) — so it cannot
+serve as a qualitative-correctness anchor the way Mattingly Fig 1 did
+for spec 000. The expected-log-growth curve, by contrast, has a shape
+fixed by the literature, so it can.
 
-- **Configuration.** Part 1, `n = 5`, hyperprior `H3`, `K = 1`,
-  `S_q = 500`, seed `20260525`. (Larger `S_q` than the headline for
-  smoother histograms in the eye-test plot.)
-- **Output.** A two-panel figure saved to
-  `tests/figures/001_infomax_betting/eyetest_part1_n5_H3_K1.png`.
-  - Left panel: histogram of `Δ(p*, p_J)` over the 500 `q`-samples,
-    with `Δ(p*, p_U)` overlaid as a second histogram, and a vertical
-    line at zero.
-  - Right panel: scatter of `(V̄₁(p*) − V̄₁^oracle)` vs `(V̄₁(p_J) −
-    V̄₁^oracle)`, one dot per `q`-sample, with the `y = x` diagonal.
-    Points below the diagonal mean `p*` is closer to the oracle.
-- **Acceptance.** Approved by direct human review against the
-  qualitative expectation that `Δ` is centred near zero with both
-  positive and negative tails (this is the lab-meeting-discussable
-  shape — we genuinely don't know yet whether `p*` wins on H3 at
-  `n = 5`), and that the scatter shows the priors are at least
-  *correlated* across `q`-samples (i.e. they are not making
-  independently random predictions; same `q` gives similar `V̄` for
-  both priors).
+**Reference.** The figure is the canonical
+Kelly growth-rate curve `g̅(π_true, π̂)` — expected log-growth as a
+function of the bettor's belief, equivalently the bet fraction
+`f = 2π̂ − 1`, a concave curve peaking at the matched belief. The
+specific published figure to check against is **Fig. 1 of Thorp
+(2006)** (§8), which plots the growth-rate coefficient
+`g(f) = p log(1 + f) + q log(1 − f)` versus `f` for the even-money
+coin-toss bet — exactly this spec's `g̅` (eq. (1.3.3)), with the same
+peak value `g(f*) = p log p + q log q + log 2 = log 2 − H_B(p)`, the
+zero at `f = 0`, and the divergence to `−∞` at the edges. (Kelly 1956
+has no figures and the MacLean–Thorp–Ziemba 2010 volume is a book;
+Thorp 2006 is a freely-downloadable PDF, so it is the reference a
+reviewer can pull up alongside the eye-test figure.) It plays the role
+Mattingly Fig 1 played for spec 000.
+
+- **Configuration.** A dense belief grid
+  `π̂ ∈ (0, 1)` (e.g. 999 evenly spaced interior points, avoiding the
+  endpoints where `g̅ = −∞`) evaluated at three fixed true probabilities
+  `π_true ∈ {0.7, 0.8, 0.9}`. The curve is a property of `g̅` alone — it does not depend
+  on `n`, the hyperprior, `K`, or any prior `p`, so none of those are
+  configured here. This isolates the Kelly identity from the posterior
+  and moment machinery, which the rest of the suite covers
+  quantitatively (notably T2a / T2b).
+- **Output.** A single-panel figure saved to
+  `tests/figures/001_infomax_betting/eyetest_kelly_growth_curve.png`:
+  `g̅(π_true, π̂)` against the belief `π̂`, one curve per `π_true`,
+  annotated with (i) a vertical marker at the peak `π̂ = π_true`, (ii)
+  the analytic peak height `log 2 − H_B(π_true)`, and (iii) the no-bet
+  baseline `g̅ = 0` at `π̂ = ½` (`f = 0`).
+- **Acceptance.** Approved by direct human
+  review against the *known* qualitative features of the Kelly growth
+  curve: each curve is concave, peaks exactly at `π̂ = π_true` (the
+  matched-belief optimum, eq. (1.3.3)) with height `log 2 −
+  H_B(π_true)`, passes through `g̅ = 0` at `π̂ = ½`, and diverges to
+  `−∞` as `π̂ → 0` or `π̂ → 1`. A curve that peaks off the truth, is
+  not concave, or has the wrong height exposes a sign, base, or
+  missing-`log 2` error in `expected_log_growth` / `kelly_fraction` —
+  the qualitative read that complements T3's pointwise numerical
+  check.
 - **Outcome of review** recorded in
   `experiments/001-infomax-betting/CODEGEN_LOG.md`. The full
   quantitative suite is run only after approval.
 
-### Sweep design (test-side)
+#### Eye test file structure
+
+Per `skills/derive-test-suite.md` §Eye test file: the eye test lives
+at `tests/eye_test_001_infomax_betting.py` (no `test_` prefix, so
+pytest does not pick it up). It is a standalone script that:
+
+1. Builds the belief grid `π̂ ∈ (0, 1)` and
+   the three `π_true` values of §3.1's Configuration.
+2. Evaluates `g̅(π_true, π̂)` via
+   `kelly.expected_log_growth` over the grid for each `π_true`. There
+   is no `run_betting_cell`, no BA, and no `q`-sampling — the curve is
+   a pure property of `g̅`, so the script is deterministic and needs no
+   RNG.
+3. Generates the single-panel growth-curve
+   figure and writes it to
+   `tests/figures/001_infomax_betting/`.
+4. Prints to stdout a reminder that human approval is required before
+   the full suite runs.
+
+Running the script *is* the smoke check, and
+it gates the handoff to the human: the script must complete without
+exception and write a non-empty PNG before its figure is presented for
+review. A failure here — an import error, an API drift in `kelly.py`, a
+plotting failure — is a script-level bug to fix before the human is
+asked to look at anything. Because the eye test is run before the
+quantitative suite (and the suite is gated on the human's approval of
+this figure), a broken eye-test script cannot silently reach either the
+reviewer or the suite, so no separate `pytest` smoke test is needed
+(this subsumes the former T14).
+
+### 3.2 Sweep design (test-side)
 
 The test suite below makes choices about which values to sweep over:
 `n`, `K`, `k_plus`, `S_q`, MC-reference sample sizes, seeds. Those
@@ -837,10 +884,12 @@ is inherited from spec 000 T5 and would only be re-tested if the
 betting code accessed grid positions in some way that broke the
 inheritance. It does not.
 
-### Properties-to-tests table
+### 3.3 Properties-to-tests table
 
 Per `skills/derive-test-suite.md`. Test functions live in
-`tests/test_001_infomax_betting.py`.
+`tests/test_001_infomax_betting.py`. Each
+entry's one-line property is expanded in §3.4 into a full description —
+what the property is and which failure mode it defends against.
 
 | # | Property | Verified by |
 |---|---|---|
@@ -861,7 +910,6 @@ Per `skills/derive-test-suite.md`. Test functions live in
 | P11 | Cell-stream snapshot: enumerating cells under the §2.5 sweep yields a list whose `(cell, stream_seed)` pairs match a frozen JSON snapshot (`tests/data/001_cell_streams.json`). Defends against silent re-ordering that would break reproducibility. | `test_t11_cell_stream_snapshot` |
 | P12 | For `q = Beta(1, 1)` (uniform), `V̄₁(p_U, n, q) = log 2 − E_q[H_B(θ)]` to atol `1e-10` — i.e. for uniform `q`, the uniform prior is the oracle. Direct algebraic check using `H_B(θ) = −θ log θ − (1−θ) log(1−θ)`. | `test_t12_uniform_q_uniform_p_is_oracle` |
 | P13 | Discrete posterior mean / pattern prob agree with a naïve dense-Bayes-rule reference: posterior over atoms computed by direct normalisation of `π_a · θ_a^h (1−θ_a)^{n−h}` matches the log-space code path to atol `1e-12` (no MC). | `test_t13_discrete_posterior_naive_vs_logspace` |
-| P14 | Eye-test smoke: running the eye-test script with the spec's pinned config completes without exception and writes a non-empty PNG. (Not a correctness test; catches script-level breakage in CI.) | `test_t14_eyetest_smoke` |
 
 We do **not** test:
 
@@ -874,18 +922,185 @@ We do **not** test:
 - Spec 000 properties (BA monotonicity, grid invariance, etc.) — those
   are owned by `tests/test_000_static_infomax_fig1.py`.
 
-### Eye test file structure
+### 3.4 Test descriptions
 
-Per `skills/derive-test-suite.md` §Eye test file: the eye test lives
-at `tests/eye_test_001_infomax_betting.py` (no `test_` prefix, so
-pytest does not pick it up). It is a standalone script that:
+The §3.3 table maps each property to its test in one line. This
+subsection expands each into what the property *is* and which failure
+mode the test defends against — a test suite
+that passes tells you only as much as the bugs its tests are capable of
+catching.
 
-1. Constructs the eye-test cell from §3 Eye-test config.
-2. Runs `run_betting_cell` with the pinned RNG.
-3. Generates the two-panel figure and writes it to
-   `tests/figures/001_infomax_betting/`.
-4. Prints to stdout a reminder that human approval is required before
-   the full suite runs.
+Entries follow the table order; their
+`T…` identifiers are the test-function names of the "Verified by"
+column (property `P1` is checked by `test_t1a_…`, i.e. **T1a**, and so
+on). Tolerances and sweep values are pinned in §3.2 and the table and
+are not repeated here.
+
+**T1a — Beta single-component moment.** `beta_mixture_moment` on a
+one-component mixture must return `M_{r,s}(Beta(a,b)) = B(a+r, b+s) /
+B(a,b)` (eq. (1.7.1)). This generalised moment is the atom out of which
+*every* `V̄₁` and `V̄₂` is built — §1.4 and §1.5 are finite weighted
+sums of these moments — so an error here corrupts every downstream
+expectation silently and uniformly. The test checks against a direct
+`scipy.special.beta` evaluation of the ratio, deliberately *not* the
+`betaln` log-space path the implementation uses (§1.7), so a mistake in
+the exponent map `(r, s) ↦ (a+r, b+s)` or in the log-space rewrite is
+caught at the source rather than three layers up inside a wrong `V̄`.
+
+**T1b — Mixture moment is the weighted component sum.** A moment of a
+Beta *mixture* must equal the Dirichlet-weighted average of its
+per-component moments, `M_{r,s}(q) = Σ_j w_j M_{r,s}(Beta(a_j, b_j))`
+(eq. (1.7.2)). This is the step where the mixture weights `w_j` enter;
+T1a alone cannot see a weighting bug (wrong normalisation, a
+weight/component index mismatch, summation over the wrong axis).
+Because the weighting is `q`-dependent, such a bug tilts `V̄`
+differently for every drawn `q` — exactly the error that survives a
+single-`q` spot check.
+
+**T1c — Stable `log(1 − r̂)` evaluation.** The loss term of the Kelly
+growth needs `log(1 − r̂)` (and `log(1 − μ̂)`); when the belief is close
+to 1 — large `h`, all-heads pattern — forming `1 − r̂` directly is a
+catastrophic cancellation that destroys precision or returns `−∞`. The
+implementation instead uses `log1p(−exp(log r̂))` (§2.4). The test
+asserts this agrees with the naive expression on inputs where the naive
+form is still well conditioned, and stays finite on inputs where the
+naive form has already lost all its significant digits — pinning *both*
+that the stable path is correct and that it is actually buying
+precision.
+
+**T1d — Pattern probability does not underflow.**
+`discrete_posterior_pattern_prob` at `k_plus = 5`, `n = 20`, with a
+`p*` carrying near-endpoint atoms must return a finite *positive*
+number. The naive `Σ_a θ_a^{h+k₊} (1−θ_a)^{n−h}` underflows to exactly
+`0` in float64 for grid cells near `0`, after which `log r̂ = −∞`
+poisons `V̄₂`. The log-space `logsumexp` path (§2.4) is what prevents
+this. This single targeted test is why §3.2 can drop `k_plus = 5` from
+the broad sweep: the one regime where `k_plus = 5` differs
+qualitatively — endpoint underflow — is covered here.
+
+**T2a — `V̄₁` against Monte-Carlo.** The Part-1 closed form (eq.
+(1.4.4)) is checked end-to-end against an independent Monte-Carlo
+estimate that shares *no code* with it: draw `θ ∼ q`, draw `X_{1:n} ∼
+Binomial(n, θ)`, form the posterior mean, and average the realised
+growth `g̅`. Agreement within `4 · MCSE` validates the whole Part-1
+chain — posterior-mean function, binomial data-average, and the moment
+substitution that collapses the `θ`-integral. The spec's central
+computational claim is that `V̄₁` needs *no* Monte-Carlo; T2a is the
+test that earns it.
+
+**T2b — `V̄₂` against Monte-Carlo, all four priors.** The Part-2 closed
+form (eq. (1.5.2)) is more error-prone than Part-1: its loss term is a
+*difference* of moments `M_{h, n−h} − M_{h+k₊, n−h}` (a cancellation),
+and the belief is the `k₊`-th raw posterior moment rather than the
+mean. T2b checks it against Monte-Carlo for each of `p_J, p_U, p_MM,
+p*` at `n ∈ {3, 5}`, `k_plus ∈ {2, 3}`. Running all four priors is
+deliberate — it exercises *both* the Beta branch (eq. (1.6.2)) and the
+discrete branch (eq. (1.6.4)) of the pattern-probability formula in one
+test.
+
+**T3 — Matched-belief identity.** At a belief equal to the truth the
+expected log-growth attains its maximum, `g̅(p, p) = log 2 − H_B(p)`
+(eq. (1.3.3) at `π̂ = π_true`). This is the analytic backbone of the
+whole spec: the curve the eye test inspects (§3.1), the ceiling the
+oracle realises (§1.10), and the identity that ties `p*`'s
+information-theoretic optimality to a betting payoff. Checked pointwise
+across `p ∈ {0.1, …, 0.9}`, it isolates `expected_log_growth` from all
+posterior and moment machinery, so a sign error, a wrong logarithm
+base, or a dropped `log 2` shows up here in its simplest possible
+setting.
+
+**T4 — Beta vs discretised posterior mean.** The two branches of §1.6
+must agree where they describe the same object: the closed-form Beta
+posterior mean (eq. (1.6.1)) and the discrete posterior mean (eq.
+(1.6.4)) obtained by atomising `Beta(α, β)` on a fine `G = 10⁴` grid
+should match to `1e-3`. The discrete log-space path is the one used for
+`p*`, where no closed form exists to check against; T4 pins it against
+the analytically known Beta path in the limit where the two coincide,
+catching a log-weight or `logsumexp` posterior-update bug that a
+self-consistent-but-wrong discrete implementation would otherwise hide.
+
+**T5 — Oracle upper bound.** No posterior-based belief can beat a
+bettor who already knows `θ`; formally `V̄(p, n, q) ≤ V̄_oracle(q)` for
+every cell (§1.10, a direct consequence of Kelly optimality, §1.3). A
+`V̄` that *exceeds* the oracle is therefore a proof of a bug — a belief
+better calibrated than the truth is impossible — which makes this a
+cheap, universal invariant that every `(p, n, q)` must satisfy
+regardless of prior or hyperprior.
+
+**T6 — Convergence to the oracle as `n → ∞`.** As the sample budget
+grows the posterior concentrates (`μ̂ → θ`) and every prior's belief
+approaches the truth, so the gap `V̄_oracle − V̄` must shrink with `n`.
+The test asserts the gap at `n = 100` is at least `5×` smaller than at
+`n = 5` (for `p_U`). This confirms the `n`-dependence is wired through
+correctly — that the implementation actually conditions on the data
+rather than, say, returning a prior-only belief — a structural error
+the fixed-`n` tests cannot see.
+
+**T7 — Reflection symmetry.** The Bernoulli model is invariant under
+relabelling heads ↔ tails, i.e. `θ ↔ 1 − θ`, and `V̄` must inherit it:
+with `q` reflected (swap `a_j ↔ b_j` in each component), `p` reflected
+(`θ_a ↔ 1 − θ_a`), the data count `h ↔ n − h`, and the bet pattern
+all-heads ↔ all-tails, the value is unchanged to `1e-10`. Because the
+all-heads-only implementation (DC-2) exposes no all-tails predictive,
+the all-tails side is evaluated through the reflection identity — an
+all-tails pattern probability on the original prior equals an all-heads
+probability on the reflected prior — so the test stays inside the
+shipped code path. A bug that breaks the symmetry (an off-by-one in the
+`h` indexing, asymmetric endpoint handling) passes the per-side
+numerical checks but fails here.
+
+**T8 — Moment-match round trip.** `p_MM` is *defined* as the Beta whose
+mean and variance equal `p*`'s (§1.8); the experiment uses it to
+isolate whether `p*`'s structure *beyond* its first two moments is what
+does the work in Part 2. If `moment_match_beta` inverts the
+method-of-moments wrong, `p_MM` is not actually moment-matched and that
+isolation is confounded. The test builds `Beta(α, β)` from the returned
+`(α, β)` and checks its mean and variance reproduce the inputs to
+`1e-12`.
+
+**T9 — Moment match rejects the invalid region.** The matched Beta
+exists only for `σ² < μ(1 − μ)` (the `ν > 0` condition, §1.8); outside
+it the method of moments yields non-positive shape parameters. The test
+asserts `moment_match_beta` *raises* on `σ² ≥ μ(1 − μ)` rather than
+silently returning a garbage `Beta`, which would feed a meaningless
+`p_MM` into Part 2. It also guards the `n = 1` exclusion of §2.5 /
+DC-4, the case where the bound is exactly saturated.
+
+**T10 — `sample_q` validity.** Every `V̄` is an expectation against a
+drawn `q`, so a malformed `q` corrupts the whole cell. The test checks
+that `sample_q` returns a well-formed `BetaMixture` — exactly `K`
+components, non-negative weights summing to 1, and all shape parameters
+inside the relevant hyperprior's support — across `H1/H2/H3` and `K ∈
+{1, 2, 3}`. This is the input-validity gate on nature's side of the
+experiment.
+
+**T11 — Cell-stream snapshot.** Reproducibility rests on the
+deterministic cell ordering of §2.6: RNG streams are `spawn`-ed in cell
+order, so any silent re-ordering (a dict/set iteration change, a newly
+inserted sweep value) reassigns streams to cells and changes every
+result — with *no* test failing, because each individual cell is still
+computed correctly. The test freezes the enumerated `(cell,
+stream_seed)` list against a committed JSON snapshot
+(`tests/data/001_cell_streams.json`), turning a reordering into an
+explicit, reviewable diff.
+
+**T12 — Uniform `q`, uniform `p` is the oracle.** When nature is
+uniform (`q = Beta(1, 1)`) and the agent's prior is uniform, the agent
+is perfectly matched to nature and must achieve the oracle bound
+exactly: `V̄₁(p_U, n, q) = log 2 − E_q[H_B(θ)]` (§1.10). Unlike the
+Monte-Carlo checks (T2a/T2b), this is an *exact* analytic value, so it
+pins a systematic offset in `V̄₁` that a `4 · MCSE` tolerance could
+absorb, and confirms the `V̄₁` and oracle formulas agree at the one
+point where both are computable in closed form.
+
+**T13 — Discrete posterior: log-space vs naïve Bayes.** The log-space
+`logsumexp` posterior path (§2.4) used for `p*` is checked against a
+direct, non-logarithmic Bayes-rule normalisation of `π_a θ_a^h
+(1−θ_a)^{n−h}` at moderate `n`, where the naive form does not yet
+underflow. Agreement to `1e-12` (no Monte-Carlo) confirms the log-space
+arithmetic is algebraically *exact*, not merely numerically *stable* —
+the complement of T1d, which covers the regime where the naive
+reference itself breaks down.
 
 ## 4. Report
 
@@ -966,9 +1181,27 @@ results tables.
 
 ### 4.3 Auxiliary references and table schemas
 
-**Oracle reference.** `V̄^oracle(q)` (§1.10) is computed per
-`q`-sample and per `k_plus`, with the same `M_{r,s}(q)` evaluator the
-priors use. No separate quadrature.
+**Oracle reference.** `V̄^oracle(q)` (§1.10)
+is computed per `q`-sample and per `k_plus`. Unlike the priors' `V̄`, it
+is *not* a finite sum of the polynomial moments `M_{r,s}(q)`: its
+integrand `H_B(θ)` (resp. `H_B(θ^{k₊})`) carries a `log` term, so it is
+evaluated as follows.
+
+- **Part 1** is exact, with no quadrature:
+  `E_q[H_B(θ)] = −Σ_j w_j (E[θ log θ] + E[(1−θ) log(1−θ)])` over the
+  mixture components, using the standard Beta log-moment identities (in
+  nats) — for a single `Beta(a, b)`,
+  `E[θ log θ] = (a/(a+b))(ψ(a+1) − ψ(a+b+1))` and
+  `E[(1−θ) log(1−θ)] = (b/(a+b))(ψ(b+1) − ψ(a+b+1))`, where `ψ` is the
+  digamma function (`scipy.special.digamma`; Johnson, Kotz &
+  Balakrishnan 1995, §8).
+- **Part 2** `E_q[H_B(θ^{k₊})]` has no elementary closed form (the
+  `log(1 − θ^{k₊})` term), so it is computed by adaptive numerical
+  *quadrature* — numerical integration of `H_B(θ^{k₊}) q(θ)` over
+  `[0, 1]` to absolute tolerance `≤ 1e-12`. That is well below the
+  `1e-10` that T5 / T6 / T12 use as the oracle bound, so those checks
+  stay valid; the oracle is only a diagnostic ceiling, so the residual
+  quadrature error is immaterial to the reported figures.
 
 **`p*_n` atom extraction for Plot C.** Uses
 `infomax.atoms.extract_atoms` from spec 000 with default `p_thresh`.
@@ -1029,7 +1262,7 @@ The report body (`REPORT.md`) contains, in order:
    `(part, n, hyperprior)`, the mean `Δ(p*, p_J)` (Part 1) and `mean
    Δ(p*, p_J)` + `mean Δ(p*, p_MM)` (Part 2), each with `± MCSE` and
    `win_fraction`.
-8. **Test results.** Pass/fail status of T1–T14 with the achieved
+8. **Test results.** Pass/fail status of T1a–T13 with the achieved
    numerical tolerances.
 9. **Notes.** Anything surprising or differing from the spec; the
    "what each result would mean" interpretation grid from the source
@@ -1050,7 +1283,7 @@ src/infomax/hyperprior.py                (§2.2)
 src/infomax/kelly.py                     (§2.2)
 src/infomax/betting_driver.py            (§2.2)
 
-tests/test_001_infomax_betting.py        (T1–T14 except T14 itself which is the eye-test smoke)
+tests/test_001_infomax_betting.py        (T1a–T13)
 tests/eye_test_001_infomax_betting.py    (eye-test script; not pytest-collected)
 tests/data/001_cell_streams.json         (T11 snapshot)
 tests/figures/001_infomax_betting/       (eye-test output)
@@ -1134,6 +1367,15 @@ imported as-is.
 - MacLean, L. C., Thorp, E. O., & Ziemba, W. T. (2010). *The Kelly
   Capital Growth Investment Criterion: Theory and Practice.* World
   Scientific. Modern reference for Kelly-style log-wealth analysis.
+- Thorp, E. O. (2006). The Kelly criterion in
+  blackjack, sports betting, and the stock market. In S. A. Zenios &
+  W. T. Ziemba (Eds.), *Handbook of Asset and Liability Management,
+  Vol. 1* (pp. 385–428). North-Holland. Its **Fig. 1** is the canonical
+  growth-rate curve `g(f) = p log(1 + f) + q log(1 − f)` versus `f` for
+  the even-money coin-toss bet (peak `g(f*) = log 2 − H_B(p)`, zero at
+  `f = 0`, `→ −∞` at the edges) — the published reference figure for
+  the §3.1 eye test. Freely available as a PDF (e.g.
+  [gwern.net/doc/statistics/decision/2006-thorp.pdf](http://gwern.net/doc/statistics/decision/2006-thorp.pdf)).
 - Gneiting, T. & Raftery, A. E. (2007). Strictly proper scoring rules,
   prediction, and estimation. *Journal of the American Statistical
   Association*, 102(477), 359–378. Justifies log-score (= Kelly
@@ -1508,3 +1750,117 @@ log moved §10 → §11.
   `needs-revision → draft` (changed this round); §1.7 left
   `needs-revision` (no comment, no change). Added a §10 Derivations
   row (`draft`) and renumbered the Revision-log row 10 → 11.
+
+### 2026-05-30 — Refinement & Clarification (§3 Test suite; new §3.4)
+
+Post-review revisions for §3 addressing the two inline `> M:` comments
+from the human reviewer (one in §3.1, one in §3.3). The substantive
+prose changes in §3.1 and the §3.3 forward pointer are wrapped in red
+`<span>` markup; the entirely new §3.4 is left unpainted, per the
+review instruction (red over a wholly new section is noise). §3 Test
+suite set `needs-revision → draft`.
+
+- **§3.1 eye-test reference (Refinement).** The eye test previously
+  plotted a bespoke two-panel figure (a histogram of `Δ(p*, p_J)` /
+  `Δ(p*, p_U)` and a `V̄` − oracle scatter) specific to this
+  experiment. The reviewer asked for an external reference figure, as
+  Mattingly Fig 1 served spec 000. No Kelly-betting paper contains the
+  bespoke figure, and its expected shape is unknown *by design* (whether
+  `p*` wins is the open question), so it cannot anchor a
+  qualitative-correctness check. Replaced it with the canonical Kelly
+  growth-rate curve `g̅(π_true, π̂)` vs belief (eq. (1.3.3); Kelly 1956,
+  MacLean–Thorp–Ziemba 2010), whose peak-at-the-truth, concave shape is
+  fixed by the literature. Consequence: the eye test now anchors the
+  *Kelly identity* (`kelly.py`) against a known shape rather than the
+  prior-comparison output; the prior comparison's sanity is instead
+  covered quantitatively (T2a, T2b, T5, T6) and surfaced in the §4
+  report plots, not at the eye-test gate. The eye-test *script* (§3.1
+  file structure) no longer calls `run_betting_cell` — it evaluates
+  `expected_log_growth` over a belief grid and is deterministic (no
+  RNG). No downstream code exists yet (spec was at `needs-revision`), so
+  nothing is invalidated. `π_true ∈ {0.7, 0.8, 0.9}` is flagged as an
+  auto-decision for confirmation.
+- **New §3.4 Test descriptions (Refinement).** Added a per-test
+  description for all 18 tests (T1a–T14), modelled on spec 000's
+  `**Tn — …**` blocks: each states what the property *is* and which
+  failure mode it defends against, expanding the one-line §3.3 table
+  entries. No test was added, removed, or re-scoped — this is exposition
+  of the existing table. Added a red forward pointer from the §3.3 intro
+  to §3.4.
+- **Table IDs (Clarification).** Considered relabelling the §3.3 `#`
+  column from `P…` to `T…` for a single identifier scheme, but kept the
+  `P…` property IDs to mirror spec 000's structure (property IDs in the
+  table, `T`-headed prose descriptions bridged by the `Verified by`
+  column). §3.4 headers therefore use the `T…` form already used by the
+  test-function names and by §1.6 / §3.1 / §4.4; the §3.4 intro states
+  the `P…`↔`T…` correspondence explicitly. The one-line table entries
+  were checked against the new descriptions and needed no correction, so
+  the table body is otherwise unchanged.
+
+### 2026-05-30 — Correction, Clarification & Refinement (§3 Test suite, second review pass)
+
+Second post-review pass on §3, addressing three new inline `> M:`
+comments (one each in §3.1, §3.4, and on the §3.4 T14 entry). Per the
+review instruction, the red `<span>` markup from the *first* 2026-05-30
+pass was stripped (its text carried forward unchanged except where
+re-edited below), and only this pass's modifications are freshly
+red-marked. §3 stays `draft`.
+
+- **§3.1 figure reference (Correction).** The first pass cited Kelly
+  (1956) and MacLean–Thorp–Ziemba (2010) as the eye test's visual
+  reference, but — as the reviewer noted — Kelly (1956) contains no
+  figures and MacLean et al. is a book, so neither is a figure a
+  reviewer can pull up quickly. Replaced with **Thorp (2006), Fig. 1**,
+  verified to plot the growth-rate coefficient
+  `g(f) = p log(1 + f) + q log(1 − f)` versus `f` for the even-money
+  coin-toss bet — exactly this spec's `g̅` form, with peak
+  `g(f*) = p log p + q log q + log 2 = log 2 − H_B(p)` matching eq.
+  (1.3.3), zero at `f = 0`, and divergence at the edges. Thorp (2006)
+  added to §8 References with a freely-available PDF link. The figure
+  was confirmed by reading the PDF directly, not from memory.
+- **§3.4 wording (Clarification).** Replaced the CI jargon "a green
+  suite is only as informative as…" with plain language ("a test suite
+  that passes tells you only as much as…").
+- **T14 relocation (Refinement).** Per the reviewer: since the eye test
+  runs *before* the quantitative suite, the smoke check belongs to
+  executing the eye test, not to the property table. Removed the P14
+  row from the §3.3 table and the T14 block from §3.4, and folded the
+  smoke check into §3.1's eye-test file-structure subsection as a
+  precondition on the human handoff (the script must complete without
+  exception and write a non-empty PNG before its figure is reviewed;
+  no separate `pytest` test). The suite is now T1a–T13. This removes a
+  planned test; no implementation exists yet, so nothing downstream is
+  invalidated.
+- **Mechanical propagation (unpainted).** The T14 removal was
+  propagated to the §4.4 report-body item (`T1–T14` → `T1a–T13`) and the
+  §5 layout line; both are left unpainted (the §5 line is inside a code
+  fence where an HTML span would not render), with the scope recorded
+  here.
+
+### 2026-05-30 — Correction (§4.3 oracle computation; red strip in §3 / §8)
+
+Third post-review pass. Two housekeeping items and one Correction.
+
+- **Red strip.** The human reviewed the whole spec and accepted §3 and
+  §8 (status set to `reviewed`); the red `<span>` markup added in the
+  second 2026-05-30 pass was removed from both (§3 ×3, §8 ×1). Pure
+  formatting cleanup, no content change — the sections stay `reviewed`.
+  The Thorp (2006) handbook chapter and the eye-test `π_true ∈ {0.7,
+  0.8, 0.9}` set were both confirmed by the human (the
+  "auto-chosen; please confirm" flag was removed).
+- **§4.3 oracle computation (Correction).** Resolves the `> M?:` "what
+  does quadrature mean here?". The previous text claimed `V̄^oracle` is
+  computed "with the same `M_{r,s}(q)` evaluator the priors use. No
+  separate quadrature." That was wrong: `E_q[H_B(θ)]` (and
+  `E_q[H_B(θ^{k₊})]`) is not a finite sum of polynomial moments — the
+  integrand carries a `log` term. Corrected to specify the actual
+  method: **Part 1** in closed form via the digamma (`ψ`) Beta
+  log-moment identities (exact, machine precision); **Part 2** by
+  adaptive numerical quadrature to `≤ 1e-12`. Because the Part-2
+  quadrature is pinned tighter than the `1e-10` used by T5 / T6 / T12,
+  those bounds remain valid, so no reviewed section needed reopening:
+  §1.10's oracle *definition* is unchanged, §2.2's `v_bar_*_oracle` API
+  is unchanged, and the §3 tolerances stand. Only §4.3's description was
+  wrong. §4 Report set `needs-revision → draft`. The correction is
+  red-marked; the inline digamma identities use §4's inline-backtick
+  math style (not display LaTeX), consistent with the rest of §4.
