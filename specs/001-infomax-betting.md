@@ -7,7 +7,7 @@
 | [1. Mathematical statement](#11-setup-and-notation) | draft | 300526 |
 | [2. Computational specification](#2-computational-specification) | draft | 300526 |
 | [3. Test suite](#3-test-suite) | draft | 300526 |
-| [4. Report](#4-report) | reviewed | 300526 |
+| [4. Report](#4-report) | draft | 300526 |
 | [5. Layout](#5-layout) | reviewed | 300526 |
 | [6. Deferred choices](#6-deferred-choices) | draft | 300526 |
 | [7. Open questions](#7-open-questions) | reviewed | 300526 |
@@ -957,7 +957,7 @@ what the property is and which failure mode it defends against.
 | P9 | `moment_match_beta` raises `ValueError` when `σ² ≥ μ(1 − μ)`. | `test_t9_moment_match_invalid` |
 | P10 | `sample_q` returns a valid `BetaMixture`: `K` components, non-negative weights summing to 1, all shape parameters in the hyperprior's support, across H1/H2/H3 and `K ∈ {1, 2, 3}`. | `test_t10_sample_q_validity` |
 | P11 | Cell-stream snapshot: enumerating cells under the §2.5 sweep yields a list whose `(cell, stream_seed)` pairs match a frozen JSON snapshot (`tests/data/001_cell_streams.json`). Defends against silent re-ordering that would break reproducibility. | `test_t11_cell_stream_snapshot` |
-| P12 | For `q = Beta(1, 1)` (uniform), `V̄₁(p_U, n, q) = log 2 − E_q[H_B(θ)]` to atol `1e-10` — i.e. for uniform `q`, the uniform prior is the oracle. Direct algebraic check using `H_B(θ) = −θ log θ − (1−θ) log(1−θ)`. | `test_t12_uniform_q_uniform_p_is_oracle` |
+| P12 | <span style="color: red">For `q = Beta(1,1)` (uniform), the implementation's `V̄₁(p_U, n, q)` (eq. (1.4.4), `betaln` moment path) equals an independent exact recomputation of the same finite sum — moments `M_{r,s} = r!·s!/(r+s+1)!` and `μ̂ = (h+1)/(n+2)` evaluated via `fractions`/`lgamma`, sharing no code with the implementation — to atol `1e-12`. An exact, MC-free pin on the *assembled* `V̄₁` level. (Replaces a former false check equating this with the oracle.)</span> | `test_t12_vbar1_exact_two_ways` |
 | P13 | Discrete posterior mean / pattern prob agree with a naïve dense-Bayes-rule reference: posterior over atoms computed by direct normalisation of `π_a · θ_a^h (1−θ_a)^{n−h}` matches the log-space code path to atol `1e-12` (no MC). | `test_t13_discrete_posterior_naive_vs_logspace` |
 
 We do **not** test:
@@ -966,8 +966,9 @@ We do **not** test:
   cell. That is the *result* the experiment is designed to discover;
   asserting it in a test would make the experiment unfalsifiable.
 - Exact `V̄` values per cell. Implementation correctness is checked
-  via MC reference (T2a, T2b), oracle bounds (T5), and analytic limits
-  (T6, T12); no per-cell expected-value snapshot.
+  via MC reference (T2a, T2b), oracle bounds (T5), analytic limits
+  (T6)<span style="color: red">, and an exact single-point value (T12)</span>;
+  no per-cell expected-value snapshot.
 - Spec 000 properties (BA monotonicity, grid invariance, etc.) — those
   are owned by `tests/test_000_static_infomax_fig1.py`.
 
@@ -1150,14 +1151,27 @@ stream_seed)` list against a committed JSON snapshot
 (`tests/data/001_cell_streams.json`), turning a reordering into an
 explicit, reviewable diff.
 
-**T12 — Uniform `q`, uniform `p` is the oracle.** When nature is
-uniform (`q = Beta(1, 1)`) and the agent's prior is uniform, the agent
-is perfectly matched to nature and must achieve the oracle bound
-exactly: `V̄₁(p_U, n, q) = log 2 − E_q[H_B(θ)]` (§1.10). Unlike the
-Monte-Carlo checks (T2a/T2b), this is an *exact* analytic value, so it
-pins a systematic offset in `V̄₁` that a `4 · MCSE` tolerance could
-absorb, and confirms the `V̄₁` and oracle formulas agree at the one
-point where both are computable in closed form.
+**T12 — `V̄₁` exact, two independent ways.** <span style="color: red">At
+`q = Beta(1, 1)` the moments `M_{r,s}(q) = r!·s!/(r+s+1)!` and the
+uniform-prior posterior mean `μ̂_n(p_U, h) = (h+1)/(n+2)` are exact
+rationals, so the Part-1 closed form (eq. (1.4.4)) has an exact value
+computable *independently* of the implementation's `betaln` moment path
+— via `fractions`/`lgamma` test-side. T12 asserts the two agree to atol
+`1e-12`. This is the only *exact* (machine-precision), MC-free pin on the
+*assembled* `V̄₁` absolute level: T2a checks `V̄₁` only to `4 · MCSE`
+(loose enough to absorb a systematic offset — a dropped `log 2`, a wrong
+log base, a near-cancelling moment-index slip), T3 checks only the
+`kelly.py` atom `g̅(π, π)` (not the binomial-average / moment assembly),
+and T6 checks only the *relative* `n → ∞` trend. The independence is the
+same kind T1a relies on (`scipy.beta` direct vs. the `betaln` path), so
+it is a genuine cross-check, not circular. This replaces an earlier
+version that asserted `V̄₁(p_U, n, q) = log 2 − E_q[H_B(θ)]` (the oracle)
+— a false identity: matching nature's *marginal* `q` removes prior
+misspecification but not posterior *uncertainty*, so the Bayesian still
+pays `E_q[D_{KL}(θ ‖ μ̂_n)] > 0` at every finite `n` and a correct `V̄₁`
+sits strictly below the oracle (the belief-vs-truth conflation flagged in
+`tutorials/math/kelly.md`). The `n → ∞` approach to the oracle is instead
+covered, as a trend, by T6.</span>
 
 **T13 — Discrete posterior: log-space vs naïve Bayes.** The log-space
 `logsumexp` posterior path (§2.4) used for `p*` is checked against a
@@ -1265,9 +1279,10 @@ evaluated as follows.
   `log(1 − θ^{k₊})` term), so it is computed by adaptive numerical
   *quadrature* — numerical integration of `H_B(θ^{k₊}) q(θ)` over
   `[0, 1]` to absolute tolerance `≤ 1e-12`. That is well below the
-  `1e-10` that T5 / T6 / T12 use as the oracle bound, so those checks
-  stay valid; the oracle is only a diagnostic ceiling, so the residual
-  quadrature error is immaterial to the reported figures.
+  `1e-10` that <span style="color: red">T5 / T6</span> use as the oracle
+  bound, so those checks stay valid; the oracle is only a diagnostic
+  ceiling, so the residual quadrature error is immaterial to the reported
+  figures.
 
 **`p*_n` atom extraction for Plot C.** Uses
 `infomax.atoms.extract_atoms` from spec 000 with default `p_thresh`.
@@ -2018,3 +2033,34 @@ Sections flipped `reviewed → draft`: Generative model, §1, §2, §3, §6,
 Deferred (not edited this pass): **second-report F1 — T12 asserts a
 false exact identity.** The human annotated it with a question (salvage
 vs. drop); awaiting decision before any §3.3/§3.4 edit.
+
+### 2026-05-30 — Correction (§3.3 P12 / §3.4 T12; §4.3 oracle-bound list)
+
+Stage-3b resolution of the deferred **second-report F1** (T12 false
+identity), per the human's chat decision to take "option (b)":
+repurpose T12 rather than drop it. T3 and T6 do not cover T12's niche —
+T3 checks only the `kelly.py` atom `g̅(π,π)`, T6 only the *relative*
+`n→∞` trend, and T2a's `4·MCSE` tolerance can absorb a systematic offset
+— so T12 remains the only *exact*, MC-free pin on the *assembled* `V̄₁`
+absolute level; that value is worth keeping.
+
+- **§3.3 P12 / §3.4 T12 (Correction).** Replaced the false property
+  `V̄₁(p_U, n, Beta(1,1)) = log 2 − E_q[H_B(θ)]` (which equated a
+  marginal-matched prior with the oracle — a correct `V̄₁` would *fail*
+  it by 0.04–0.14 nats, since the Bayesian still pays
+  `E_q[D_KL(θ ‖ μ̂_n)] > 0` at finite `n`) with an exact
+  two-independent-ways check: at `q = Beta(1,1)` the moments and
+  `μ̂ = (h+1)/(n+2)` are exact rationals, so the implementation's `V̄₁`
+  (eq. (1.4.4), `betaln`) is compared to a `fractions`/`lgamma`
+  test-side recomputation of the same finite sum, to atol `1e-12`. Test
+  function renamed `test_t12_uniform_q_uniform_p_is_oracle →
+  test_t12_vbar1_exact_two_ways`. The "We do not test" note was updated
+  (T12 moved from "analytic limits" to "an exact single-point value").
+- **§4.3 (Correction).** Dropped T12 from the "`1e-10` that T5 / T6 / T12
+  use as the oracle bound" list — the repurposed T12 is no longer an
+  oracle check (it uses atol `1e-12` and does not reference `V̄^oracle`).
+  §4 Report flipped `reviewed → draft`.
+
+No implementation exists yet, so nothing downstream is invalidated. §3
+remains `draft` (flipped in the previous red-team-pass entry); §4 flipped
+to `draft` this entry.

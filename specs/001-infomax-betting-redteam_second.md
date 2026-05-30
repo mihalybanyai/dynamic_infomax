@@ -94,6 +94,16 @@ the oracle" sentence and the `= log2 − E_q[H_B(θ)]` equality from §3.3/§3.4
 > `Σ_h Binom·g̅` evaluation with closed-form Beta moments, atol 1e-12).
 > Awaiting your stage-3b decision before editing.
 
+> C: Resolved (stage 3b) — you chose option (b): repurpose, not drop.
+> §3.3 P12 and §3.4 T12 now check the implementation's `V̄₁(p_U, n,
+> Beta(1,1))` (eq. (1.4.4), `betaln`) against an independent exact
+> `fractions`/`lgamma` recomputation of the same sum, atol `1e-12`, and
+> the false "uniform prior is the oracle" identity is deleted. Test
+> renamed `test_t12_uniform_q_uniform_p_is_oracle →
+> test_t12_vbar1_exact_two_ways`; T12 dropped from §4.3's oracle-bound
+> list (it is no longer an oracle check); §4 flipped `reviewed → draft`.
+> Revision-log entry added (Correction).
+
 ---
 
 ### F2: §1.6 overstates T2a's coverage — `V̄₁` for the discrete `p*` is never end-to-end MC-tested [severity: medium]
