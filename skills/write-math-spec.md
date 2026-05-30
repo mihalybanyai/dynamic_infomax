@@ -29,25 +29,36 @@ to any particular tensor shape convention. It describes the math.
    for which sections have been reviewed and what downstream work is
    permitted. See "Status table" below.
 
-4. **Structure the spec with these sections, in order:**
+4. **Structure the spec with these sections, in order.** Number the
+   top-level content sections from `0` (`## 0. Context`, `## 1. Setup`,
+   …); subsections are `### X.Y` and subsubsections `#### X.Y.Z` (see
+   "Numbering and links"). A spec needs at least:
 
    - **Context** — one paragraph: what problem this solves, what came before.
    - **Setup** — definitions of all symbols. Use a notation table if there are
      more than 5 symbols.
    - **Generative model** (if applicable) — a plate-notation diagram for any
-     probabilistic content. See "Visuals" below.
+     probabilistic content. See "Visuals" below. (Conventionally left
+     unnumbered, between Context and Setup.)
    - **Objective** — the formal objective function or property of interest.
    - **Derivation** — the math, with steps a reader can verify. Format
-     equations per "Math typesetting" below.
+     equations per "Math typesetting" below. Long, mechanical algebra that
+     would clutter the main statement is moved to the **Derivations
+     appendix** (see below); the main Derivation keeps only the
+     load-bearing steps.
    - **Algorithm** — pseudocode. Use plain numbered steps with mathematical
      notation. If a data-flow or control-flow diagram would clarify the
      algorithm, include one (see "Visuals").
    - **Properties to verify** — what an implementation should satisfy. These
      become the test suite. Be specific: "the loss is invariant under
      permutation of the batch dimension" is good; "it should work" is not.
-     - **Eye test** — A figure (or small set of figures) whose qualitative features can be
-       inspected by a human to confirm the implementation is roughly correct
-       before the full quantitative test suite is run.
+     Lay them out as a **property-to-tests table** *and* a **per-test
+     descriptions** subsection (see "Test suite" below).
+     - **Eye test** — a figure (or small set) anchored to a *specific
+       published external figure* whose qualitative shape is known, so a
+       human can confirm the implementation is roughly right before the
+       full suite. Its run/file structure goes in a numbered subsubsection.
+       See "Eye test" below.
      - **Sweep design** — every choice the test code will need to make
        about *what values are tested* is pinned here, not in the test
        file. See "Sweep design" below.
@@ -57,7 +68,12 @@ to any particular tensor shape convention. It describes the math.
      script will make about *what to plot, at what density, with what
      formatting* is pinned here. See "Report" below.
    - **Open questions** — anything you're unsure about. Mark with `[?]`.
-   - **References** — papers, prior work. Use `[CITATION NEEDED]` if unsure.
+   - **References** — papers, prior work, each with a DOI/URL link where
+     one exists (see "Numbering and links"). Use `[CITATION NEEDED]` if
+     unsure.
+   - **Derivations appendix** — the full step-by-step algebra behind the
+     closed forms stated in the main sections. Placed near the end (after
+     References). See "Derivations appendix" below.
    - **Revision log** — appended below as the spec is revised. See
      "Revision log" below.
 
@@ -71,14 +87,17 @@ Every spec opens with a table that tracks per-section review status:
 ```markdown
 | Section | Status | Date |
 |---|---|---|
-| Context | draft | — |
-| Setup | draft | — |
-| Generative model | draft | — |
-| Objective | draft | — |
-| Derivation | draft | — |
-| Algorithm | draft | — |
-| Properties to verify | draft | — |
+| [0. Context](#0-context) | draft | — |
+| [Generative model](#generative-model) | draft | — |
+| [1. Setup](#1-setup) | draft | — |
+| [2. Objective](#2-objective) | draft | — |
+| [3. Derivation](#3-derivation) | draft | — |
+| [4. Algorithm](#4-algorithm) | draft | — |
+| [5. Properties to verify](#5-properties-to-verify) | draft | — |
 ```
+
+Each section name links to its own heading anchor (see "Numbering and
+links"), so the table doubles as a clickable table of contents.
 
 ### Status values
 
@@ -151,6 +170,48 @@ unexamined foundations:
 
 Downstream work is permitted but not automatic. Always confirm with the
 human before starting the next stage.
+
+## Numbering and links
+
+### Section and subsection numbering
+
+Number every content heading so cross-references are stable and
+unambiguous:
+
+- Top-level content sections are numbered from `0` (`## 0. Context`,
+  `## 1. Setup`, `## 2. …`); the Purpose/Context section is `0`. A
+  Generative-model section, if present, conventionally sits *unnumbered*
+  between `0` and `1`.
+- Subsections are `### X.Y` (`### 1.3 Kelly fraction …`); subsubsections
+  are `#### X.Y.Z` (`#### 3.1.1 Eye-test file structure`).
+- Do **not** leave a content subsubsection as a bare unnumbered heading
+  (`#### Eye test file structure`). If it earns its own heading it earns
+  a number — the number is what a `> M:` review comment, a status-table
+  link, and an equation `\tag` all point at.
+- Section-scoped equation numbering (`\tag{X.Y.Z}`, see "Math
+  typesetting") keys off these heading numbers, so keep the two
+  consistent when a subsection is inserted or moved.
+
+### Links
+
+Make the spec navigable; links cost nothing and save a reviewer hunting
+through a long file or chasing a citation.
+
+- **Status table** — every section name links to its own anchor:
+  `| [3. Test suite](#3-test-suite) | reviewed | … |`. (GitHub, Obsidian,
+  and VSCode all derive the anchor by lower-casing the heading, dropping
+  punctuation, and replacing spaces with hyphens.) The table then doubles
+  as a table of contents.
+- **References** — every entry carries a DOI or stable URL as a markdown
+  link, so the source opens in one click. When a figure is the eye-test
+  anchor (see "Eye test"), prefer a freely-available copy and link it.
+  (Early references may predate this rule; apply it from here on and
+  backfill the next time a reference list is revised.)
+- **External URLs** anywhere in the spec (a PDF of a cited figure, a
+  dataset, a tool) are markdown links, never bare or backticked URLs.
+- **Internal cross-references** use the `§X.Y` notation and may also
+  link the anchor. Once a subsection or equation is numbered, refer to it
+  by number — never "the section/equation above/below".
 
 ## Math typesetting
 
@@ -338,6 +399,65 @@ A spec without a single diagram is a yellow flag: probabilistic content
 without a plate diagram is usually under-specified, and an algorithm
 without a flow diagram is often hiding a step.
 
+## Test suite
+
+The "Properties to verify" section has two parts, both pinned in the
+spec (not deferred to the test file):
+
+- **Property-to-tests table** — one row per property: a one-line
+  statement, the spec section it comes from, and the name of the test
+  function that verifies it. This is the index.
+- **Per-test descriptions** — a numbered subsection (e.g. `### 3.4 Test
+  descriptions`) with one short block per test, headed by its identifier
+  (`**T4 — short title.**`). Each block says *what the property is* and,
+  crucially, *which failure mode the test defends against* — a suite that
+  passes tells you only as much as the bugs its tests are capable of
+  catching. The table lists; the descriptions explain why each test earns
+  its place. Spec 000 §4 and spec 001 §3.4 are the models.
+
+Keep the table's identifiers, the description headers, and the
+test-function names consistent, and number the descriptions subsection
+like any other heading (see "Numbering and links"). State explicitly what
+you do *not* test and why — e.g. asserting the experiment's headline
+result would make it unfalsifiable.
+
+## Eye test
+
+The eye test is the manual gate before the quantitative suite: a figure a
+human inspects to catch implementations that pass every per-tolerance
+check yet are qualitatively wrong (optimising the right objective along
+the wrong axis). For that glance to mean anything, the figure must have a
+*known* expected shape.
+
+- **Anchor it to a specific published external figure.** Name the paper
+  *and the figure number* whose qualitative shape the eye-test figure
+  reproduces — "Mattingly et al. (2018), Fig. 1" (spec 000), "Thorp
+  (2006), Fig. 1" (spec 001). The anchor must be a figure a reviewer can
+  pull up quickly: a *book*, or a paper *with no figures*, is not usable
+  (a freely-available PDF showing the exact plot is). Verify the figure
+  exists and shows what you claim — read it, don't trust memory — and add
+  it to References with a link.
+- **Do not anchor on an unknown-shape quantity.** If the figure plots the
+  experiment's *headline result*, whose shape you cannot predict (it is
+  the thing the experiment exists to discover), it cannot serve as a
+  correctness check. Anchor instead on a foundational identity or
+  intermediate whose shape the literature fixes.
+- **Configuration** — pin the exact inputs (parameter values, grid, seed
+  if any) the figure is generated from, flagging auto-decisions per
+  "Sweep design".
+- **Acceptance** — state the *known* qualitative features the human
+  checks (peak location, concavity, limits, zero-crossings) and what a
+  wrong implementation would make the figure do.
+- **File structure** — the eye-test script's structure lives in a
+  numbered subsubsection of the Eye-test subsection (e.g. `#### 3.1.1
+  Eye-test file structure`), not in a floating unnumbered heading. The
+  script is standalone (not pytest-collected) and writes its figure under
+  `tests/figures/NNN_*/`. *Running it is itself the smoke check* — it must
+  complete without exception and write a non-empty figure before the
+  result is handed to the human. Do not add a separate pytest "does the
+  eye-test script run" test: the eye test runs before the suite, so a
+  broken script cannot silently reach the suite.
+
 ## Sweep design
 
 Any test that varies a quantity across runs — parameter sweeps, grid
@@ -442,6 +562,25 @@ forming any opinion about whether the *figures will look nice*.
 Auto-decisions in the Report section are flagged the same way as
 in Sweep design: `(auto-chosen by codegen; please confirm)`. The
 same review-and-ratify rule applies.
+
+## Derivations appendix
+
+When a main math section states a closed-form result that compresses
+several algebraic steps, put the full expansion in a **Derivations**
+appendix near the end of the spec (spec 001 places it as `## 9.
+Derivations`, after References and before the Revision log). The point is
+to keep the main statement readable — a reader who trusts the result
+reads on; a reviewer who wants to check it has every step in one place.
+
+- One numbered subsection per derived result, each **self-contained** and
+  headed with the equation(s) it reconstructs (e.g. `### 9.1 Part-1 data
+  expectation (eq. (1.4.2) → (1.4.3))`).
+- The main section keeps only the load-bearing steps and points to the
+  appendix ("the full expansion is in §9.1").
+- Appendix equations carry their own section-scoped tags (`\tag{9.1.1}`),
+  so adding an intermediate step never renumbers the main sections.
+- It is reference material, not the main read: the appendix introduces no
+  result the main sections don't already state.
 
 ## Revision log
 
