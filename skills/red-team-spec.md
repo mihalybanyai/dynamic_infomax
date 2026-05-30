@@ -52,6 +52,10 @@ Focus on these failure modes, in roughly this order of value:
    "well-known", "standard" should be flagged. These words usually hide a
    step the author did not want to write out.
 
+7. **Aims not achieved**: any reason the spec does not really achieve it's 
+    stated goal, a conceptual gap in the reasoning that will prevent the 
+    experiment from demonstrating what it's stated to demonstrate.
+
 Be specific. Useless: "the proof in section 3 might not work."
 Useful: "the inequality in equation (3.7) requires f to be convex, but f is
 defined in section 2 as a difference of two convex functions, which is not
