@@ -3,16 +3,16 @@
 | Section | Status | Date |
 |---|---|---|
 | [0. Purpose and scope](#0-purpose-and-scope) | reviewed | 250526 |
-| [Generative model](#generative-model) | reviewed | 250526 |
-| [1. Mathematical statement](#11-setup-and-notation) | reviewed | 290526 |
-| [2. Computational specification](#2-computational-specification) | reviewed | 300526 |
-| [3. Test suite](#3-test-suite) | reviewed | 300526 |
+| [Generative model](#generative-model) | draft | 300526 |
+| [1. Mathematical statement](#11-setup-and-notation) | draft | 300526 |
+| [2. Computational specification](#2-computational-specification) | draft | 300526 |
+| [3. Test suite](#3-test-suite) | draft | 300526 |
 | [4. Report](#4-report) | reviewed | 300526 |
 | [5. Layout](#5-layout) | reviewed | 300526 |
-| [6. Deferred choices](#6-deferred-choices) | reviewed | 300526 |
+| [6. Deferred choices](#6-deferred-choices) | draft | 300526 |
 | [7. Open questions](#7-open-questions) | reviewed | 300526 |
 | [8. References](#8-references) | reviewed | 300526 |
-| [9. Derivations](#9-derivations) | reviewed | 290526 |
+| [9. Derivations](#9-derivations) | draft | 300526 |
 | [10. Revision log](#10-revision-log) | n/a | — |
 
 ## 0. Purpose and scope
@@ -119,6 +119,17 @@ materialised at simulation time* — both `θ` and `X_{1:n}` are integrated
 out analytically against `q_s` (see §1.4 and §1.5). The plate is shown
 for conceptual completeness; the algorithm of §2 only ever samples `q_s`.
 
+<span style="color: red">A note on the shaded node `x`: in this diagram
+shading denotes *observability in the generative model at some point*,
+not the agent's conditioning set at decision time. In a decision problem
+observability is not a fixed property of a variable — some variables are
+observed *before* the bet (the `n` training tosses, which the agent
+conditions on to form `π̂`) and some only *after* (the `k₊` bet-outcome
+tosses, which the agent bets on and never conditions on). Folding both
+into one shaded `n + k₊` plate is deliberate shorthand under this
+convention; it is *not* a claim that the agent sees the `k₊` outcomes
+when choosing its bet (cf. §0, §1.4–§1.5).</span>
+
 The agent's prior `p` (one of `p*_n`, `p_J`, `p_U`, or for Part 2 also
 `p_MM`) is *not* coupled to `q` — that is the whole point of the
 experiment. The agent picks `p` ahead of time as a function of the
@@ -157,7 +168,7 @@ avoid collision with `k₊`).
 | `Δ(p, p′)` | `V̄(p) − V̄(p′)` — the difference statistic we report. |
 
 All logarithms in nats unless otherwise stated. Bits are obtained at
-report time via `log 2`.
+report time <span style="color: red">by dividing by `log 2`</span>.
 
 ### 1.2 Reusing `p*_n` from spec 000
 
@@ -319,9 +330,12 @@ structure to Part 1, with `π̂ = r̂_n` and `π_true = θ^{k₊}`, and using
 the loss term — is in §9.4.
 
 Exact for Beta-mixture `q`. Note that `M_{h, n−h}(q) − M_{h+k₊, n−h}(q)
-= E_q[ θ^h (1−θ)^{n−h} (1 − θ^{k₊}) ]`, which is non-negative by
-construction (each term is a probability against a non-negative
-integrand).
+= E_q[ θ^h (1−θ)^{n−h} (1 − θ^{k₊}) ]`, which is non-negative
+<span style="color: red">because the difference equals a *single*
+expectation whose integrand `θ^h (1−θ)^{n−h} (1 − θ^{k₊})` is `≥ 0`
+on `[0,1]` (the only non-obvious factor, `1 − θ^{k₊}`, is `≥ 0` for
+`θ ∈ [0,1]`) — not because the two subtracted moments are separately
+non-negative, which would not imply their difference is</span>.
 
 ### 1.6 Posterior-mean / posterior-pattern formulas per prior
 
@@ -362,7 +376,10 @@ $$
 \tag{1.6.4}
 $$
 
-For `ω = (1,…,1)`, `r̂_n(p*, h, ω) = Σ_a θ_a^{k₊} · π'_a(h)` — the
+<span style="color: red">Here `|ω|` is the Hamming weight of the pattern
+— the number of 1s (heads) in `ω` — so `k₊ − |ω|` is the number of 0s
+(tails); for the all-heads headline pattern `|ω| = k₊`.</span> For
+`ω = (1,…,1)`, `r̂_n(p*, h, ω) = Σ_a θ_a^{k₊} · π'_a(h)` — the
 `k₊`-th raw posterior moment under the discrete posterior. The discrete
 formulas are evaluated in log-space to avoid underflow (see §2.4).
 
@@ -398,8 +415,11 @@ ratio is `≤ 0` for `r + s ≥ 1`.
 ### 1.8 Moment-matched Beta (`p_MM`, Part 2 only)
 
 Given a prior `p̃` (in our use, `p̃ = p*_n`) with mean `μ` and variance
-`σ²` strictly inside `(0, ¼)`, the unique Beta distribution with the
-same first two moments has
+`σ²` <span style="color: red">satisfying `0 < σ² < μ(1−μ)` (for the
+reflection-symmetric `p*_n`, `μ = ½`, so this reduces to `σ² < ¼`;
+note `σ² ∈ (0, ¼)` alone is necessary but **not** sufficient for general
+`μ`, since `μ(1−μ) < ¼` whenever `μ ≠ ½`)</span>, the unique Beta
+distribution with the same first two moments has
 
 $$
 \begin{aligned}
@@ -416,11 +436,25 @@ the Beta distribution (Johnson, Kotz & Balakrishnan 1995, ch. 25; see
 §9.5.
 
 The constraint `σ² < μ(1−μ)` is necessary for `ν > 0` and is satisfied
-by any non-degenerate distribution on `[0,1]` (it is the bound saturated
-only by `Bernoulli(μ)`). `p*_n` is multi-atom for all `n ≥ 2` (spec 000 §1.5
-and §4 T2b), so `σ² < μ(1−μ)` strictly; for `n = 1`, `p*_1 =
-½(δ_0 + δ_1)` with `σ² = μ(1−μ) = ¼` and `ν = 0` — `p_MM` is undefined
-in that degenerate case and Part 2 excludes `n = 1` (see §2.5).
+by any distribution on `[0,1]` whose <span style="color: red">support is
+not contained in `{0,1}` (the bound is saturated only by a two-point
+distribution on `{0,1}`, i.e. `Bernoulli(μ)` — multi-atomicity alone is
+not enough; interior support is the operative condition)</span>. `p*_n`
+has <span style="color: red">interior support</span> for all `n ≥ 2`
+(spec 000 §1.5 and §4 T2b), so `σ² < μ(1−μ)` strictly.
+<span style="color: red">For `n = 1` the exact and the gridded `p*_1`
+differ in a way that matters here. The *exact* infomax prior is
+`p*_1 = ½(δ_0 + δ_1)`, with `σ² = μ(1−μ) = ¼` and `ν = 0`, so `p_MM` is
+genuinely undefined. But this spec uses the cell-centred *grid* masses
+(§2.3), whose `n = 1` atoms sit at the first and last cell centres
+`θ ≈ 1/(2G)` and `1 − 1/(2G)` — not at `0` and `1` (spec 000 §3.1 / T1).
+On that grid object `σ² ≈ 0.2495 < ¼` strictly, so `ν ≈ 0.0020 > 0` and
+`p_MM` is well-defined (an extreme, near-U-shaped Beta);
+`moment_match_beta` would *not* raise. Part 2 nonetheless excludes
+`n = 1` (§2.5, DC-4), not because `p_MM` fails to exist on the grid, but
+because `n = 1` is the trivially extreme boundary case with a known
+closed-form solution (spec 000 T1) — outside the small-but-nontrivial
+regime the comparison targets.</span>
 
 ### 1.9 The hyperprior `𝓗` over `q`
 
@@ -693,9 +727,12 @@ results by `q`-shape (e.g. "across `q`-samples whose mean is near
 **Sample-budget sweep `n`.** `n ∈ {2, 3, 5, 10, 20}`. We skip `n = 1`
 because:
 
-- `p*_1 = ½(δ_0 + δ_1)` is a known closed form (spec 000 T1) and
-  ill-suited to Part 2 (variance saturates the `σ² ≤ μ(1−μ)` bound so
-  `p_MM` is undefined per §1.8).
+- `p*_1 = ½(δ_0 + δ_1)` is a known closed form (spec 000 T1).
+  <span style="color: red">(On the *exact* prior `p_MM` is undefined —
+  `σ²` saturates the `σ² < μ(1−μ)` bound, §1.8 — but on the cell-centred
+  grid this spec actually uses, `p*_1`'s variance is strictly below the
+  bound, so `p_MM` is well-defined there. The exclusion below therefore
+  does not rest on `p_MM` failing to exist.)</span>
 - The interest of the comparison is *not* in the trivially extreme
   case; the question is whether `p*` wins in the *small-but-not-trivial*
   regime where the prior matters and there is room for genuine
@@ -752,6 +789,18 @@ field name, then natural order on values); spawning is order-dependent,
 so cell ordering is part of the spec's reproducibility guarantee. The
 ordering is pinned at the top of `betting_driver.py` and tested by
 T11 (snapshot of the cell list with their stream-index seeds).
+
+<span style="color: red">The `k_plus_sweep` argument is iterated **only
+for `part = 2`**: Part-1 cells are emitted **once** each, with
+`k_plus = None`, and are *not* crossed with the three `k_plus` values
+(their `V̄₁` does not depend on `k_plus`, so crossing would produce three
+identical duplicates and waste two RNG streams per `(n, 𝓗, K)`).
+`enumerate_cells` therefore yields exactly the §2.5 sweep — for `part = 1`
+the `(n, 𝓗, K)` grid, for `part = 2` the `(n, k_plus, 𝓗, K)` grid — with
+no Part-1 duplication. In the lexicographic ordering the `k_plus` field of
+a Part-1 cell takes the single value `None`, which sorts before any
+integer `k_plus`. This makes the T11 cell-stream snapshot fully
+predictable from the spec, not merely self-consistent.</span>
 
 ## 3. Test suite
 
@@ -897,7 +946,7 @@ what the property is and which failure mode it defends against.
 | P1b | `beta_mixture_moment` of a mixture equals the weighted average of per-component moments (§1.7). | `test_t1b_mixture_moment_is_weighted_sum` |
 | P1c | `log(1 − r̂)` evaluated via `log1p(−exp(log r̂))` agrees with the naive expression on values where naive is stable, and stays finite where naive does not (§2.4). | `test_t1c_log1p_minus_exp_stability` |
 | P1d | `discrete_posterior_pattern_prob` at `k_plus = 5`, `n = 20`, `p*` with extreme-θ atoms returns a finite positive number (no underflow, §2.4). | `test_t1d_pattern_prob_no_underflow` |
-| P2a | `V̄₁` closed form (§1.4) agrees with a Monte-Carlo estimate (sample `θ ~ q`, sample `X_{1:n} ~ θ`, evaluate `g̅`) within `4 · MCSE` (`p_J` on H3, `n=5, K=2`). | `test_t2a_vbar1_matches_monte_carlo` |
+| P2a | `V̄₁` closed form (§1.4) agrees with a Monte-Carlo estimate (sample `θ ~ q`, sample `X_{1:n} ~ θ`, evaluate `g̅`) within `4 · MCSE` (<span style="color: red">each of the four priors `{p_J, p_U, p_MM, p*}`</span> on H3, `n=5, K=2`). | `test_t2a_vbar1_matches_monte_carlo` |
 | P2b | `V̄₂` closed form (§1.5) agrees with a Monte-Carlo estimate within `4 · MCSE` for each of `(p_J, p_U, p_MM, p*)`, `n ∈ {3,5}`, `k_plus ∈ {2,3}`. | `test_t2b_vbar2_matches_monte_carlo` |
 | P3 | `g̅(p, p) = log 2 − H_B(p)` (Kelly's matched-belief identity), pointwise across `p ∈ {0.1, 0.3, 0.5, 0.7, 0.9}`, atol `1e-12` (§1.3). | `test_t3_g_bar_at_matched_belief` |
 | P4 | Closed-form Beta posterior mean agrees with discrete posterior mean computed by atomising `Beta(α, β)` on a `G = 10⁴` grid, atol `1e-3` (consistency check across §1.6's two branches). | `test_t4_beta_vs_discretised_posterior_mean` |
@@ -986,7 +1035,18 @@ growth `g̅`. Agreement within `4 · MCSE` validates the whole Part-1
 chain — posterior-mean function, binomial data-average, and the moment
 substitution that collapses the `θ`-integral. The spec's central
 computational claim is that `V̄₁` needs *no* Monte-Carlo; T2a is the
-test that earns it.
+test that earns it. <span style="color: red">T2a runs **all four priors**
+`{p_J, p_U, p_MM, p*}` (mirroring T2b's design), not just `p_J`. This is
+load-bearing: it is the only place the discrete `p*` posterior-mean path
+(1.6.4) is checked end-to-end *inside `V̄₁`* against an independent
+Monte-Carlo reference — a `Beta`-only T2a would leave the way the
+discrete `μ̂_n(p*, ·)` array is assembled into `V̄₁` (e.g. a wrong moment
+index used only on the `p*` branch) untested by any MC check, since T2b
+exercises the discrete path only inside `V̄₂`. `p_MM` is included here
+purely to exercise the `Beta` branch end-to-end; it is the same
+moment-matched Beta as in Part 2 and is **not** part of Part 1's
+experimental prior comparison (§2.5 keeps `{p*, p_J, p_U}` for
+Part 1).</span>
 
 **T2b — `V̄₂` against Monte-Carlo, all four priors.** The Part-2 closed
 form (eq. (1.5.2)) is more error-prone than Part-1: its loss term is a
@@ -1063,8 +1123,14 @@ exists only for `σ² < μ(1 − μ)` (the `ν > 0` condition, §1.8); outside
 it the method of moments yields non-positive shape parameters. The test
 asserts `moment_match_beta` *raises* on `σ² ≥ μ(1 − μ)` rather than
 silently returning a garbage `Beta`, which would feed a meaningless
-`p_MM` into Part 2. It also guards the `n = 1` exclusion of §2.5 /
-DC-4, the case where the bound is exactly saturated.
+`p_MM` into Part 2. <span style="color: red">The degenerate input the
+guard rejects is the *exact-continuum* `p*_1 = ½(δ_0+δ_1)`, which
+saturates the bound (`σ² = μ(1−μ)`); the *gridded* `p*_1` this spec
+actually uses does **not** saturate it (§1.8), so the `n = 1` Part-2
+exclusion (§2.5, DC-4) rests on the boundary-case argument, not on this
+guard firing for `p*_1`. The test exercises the guard on synthetic
+saturating/over-saturating inputs, independent of whether any `p*_n`
+hits it.</span>
 
 **T10 — `sample_q` validity.** Every `V̄` is an expectation against a
 drawn `q`, so a malformed `q` corrupts the whole cell. The test checks
@@ -1324,11 +1390,16 @@ imported as-is.
   and the implementation would need to fall back to quadrature against
   the density `q(θ)`. Deferred unless results are sensitive to the
   Beta-mixture restriction (open question OQ-1).
-- **DC-4** `n = 1` is excluded from Part 2 because `p_MM` is undefined
-  there (§1.8). Part 1 includes `n = 1` trivially since `p_MM` is not
-  used in Part 1 — but for consistency the headline `n` sweep skips
-  `n = 1` in both parts (the boundary case is well-understood
-  analytically; we are interested in the regime where it is not).
+- **DC-4** `n = 1` is excluded from Part 2 <span style="color: red">as
+  the trivially extreme, analytically-understood boundary case (§2.5).
+  (On the *exact* `p*_1 = ½(δ_0+δ_1)`, `p_MM` is additionally undefined
+  — `σ²` saturates the bound, §1.8 — but on the cell-centred grid this
+  spec uses, `p_MM` is well-defined at `n = 1`, so undefinedness is not
+  the operative reason for the exclusion.)</span> Part 1 includes
+  `n = 1` trivially since `p_MM` is not used in Part 1 — but for
+  consistency the headline `n` sweep skips `n = 1` in both parts (the
+  boundary case is well-understood analytically; we are interested in
+  the regime where it is not).
 
 ## 7. Open questions
 
@@ -1415,27 +1486,27 @@ V_1(\theta, p, n)
   &= \sum_{h=0}^{n} \binom{n}{h}\,\theta^h (1-\theta)^{n-h}\;\bar g\big(\theta,\, \hat\mu\big) \\
   &= \sum_{h=0}^{n} \binom{n}{h}\,\theta^h (1-\theta)^{n-h}\Big[\, \theta \log(2\hat\mu) + (1-\theta)\log\big(2(1-\hat\mu)\big)\Big].
 \end{aligned}
-\tag{10.1.1}
+\tag{9.1.1}
 $$
 
 Split each logarithm as `log(2x) = log 2 + log x` and collect the
 `log 2` term using `θ + (1-θ) = 1`:
 
 $$
-\theta \log(2\hat\mu) + (1-\theta)\log\big(2(1-\hat\mu)\big) = \log 2 + \theta \log \hat\mu + (1-\theta)\log(1-\hat\mu). \tag{10.1.2}
+\theta \log(2\hat\mu) + (1-\theta)\log\big(2(1-\hat\mu)\big) = \log 2 + \theta \log \hat\mu + (1-\theta)\log(1-\hat\mu). \tag{9.1.2}
 $$
 
-Substituting (10.1.2) back and pulling the `θ`-independent `log 2`
+Substituting (9.1.2) back and pulling the `θ`-independent `log 2`
 through the binomial sum, which obeys
 `Σ_{h} \binom{n}{h} θ^h (1-θ)^{n-h} = 1`, gives (1.4.3):
 
 $$
-V_1(\theta, p, n) = \log 2 + \sum_{h=0}^{n} \binom{n}{h}\,\theta^h (1-\theta)^{n-h}\Big[\, \theta \log \hat\mu + (1-\theta)\log(1-\hat\mu)\Big]. \tag{10.1.3}
+V_1(\theta, p, n) = \log 2 + \sum_{h=0}^{n} \binom{n}{h}\,\theta^h (1-\theta)^{n-h}\Big[\, \theta \log \hat\mu + (1-\theta)\log(1-\hat\mu)\Big]. \tag{9.1.3}
 $$
 
 ### 9.2 Part-1 average over `q` (eq. (1.4.3) → (1.4.4))
 
-Average (10.1.3) over `θ ∼ q`. Because `log μ̂` and `log(1 − μ̂)` depend
+Average (9.1.3) over `θ ∼ q`. Because `log μ̂` and `log(1 − μ̂)` depend
 on `(p, h, n)` but not on `θ`, they pull out of `E_q[·]`:
 
 $$
@@ -1444,7 +1515,7 @@ $$
   &= \log 2 + \sum_{h=0}^{n} \binom{n}{h}\Big[\, \log \hat\mu \cdot \mathbb E_q\!\big[\theta^{h+1}(1-\theta)^{n-h}\big] \\
   &\qquad\qquad + \log(1-\hat\mu)\cdot \mathbb E_q\!\big[\theta^{h}(1-\theta)^{n-h+1}\big]\Big].
 \end{aligned}
-\tag{10.2.1}
+\tag{9.2.1}
 $$
 
 Identify the two expectations with the moments of §1.7:
@@ -1467,7 +1538,7 @@ $$
   &= \int_0^1 P\big(X_{n+1:n+k_+} = 1^{k_+} \,\big|\, \theta\big)\; p(\theta \mid X_{1:n})\, d\theta \\
   &= \int_0^1 \theta^{k_+}\, p(\theta \mid h_n)\, d\theta \;=\; \mathbb E_{p(\theta \mid h_n)}\!\big[\theta^{k_+}\big].
 \end{aligned}
-\tag{10.3.1}
+\tag{9.3.1}
 $$
 
 This is the `k₊`-th raw posterior moment. The corresponding ground-truth
@@ -1476,7 +1547,7 @@ pattern probability under the true `θ` is `r(θ) = θ^{k₊}`.
 ### 9.4 Part-2 closed form (eq. (1.5.1) → (1.5.2))
 
 The Part-2 bet is binary with belief `π̂ = r̂` and true probability
-`π_true = θ^{k₊}`, so the split (10.1.2) applies verbatim with
+`π_true = θ^{k₊}`, so the split (9.1.2) applies verbatim with
 `(μ̂, θ) → (r̂, θ^{k₊})`:
 `g̅(θ^{k₊}, r̂) = log 2 + θ^{k₊} log r̂ + (1 − θ^{k₊}) log(1 − r̂)`.
 Averaging the data expectation (1.5.1) over `θ ∼ q`, with `r̂` constant
@@ -1488,34 +1559,34 @@ $$
   &= \log 2 + \sum_{h=0}^{n} \binom{n}{h}\Big[\, \log \hat r \cdot \mathbb E_q\!\big[\theta^{h+k_+}(1-\theta)^{n-h}\big] \\
   &\qquad\qquad + \log(1-\hat r)\cdot \mathbb E_q\!\big[\theta^{h}(1-\theta)^{n-h}\big(1-\theta^{k_+}\big)\big]\Big].
 \end{aligned}
-\tag{10.4.1}
+\tag{9.4.1}
 $$
 
 The first expectation is `M_{h+k₊,\,n−h}(q)`. The loss-term expectation
 splits linearly:
 
 $$
-\mathbb E_q\!\big[\theta^{h}(1-\theta)^{n-h}\big(1-\theta^{k_+}\big)\big] = M_{h,\,n-h}(q) - M_{h+k_+,\,n-h}(q), \tag{10.4.2}
+\mathbb E_q\!\big[\theta^{h}(1-\theta)^{n-h}\big(1-\theta^{k_+}\big)\big] = M_{h,\,n-h}(q) - M_{h+k_+,\,n-h}(q), \tag{9.4.2}
 $$
 
-which recovers (1.5.2). Non-negativity of (10.4.2) is noted in §1.5.
+which recovers (1.5.2). Non-negativity of (9.4.2) is noted in §1.5.
 
 ### 9.5 Moment-matched Beta (eq. (1.8.1))
 
 For `θ ∼ Beta(α, β)` write `ν = α + β`. The first two moments are
 
 $$
-\mu = \frac{\alpha}{\nu}, \qquad \sigma^2 = \frac{\alpha\beta}{\nu^2(\nu+1)}. \tag{10.5.1}
+\mu = \frac{\alpha}{\nu}, \qquad \sigma^2 = \frac{\alpha\beta}{\nu^2(\nu+1)}. \tag{9.5.1}
 $$
 
 From the mean, `α = μν` and `β = (1 − μ)ν`. Substituting into the
 variance and simplifying:
 
 $$
-\sigma^2 = \frac{(\mu\nu)\big((1-\mu)\nu\big)}{\nu^2(\nu+1)} = \frac{\mu(1-\mu)}{\nu+1}. \tag{10.5.2}
+\sigma^2 = \frac{(\mu\nu)\big((1-\mu)\nu\big)}{\nu^2(\nu+1)} = \frac{\mu(1-\mu)}{\nu+1}. \tag{9.5.2}
 $$
 
-Solving (10.5.2) for `ν` gives `ν = μ(1 − μ)/σ² − 1`, and then
+Solving (9.5.2) for `ν` gives `ν = μ(1 − μ)/σ² − 1`, and then
 `α = μν`, `β = (1 − μ)ν` — exactly (1.8.1). The solution has `ν > 0`
 (hence `α, β > 0`) iff `σ² < μ(1 − μ)`, the non-degeneracy condition
 discussed in §1.8.
@@ -1864,3 +1935,86 @@ Third post-review pass. Two housekeeping items and one Correction.
   wrong. §4 Report set `needs-revision → draft`. The correction is
   red-marked; the inline digamma identities use §4's inline-backtick
   math style (not display LaTeX), consistent with the rest of §4.
+
+### 2026-05-30 — Correction, Clarification & Refinement (red-team pass: §Generative model, §1.1, §1.5, §1.6, §1.8, §2.5, §2.6, §3.3/§3.4, §6, §9)
+
+Processing the two independent red-team reports
+(`001-infomax-betting-redteam_first.md` and
+`001-infomax-betting-redteam_second.md`), applying every finding the
+human gave a confident `> M:` instruction on. One finding (second report
+F1, the T12 false-identity) was annotated as a *question* and is **not**
+resolved in this pass — it is deferred to a follow-up round. Substantive
+edits are red-`<span>`-marked; the §9 equation renumbering is mechanical
+and left unpainted (red inside `$$` display math breaks rendering).
+Sections flipped `reviewed → draft`: Generative model, §1, §2, §3, §6,
+§9.
+
+- **§1.8 / §2.5 / §6 DC-4 / §3.4 T9 — `n = 1` / `p_MM` reasoning
+  (Correction; first-report F1).** The previous text claimed `p_MM` is
+  *undefined* at `n = 1` because `p*_1 = ½(δ_0+δ_1)` saturates
+  `σ² = μ(1−μ) = ¼`. That is false for the object the code uses: this
+  spec uses the cell-centred *grid* masses (§2.3), whose `n = 1` atoms
+  sit at `θ ≈ 1/(2G)` and `1 − 1/(2G)`, giving `σ² ≈ 0.2495 < ¼` and a
+  well-defined `p_MM` — `moment_match_beta` would not raise. Restated the
+  `n = 1` Part-2 exclusion on its independently-sufficient grounds (the
+  trivially-extreme, analytically-known boundary case), kept the
+  exact-continuum `p_MM`-undefined fact as a parenthetical, and corrected
+  the T9 description's "exactly saturated" gloss. Also fixed the adjacent
+  "multi-atom ⇒ strict bound" wording in §1.8 to the operative condition
+  "interior support ⇒ strict bound". Downstream: T9's *test* (raise on
+  synthetic `σ² ≥ μ(1−μ)`) is unchanged and still valid; only its prose
+  justification moved.
+- **§1.8 first sentence — `moment_match_beta` precondition (Correction;
+  second-report F3).** "variance `σ²` strictly inside `(0, ¼)`" is
+  necessary but not sufficient for general `μ` (`μ(1−μ) < ¼` when
+  `μ ≠ ½`). Replaced with the actual existence condition
+  `0 < σ² < μ(1−μ)`, noting it reduces to `σ² < ¼` for the symmetric
+  `p*_n`.
+- **§3.3 P2a / §3.4 T2a — T2a runs all four priors (Correction;
+  first-report F3 = second-report F2).** §1.6 claimed the discrete `p*`
+  `V̄₁` path is "consumed inside `V̄` (for `p*`) by T2a", but P2a
+  parametrised T2a on `p_J` only, so the discrete-`p*` Part-1 path was
+  never MC-checked. Expanded T2a to all four priors `{p_J, p_U, p_MM,
+  p*}` (mirroring T2b), which makes the §1.6 coverage claim true (so
+  §1.6 itself needed no edit). `p_MM` is included in the *test* only to
+  exercise the Beta branch; Part 1's experimental comparison (§2.5) still
+  uses `{p*, p_J, p_U}`. Downstream: the T2a test must now parametrise
+  over four priors.
+- **§2.6 — Part-1 cell enumeration (Clarification; first-report F2).**
+  Pinned that `k_plus_sweep` is iterated only for `part = 2`: Part-1
+  cells are emitted once with `k_plus = None`, not crossed with the
+  `k_plus` values, and `None` sorts before the integer `k_plus` in the
+  lexicographic order. Downstream: makes the T11 cell-stream snapshot
+  predictable from the spec rather than only self-consistent, and pins
+  the RNG-stream-to-cell assignment for Part 1.
+- **§Generative model — observability note (Clarification; first-report
+  F5 = second-report F4).** Added a note that the shaded node denotes
+  observability *at some point* in the generative model, not the agent's
+  decision-time conditioning set; the `k₊` bet-outcome tosses are
+  observed only after the bet and are never conditioned on. No diagram
+  change (per the human's instruction to note it in the text).
+- **§1.6 — `|ω|` definition (Clarification; second-report F5).** Defined
+  `|ω|` (the Hamming weight — number of heads in the pattern) inline at
+  eq. (1.6.4), where the general-`ω` formula first uses it.
+- **§1.1 / §1.5 — wording (Clarification; first-report F6).** (1) "Bits
+  are obtained at report time via `log 2`" → "by dividing by `log 2`".
+  (2) Replaced the §1.5 non-negativity parenthetical ("each term is a
+  probability against a non-negative integrand", which justifies the
+  wrong thing — two separately-non-negative terms need not have a
+  non-negative difference) with the actual reason: the difference equals
+  a single expectation whose integrand is `≥ 0` because `1 − θ^{k₊} ≥ 0`
+  on `[0,1]`.
+- **§9 — equation renumbering (Correction; first-report F4).** The §9
+  Derivations equation tags and in-§9 prose references were labelled
+  `10.x.y` (residue from an earlier round when the section was expected
+  to ship as §10); the section ships as §9 and §1's cross-refs already
+  say "§9.x". Renumbered all nine tags `10.x.y → 9.x.y` and the five
+  in-§9 prose references to match. *Not changed:* the historical
+  revision-log entry for 2026-05-29 still narrates "§10 Derivations …
+  Revision log moved §10 → §11" and references "§10.1–§10.5"; left as
+  audit trail of that round's intent — flag for the human if a changelog
+  correction is also wanted.
+
+Deferred (not edited this pass): **second-report F1 — T12 asserts a
+false exact identity.** The human annotated it with a question (salvage
+vs. drop); awaiting decision before any §3.3/§3.4 edit.
