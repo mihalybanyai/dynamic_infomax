@@ -226,6 +226,84 @@ upgrades to *predictive* goodness.
    `D(m_q‖m_π)` via Monte-Carlo on the marginals. (A&M's `AtomicPriors.jl` finds
    `p*`; our repo has BA for the discrete case.)
 
+## 6. Experiment design: locate the boundary, don't maximise the effect
+
+**Framing (MB).** A&M go for **dramatic effect** (`d=26`, `Δ>20σ`) to make the
+phenomenon unmissable. We want the opposite: the **minimal structural settings**
+where the same effect is *just* visible (presumably to a small degree), and on
+each structural axis the **boundary** separating `p*` *useful* from *useless* as
+an epistemic prior. **Dimension is not the axis** — independent high-`D` (100
+separable bets) is the null; the axes are the likelihood **structure**
+(scale hierarchy + coupling), per the §6/§7.3 anisotropy argument of the
+two-hats note.
+
+### 6.1 What "useful" means — two reference comparisons, two order parameters
+
+- **(i) `p*` vs the pathological default (Jeffreys).** Onset of *any* co-volume
+  bias. Order parameter: A&M's **`B = max_θ b(θ) > 0`** — *prior-only, `q`-free,
+  cheap* (their `AtomicPriors.jl`). Boundary sits at **zero coupling**
+  (block-diagonal / independent ⇒ `B=0` ⇒ `p*=p_J`). Necessary but weak:
+  beating a broken default ≠ being a good belief.
+- **(ii) `p*` vs the best *deployable smooth* default** (uniform-`θ`,
+  log-normal) on **held-out log-loss** — the meaningful line, where `p*`'s
+  *benefit* (avoiding the co-volume bias) finally exceeds its *cost* (the
+  discreteness / endpoint miscalibration that sank it in §1, i.e. the §3
+  calibration term). The **matched `q̄` is the ceiling, not a competitor**: by
+  §2.1 it achieves the floor `I_q`, so `p*` can *never* beat it average-case —
+  the gap `p*→q̄` measures only the room left. *Caveat:* boundary (ii) depends
+  on the test `q`; report it as a function of `q` (or fix a canonical one — the
+  model's own measure, or `q̄`).
+
+Region between (i) and (ii): "`p*` beats the broken Jeffreys but is still a worse
+belief than a plain smooth prior." Beyond (ii): "`p*` is the best deployable
+epistemic prior." The §1 regime is *below* (ii); A&M's `d=26` is far *beyond* it.
+
+### 6.2 Structural axes to sweep (deconfounded), with the expected boundary
+
+1. **Coupling / co-volume gradient** (the irrelevant scale *varying along* the
+   relevant directions — the hypercone taper `r(θ_rel)`): the **necessary**
+   ingredient. Boundary (i) at taper `=0`. **Negative control:** constant
+   cross-section / independent dims ⇒ `B=0`, log-loss gap `=0`. *If `p*` "wins"
+   there, it's a bug.*
+2. **Scale-hierarchy depth / sloppiness** (spectrum slope; # directions with
+   Fisher length `L<1`): more/steeper ⇒ more co-volume to misweight ⇒ boundary
+   (ii) reached sooner. Sweep **at fixed `d`** to deconfound from dimension —
+   A&M never do this (their `d`-sweep silently deepens the spectrum, since
+   exp-decay eigenvalues `∝10^{-d}`).
+3. **Anisotropy / rotation** of the resolvable directions off the parameter
+   axes: hurts *coordinate* priors (uniform-`θ`) specifically; isolates
+   geometry-driven from coordinate-driven bias.
+4. **Data budget `N`/`σ`** (the finite-data axis): the *average-case* advantage
+   **vanishes as `N→∞`** (interior posteriors agree, `I_J→I*`; only a worst-case
+   boundary bias `B_J↛0` persists). So there is an **upper-`N` boundary** past
+   which `p*` stops being needed — and it is *exponential in `d`* for sloppy
+   models (`~10^d` reps; "far from asymptopia"). The useful regime is small `N`.
+5. **Dimension `d`** (last, axes 1–4 fixed): in the hypercone `Δ=(d−1)/x`, so the
+   effect is **continuous from `d=2`** — *no sharp onset in `d`*. Confirms `d` is
+   a magnitude knob, not the boundary variable.
+
+### 6.3 Minimal model
+
+Smallest setting that already shows it: **`d=2`, one relevant + one irrelevant,
+coupled (tapering)** — A&M's own Fig. 1 model, which they use only to
+*illustrate*. There the bias is tiny (hypercone `Δ=1/x ≈ 0.1σ`), which is exactly
+why it's the right place to **locate boundary (ii)** (does `p*` beat a smooth
+prior on held-out log-loss when the effect is *small*?) rather than to
+dramatise. Build the controlled family on the **hypercone** (tunable taper +
+spectrum; closed-form `Δ=(d−1)/x` for calibration), with the **independent-dims
+null** as the negative control.
+
+### 6.4 A positive result, stated minimally
+
+A `d=2`–small-`d` model, moderate `σ`, *modest* (single-digit-`σ`, not `20σ`)
+Jeffreys bias, in which **`p*`'s held-out log-loss beats every deployable smooth
+default and lands close to the `q̄` ceiling** — boundary (ii) crossed in an
+undramatic setting. That would show the effect is **generic and graded**, not a
+high-`d` curiosity, and would be the first evidence `p*` is a good *epistemic*
+prior off the worst-case corner. Conversely, if boundary (ii) only ever crosses
+at large `d`/steep sloppiness, that *localises* `p*`'s epistemic usefulness to
+the extreme regime — itself a clean, publishable negative.
+
 **Slogan for the note:** *A&M proved `p*` puts the prediction in the right
 place (unbiased centre) in high `d`; the open question is whether it also gets
 the prediction's spread right (calibration) — and only a proper log-loss score,
