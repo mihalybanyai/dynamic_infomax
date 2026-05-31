@@ -179,6 +179,46 @@ log-wealth shortfall** — the opposite corner from the spec's average-case
 one-shot. (Even then, Jeffreys wins at large `N`, being the asymptotic minimax
 prior.)
 
+**Multi-D corroboration — a *prediction* task family where `p*` is good as an
+inference prior (Quinn, Abbott, Transtrum, Machta & Sethna 2023).** The
+sloppy-models review (same lineage; the multi-D generalisation of `p*` —
+discrete infomax prior, atoms on the model-manifold *boundaries* along sloppy
+directions, `→` Jeffreys as data `→∞`) scores priors as *inference* priors in
+**prediction space** (posterior-predicted outputs vs data, in noise units), not
+by a betting/point score — and there `p*` is good while **Jeffreys is
+catastrophic**: in high-`D` hyperribbon models Jeffreys' posterior is biased by
+many `σ` (their `D=26` sum-of-exponentials: `~20σ` off the data), because in
+high `D` the Fisher volume is dominated by *unidentifiable* directions and
+Jeffreys spreads mass there, dragging the predictive posterior off; the
+edge-weighted `p*`/projected-ML priors keep mass on the identifiable boundary,
+so predictions stay calibrated. This is a **second** reason `p*` wins as a
+predictor, *beyond* the worst-case argument above: in high `D` even the
+**typical/average** case favours it, because the natural competitor (Jeffreys)
+carries a dimension-driven volume pathology. It also **reconciles with §1 rather
+than contradicting it**: §1's betting loss is `1-D`, average-case, benign-`q` —
+where Jeffreys is benign and `p*`'s endpoint atoms mis-calibrate — whereas
+Quinn is high-`D` prediction, where it flips. So the controlling axes are
+**worst-case-vs-average** and **dimension**, *not* "betting vs prediction" per
+se: `p*` wins (i) worst-case over `θ` at any `D` (redundancy theorem, provable)
+and (ii) high-`D` typical-case (empirical). **How systematic is it? — Abbott &
+Machta (2023, "Far from Asymptopia")**, the focused companion, makes it
+quantitative, not visual: they define a **bias pressure**
+`b(θ) = D_KL(p(x|θ)‖p(x)) − I(Θ;X)` — which is *exactly* the equalizer residual
+of `redundancy-capacity.md` (per-`θ` redundancy minus capacity) — show
+`b(θ)=0` on `supp(p*)` (the KKT/equalizer condition), and give scaling laws for
+worst-case bias vs dimension. **So `p*`'s prediction-space *unbiasedness* and
+its design/coding *optimality* are the same condition** (`b=0` ⇔ equalizer) —
+the success is theorem-grounded, not just empirical. Two consequences: (i) the
+pathology is **generic to fixed parameter-space priors**, not special to
+Jeffreys — "any measure treating all parameters equally is far from uniform when
+projected onto the relevant subspace," and they confirm a **log-normal** prior
+also degrades with `d`, so **uniform-in-`θ` is no escape**; (ii) the unbiased
+measure **must be data-dependent** (resolution-adapted = `p*`) — *no fixed
+continuous prior is unbiased in high `D`*, and the right notion of "uniform" is
+uniform over *distinguishable predictions*, not parameters. The one genuinely
+open bit is now narrow: a **held-out proper-scoring (log-loss) sweep** (§10
+offer 5), since they score bias/unbiasedness rather than predictive log-loss.
+
 ## 5. The two-hat agent, concretely (bank of `m` coins)
 
 World: `m` coins, biases `θ_i ~ q`, budget `T` tosses; at each step choose
@@ -435,6 +475,37 @@ stop representing in between.*
 - **Mattingly, Transtrum, Abbott, Machta (2018), PNAS** — finite-data infomax
   prior `p*`: discrete atoms, count `~√n`, `→` Jeffreys as `n→∞`. (In
   `resources/`.)
+- **Quinn, Abbott, Transtrum, Machta, Sethna (2023), *Rep. Prog. Phys.*** —
+  multi-D generalisation of `p*`: discrete infomax prior with atoms on
+  model-manifold *boundaries*, `→` Jeffreys as data `→∞`; MBAM model reduction;
+  the high-`D` hyperribbon **Jeffreys-as-inference-prior catastrophe** (`~20σ`
+  prediction-space bias) fixed by edge-weighted priors. Multi-D evidence for the
+  two-hat split, scored in *prediction space* (visual + the prior's own MI, not
+  a proper scoring rule). DOI 10.1088/1361-6633/aca6f8.
+- **Abbott & Machta (2023, "Far from Asymptopia", *Entropy* 25(3):434; arXiv
+  2205.03343; code `mcabbott/AtomicPriors.jl`)** — the focused, *systematic*
+  high-`D` result behind the review. Defines **bias pressure** `b(θ) = ∂I/∂p(θ)
+  = D_KL(p(x|θ)‖p(x)) − I(Θ;X)` (Eq. 5) — which is the *variational gradient* of
+  `I` and, by our identification, the `redundancy-capacity` equalizer residual;
+  the optimal `p*` has `b=0` on its support, found by minimising `B=max_θ b(θ)`.
+  Shows `b` **correlates with posterior bias** (posterior-mean prediction pulled
+  `Δ>20σ` off the data at `d=26`, with `I<1` bit, `B>500` bits learned), and that
+  **Jeffreys *and* other fixed continuous priors (a log-normal they test)
+  degrade with `d`** — their general claim ("any measure treating all parameters
+  equally") covers uniform-in-`θ` too. The unbiased measure must be
+  **data-dependent** (`p*`); the asymptotic (Jeffreys) limit needs data
+  *exponential in d* ("longer than the age of the universe"). Sharp framings:
+  Bayesian **model selection exists to avoid measure-induced bias, not
+  overfitting**; and a **new invariance** — predictions independent of
+  unobservable detail — *replacing* Jeffreys' repetition-invariance. Bears on §4:
+  strong support that `p*` is a good *inference* prior under a
+  *prediction/unbiasedness* criterion — it **refines** rather than vindicates
+  "p* bad as belief" (they argue `p*` gives the *best, unbiased* posteriors, i.e.
+  the design object is the right belief *for this loss*; the §1 betting/decision
+  loss is untested by them). NB they reserve "reference prior" for Bernardo's
+  *asymptotic* limit (= Jeffreys) and call the finite-`n` object the
+  "optimal / Shannon-optimal prior" — so our "finite-data reference prior" is
+  loose usage.
 - **Clarke & Barron (1990, 1994)** — Jeffreys asymptotically least-favourable /
   maximises `I(Θ;X^n)`; asymptotic minimax redundancy.
 - **Redundancy–capacity theorem** (Gallager 1968; Davisson 1973) — minimax
@@ -486,6 +557,14 @@ forms; no new theory needed):**
    the gap up to it from each fixed prior (§5.3).
 4. **1-D rate–distortion** — BA rate–distortion codebook for a single feature
    going discrete, category count tracking the rate (§7).
+5. **Proper-scoring prediction sweep** — score `p*` vs `p_J` vs `q̄` by
+   **held-out posterior-predictive log-loss (= redundancy)**, *not* the
+   plug-in-mean Kelly bet, across worst-case-vs-average `q` and across `n` (1-D)
+   / `D` (multi-D toy, e.g. sum-of-exponentials). Predicted map: `p*` wins
+   worst-case at any `D`, and high-`D` average-case (Jeffreys volume pathology,
+   Quinn et al.), while losing low-`D` average-case (§1). Turns Quinn's
+   visual/MI evidence into a proper-scoring result; the prediction-task analogue
+   of offers 1–2 (§4).
 
 **Three candidate research directions (not mutually exclusive):**
 - **(A) Data × capacity → data-modulated discretisation** (bottom-right of the
