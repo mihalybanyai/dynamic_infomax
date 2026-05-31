@@ -185,6 +185,30 @@ upgrades to *predictive* goodness.
 
 ## 5. Maths to work through (checklist)
 
+0. **Go/no-go precondition (free — uses numbers we already have).** Confirm the
+   budget-matched capacity prior `p*_N` has **finite** worst-case held-out
+   predictive log-loss equal to capacity, `max_θ R_N(p*_N;θ)=C_N`, *flat* at
+   `C_N` on its support (the equalizer), growing only `∝(d/2)\log N`. 1-D values
+   already in hand (`redundancy-capacity.md`): `C_1=log2=1` bit (support
+   `{0,1}`), `C_2=0.754` nats `=1.087` bits (support `{0,½,1}`).
+   - *Why necessary:* this is the **same `p*`, same `n`** where the
+     *plug-in/betting* score gave `+∞` (§1), and the same high-`d` regime where
+     Jeffreys' bias score is `B>500` bits. If `p*`'s *proper-score* worst case
+     were not finite-and-graceful, the programme is **dead on arrival**.
+     Switching the currency (full predictive, not plug-in mean) turns the `+∞`
+     into `=C_N` — so `p*` is at least *viable*, and the proper score is the
+     right currency.
+   - *Why far from sufficient:* it is the **worst-case** corner — the *theorem*,
+     so it tests coherence, not the open claim — and is silent on (a) the
+     **average case** (where §1 has `p*` *losing* in 1-D, paying `D(m_q‖m_{p*})`)
+     and (b) **calibration** (§3 — whether `p*`'s discreteness spoils `Σ_π`).
+   - *Zero-compute corollary (competitor side):* the Gaussian log-loss
+     *contains* `Δ²` as its bias term (§3), so it **inherits** A&M's high-`d`
+     discrimination — a `~20σ` centre-bias costs `≳Δ²/2` nats unless hidden by
+     over-dispersion, which the calibration term then charges. So `Δ→`log-loss
+     can only *add* the calibration term, never *lose* A&M's verdict.
+   - **Run this first; only if it passes do items 1–5 have a point.**
+
 1. **Compensation identity** `R_N^q(π)=I_q+D(m_q‖m_π)` — verify the `N`-fold
    version and the prior-washout `O(1)` claim. (§2.1)
 2. **Bernoulli sanity check (1-D).** Compute `D(m_q‖m_π)` for
