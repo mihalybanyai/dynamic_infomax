@@ -47,6 +47,9 @@ mathematical sub-areas.
 - `gh.md` — GitHub CLI for authentication, repo creation, PRs, issues
 - `rng-passing.md` — How and why we pass random generators explicitly
 - `math/kkt.md` — KKT conditions, calibrated to Blahut-Arimoto
+- `math/kelly.md` — Kelly betting, calibrated to the infomax-betting experiment
+- `math/redundancy-capacity.md` — coding redundancy, capacity, equalizer
+  priors, and why `p*` is discrete (the design-loss case)
 
 ## Adding a new tutorial
 

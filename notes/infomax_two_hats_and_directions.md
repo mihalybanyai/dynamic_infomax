@@ -242,6 +242,14 @@ not being matched.
   model theory: Transtrum, Machta, Sethna). The infomax prior collapses the
   sloppy directions → an effectively lower-dimensional model; effective
   dimension `~` information volume `∫√(det g_n)`, growing with `n`.
+- **Caveat — sloppy ≠ (practically) unidentifiable.** The FIM eigenvalue
+  spread (sloppiness) is *not* the same property as practical identifiability:
+  a sloppy model can still be practically identifiable given enough/appropriate
+  data, and designs that optimise identifiability differ from those that
+  minimise sloppiness (Chis, Banga et al.; *Sloppy models can be identifiable*).
+  So "collapse the sloppy directions" is **budget-relative** — drop what is
+  *unresolvable at budget `n`*, which the sloppy spectrum only *flags as a
+  candidate* — not an intrinsic verdict on the coordinate.
 - **Two-hat survives:** infomax answers the *design/identifiability* model
   choice ("what is resolvable at budget `n`"), **not** "what is true" or "what
   predicts best under `q`."
@@ -259,6 +267,61 @@ not being matched.
 - **Meta:** this moves the programme from "is `p*` a good prior to *bet* with"
   (wrong seat) to "is `p*`/info-volume a good way to *choose the effective
   model*" (right seat, for the coding criterion).
+
+### 6.1 Learnability as a model-selection constraint: prior art, and the cost it needs
+
+**The goal.** Model selection / the frame problem is underconstrained, and an
+agent must solve it *in real time*; the pure-belief (maxent) picture cries out
+for an extra constraint, and **learnability** is a principled one — *don't spend
+model structure on distinctions the data you'll get cannot constrain anyway.*
+
+**Prior art (not new).** Banners worth knowing:
+- **MDL / geometric complexity** (Rissanen; Balasubramanian): penalise a model
+  by its count of *distinguishable* distributions `log∫√(det g)` — learnability
+  *is* the complexity measure. (= §6 above.)
+- **Sloppy models / practical identifiability** (Transtrum–Machta–Sethna; MBAM
+  manifold-boundary reduction): collapse directions data can't constrain (with
+  the §6 sloppy ≠ unidentifiable caveat).
+- **Singular learning theory** (Watanabe): the real log-canonical threshold is
+  the *effective* resolvable dimension near singularities — the rigorous modern
+  version of "effective dimension `< nominal`".
+- **Resource-rational / bounded-rational analysis** (Simon; Griffiths–Lieder;
+  active inference): the agent-in-real-time framing.
+- **Zellner's MDIP** (§9): maxent prior-entropy term **+** an (uncoupled)
+  data-information term — a literal maxent↔reference *bridge prior*, but it
+  selects a prior *within* a model, does no model choice, and can give improper
+  posteriors. Right spirit, wrong altitude.
+
+**Why it is not a heuristic (load-bearing).** Under a strictly proper loss,
+unbounded compute, and **no representation cost**, the Bayes-optimal object is the
+full continuous posterior (§8) — so learnability-as-selection **cannot** be derived
+as loss-optimal for *ideal* inference. That is exactly why it *feels* bolted on.
+It becomes a theorem the instant you **name the non-epistemic criterion** doing
+the work: a **coding/capacity cost** (→ MDL / RD makes dropping unresolvable
+structure *forced*) or a **worst-case/minimax stance** (→ least-favourable /
+capacity). The agent stance ("agents don't have purely epistemic beliefs")
+*supplies* that criterion non-arbitrarily — an embodied agent has a
+compute/communication budget and faces adversarial-ish environments. **Rule for
+the programme:** never claim learnability is normative for inference; *name the
+cost* that makes it normative, and let the agent supply it. The heuristic-*feel*
+is the symptom of overloading one prior with both hats; in the coherent split
+(design-criterion ∘ matched-belief, §6 recipe) the design criterion is a genuine
+theorem.
+
+**The "source" is part of the same fiction.** `I(Θ;X)` needs *both* `p(θ)` and
+`p(x∣θ)`: you cannot write "the source over `θ`" without first fixing a
+parametrisation and likelihood — i.e. a **measurement model**. So the "source" is
+never measurement-independent (no Platonic "constant radiance of data"); it is a
+coordinate on the agent's own model. As a *design* object `p*` is fine ("the input
+that makes *this* measurement maximally informative" — a statement about the
+apparatus); as a *belief* it would need the measurement-independent source that
+does not exist — the same fiction as "`p*` is your belief". The agent reframing
+dissolves it: the data stream is *endogenous* (actions shape what is sampled), so
+"learnable models" = those distinguishable by the data this agent will actually
+get, *through this channel at this budget* — intrinsically channel/budget-relative,
+which lands on the **rate–distortion / IB side** (§7), away from the source-side
+capacity object that needed the fiction. The source-discomfort and the
+learnability-goal point at the same resolution.
 
 ## 7. Discretisation of continuous features
 
@@ -297,7 +360,17 @@ version.
 
 **Discretisation is well-posed in 1-D** (RD of one feature → categories);
 **variable-selection is vacuous in 1-D** (needs multi-D). Opposite dimensionality
-needs because they are different sub-theories. They **compose**:
+needs because they are different sub-theories. **Why the asymmetry, in one line:**
+*selection exploits **anisotropy** of learnability — different resolvability in
+different directions — and anisotropy is a `≥2`-D phenomenon.* In 1-D the Fisher
+information is a scalar `g(θ)`; `∫√g\,dθ` is just a **length** (= the resolution /
+JND count), a `1×1` matrix has no eigenvalue *spread*, and the only sub-model
+below a 1-D model is "fix `θ`" — so there is nothing to *select*. Hence the
+unifying statement over §6–§7: **learnability alone buys a *scale* (resolution);
+a *structural choice* needs either another dimension (anisotropy → selection, §6)
+or another constraint (a cost → discretisation, §7).** 1-D resolution and 1-D
+discretisation are both well-posed; 1-D *selection* is the one operation that
+genuinely cannot exist. They **compose**:
 $$
 \text{representational format}=\underbrace{(\text{dims kept})}_{\text{info-volume / MDL, multi-D}}\;\otimes\;\underbrace{(\text{discretisation within each})}_{\text{rate–distortion, 1-D ok}}.
 $$
@@ -368,6 +441,12 @@ stop representing in between.*
   redundancy = channel capacity; capacity-achieving prior = least-favourable.
 - **Bernardo (1979)** — reference prior as an information-maximising *design*
   device, explicitly *not* a subjective belief. (Already in spec 001 §8.)
+- **Zellner (1977; 1996, *J. Econometrics*; Zellner & Min 1993)** — maximal data
+  information prior (MDIP): maximises *prior entropy* **+** *average data
+  information*, `p(θ)∝exp{∫f(x∣θ)log f(x∣θ)dx}`. A maxent↔reference **bridge
+  prior**: the data term is *uncoupled* (no mixture marginal `m(x)`), hence
+  linear in `p` and ≠ the reference prior; can give improper posteriors; selects
+  a prior *within* a model, not a model.
 - **Gneiting & Raftery (2007)** — log-loss is a strictly proper scoring rule ⇒
   the matched prior's posterior-predictive mean is Bayes-optimal. (In spec §8.)
 - **Rissanen (MDL); Balasubramanian (1997); Clarke–Barron** — model selection
@@ -375,6 +454,15 @@ stop representing in between.*
   distributions = NML penalty.
 - **Sloppy models** — Transtrum, Machta, Sethna: FIM eigenspectrum, stiff/sloppy
   collective coordinates.
+- **Sloppiness ≠ identifiability** — Chis, Banga et al. (*On the relationship
+  between sloppiness and identifiability*); *Sloppy models can be identifiable*:
+  sloppy directions are candidates for collapse, not verdicts; practical
+  identifiability is budget-relative.
+- **Singular learning theory** — Watanabe: real log-canonical threshold =
+  effective resolvable dimension near singularities.
+- **Resource-rational / bounded rationality** — Simon; Griffiths & Lieder;
+  active inference (Friston): beliefs as action-tools under compute/budget
+  limits (the "agents lack purely epistemic beliefs" stance).
 - **Rate–distortion** — Shannon; Berger; **Blahut (1972)** algorithm; **Smith
   (1971)** amplitude-constrained channel → discrete optimal input.
 - **Cognitive discretisation** — **Sims (2016 *Cognition*; 2018 *Science*)**;
@@ -399,15 +487,51 @@ forms; no new theory needed):**
 4. **1-D rate–distortion** — BA rate–distortion codebook for a single feature
    going discrete, category count tracking the rate (§7).
 
-**Two candidate research directions (not mutually exclusive):**
+**Three candidate research directions (not mutually exclusive):**
 - **(A) Data × capacity → data-modulated discretisation** (bottom-right of the
   §8 lattice). Single-variable friendly; the only place finite observations
   shape discretisation; relatively novel. Needs a motivated distortion `d` and
   capacity `R`; predicts the data-dependence (coarser categories under scarcer
   data) that pure RD cannot.
 - **(B) Pure-environment learnability / identifiability** via info-volume / MDL
-  (§6). Multi-D; variable choice as dimensionality reduction (stiff coordinates),
+  (§6, §6.1 — normative only relative to a *named* cost). Multi-D; variable
+  choice as dimensionality reduction (stiff coordinates),
   not include/exclude. Normative for worst-case coding; bring `q` for decisions.
+- **(C) Daisy-chain mismatch signal under the two-hat split** (revives the
+  `resources/overleaf_doc/main.tex` §"daisy chain": MB → BI → misspecification
+  signal → EC adjusts the likelihood). The original loop reads off the *expected*
+  bits-to-learn (the future component of the MI) in the MB step and compares it
+  to the *actual* bits from a Bayesian-inference step; the residual is meant to
+  signal whether the agent's **likelihood** `p_A` matches nature's `p_N`, and an
+  efficient-coding step then nudges `p_A`. **The catch:** the loop silently uses
+  `p*` as *both* the MB design object *and* the BI belief, so "expected vs
+  actual" is self-consistent. Once inference uses a separate epistemic prior
+  `π_A` (maxent/matched), the gap splits into a **prior gap** (`p*` ≠ `π_A`,
+  present even with a correct likelihood) and the wanted **likelihood gap**
+  (`p_A` ≠ `p_N`); the naive comparison conflates them → false misspecification
+  alarms — the two-hat conflation, inherited by the loop.
+  - *Fix:* baseline the expected learning under the **same `π_A` you infer
+    with**, and read the signal as **predictive-log-loss excess**, not raw
+    info-gain (the prior→posterior KL is not sign-definite under misspecification;
+    the cumulative log-loss → `H(p_N) + D(p_N‖p_A(·|θ*))`). The redundancy split
+    `regret = estimation (prior-dependent, vanishes ~ d·log t / 2t) +
+    D(p_N‖best-in-class)` shows the **misspecification floor is prior-invariant**
+    — `π_A` only sets convergence speed. So `p*`/capacity keeps a *different*
+    job (the learnability **budget** `C`: whether/what to measure), the inference
+    prior does the update **and** the self-consistent baseline, and the prior-free
+    floor is the EC target.
+  - *Payoff:* the two-hat split **sharpens** the loop rather than killing it —
+    maxent inference + a self-consistent baseline *removes* the prior-as-belief
+    confound the `p*`-does-everything loop carried; asymptotically the belief
+    prior washes out and the misspecification signal (hence the EC update) is
+    prior-invariant. *Caveats:* an unknown `n`/horizon is a third confound (the
+    log-loss-**rate** form is more robust than a one-shot bit count); EC can
+    reduce the floor only to `D(p_N‖closest representable encoder)`, and that
+    irreducible residual ("my representational class can't capture nature") is
+    itself the interesting meta-cognitive signal. Connects to §3 (bits=regret),
+    §4 (cumulative-Kelly = redundancy), §6.1 (name the cost), and efficient
+    coding (`main.tex` §ec). Tutorial stays focused; the mechanics live in
+    `tutorials/math/redundancy-capacity.md`.
 
 **One-line status of the spec itself:** the third red-team's F1 (design has
 near-zero power; headline confounded by hyperprior shape) is *not yet processed*
