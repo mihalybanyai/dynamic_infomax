@@ -29,6 +29,58 @@ $\Theta\subset\mathbb R^k$ **compact**, observed with a per-experiment budget �
 i.i.d. repetitions, equivalently (for the Gaussian case of spec 002) noise $\sigma$
 with $n$ scaling the Fisher information by $n$ (so "budget" = $n$ ≈ $1/\sigma^2$).
 
+## The description-length picture (where the CS intuition fits)
+
+The folk version of MDL is computer-science flavoured: *to model data, find the
+shortest program that reproduces it.* That instinct is right and it lands exactly on
+the $\log Z$ we are about to build — but it takes one refinement to get there, and
+seeing the refinement is what makes "budget dependence" concrete.
+
+**Two-part code (the literal "program + data").** Pick a model $\theta$ — the
+"program" — pay to write it down, $L(\theta)$, then pay to write the data given it,
+$L(x\mid\theta)=-\log p(x\mid\theta)$ (Shannon code length: likely data cheap,
+surprising data dear). The total description length $L(\theta)+L(x\mid\theta)$,
+minimised over $\theta$, rewards a program that is at once *simple* (small $L(\theta)$)
+and a good *fit* (small $L(x\mid\theta)$). That sum is the original MDL objective and
+the formal reading of "compress the generating code and its residual together." It is
+**Rissanen's two-part code** — the thing his 1996 paper (`resources/rissanen.pdf`)
+then sharpens.
+
+**Where Kolmogorov sits, and why we don't use it.** Push "shortest program" to the
+limit — shortest program on a *universal* computer — and $L(x)$ becomes the
+Kolmogorov complexity $K(x)$. Two facts matter. (i) Changing the computer changes $K$
+only by an additive constant (the invariance theorem): swapping languages costs a
+fixed-size *compiler/interpreter*, $O(1)$ — that is the "compiler + code" half of the
+folk memory. (ii) $K(x)$ is **uncomputable**. MDL is the computable, practical cousin:
+instead of *all* programs on a universal machine, fix a **model class**
+$\{p(x\mid\theta)\}$ — a restricted programming language — and ask for the shortest
+code length *within that language*. The model class plays the role of the compiler;
+what we compute is language-relative description length, not absolute $K$.
+
+**The refinement: one part, not two.** The two-part code is wasteful: you pay
+$L(\theta)$ to name a model to some precision, the precision is arbitrary, and once
+named the model still mispredicts — there is redundancy between "which model" and
+"the residual." Rissanen's move (1996) removes it with a single code whose length is
+$$
+-\log p_{\rm NML}(x)=\underbrace{-\log \max_\theta p(x\mid\theta)}_{\text{best fit the class can give}}\;+\;\underbrace{\log Z}_{\text{one complexity charge for the whole class}}.
+$$
+The separate program length $L(\theta)$ is gone; in its place is a **single**
+class-level charge $\log Z$, amortised identically across all data (the §2
+equalizer). The CS intuition survives intact — *code length = how well the best model
+in the class fits + how complex the class is* — with "class complexity" now pinned as
+$\log Z$ rather than a hand-chosen $L(\theta)$.
+
+**And that is budget dependence, in CS terms.** As §3 shows,
+$\log Z=\frac k2\log\frac n{2\pi}+\log\int\sqrt{\det I}$ is the log of the **number of
+programs the language can actually tell apart at this much data**. With little data
+many nominally distinct parameter settings compile to indistinguishable behaviour —
+the effective vocabulary is small; more data makes more distinctions real and the
+vocabulary grows. In a sloppy model the resolvable vocabulary is set by the few stiff
+directions, so the description-length budget should be spent only on distinctions the
+data can pay for — which is exactly what the priors $p^\star$ / $p_{\rm proj}$ do.
+"Find the shortest program" and "weight only what is resolvable at the budget" are
+the same instruction.
+
 ## 1. Two regrets from one numerator
 
 Fix a single predictor / code $q(x)$ — one distribution over data we must commit to
@@ -248,6 +300,13 @@ two takes on **budget dependence** rather than one approximating the other.
    minimax redundancy ($\sim\! 2\pi e$) is real but rate-vanishing; treating it as the
    reason `p*` and `p_proj` differ as *priors* over-reads it (the prior difference is
    the finite-$n$ edge/halo geometry of §4–§6, not the constant).
+6. **Two-part vs refined, and Kolmogorov.** "MDL = code the model, then the data" is
+   the *two-part* code; $\log Z$ is the *refined* one-part complexity that removes its
+   redundancy (the description-length section above). And MDL is **not** Kolmogorov
+   complexity: $K(x)$ is universal-machine / model-class-free and uncomputable,
+   whereas $\log Z$ is relative to the chosen class $\{p(x\mid\theta)\}$ and
+   computable. A claim that invokes "the shortest program" without naming the model
+   class has slipped from MDL to $K$.
 
 ## References
 
