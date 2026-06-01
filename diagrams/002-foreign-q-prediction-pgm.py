@@ -49,6 +49,15 @@ pgm.add_edge("q",     "theta")
 pgm.add_edge("theta", "x")
 pgm.add_edge("theta", "xp")
 
+# Fixed likelihood inputs collected in one double-circled node: the noise scale
+# sigma and the geometry config psi (dimension d, observation times, taper,
+# rotation). Constant across draws, so OUTSIDE the S_q plate; it feeds every
+# observation. Answers the review note "can sigma and other parameters be put on
+# the generative model".
+pgm.add_node("phi", r"$\sigma,\psi$", x=2.6, y=-0.5, fixed=True)
+pgm.add_edge("phi", "x")
+pgm.add_edge("phi", "xp")
+
 # NB on plate order: daft draws plates with a *white* fill, so a later plate
 # paints over an earlier one in the overlap region. The outer plate is added
 # FIRST so the inner training plate, drawn second, renders on top of it.
