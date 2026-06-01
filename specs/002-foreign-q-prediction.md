@@ -5,7 +5,7 @@
 | [0. Context](#0-context) | reviewed | 010626 |
 | [1. Setup](#1-setup) | reviewed | 010626 |
 | [1.2 Generative model](#12-generative-model) | reviewed | 010626 |
-| [2. Objective](#2-objective) | needs-revision | 010626 |
+| [2. Objective](#2-objective) | draft | 010626 |
 | [3. Derivation](#3-derivation) | draft | — |
 | [4. Algorithm](#4-algorithm) | draft | — |
 | [5. Properties to verify](#5-properties-to-verify) | draft | — |
@@ -153,24 +153,31 @@ $$
 log-loss over an oracle that knows `θ` — with `R_N^q(π) ≥ 0`, reached only by a
 predictor matching nature.</span>
 
-<span style="color:red">**Then why expect a *maximiser* of mutual information to
-help?** Infomax sets `p* = argmax_π I(Θ;X)`, and `I` is itself an average
-redundancy — the construction *maximises* a redundancy while we want to *minimise*
-one. They are different objects, optimised over different things. (i) `I(Θ;X;π)` is
-the redundancy in the **self-consistent** case (nature `= π`, averaged under `π`);
-maximising it over the *prior* is a **design** choice — picking the most-informative
-/ least-favourable source — not the agent lowering its loss. (ii) By
-redundancy–capacity duality (`redundancy-capacity.md`), that same maximisation makes
-the mixture `m_{p*}` the minimiser of the **worst-case-over-`θ`** redundancy, so
-infomax *is* a redundancy-minimiser, in the minimax sense. (iii) This experiment
-scores the **average** case under a *foreign* `q` — a different corner, where the
-minimiser is the matched `q̄` ([§2.3](#23-q̄-is-the-ceiling-not-a-competitor)), not
-`p*`. So `p*` carries **no guarantee** here; it can beat only the *deployable*
-priors, and only when their marginal mismatch `D(m_q‖m_π)` (the co-volume bias)
-exceeds `p*`'s — the open bet
+<span style="color:red">**Then why expect a *maximiser* of mutual information to help
+minimise a loss?** The clash is nomenclatural: **three different "redundancies"**,
+all built from the same per-`θ` loss `r_θ(π) = D_KL(p(X_{1:N}|θ) ‖ m_π)` (`≥ 0`,
+lower is better), hide behind one word, and infomax's "max" and our "min" act on
+different ones. Set side by side:</span>
+
+| "redundancy" | definition (from `r_θ(π)`) | `θ` ranges over | the operation on it | the optimiser |
+|---|---|---|---|---|
+| self-consistent (**mutual information**) | `I(π) = 𝔼_{θ∼π} r_θ(π)` | the prior `π` *itself* (`m_π` uses the same `π`) | **`max` over `π`** — *design*: pick the most-informative / least-favourable source | `p* = argmax_π I`; value `= C` (capacity) |
+| **worst-case** | `R_N^{max}(π) = max_θ r_θ(π)` | an adversarial `θ` | **`min` over `π`** — the minimax-robust code | `argmin_π R_N^{max} = p*` (**same object** as row 1, by duality) |
+| **foreign-`q` average** (this spec's score) | `R_N^q(π) = 𝔼_{θ∼q} r_θ(π) = I_q^{(N)} + D(m_q‖m_π)` | a *foreign* nature `q` | **`min` over `π`** — the loss we report | the matched prior `q̄`, **not** `p*` |
+
+<span style="color:red">Reading down the *optimiser* column dissolves the clash:
+infomax's `argmax_π I` (row 1) and the minimax-robust `argmin_π R_N^{max}` (row 2)
+are the **same operation on the same object** `p*` — the two faces of the
+redundancy–capacity saddle (`redundancy-capacity.md`), so "maximising `I`" *is*
+"minimising worst-case redundancy". Our score (row 3) is a **third** redundancy, and
+its minimiser is the matched prior `q̄`
+([§2.3](#23-q̄-is-the-ceiling-not-a-competitor)), **not** `p*`. So `p*` carries **no
+guarantee** on row 3; it can beat only the *deployable* priors, and only when their
+marginal mismatch `D(m_q‖m_π)` (the co-volume bias) exceeds `p*`'s — the open bet
 ([§2.2](#22-what-wins-means--and-what-cannot-be-asserted)). A&M's claim is
-counterintuitive precisely because it asserts this incidental robustness of
-`m_{p*}` does hold across realistic `q` in high `d`.</span>
+counterintuitive precisely because it asserts that the row-1/2 object `m_{p*}` is
+*also* incidentally good on row 3 — its data-marginal stays close to a realistic `q`
+in high `d` while the deployable priors' marginals do not.</span>
 
 This is a **strictly proper** score (Gneiting & Raftery 2007). <span style="color:red">A
 scoring rule is *proper* if a forecaster minimises its expected value by reporting
@@ -196,20 +203,27 @@ term in isolation, reported only as a calibration diagnostic
 It is the proper-score upgrade of A&M's `Δ`: it scores the *full* predictive
 distribution, *held-out*, and — unlike `Δ`-on-`x∼p*` — under a *foreign* `q`.
 
-By the **compensation identity** (Topsøe 1979), applied to the `N`-fold marginals,
-
-> M: spell out what the N-fold marginals are
+By the **compensation identity** (Topsøe 1979), applied to the `N`-fold data
+marginals <span style="color:red">— the laws of the *whole* training sequence
+`X_{1:N}` under nature and under the agent, `m_q(X_{1:N}) = ∫ p(X_{1:N}|θ) q(dθ)`
+and `m_π(X_{1:N}) = ∫ p(X_{1:N}|θ) π(dθ)`, i.e. the marginal likelihoods of the `N`
+i.i.d. observations —</span>
 
 $$
 \boxed{\;R_N^q(\pi) \;=\; \underbrace{I_q^{(N)}}_{\text{matched floor, }\pi\text{-free}} \;+\; \underbrace{D_{\mathrm{KL}}\!\big(m_q \,\|\, m_\pi\big)}_{\text{the only }\pi\text{-dependent term}}\;}\tag{2.1.2}
 $$
 
-with `I_q^{(N)} = 𝔼_{θ∼q} D_{KL}(p(X_{1:N}|θ)‖m_q)` ([§9.1]
-> M: put this into latex
+<span style="color:red">where the prior-independent **matched floor** is</span>
 
-(#91-the-compensation-identity-for-the-n-fold-marginal-eq-212)). So the entire
-prior-dependence of the held-out predictive loss is the **marginal mismatch**
-`D(m_q‖m_π)` — how far the prior's Bayes-mixture data-marginal sits from nature's.
+$$
+I_q^{(N)} \;=\; \mathbb{E}_{\theta\sim q}\, D_{\mathrm{KL}}\!\big(p(X_{1:N}\mid\theta)\,\big\|\,m_q\big)
+$$
+
+<span style="color:red">(the redundancy nature would pay against its own marginal;
+derived in [§9.1](#91-the-compensation-identity-for-the-n-fold-marginal-eq-212)).</span>
+So the entire prior-dependence of the held-out predictive loss is the **marginal
+mismatch** `D(m_q‖m_π)` — how far the prior's Bayes-mixture data-marginal sits from
+nature's.
 The contest between two priors is exactly
 
 $$
@@ -225,7 +239,16 @@ co-volume bias (real, `O(d)`, [§3.3](#33-the-asymmetry-od-competitor-bias-vs-o1
 `min_{π' ∈ {p_J, p_U, p_LN}} ΔR(p*, π')` — the gap from `p*` to the **best**
 deployable competitor — as a function of `(d, σ, taper, rotation, c)`.
 
-> M: how much of this will be exactly computable without simulation? 
+<span style="color:red">**Computability.** Little of `R_N^q` is closed-form in a
+curved, foreign-`q` setting; it is a Monte-Carlo estimate
+([§4.4](#44-score-estimation)) — sample `θ ∼ q`, then `X_{1:N} ∼ p(·|θ)`, and
+average `log p(X_{1:N}|θ) − log m_π(X_{1:N})`. The inner mixture `m_π(X_{1:N})` is
+*exact* for the discrete `p*` (a finite sum over its atoms) and a grid-quadrature or
+importance-sampling integral for the continuous priors. What *is* exact — the FIM
+and Jeffreys density, the Gaussian per-`θ` log-likelihood, and the analytic
+cross-checks (the hypercone `Δ=(d−1)/x` and the Gaussian KL split,
+[§3](#3-derivation)) — feeds the controls and unit tests (T4–T6), not the headline
+number.</span>
 
 We **cannot** assert the sign of this gap and must not: that `p*` wins is the open
 question. Asserting it would make the experiment unfalsifiable ([§5](#5-properties-to-verify) states this
@@ -255,15 +278,174 @@ T3):
   section model (no taper, [§4.1](#41-model-families)), `√det g` is constant, `b(θ)≡0`, and there is no
   co-volume pathology to avoid: `R_N^q(p*) = R_N^q(p_J) = R_N^q(p_U)` within
   Monte-Carlo error, at every `d`. **If `p*` "wins" here, the result is an
-  artefact** (T2).
-
-> M: is this the case where the latents are independent? Or what is the definition of a flat co-volume?
+  artefact** (T2). <span style="color:red">*Flat co-volume* means the
+  irrelevant-direction co-volume (the product of the unresolvable Fisher lengths)
+  does not vary along the relevant coordinate, so `√det g` is constant in `θ` and
+  Jeffreys reduces to uniform-on-the-relevant-coordinate (`b(θ)≡0`). It is **not**
+  the same as "the latents are independent": independent latents with equal-length
+  irrelevant directions are the *special case* the note (§6.2) calls the null; the
+  operative condition is the absent co-volume *gradient*, realised here by the
+  constant-cross-section cone ([§4.1](#41-model-families), no taper).</span>
 
 - **Sign-of-advantage vs cooperativeness `c`.** `p*` wins the cooperative end
   (`c=0`, `q≈m_{p*}`) by self-sampling, trivially. The reported quantity is whether
   `min_{π'} ΔR(p*,π') < 0` *persists* into the non-cooperative range (`c→1`). Win
   across realistic `c` ⇒ transfer (positive result); win only at `c≈0` ⇒
   self-served (clean negative). This is a **reported curve**, not a pass/fail test.
+
+### 2.5 Why expect `p*` to transfer — a partial argument and its limits
+
+The contest ([§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss))
+reduces to the marginal mismatch `D(m_q‖m_π)`, and *nothing forces this to be
+smallest for `p*`* on a foreign `q`. What follows is the strongest case we can make
+— one real guarantee, one geometric heuristic — and, just as importantly, the ways
+it can fail. It is an argument for *plausibility*, not a proof of the headline.
+
+**The one guarantee (worst-case over `q`).** `p*` is the
+capacity-achieving prior, and its mixture `m_{p*}` is the unique distribution
+minimising the worst-case KL to the whole model family — the information radius /
+KL-center: the equalizer condition gives `D(p(·|θ)‖m_{p*}) ≤ C` for **every** `θ`,
+with equality on `supp(p*)` (`redundancy-capacity.md`; Kemperman 1974, Haussler
+1997). Averaging that per-`θ` bound over *any* nature `q`,
+
+$$
+R_N^q(p^\star) \;=\; \mathbb{E}_{\theta\sim q}\, D_{\mathrm{KL}}\!\big(p(X_{1:N}\mid\theta)\,\big\|\,m_{p^\star}\big) \;\le\; \max_\theta D_{\mathrm{KL}}\!\big(p(X_{1:N}\mid\theta)\,\big\|\,m_{p^\star}\big) \;=\; C_N \qquad\text{for every } q. \tag{2.5.1}
+$$
+
+So `p*`'s foreign-`q` redundancy is **capped at capacity for
+any `q` whatsoever** — `p*` can never be catastrophic. No fixed non-infomax prior
+has this: by A&M's own score a prior's worst-case redundancy is `I_π + B(π)` with
+`B(π)=max_θ b(θ)`, and `B(p_J)` *grows with dimension* (`>500` bits at `d=26`),
+whereas `C_N` tracks only the **resolvable** complexity (`~ (d_eff/2)·log N`, roughly
+flat in nominal `d` — A&M Fig. 5). This is exactly the "tautology"
+[§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note) demotes to a unit
+test (T3): it cannot *fail*, but its *content* — a `d`-controlled ceiling for `p*`
+against an `O(d)` worst case for the competitors — is the load-bearing half of the
+case for transfer.
+
+**The heuristic (why the *average*, not only the worst,
+case should favour `p*` in high `d`).** Bound (2.5.1) is worst-case; the experiment
+scores an average, and the bridge is geometric (Quinn et al. 2023). The model
+manifold is a **hyperribbon** whose widths fall off roughly geometrically, so the
+space of *distinguishable predictions* is dominated by a few stiff directions, and
+Jeffreys' weight `∝√det g` piles into the high-co-volume corner — a **vanishing
+fraction** of that space as `d` grows, swinging by orders of magnitude under tiny
+parameter changes. Hence for **any `q` whose predictions are spread over
+distinguishable outcomes** (the natural notion of a nature that explores the
+resolvable behaviours), most of `q`'s mass falls where `b_{p_J}(θ)>0` is large, so
+`D(m_q‖m_{p_J})` inflates with `d` while `D(m_q‖m_{p*})` stays `O(1)`. A&M state the
+same point as a **new invariance** — *predictions should be independent of
+unobservable model detail* — which `m_{p*}` respects and `m_{p_J}` violates. Quinn
+et al. also dispatch the obvious objection that a *discrete* `p*` must mis-predict
+when the truth lies between atoms: along a **relevant** direction the atom spacing
+*is* the resolution, so the error is no worse than rounding `θ` to its resolved
+precision (within the noise); along an **irrelevant** direction, putting weight at
+the boundary is just what an effective theory does (the discarded detail does not
+move predictions). Both bound `p*`'s discretisation penalty at `O(1)` **without**
+leaning on A&M's self-sampling — the part of their result that does *not* transfer
+([§1.1](#11-notation)).
+
+**What would sink it (the honest column).** None of the
+above proves `p*` *wins the average-case contest this spec scores*, and several
+things can make it lose:
+
+1. **Worst-case ≠ average.** (2.5.1) bounds the worst `q`;
+   for a **benign** `q` concentrated in the data-rich interior (low *effective*
+   dimension), the deployable priors pay little — and `I_{p_J}<C` can let a smooth
+   prior *beat* `p*` there. That is the 1-D / low-`d` regime where `p*` already
+   loses (note §1); the cooperativeness sweep
+   ([§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note)) exists to
+   find where the sign flips.
+2. **The real competitor is resolution-adapted, not
+   Jeffreys.** Quinn et al.'s **projected-maximum-likelihood prior** is a *smooth*,
+   easy-to-sample prior that tracks `p*` closely on the MI score and "avoids
+   Jeffreys' vices". If a smooth resolution-adapted prior also keeps `D(m_q‖m_π)`
+   small, `p*` wins nothing a smooth prior could not, and its **discreteness does no
+   work** (OQ-5, [§7](#7-open-questions)). Attributing a win to `p*` specifically
+   therefore *requires* such a prior in the lineup; beating only Jeffreys / uniform
+   / log-normal merely re-derives A&M.
+3. **`q̄` dominates**
+   ([§2.3](#23-q̄-is-the-ceiling-not-a-competitor)): `p*` cannot beat the matched
+   ceiling; only the gap to the *best deployable* prior is live.
+4. **A ceiling is not optimality.** (2.5.1) prevents
+   catastrophe; it does not make `p*` *good* in absolute terms, since `C_N` itself
+   can be sizeable at the small `N` this spec targets. `p*`'s case is
+   **robustness / insurance**, not average-case optimality — a premium wasted on
+   benign `q` (two-hats note §3).
+
+**Falsification.** The expectation is *supported* if
+`min_{π'} ΔR(p*,π') < 0` persists across the cooperativeness sweep **with the
+projected-ML prior in `π'`**; it is *refuted* if `p*` ties or loses to the best
+resolution-adapted prior, or wins only at `c≈0`. Bound (2.5.1) forecloses
+neither.
+
+### 2.6 Budget dependence: infomax and NML as two takes on one principle
+
+`p_proj` earns **co-protagonist** status (not control) because
+it reaches the property this project actually cares about — **budget dependence** —
+by a different route than `p*`. The principle: an uninformative prior should be a
+*function of the resolving power* of the experiment (`σ`, equivalently `N`),
+weighting parameter regions by what the data *at that budget* can tell apart. Both
+priors below are explicit functions of `σ`, and **Jeffreys is the `σ→0`
+(infinite-budget) limit of both** — its budget-*independence* is exactly the
+property that sinks it in high `d` ([§2.5](#25-why-expect-p-to-transfer--a-partial-argument-and-its-limits)).
+Meta-cognitively: a resolution-limited agent's "prior" is fixed by what it can
+learn, not by a budget-free notion of ignorance — and there is more than one
+budget-dependent way to be uninformative.
+
+**The two constructions.**
+
+- **Capacity / infomax — `p*`.** `argmax_π I(Θ;X)`: the
+  least-favourable / minimax-**expected**-redundancy prior (Bernardo's
+  reference-prior lineage; `redundancy-capacity.md`). Its `σ`-dependence is the atom
+  count `~√N`.
+- **NML / MDL — `p_proj`.** `p_NML(x) = max_θ p(x|θ)/Z` is
+  the **Shtarkov (1987) normalized-maximum-likelihood** distribution, with `log Z`
+  the **Rissanen (1996) parametric (stochastic) complexity** (Grünwald 2007);
+  `p_proj` is its pushforward through the MLE map `θ̂(x)` (A&M App. A.3
+  "projected-ML" / Quinn §5.2 "adaptive slab-and-spike"). Its `σ`-dependence is the
+  halo width `σ`. A&M/Quinn present it as an ad-hoc easy approximation of `p*`; its
+  real pedigree is MDL, left uncited there.
+
+**Why they coincide here.** The two solve the *same*
+universal-coding problem under different regret notions — `p*` the worst-case
+**expected** redundancy `max_θ 𝔼_{x|θ} log[p/q]`, NML the worst-case **pointwise**
+regret `max_x[log max_θ p(x|θ) − log q]`. They nearly agree on our models for two
+reasons: *(i) asymptotically*, both carry the same stochastic complexity
+`(d/2)log(N/2π) + log∫√det g` (Clarke–Barron 1990; Rissanen 1996) — the shared
+`σ→0` limit, which is Jeffreys; *(ii) in hyperribbon geometry at finite `σ`*,
+resolution-adaptation is essentially **unique** (weight the few stiff directions,
+collapse the sloppy ones onto edges), so both land on nearly the same prior and
+nearly the same MI (Quinn et al. Fig. 12). They are **siblings**, not
+approximation-and-original — so the live question is not "how well does `p_proj`
+approximate `p*`" but **"does the harder capacity object buy anything over the cheap
+MDL one on held-out prediction"** (the [§2.5](#25-why-expect-p-to-transfer--a-partial-argument-and-its-limits)
+falsification).
+
+**Where they part, and is it reachable here.** Their one
+structural difference is expected- vs pointwise-regret: NML weights by where the
+worst *individual* data land (the noise halo just outside convex boundaries), `p*`
+by *expected* distinguishability (Fisher length). This yields two contrastive
+corners, **both reachable by tuning the hyperribbon ([§4.1](#41-model-families)), no
+new model needed:**
+
+- *Adversarial to `p_proj`, benign for `p*`:* sharpen a
+  **convex vertex** (the cone tip / a high-curvature boundary) so the exterior halo
+  piles up there, and score against a `q` on the **interior/faces**. NML
+  over-weights the halo-collecting vertex; `p*` is unmoved. **Easy** — the
+  hyperribbon already has skewed convex vertices; a boundary-curvature knob sharpens
+  them.
+- *Adversarial to `p*`, benign for `p_proj`:* a **smooth
+  interior `q` finer than the atom spacing** at moderate `σ`. `p*`'s discrete
+  mixture ripples (bounded `O(σ²)` — `σ`-spaced atoms have overlapping `σ`-wide
+  blobs); `p_proj`'s cloud is smooth. **Easy** — needs only moderate `σ` and a
+  smooth interior `q`, no model change; the effect is generic but mild.
+
+Neither corner's winner is analytic; the
+[§4.3](#43-foreign-q-family) / [§5.4](#54-sweep-design) sweep maps both. *Locating
+where the two budget-dependent siblings diverge is precisely the measurement of what
+the capacity route uniquely contributes* ([§6](#6-report)) — and is of more interest
+here than discreteness per se, which it incidentally also measures.
 
 ## 3. Derivation
 
@@ -366,7 +548,11 @@ All three share the Gaussian likelihood `p(x|θ)=𝒩(y(θ),σ²I_m)` and FIM
    rotation** `θ ↦ Q θ` of the embedding (orthogonal `Q`, angle swept, [§5](#5-properties-to-verify) sweep)
    moves the relevant direction off the coordinate axes so that uniform-`θ` is no
    longer trivially unbiased (note §6.3) — making it a fair competitor in the
-   controlled model too.
+   controlled model too. A **boundary-curvature** knob (sharpening the cone tip / a
+   vertex) is also exposed: per [§2.6](#26-budget-dependence-infomax-and-nml-as-two-takes-on-one-principle)
+   it is the one axis on which `p*` and `p_proj` provably differ — a sharp convex
+   vertex makes the NML-based `p_proj` over-weight the halo there while `p*` is
+   unmoved.
 3. **Constant-cross-section cone (negative control).** As (2) but `r(θ_1)=r_0`
    constant (taper `=0`): `√det g` constant, `b(θ)≡0`, no co-volume gradient.
 
@@ -387,6 +573,14 @@ All three share the Gaussian likelihood `p(x|θ)=𝒩(y(θ),σ²I_m)` and FIM
 - **`p_U` — uniform** on the box `Θ`.
 - **`p_LN` — log-normal** in `θ` (A&M Eq. 10), `θ̄=0`, `σ̄=1` per coordinate
   (auto-chosen; please confirm — see [§7](#7-open-questions) OQ-3).
+- **`p_proj` — projected-ML / NML prior (co-protagonist, [§2.6](#26-budget-dependence-infomax-and-nml-as-two-takes-on-one-principle)).**
+  The law of the MLE `θ̂(x)` for `x ∼ p_NML ∝ max_θ p(x|θ)` (A&M App. A.3; Quinn
+  §5.2). For Gaussian noise `p_NML` is a band of width `σ` around the manifold `Y`,
+  so the sampler draws `x` near `Y` and projects to its MLE; `m_{p_proj}` is then
+  evaluated like any continuous prior (quadrature, or directly from the sampled
+  cloud). It is **not** a control — it is the second *budget-dependent* prior, and
+  its gap to `p*` is a headline read ([§2.6](#26-budget-dependence-infomax-and-nml-as-two-takes-on-one-principle),
+  [§6](#6-report)). Exact sampler pinned at implementation ([§7](#7-open-questions) OQ-6).
 - **`q̄` — reference ceiling** `= 𝔼_c[q]`, computed from the q-family ([§4.3](#43-foreign-q-family)).
 
 ### 4.3 Foreign-`q` family
@@ -406,13 +600,21 @@ parameterisation of `q_{coop}`/`q_{non}` is an open choice ([§7](#7-open-questi
 cooperative→non-cooperative and is reported per-sample so results can be subset by
 `q`-shape.** No other randomness enters the model.
 
+Now that `p_proj` is a competitor ([§2.6](#26-budget-dependence-infomax-and-nml-as-two-takes-on-one-principle)),
+the family must **also** span the **interior↔boundary** axis that separates `p*`
+from `p_proj`: an *interior-smooth* `q` (supported in the manifold bulk, finer than
+the atom spacing — stresses `p*`'s discreteness) and a *boundary/vertex-concentrated*
+`q` (stresses `p_proj`'s halo over-weighting). This may fold into the same `c` knob
+(cooperative ≈ near `p*`'s atoms; non-cooperative ≈ interior gaps and edges) or run
+as a second knob; pinned in [§7](#7-open-questions) OQ-2.
+
 ### 4.4 Score estimation
 
 For each cell `(model, d, σ, taper, rotation, c)`:
 
 ```
 1.  Build y(·), FIM g(·) on the θ-box.
-2.  Construct priors: p* (BA / atomic), p_J ∝ √det g, p_U, p_LN, q̄.
+2.  Construct priors: p* (BA / atomic), p_J ∝ √det g, p_U, p_LN, p_proj (§2.6), q̄.
 3.  For s = 1 .. S_q:
         θ_s        ~ q_c                                   # nature's truth
         X_{1:N}    ~ p(·|θ_s)          (N i.i.d. draws)    # training sample
@@ -459,7 +661,8 @@ Test functions live in `tests/test_002_foreign_q_prediction.py`. The suite pins 
 | P8 | Floors: `R_N^q(π) ≥ I_q^{(N)} ≥ 0` per cell; `q̄` minimises the **`c`-averaged** `R` ([§2.3](#23-q̄-is-the-ceiling-not-a-competitor)) | `test_t8_floors` |
 | P9 | A&M prior-side reproduction: `I_{p*}(d) ≥ I_{p_J}(d)` and `B_{p*}(d) ≤ B_{p_J}(d)`, all `d` ([§0](#0-context); A&M Fig. 5) | `test_t9_am_prior_side_dominance` |
 | P10 | Determinism: fixed seed ⇒ identical `R` arrays across runs ([§4.4](#44-score-estimation)) | `test_t10_seed_determinism` |
-| — | **Headline** `min_{π'} ΔR(p*,π') < 0` under non-cooperative `q` | *not tested — the open question; asserting it would make the experiment unfalsifiable ([§2.2](#22-what-wins-means--and-what-cannot-be-asserted))* |
+| P11 | `p_proj` construction: `p_NML` normalises; `I_{p_proj}(d) ≈ I_{p*}(d) ≫ I_{p_J}(d)` (Quinn Fig. 12) ([§2.6](#26-budget-dependence-infomax-and-nml-as-two-takes-on-one-principle), [§4.2](#42-prior-construction)) | `test_t11_pproj_construction` |
+| — | **Headline** `min_{π'∈{p_J,p_U,p_LN,p_proj}} ΔR(p*,π') < 0`, and the `p*`-vs-`p_proj` sign across the interior↔boundary axis | *not tested — the open questions ([§2.5](#25-why-expect-p-to-transfer--a-partial-argument-and-its-limits), [§2.6](#26-budget-dependence-infomax-and-nml-as-two-takes-on-one-principle)); asserting either would make the experiment unfalsifiable* |
 
 ### 5.2 Test descriptions
 
@@ -470,10 +673,12 @@ mis-estimated score — the single tightest check that the headline quantity mea
 what [§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss) says.
 
 **T2 — Negative control.** In the constant-cross-section model (§4.1.3) at each
-`d ∈` sweep, assert `|R(p*) − R(p_J)|`, `|R(p*) − R(p_U)|` are within `3·MCSE`. This
-is the [§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note) falsification screen: with no co-volume gradient, no prior can beat
-another on `D(m_q‖m_π)`, so a `p*` "win" here exposes an estimator bias or a rigged
-comparison. The most important non-headline test in the suite.
+`d ∈` sweep, assert `|R(p*) − R(p_J)|`, `|R(p*) − R(p_U)|`, `|R(p*) − R(p_proj)|`
+are within `3·MCSE`. This is the [§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note) falsification screen: with no
+co-volume gradient, no prior can beat another on `D(m_q‖m_π)`, so a `p*` "win" here
+(over *any* competitor, including the budget-dependent `p_proj`) exposes an
+estimator bias or a rigged comparison. The most important non-headline test in the
+suite.
 
 **T3 — `p*` equalizer (the demoted capacity tautology).** Confirm the solver
 returns a genuine capacity prior: `b(θ) = D(p(x|θ)‖m_{p*}) − I_{p*}` is `≈0` on
@@ -518,6 +723,15 @@ before the foreign-`q` scoring runs.
 
 **T10 — Determinism.** Two runs with the same seed produce bit-identical `R`
 arrays. Standard reproducibility guard (`manage-randomness.md`).
+
+**T11 — `p_proj` construction.** `p_NML ∝ max_θ p(x|θ)` integrates to a finite `Z`
+on the compact `Θ` and normalises, and the resulting `p_proj` reproduces the
+A&M/Quinn result that a *resolution-adapted* prior captures essentially the same
+information as `p*` and far more than Jeffreys: `I_{p_proj}(d) ≈ I_{p*}(d) ≫
+I_{p_J}(d)` over the `d`-sweep (Quinn Fig. 12). Validates the second
+budget-dependent prior ([§2.6](#26-budget-dependence-infomax-and-nml-as-two-takes-on-one-principle))
+before it enters the foreign-`q` contest; a `p_proj` whose MI tracks Jeffreys
+rather than `p*` signals a broken NML / MLE-projection construction.
 
 We do **not** test: the headline sign ([§2.2](#22-what-wins-means--and-what-cannot-be-asserted)); exact `p*` atom positions at
 intermediate `d` (no closed form); behaviour at `d` beyond the solver's feasible
@@ -576,9 +790,14 @@ flagged for ratification.
 - **Rotation angle (hypercone).** `{0, π/8, π/4}`. *Why:* `0` is axis-aligned
   (uniform-`θ` unbiased strawman, note §6.3); nonzero makes uniform-`θ` a fair
   competitor. (Auto-chosen; please confirm.)
+- **Boundary curvature (hypercone).** `{moderate, sharp}` vertex sharpening.
+  *Why:* the axis on which `p*` and `p_proj` provably differ ([§2.6](#26-budget-dependence-infomax-and-nml-as-two-takes-on-one-principle));
+  `moderate` ≈ A&M's cone, `sharp` stresses `p_proj`'s halo over-weighting. (Auto-chosen;
+  please confirm.)
 - **Cooperativeness `c`.** `c ∈ {0, 0.25, 0.5, 0.75, 1}`. *Why:* the [§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note) sign-flip
   sweep needs the cooperative and non-cooperative ends plus enough interior to see
-  where the sign changes. (Auto-chosen density; please confirm.)
+  where the sign changes; it must also span **interior↔boundary** so the
+  `p*`-vs-`p_proj` contest is mapped ([§2.6](#26-budget-dependence-infomax-and-nml-as-two-takes-on-one-principle), [§4.3](#43-foreign-q-family)). (Auto-chosen density; please confirm.)
 - **Grid resolution `G`.** Per-axis `G=50` for `d≤2`, `G=30` for `d=3`, `G=20` for
   `d=4` (so the grid stays `≤ 10^6` cells). *Why:* `G ≫ √(budget)` resolves the
   `~√n` atom spacing (spec 000 §1.3) while keeping `d`-dim BA tractable. Grid-
@@ -591,8 +810,8 @@ flagged for ratification.
   `rng.spawn`, cells enumerated in fixed lexicographic order.
 - **Test-suite subset.** T1, T3, T5, T7, T10 run at a single cheap cell
   (`exp-decay, d=2, σ=0.1, c=0.5`); T2 over the `d`-sweep in the control model; T6
-  at `d∈{6,11,26}` (hypercone, analytic — no solver needed); T9 over the full
-  `d`-sweep. The experiment script ([§6](#6-report)) runs the full cross-product.
+  at `d∈{6,11,26}` (hypercone, analytic — no solver needed); T9 and T11 over the
+  full `d`-sweep. The experiment script ([§6](#6-report)) runs the full cross-product.
 
 ## 6. Report
 
@@ -604,11 +823,15 @@ Report at `experiments/002-foreign-q-prediction/REPORT.md`, generated by
 Under `experiments/002-foreign-q-prediction/`:
 
 - `figures/am_fig5_reproduction.png` — `I/log2` and `max_θ b/log2` vs `d` (the
-  eye-test figure, exp-decay), priors `p*`, `p_J`, `p_LN`.
-- `figures/transfer_vs_c.png` — the headline: `min_{π'} ΔR(p*,π')` and the gap to
-  `q̄`, vs cooperativeness `c`, one panel per `d`. The [§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note) sign-of-advantage curve.
-- `figures/R_vs_d.png` — `R_N^q(π)` vs `d` per prior, at fixed `(σ, c)`, with the
-  `q̄` ceiling line.
+  eye-test figure, exp-decay), priors `p*`, `p_J`, `p_LN`, `p_proj` (the last
+  reproducing Quinn Fig. 12: `p_proj` tracks `p*`, not Jeffreys).
+- `figures/transfer_vs_c.png` — the headline: `min_{π'∈{p_J,p_U,p_LN,p_proj}} ΔR(p*,π')`
+  and the gap to `q̄`, vs cooperativeness `c`, one panel per `d`. The [§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note) sign-of-advantage curve.
+- `figures/pstar_vs_pproj.png` — `ΔR(p*,p_proj)` across the interior↔boundary axis
+  and the curvature knob, localising where the two budget-dependent siblings diverge
+  ([§2.6](#26-budget-dependence-infomax-and-nml-as-two-takes-on-one-principle)).
+- `figures/R_vs_d.png` — `R_N^q(π)` vs `d` per prior (incl. `p_proj`), at fixed
+  `(σ, c)`, with the `q̄` ceiling line.
 - `figures/negative_control.png` — `R(π)` vs `d` in the constant-cross-section
   model; the curves should coincide (visual companion to T2).
 - `figures/calibration_pit.png` — PIT histogram / over-dispersion of the held-out
@@ -631,11 +854,12 @@ exp-decay (primary) and rotated-hypercone (controlled) models.
 
 `results_table.json` — one row per `(model, d, σ, taper, rotation, c)` cell:
 
-- `model`, `d`, `sigma`, `taper`, `rotation`, `c` — the cell key.
-- `R_mean[π]`, `R_mcse[π]` for `π ∈ {p*, p_J, p_U, p_LN, q̄}` (nats).
-- `delta_R_best` — `min_{π'∈{p_J,p_U,p_LN}} (R[p*] − R[π'])` and its MCSE (the
-  headline statistic).
-- `I_pstar`, `I_pJ`, `B_pstar`, `B_pJ` (bits) — the A&M prior-side scores.
+- `model`, `d`, `sigma`, `taper`, `rotation`, `curvature`, `c` — the cell key.
+- `R_mean[π]`, `R_mcse[π]` for `π ∈ {p*, p_J, p_U, p_LN, p_proj, q̄}` (nats).
+- `delta_R_best` — `min_{π'∈{p_J,p_U,p_LN,p_proj}} (R[p*] − R[π'])` and its MCSE (the
+  headline statistic), and `delta_R_pproj = R[p*] − R[p_proj]` separately (the
+  sibling-divergence read, [§2.6](#26-budget-dependence-infomax-and-nml-as-two-takes-on-one-principle)).
+- `I_pstar`, `I_pJ`, `I_pproj`, `B_pstar`, `B_pJ` (bits) — the A&M/Quinn prior-side scores.
 - `pstar_n_atoms`, `pstar_method` (`grid-BA` / `atomic`).
 - `S_q`, `seed_stream` — provenance.
 
@@ -647,7 +871,7 @@ stays small but a `q`-subset analysis can re-key off it).
 
 1. A&M Fig. 5 reproduction (with the eye-test approval note).
 2. The transfer-vs-`c` headline figure, per `d`, with the negative-control panel
-   alongside.
+   and the `p*`-vs-`p_proj` sibling-divergence panel (§2.6) alongside.
 3. `R` vs `d` with the `q̄` ceiling.
 4. Calibration diagnostic.
 5. A table embedding `d`, `c`, `delta_R_best`, and the gap to `q̄`.
@@ -668,7 +892,10 @@ stays small but a `q`-subset analysis can re-key off it).
   must be defined in prediction space and span cooperative→non-cooperative; the
   concrete family (e.g. mixtures of pulled-back uniforms on manifold edges vs
   interior) needs a human choice so the cooperativeness axis is principled, not
-  reverse-engineered to a desired answer. [?]
+  reverse-engineered to a desired answer. It must **also** span the
+  **interior↔boundary** axis ([§2.6](#26-budget-dependence-infomax-and-nml-as-two-takes-on-one-principle),
+  [§4.3](#43-foreign-q-family)) so the `p*`-vs-`p_proj` contest is mapped, not only
+  `p*`-vs-Jeffreys. [?]
 - **OQ-3 (convention).** `p_LN` meta-parameters `(θ̄, σ̄)` — A&M use `(0,1)`; do we
   follow, or tune to make `p_LN` the *strongest* deployable competitor (A&M note a
   tuned variational prior can approximate `p*`)? The honest competitor is the best
@@ -676,13 +903,25 @@ stays small but a `q`-subset analysis can re-key off it).
 - **OQ-4 (scope).** Primary model = exp-decay (curved, all competitors fail) with
   the rotated hypercone as the controlled companion. Is that the right split, or
   should the controlled rotated-hypercone be primary (closed-form `Δ`, cleaner
-  boundary location) with exp-decay as the realism check? [?]
+  boundary location) with exp-decay as the realism check? Either way the controlled
+  model needs a **tunable convex-vertex curvature** ([§4.1](#41-model-families)) —
+  the only axis on which `p*` and `p_proj` provably differ ([§2.6](#26-budget-dependence-infomax-and-nml-as-two-takes-on-one-principle)). [?]
 - **OQ-5.** Discreteness is **not** assumed to be the load-bearing property (per the
   discussion behind this spec); a resolution-adapted *smooth* prior might capture
-  the same benefit. Should the competitor set include a smoothed/variational
-  resolution-adapted prior to isolate whether discreteness does any work? Deferred,
-  but flagged: a `p*` win that a smooth resolution-adapted prior also achieves does
-  not implicate discreteness. [?]
+  the same benefit. <span style="color:red">[§2.5](#25-why-expect-p-to-transfer--a-partial-argument-and-its-limits)
+  (failure mode 2) sharpens this from "nice to have" to *required for attribution*:
+  Quinn et al.'s **projected-maximum-likelihood prior** `p_proj` (the smooth
+  near-optimal prior of A&M App. A.3 / Quinn §5.2) should join the competitor set
+  `π'`, because a `p*` win that `p_proj` also achieves implicates
+  *resolution-adaptation*, not *discreteness* — and beating only Jeffreys / uniform
+  / log-normal merely re-derives A&M.</span> Open: include `p_proj` in the headline
+  lineup now (the principled choice), or defer it to a follow-up once the
+  Jeffreys-class contest is mapped? [?]
+- **OQ-6 (`p_proj` sampler).** The concrete sampler for `p_NML` / `p_proj` —
+  rejection from a box enclosing the `σ`-tube, or sample-on-`Y`-(by area)-then-add-
+  `σ`-noise-then-project-to-MLE — and the `m_{p_proj}` estimator (sampled cloud vs
+  quadrature). A&M/Quinn assert it is "easy to sample" but pin no recipe; choose one
+  and verify against T11 ([§4.2](#42-prior-construction)). [?]
 
 ## 8. References
 
@@ -729,6 +968,21 @@ stays small but a `q`-subset analysis can re-key off it).
   S. (1972). *IEEE Trans. IT* 18(1), 14–20.
   [doi:10.1109/TIT.1972.1054753](https://doi.org/10.1109/TIT.1972.1054753). The BA
   solver (spec 000), generalised to multi-`d` here.
+- Shtarkov, Yu. M. (1987). Universal sequential coding of single messages.
+  *Problems of Information Transmission* 23(3), 175–186. The
+  normalized-maximum-likelihood (NML) distribution and its minimax *pointwise*
+  regret — the object behind `p_proj` ([§2.6](#26-budget-dependence-infomax-and-nml-as-two-takes-on-one-principle)).
+- Rissanen, J. (1996). Fisher information and stochastic complexity. *IEEE Trans.
+  IT* 42(1), 40–47. [doi:10.1109/18.481776](https://doi.org/10.1109/18.481776). NML
+  parametric complexity `log Z = (d/2)log(N/2π)+log∫√det g`; the MDL bridge to the
+  capacity / Jeffreys codes ([§2.6](#26-budget-dependence-infomax-and-nml-as-two-takes-on-one-principle)).
+- Grünwald, P. D. (2007). *The Minimum Description Length Principle.* MIT Press
+  (ISBN 978-0-262-07281-6). NML, stochastic complexity, and the asymptotic
+  equivalence of MDL, Bayes/Jeffreys, and capacity codes ([§2.6](#26-budget-dependence-infomax-and-nml-as-two-takes-on-one-principle)).
+- Clarke, B. S. & Barron, A. R. (1990). Information-theoretic asymptotics of Bayes
+  methods. *IEEE Trans. IT* 36(3), 453–471.
+  [doi:10.1109/18.50382](https://doi.org/10.1109/18.50382). The stochastic-complexity
+  expansion shared by the capacity and NML codes ([§2.6](#26-budget-dependence-infomax-and-nml-as-two-takes-on-one-principle)).
 - In-repo: `notes/prediction_objective_for_priors.md` (the maths this spec
   formalises), `notes/infomax_two_hats_and_directions.md` (the two-hat diagnosis),
   `tutorials/math/redundancy-capacity.md` (compensation identity, equalizer),
@@ -828,3 +1082,86 @@ Round 1 of human review (status set to `needs-revision` on [§0](#0-context), Ge
 Prose modifications are marked in red `<span>`; relocations of unchanged text and
 the link-ification are left unpainted. Status of [§0](#0-context), [§1](#1-setup), [§1.2](#12-generative-model) returned to `draft`.
 No downstream artefacts exist yet, so nothing is invalidated.
+
+### 2026-06-01 — Clarification (§2 Objective)
+
+Round 2 of human review (§2 set to `needs-revision`). Changes per inline `> M:`
+comments; the math is unchanged throughout, so all are Clarifications.
+
+- **[§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss)
+  [Clarification].** Stated explicitly that `R_N^q` is a *loss* (lower is better).
+  Addressed the central question — how a *maximiser* of mutual information can be
+  expected to *minimise* a loss — with a **side-by-side table** of the three
+  distinct redundancies (self-consistent / mutual information, worst-case, and the
+  foreign-`q` average that is our score) and the argmax/argmin acting on each: the
+  infomax `argmax_π I` and the minimax `argmin_π R_N^{max}` are the *same* object
+  `p*` (redundancy–capacity duality), whereas our score's minimiser is the matched
+  `q̄`, not `p*`. Defined *strictly proper* and why A&M's `Δ` is not a proper
+  scoring rule. Put the cumulative one-step-ahead regret in a displayed
+  (unnumbered) equation, and clarified that the headline `R_N` is prequential while
+  the fresh `x'` is the `t=N` calibration diagnostic. Spelled out the `N`-fold
+  marginals; gave the matched floor `I_q^{(N)}` as a displayed equation; fixed a
+  §9.1 link broken by a review comment.
+- **[§2.2](#22-what-wins-means--and-what-cannot-be-asserted) [Clarification].**
+  Added a *Computability* note: `R` is Monte-Carlo (exact atom-sum for `p*`,
+  quadrature / importance-sampling for the continuous priors); only the priors,
+  per-`θ` likelihood, and analytic cross-checks are closed-form.
+- **[§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note)
+  [Clarification].** Defined *flat co-volume* (constant `√det g`, no co-volume
+  gradient) and distinguished it from latent independence (a special case).
+
+Prose modifications in red `<span>`; the new side-by-side table and the two new
+displayed equations are unpainted (a red `<span>` breaks `$$` math, and a table
+cannot be wrapped in one), same convention as new equations. Status of §2 returned
+to `draft`, dated today. No downstream artefacts exist yet, so nothing is
+invalidated.
+
+### 2026-06-01 — Refinement (§2.5 added; §7 OQ-5)
+
+Round 3, on request: a **mathematical justification** for *why* `p*` might do well
+on the foreign-`q` score, since the contest carries no guarantee. New §2.5 lays out
+(a) the one real guarantee — the redundancy–capacity / KL-center bound
+`R_N^q(p*) ≤ C_N` for **every** `q` (eq. (2.5.1)), unique to `p*`, against an `O(d)`
+worst case for fixed non-infomax priors; (b) the geometric heuristic for the
+average case (hyperribbon-width hierarchy and the vanishing high-co-volume corner,
+Quinn et al. 2023; A&M's "new invariance"; Quinn's "truth-between-atoms" replies
+bounding the discretisation penalty at `O(1)` *without* self-sampling); and (c) a
+candid failure-mode column — worst-case ≠ average (benign `q` flips it), the real
+competitor is the resolution-adapted **projected-ML prior** not Jeffreys (so a win
+may implicate resolution-adaptation, not discreteness), `q̄` dominates anyway, and a
+ceiling is not optimality. Read the longer companion paper
+`resources/quinn.html` (Quinn et al. 2023) for the hyperribbon-width and
+projected-ML material; the substantive additions are the KL-center ceiling (2.5.1)
+and the explicit falsification condition. §7 OQ-5 sharpened: the projected-ML prior
+is now flagged as *required for clean attribution*, not merely nice-to-have.
+
+This is additive (no existing claim changed), hence **Refinement**. New prose is
+red; eq. (2.5.1) is unpainted (red `<span>` breaks `$$`). §2 stays `draft`. No
+downstream artefacts exist yet.
+
+### 2026-06-01 — Refinement (§2.6 added; `p_proj` promoted to co-protagonist across §4–§8)
+
+Round 4, on request: pin down the relationship between the two budget-dependent
+priors and propagate the consequences. New **§2.6** states the unifying principle —
+*budget dependence* — and shows `p*` (capacity / minimax-**expected** redundancy)
+and `p_proj` (the Shtarkov-NML / Rissanen-MDL distribution pushed through the MLE)
+as two routes to it, with Jeffreys the budget-free `σ→0` limit of both; why they
+coincide (shared stochastic complexity asymptotically; near-unique
+resolution-adaptation in hyperribbon geometry); and the two contrastive corners
+(convex-vertex halo → bad for `p_proj`; smooth interior `q` finer than atom spacing
+→ bad for `p*`), both constructible by tuning the hyperribbon. The reframing is that
+`p_proj` is a **sibling, not an approximation**, so the live question becomes "does
+capacity buy anything over the cheap MDL prior on held-out prediction" — and that
+budget-dependence, not discreteness, is the object of interest.
+
+Downstream (unreviewed sections, **no red** per instruction): §4.1 gains a
+boundary-curvature knob; §4.2 adds the `p_proj` construction; §4.3 adds the
+interior↔boundary `q`-axis; §4.4 adds `p_proj` to the prior set. §5 adds **P11/T11**
+(`p_proj` construction + Quinn-Fig.-12 MI reproduction), includes `p_proj` in the
+negative control (T2) and the **four-way** headline statistic, and adds the
+curvature sweep. §6 adds the `p*`-vs-`p_proj` divergence figure and threads `p_proj`
+(and `I_pproj`, `delta_R_pproj`, the `curvature` key) through the figures/table. §7
+extends OQ-2 (q must span interior↔boundary) and OQ-4 (model needs tunable convex
+curvature) and adds **OQ-6** (the `p_proj` sampler). §8 adds Shtarkov (1987),
+Rissanen (1996), Grünwald (2007), and Clarke–Barron (1990). No downstream artefacts
+exist yet, so nothing is invalidated.
