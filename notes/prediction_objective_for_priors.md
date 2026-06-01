@@ -6,11 +6,21 @@
 in high `d` the finite-data infomax prior `p*` is *unbiased* in prediction space
 while Jeffreys (and other fixed continuous priors) are catastrophically biased.
 But their score is a **bias of the posterior's centre** (`Δ`, below), in-sample
-and self-consistent — *not* a proper predictive scoring rule. This note builds
-the **held-out posterior-predictive log-loss (= redundancy)** objective under
-which one could test, systematically, whether `p*` is a good *inference* prior —
-and isolates the one question their `Δ` cannot answer. It is the maths behind
-§10 offer 5 / §4 of `notes/infomax_two_hats_and_directions.md`, and leans on
+and **self-consistent** — they draw the data from `p*` itself (`x ∼ p*`), and
+`b(θ)=0` on `supp(p*)` is the equalizer/KKT condition — so what they establish is
+that `p*` codes *its own* source unbiasedly, *not* that it infers a *foreign*
+nature `q` well. The right question is therefore **not** "is `p*` a good epistemic
+prior": under a proper score it is dominated by the matched prior `q̄`, and it is a
+*design* object by construction (`notes/infomax_two_hats_and_directions.md` §2).
+It is: **does the high-`d`, coupled, ribbon-geometry setting create a difficulty
+that bites *deployable non-infomax* priors (Jeffreys, uniform-`θ`, log-normal)
+disproportionately — a co-volume pathology `p*` is structurally less sensitive to
+— and does that advantage *transfer* to held-out predictive accuracy under a
+foreign `q`, or evaporate once `p*` is no longer flattered by self-sampling?**
+This note builds the **held-out posterior-predictive log-loss (= redundancy)**
+objective under which that question is answerable, and isolates what `Δ` cannot
+see. It is the maths behind §10 offer 5 / §4 of
+`notes/infomax_two_hats_and_directions.md`, and leans on
 `tutorials/math/redundancy-capacity.md` (equalizer/capacity) and `kelly.md`.
 
 Companion files to pull: the two-hats note (§4 cumulative-Kelly = redundancy,
@@ -48,6 +58,31 @@ prediction** `⟨y⟩_x`. It is: *bias of the centre*, **in-sample** (same `x`),
 **point summary** (first moment of the predictive only), and in their figures
 **self-consistent** (`x ∼ p*`). Ideal `Δ≈0`; Jeffreys at `d=26` gives `Δ>20`.
 
+> **Self-consistency caveat (load-bearing — the transfer is asymmetric).** A&M
+> evaluate `Δ` on data drawn from `p*`'s own marginal,
+> `x ∼ p*(x) = ∫ p*(θ) p(x|θ) dθ`, and `b(θ)=0` on `supp(p*)` is the
+> equalizer/KKT condition — both *self-referential* (design) properties. So
+> `Δ≈0` says `p*` codes its *own* source unbiasedly, **not** that it infers a
+> foreign nature `q` without bias. The transfer to a foreign-`q` predictive test
+> is **asymmetric**:
+> - **Jeffreys' badness transfers.** In the hypercone (A&M Appendix A.1) the
+>   posterior-mean bias is `Δ = (d−1)/x`, a *pointwise* property of the posterior
+>   at the observed `x` — independent of how `x` was generated, and *largest at
+>   the thin end* (`x` small), exactly where a foreign interior/edge `q` puts its
+>   data. A foreign `q` does not rescue Jeffreys; it can make it worse.
+> - **`p*`'s goodness is partly self-served.** `p*`'s pointwise bias is bounded
+>   by its atom spacing ≈ resolution ≈ `O(1)` Fisher length, *independent of `d`*
+>   (it tiles the relevant subspace and collapses the irrelevant ones — A&M
+>   Fig. 5's "ignores added irrelevant parameters"). Self-sampling lands data on
+>   the atoms, where that `O(1)` is near-zero; under foreign `q` data can land
+>   *between* atoms, and `p*` then pays its `O(1)` spacing penalty *plus* the
+>   marginal-mismatch `D(m_q‖m_{p*})` of §2.1.
+>
+> Net: **`p*`'s pointwise bias is `O(1)`; Jeffreys' is `O(d)`.** The foreign-`q`
+> experiment tests whether that `O(d)`-vs-`O(1)` gap survives once `p*` is no
+> longer flattered by self-sampling — *not* whether `p*` is unbiased in any
+> absolute sense (it is not the matched prior, so it cannot be).
+
 ### 1.2 Our objective — held-out predictive log-loss `=` redundancy
 
 Train on `x_{1:t} ∼ p(·|θ)`, predict a *fresh* `x' ∼ p(·|θ)` with the posterior
@@ -75,7 +110,7 @@ This is a **proper** score (full predictive, all moments), **held-out**
 | sample | **in-sample** (same `x`) | **held-out** (fresh `x'`) |
 | measures | bias of the centre | bias **+** calibration/spread |
 | proper rule? | no | yes |
-| `p*` by construction | unbiased (`b=0`) | **unknown — the open question** |
+| `p*` by construction | unbiased **on `x∼p*`** (`b=0` is self-referential; §1.1) | `O(1)` bias vs Jeffreys' `O(d)` — **does it transfer to foreign `q`?** (§1.1, §3) |
 
 ---
 
@@ -127,7 +162,7 @@ content of `R` beyond the centre (§3).
 
 ---
 
-## 3. The open question: does `Δ`-unbiased ⇒ `R`-good? (bias vs calibration)
+## 3. The real question: does the co-volume bias transfer to a foreign `q`? (and the bias/calibration split)
 
 For the Gaussian manifold model `p(x|θ)=N(y(θ),σ²I)`, approximate the
 posterior-predictive as `m_π(x'|x_{1:t})≈N(μ_π,Σ_π)`. Then
@@ -142,14 +177,25 @@ covariance `Σ_π` vs the noise `σ²I` — is exactly what `Δ` misses, and is 
 only when the predictive spread matches the noise (you've correctly resolved
 `θ`).
 
-**Central question.** A&M show `p*` controls the **bias** term in high `d`
-(`Δ≈0`, by `b=0`). Does `p*` *also* control the **calibration** term? `p*` is
-**discrete/atomic**, so its posterior — and hence `Σ_π` — can be *lumpy*
-(over- or under-dispersed) even where the centre `μ_π` is unbiased. If the
-calibration term is large, `p*` could be `Δ`-unbiased yet `R`-bad — the high-`d`
-analogue of the §1 1-D betting failure (where `p*`'s discrete posterior is a bad
-*belief* under a proper score, even when its mean is not crazy). **This is the
-thing to settle, and it is invisible to `Δ`.**
+**Central question (two parts).** *(a) Transfer of the bias term — the decider.*
+A&M show the *bias* term blows up for Jeffreys (`Δ`) on self-sampled data; the
+live question is whether the **gap** — `p*`'s `O(1)` bias vs the deployable
+non-infomax priors' `O(d)` bias (§1.1) — survives scoring on a **foreign `q`**,
+where `p*` is no longer flattered by self-sampling and pays `D(m_q‖m_{p*})`. The
+bias term of `R` is the right currency: it equals a precision-weighted `Δ²`, so
+it *inherits* A&M's discrimination of the competitors while *also* charging `p*`
+for its foreign-`q` mis-centring — exactly what `Δ`-on-`x∼p*` hides. *(b)
+Calibration — a secondary refinement.* `p*` is **discrete/atomic**, so its
+posterior `Σ_π` can be *lumpy* even where `μ_π` is unbiased; but because the atoms
+sit ~1 Fisher length apart **in prediction space by construction**, this
+miscalibration is bounded at `O(σ²)` — a constant-factor effect, *not* the `O(d)`
+blow-up that lives in the bias term. So calibration can *modulate* the contest at
+the boundary but is unlikely to *decide* it; the deciding quantity is the
+foreign-`q` transfer of the bias gap. Both are invisible to `Δ`-on-`x∼p*` — that
+is what makes the proper held-out score, not `Δ`, the instrument. (The high-`d`
+analogue of the §1 1-D betting failure lives in part (b): there `p*`'s discrete
+posterior was a bad *belief* under a proper score; here the question is whether
+prediction-space tiling keeps that penalty `O(σ²)` rather than `O(d)`.)
 
 Caveats to handle in the maths:
 - Reference point: A&M's bias uses `y(θ̂_x)` (MLE, in-sample); the held-out bias
@@ -185,29 +231,41 @@ upgrades to *predictive* goodness.
 
 ## 5. Maths to work through (checklist)
 
-0. **Go/no-go precondition (free — uses numbers we already have).** Confirm the
-   budget-matched capacity prior `p*_N` has **finite** worst-case held-out
-   predictive log-loss equal to capacity, `max_θ R_N(p*_N;θ)=C_N`, *flat* at
-   `C_N` on its support (the equalizer), growing only `∝(d/2)\log N`. 1-D values
-   already in hand (`redundancy-capacity.md`): `C_1=log2=1` bit (support
-   `{0,1}`), `C_2=0.754` nats `=1.087` bits (support `{0,½,1}`).
-   - *Why necessary:* this is the **same `p*`, same `n`** where the
-     *plug-in/betting* score gave `+∞` (§1), and the same high-`d` regime where
-     Jeffreys' bias score is `B>500` bits. If `p*`'s *proper-score* worst case
-     were not finite-and-graceful, the programme is **dead on arrival**.
-     Switching the currency (full predictive, not plug-in mean) turns the `+∞`
-     into `=C_N` — so `p*` is at least *viable*, and the proper score is the
-     right currency.
-   - *Why far from sufficient:* it is the **worst-case** corner — the *theorem*,
-     so it tests coherence, not the open claim — and is silent on (a) the
-     **average case** (where §1 has `p*` *losing* in 1-D, paying `D(m_q‖m_{p*})`)
-     and (b) **calibration** (§3 — whether `p*`'s discreteness spoils `Σ_π`).
-   - *Zero-compute corollary (competitor side):* the Gaussian log-loss
-     *contains* `Δ²` as its bias term (§3), so it **inherits** A&M's high-`d`
-     discrimination — a `~20σ` centre-bias costs `≳Δ²/2` nats unless hidden by
-     over-dispersion, which the calibration term then charges. So `Δ→`log-loss
-     can only *add* the calibration term, never *lose* A&M's verdict.
-   - **Run this first; only if it passes do items 1–5 have a point.**
+0. **Go/no-go precondition (the *informative* one — replaces the capacity
+   tautology).** The tempting screen — confirm `max_θ R_N(p*_N;θ)=C_N`, flat on
+   the support — is the redundancy–capacity **theorem** (`redundancy-capacity.md`;
+   `C_1=log2`, `C_2=0.754` nats already in hand). It **cannot fail** modulo a
+   code bug, so it gives **zero** go/no-go signal about the open question; keep it
+   only as a unit-test of the `p*`/MI machinery, not as a viability gate. (One
+   genuine clarification it *does* settle: switching the currency from plug-in
+   Kelly to the full mixture predictor removes the §1 `n=1` `+∞` — the design
+   loss `D(p(·|θ)‖m_π)` is finite whenever the prior has interior support — so the
+   proper score is at least the right *kind* of object. That is coherence, not
+   evidence.) The informative precondition is a **two-part falsification screen**
+   on the foreign-`q` predictive log-loss itself:
+   - *(i) Negative control — flat co-volume ⇒ everyone ties.* In the
+     **constant-cross-section** cone (no taper, `r(θ_rel)=const`, so `√det g`
+     constant and `b(θ)≡0` for Jeffreys), `p*`, `p_J`, `p_U` must agree on `R`
+     within Monte-Carlo error, at every `d`. **If `p*` "wins" here it is a bug**
+     (or the estimator is rigged): with no co-volume pathology to avoid, no prior
+     can beat another on the prior-dependent term `D(m_q‖m_π)`.
+   - *(ii) Sign-of-advantage under non-cooperative `q`.* Sweep `q` from
+     **cooperative** (`q≈m_{p*}`, mass where `p*` expects it) to
+     **non-cooperative** (mass at the thin end / in `p*`'s atom gaps). `p*` wins
+     the cooperative end by self-sampling, *of course*; the question is whether
+     its advantage over the **best deployable non-infomax prior** persists into
+     the non-cooperative range. **`p*` wins across realistic `q` ⇒ the
+     `O(d)`-vs-`O(1)` gap transfers (positive result). `p*` wins only for
+     `q≈m_{p*}` ⇒ the effect is self-served and A&M's verdict does not generalise
+     (a clean negative).**
+   - *Why this is the right gate:* its outcome is **genuinely unknown today**
+     (unlike the capacity theorem), it is the cheapest probe of the *actual* open
+     claim, and it is built to detect the experiment's own failure modes —
+     estimator bias via the control, and predetermined-by-`q` confounding via the
+     sweep (the F1 pathology of `specs/001-infomax-betting-redteam_third.md`,
+     where the headline was fixed by an unstated hyperprior-shape choice).
+   - **Run this first; only if (i) holds and (ii) shows life beyond `q≈m_{p*}` do
+     items 1–5 carry weight.**
 
 1. **Compensation identity** `R_N^q(π)=I_q+D(m_q‖m_π)` — verify the `N`-fold
    version and the prior-washout `O(1)` claim. (§2.1)
@@ -286,12 +344,29 @@ epistemic prior." The §1 regime is *below* (ii); A&M's `d=26` is far *beyond* i
 
 Smallest setting that already shows it: **`d=2`, one relevant + one irrelevant,
 coupled (tapering)** — A&M's own Fig. 1 model, which they use only to
-*illustrate*. There the bias is tiny (hypercone `Δ=1/x ≈ 0.1σ`), which is exactly
-why it's the right place to **locate boundary (ii)** (does `p*` beat a smooth
-prior on held-out log-loss when the effect is *small*?) rather than to
-dramatise. Build the controlled family on the **hypercone** (tunable taper +
-spectrum; closed-form `Δ=(d−1)/x` for calibration), with the **independent-dims
-null** as the negative control.
+*illustrate*. There the bias is tiny (hypercone `Δ=(d−1)/x ≈ 0.1σ` at `d=2`),
+which is exactly why it's the right place to **locate boundary (ii)** (does `p*`
+beat a smooth prior on held-out log-loss when the effect is *small*?) rather than
+to dramatise.
+
+**Caveat — the bare hypercone is a strawman for `p_U`/`p_LN`.** In the
+*axis-aligned* hypercone the relevant coordinate **is** `θ₁`, so a prior uniform
+in `θ` projects to *flat* on `θ₁` and is **unbiased** — only Jeffreys (which
+carries the `θ₁^{d−1}` co-volume) is a victim. A `p*` win there is a win over
+Jeffreys *only*, i.e. A&M re-derived, and reproduces the F1 trap (a contest whose
+answer is fixed by an unstated modelling choice). To make uniform-`θ` and
+log-normal genuine competitors that *also* fail, the relevant direction must be
+**misaligned with the parameter coordinates** — a fixed **rotation/shear** of the
+embedding, or genuine **curvature** of `y(θ)` (A&M's uniform/log-normal failures
+live in the *curved* exp-decay and enzyme models, not in the cone). So the
+minimal *non-vacuous* model is **taper (⇒ Jeffreys fails) + non-alignment (⇒
+coordinate priors fail)**: coupling buys one victim, rotation/curvature buys the
+rest. Build the controlled family on the **hypercone with a tunable rotation**
+(tunable taper + spectrum + rotation; closed-form `Δ=(d−1)/x` retained as the
+calibration cross-check on the relevant axis), with the **constant-cross-section /
+independent-dims null** as the negative control (§5.0 (i)). The curved exp-decay
+model (A&M Eq. 6) is the realistic companion where all three deployable priors
+demonstrably fail.
 
 ### 6.4 A positive result, stated minimally
 
