@@ -249,15 +249,70 @@ the budget is finite and the model is sloppy.** Budget dependence, not discreten
 is the shared principle; `p*`'s discreteness is one route's incidental signature, not
 the principle itself.
 
-## 6. Where they part (one line, deferred to spec 002)
+## 6. What each one assumes about the world — and where they part
 
-Their only structural difference is the regret notion: NML weights by where the worst
-*individual* data land (the noise halo just outside convex boundaries), `p*` by
-*expected* distinguishability (Fisher length). So NML/`p_proj` over-weights sharp
-convex vertices that `p*` ignores, while `p*`'s discreteness ripples where `p_proj`'s
-cloud is smooth. Both gaps are constructible by tuning the hyperribbon; mapping them
-is the measurement spec 002 §2.6 / §4.3 sets up. *That* is what isolates whatever the
-harder capacity object buys over the cheap MDL sibling.
+§5 said *how* they coincide; this is *why* they differ, which turns out to be a
+single fork with everything hanging off it. Both are **minimax / robust** objects —
+neither is the matched, average-case prior (that is `q̄`). They differ only in the
+**axis of the worst case**: `p*` takes the worst case over the **parameter** (data
+*averaged* given $\theta$); NML over the **data sequence** itself (no expectation, no
+generating assumption). Two foundational commitments fall out:
+
+- **Well-specified vs individual-sequence.** `p*` lives in the stochastic world —
+  there *is* a true $\theta$ and honest data $x\sim p(\cdot\mid\theta)$, averaged
+  over. NML assumes *nothing* about where the data came from — it competes with the
+  best model in hindsight on whatever sequence arrives, so it is
+  **misspecification-robust by construction**.
+- **Realist/estimation vs instrumentalist/coding.** `p*` reads the model as a model
+  *of* something: there is a parameter to identify, and infomax maximises the bits the
+  experiment transmits *about* it. NML reads the model class as a *language*, not a
+  truth (Rissanen denied that any "true model" exists); the goal is to *describe /
+  predict* the data with the shortest code, truth not assumed. In a slogan: `p*` asks
+  *"which hypothesis is true, and which truth is hardest?"*; NML asks *"how well can I
+  describe the data, and which data is hardest to describe?"*
+
+**The non-asymptotic crux.** This is also *why* they agree as $n\to\infty$ yet differ
+at finite budget. By the CLT, typical data from $\theta$ concentrates where $\theta$
+predicts, so worst-case-over-data $\approx$ worst-case-over-typical-data $\approx$
+worst-case-over-$\theta$ — the two close to the same value. They diverge only on
+**atypical data**: sequences far from *any* $\theta$'s typical set — in the Gaussian
+picture, the $\sigma$-halo *off* the manifold. `p*` (averaging over data given
+$\theta$) never sees that region; NML (worst case over every $x$) must insure against
+it. **The entire non-asymptotic gap is the large-deviations / atypical-data
+contribution, which shrinks relative to the budget term as $n\to\infty$.** That is
+the mechanism behind §4: at finite budget NML/`p_proj` over-weights the convex
+boundaries where atypical data projects, while `p*` weights by *expected*
+distinguishability (Fisher length) and can be lumpy — right only on average. The
+contrastive corners of spec 002 §2.6 are this fork's geometric signature; mapping
+them (§2.6 / §4.3) is what isolates whatever the capacity object buys over the cheap
+MDL sibling.
+
+**When to prefer which.** Reach for `p*` when you trust the model to be
+well-specified and you care about *identifying the parameter* (or your loss really is
+worst-case-over-hypotheses): *"a truth is in here, nature may pick the nastiest one,
+but the data is honest."* Reach for NML/`p_proj` when you *distrust* the
+specification and care about *prediction on whatever data arrives*: *"models are
+languages, not truths; just never code much worse than the best one in hindsight."*
+
+**The reflexive point for spec 002 (a hypothesis, not a fact).** Its foreign `q` is
+exactly **prior-misspecification** ($\theta\sim q\neq p^\star$) — the regime NML's
+worldview is built for — so one might expect `p_proj` to transfer to a foreign `q`
+more gracefully. The honest counter: once NML is pushed to a prior and Bayes-scored,
+that robustness is just "$m_{p_{\rm proj}}$ spreads to cover atypical data (the
+halo)" — the *same* worst-case insurance as `p*`'s, on a different axis, and equally
+wasteable on a benign interior `q`. So the principle only says *where to look*
+(`p_proj` more foreign-`q`-robust where `q` produces boundary/atypical predictions;
+`p*` better-tuned for typical-interior `q`); the §2.4/§4.3 sweep adjudicates.
+
+**Algorithmic aside (the axis flips the cost, too).** `p_proj` is
+*simulate-don't-optimise* — sample the $\sigma$-tube, project each draw to its MLE; no
+global search — so it scales in $d$, which is why A&M/Quinn reach for it. `p*` is a
+*flat, ill-conditioned global solve* for a discrete measure (the gradient of
+$I(\Theta;X)$ is tiny near the optimum, where the atoms settle). Neither is free:
+`p_proj` pays a per-sample MLE projection and needs $Z<\infty$; `p*` pays the solve.
+The clean triangulation: **`q̄` is the non-paranoid (matched) prior; `p*` is paranoid
+about which hypothesis is true; NML is paranoid about which data arrive** — same
+budget dependence, three stances toward the unknown.
 
 ## Connections worth noting
 
