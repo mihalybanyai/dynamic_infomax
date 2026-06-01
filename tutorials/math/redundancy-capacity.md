@@ -10,8 +10,11 @@
 > Information Theory*; Csiszár & Shields, *Information Theory and
 > Statistics*; Grünwald, *The Minimum Description Length Principle*. This
 > file is the design-hat companion to `tutorials/math/kelly.md` (the
-> belief-hat / decision-loss side) and to `tutorials/math/kkt.md` (the
-> optimisation side of the same fixed-point).
+> belief-hat / decision-loss side), to `tutorials/math/kkt.md` (the
+> optimisation side of the same fixed-point), and to
+> `tutorials/math/nml-mdl.md` (the **pointwise-regret / NML** dual of this
+> **expected-regret / capacity** file — the budget-dependent sibling prior
+> `p_proj`).
 
 ## What problem are we solving
 

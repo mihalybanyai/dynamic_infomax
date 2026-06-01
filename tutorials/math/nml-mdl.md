@@ -1,0 +1,296 @@
+# NML, stochastic complexity, and the projected prior, calibrated to budget dependence
+
+> Just-in-time math explainer triggered by `specs/002-foreign-q-prediction.md`
+> §2.6, where the **projected-ML prior** `p_proj` is promoted from "control" to
+> co-protagonist alongside the infomax prior `p*`. Goal: enough
+> NML / minimum-description-length (MDL) machinery to see *why* `p_proj` is a
+> principled, **budget-dependent** object — the **pointwise-regret** sibling of the
+> **expected-regret** capacity prior of `redundancy-capacity.md` — why both collapse
+> to Jeffreys only at infinite budget, and where they part. Not a general MDL theory;
+> for that see Rissanen (`resources/rissanen.pdf`) and Grünwald, *The MDL Principle*.
+> This is the pointwise-regret companion to `tutorials/math/redundancy-capacity.md`
+> (expected regret / capacity), `kelly.md` (belief loss), and `kkt.md` (the optimiser
+> behind `p*`).
+
+## What problem are we solving
+
+Spec 002 fields two "uninformative" priors that both claim to be the right thing to
+use at finite data: the infomax / capacity prior `p*` and the projected-ML prior
+`p_proj`. They look unrelated — one maximises mutual information, the other pushes a
+funny data-space distribution through the MLE. The point of this file is that they
+are **two solutions of one universal-coding problem under two regret notions**, both
+*budget-dependent*, both reducing to Jeffreys at infinite budget; and that the single
+property the project cares about — **budget dependence** — is exactly what they
+share and Jeffreys lacks. We build NML, its stochastic complexity, the
+MLE-pushforward that turns it into a prior, and the side-by-side comparison.
+
+Throughout, the model is a parametric family $\{p(x\mid\theta):\theta\in\Theta\}$,
+$\Theta\subset\mathbb R^k$ **compact**, observed with a per-experiment budget — $n$
+i.i.d. repetitions, equivalently (for the Gaussian case of spec 002) noise $\sigma$
+with $n$ scaling the Fisher information by $n$ (so "budget" = $n$ ≈ $1/\sigma^2$).
+
+## 1. Two regrets from one numerator
+
+Fix a single predictor / code $q(x)$ — one distribution over data we must commit to
+*before* knowing $\theta$. Score it by **regret** against the best-in-hindsight model
+$p(x\mid\hat\theta(x))$, where $\hat\theta(x)=\arg\max_\theta p(x\mid\theta)$ is the
+MLE. The same numerator $\max_\theta p(x\mid\theta)$ admits two "worst cases":
+
+- **Pointwise (individual-sequence) regret**, worst case over *data*:
+  $$
+  \mathrm{reg}_{\rm pw}(q)=\max_{x}\ \log\frac{\max_\theta p(x\mid\theta)}{q(x)}.
+  $$
+- **Expected (Bayes / redundancy) regret**, worst case over *parameters*:
+  $$
+  \mathrm{reg}_{\rm exp}(q)=\max_\theta\ \mathbb E_{x\sim p(\cdot\mid\theta)}\log\frac{p(x\mid\theta)}{q(x)}=\max_\theta D_{\mathrm{KL}}\big(p(\cdot\mid\theta)\,\|\,q\big).
+  $$
+
+The expected one is the object of `redundancy-capacity.md`: its minimiser is the
+Bayes mixture $m_{p^\star}$ under the capacity-achieving prior `p*`, value the
+capacity $C$. The pointwise one is this file's object. *Same family, same "fit to the
+best model", two ways of refusing to know $\theta$* — and, as we'll see, two
+universal codes that nearly coincide.
+
+## 2. NML is the pointwise-minimax code (and why the formula is forced)
+
+Write the **unnormalised** best-fit $\hat p(x)=\max_\theta p(x\mid\theta)$ and
+$Z=\int \hat p(x)\,dx$. Define the **normalized maximum likelihood (NML)**
+distribution (Shtarkov 1987):
+$$
+\boxed{\;p_{\rm NML}(x)=\frac{\max_\theta p(x\mid\theta)}{Z},\qquad Z=\int \max_\theta p(x\mid\theta)\,dx.\;}
+$$
+
+**Why this exact form is the minimax solution.** For *any* code $q$,
+$$
+\log\frac{\hat p(x)}{q(x)}=\log Z+\log\frac{p_{\rm NML}(x)}{q(x)}
+\quad\Longrightarrow\quad
+\mathrm{reg}_{\rm pw}(q)=\log Z+\max_x\log\frac{p_{\rm NML}(x)}{q(x)}.
+$$
+Both $p_{\rm NML}$ and $q$ are probability densities, so they integrate to the same
+$1$; hence $\int (p_{\rm NML}-q)=0$, so unless $q=p_{\rm NML}$ everywhere there is a
+point where $p_{\rm NML}>q$, making $\log(p_{\rm NML}/q)>0$ there. Therefore
+$\max_x\log(p_{\rm NML}/q)\ge 0$, with equality **iff** $q=p_{\rm NML}$. So
+$$
+\min_q\ \mathrm{reg}_{\rm pw}(q)=\log Z,\quad\text{attained uniquely at } q=p_{\rm NML},
+$$
+and at that optimum $\log\frac{\hat p(x)}{p_{\rm NML}(x)}=\log Z$ for **every** $x$.
+That last line is the **pointwise equalizer property**: NML spreads its regret
+perfectly flat across all data, exactly mirroring how the capacity prior's mixture
+equalises redundancy flat across $\theta$ (`redundancy-capacity.md`, equalizer
+section). NML is the "centre" of the model family in the worst-case-over-data sense,
+as $m_{p^\star}$ is the centre in the worst-case-over-$\theta$ sense.
+
+(Compactness of $\Theta$ — and finiteness of the noise — is what makes $Z<\infty$.
+For unbounded models $Z$ diverges, NML is undefined, and so is capacity; both need a
+budget to be finite. This is the well-known NML divergence problem.)
+
+## 3. Stochastic complexity $\log Z$, term by term
+
+The minimax regret $\log Z$ is Rissanen's (1996) **stochastic / parametric
+complexity** — the irreducible price of not knowing $\theta$. Under a CLT on the MLE,
+its asymptotic form (Rissanen 1996, the central result of `resources/rissanen.pdf`)
+is
+$$
+\boxed{\;\log Z_n=\underbrace{\frac{k}{2}\log\frac{n}{2\pi}}_{\text{budget / resolution}}+\underbrace{\log\!\int_\Theta\!\sqrt{\det I(\theta)}\,d\theta}_{\text{shape / geometric complexity}}+o(1).\;}
+$$
+
+**Where it comes from.** $Z_n=\int p(x^n\mid\hat\theta(x^n))\,dx^n$. Re-index the data
+integral by *which* MLE value the data produce: near a value $\theta$, the
+log-likelihood is locally quadratic with curvature the Fisher information,
+$p(x^n\mid\theta')\approx p(x^n\mid\hat\theta)\exp\!\big(-\tfrac n2(\theta'-\hat\theta)^\top I(\hat\theta)(\theta'-\hat\theta)\big)$,
+so the "amount of data mapping to a $\theta$-cell of size $d\theta$" carries the
+Gaussian-integral Jacobian $\sqrt{\det\!\big(nI(\theta)/2\pi\big)}$. Integrating over
+$\Theta$,
+$$
+Z_n=\Big(\tfrac{n}{2\pi}\Big)^{k/2}\!\int_\Theta\sqrt{\det I(\theta)}\,d\theta\,\big(1+o(1)\big),
+$$
+which is the boxed log. Reading the two terms — this is the whole payoff:
+
+- $\frac{k}{2}\log\frac{n}{2\pi}$ is $k$ parameters times $\tfrac12\log\frac{n}{2\pi}$
+  each: each parameter is resolvable to precision $\sim 1/\sqrt n$, i.e. to
+  $\sim\sqrt{n/2\pi}$ distinguishable values, so there are $\sim(n/2\pi)^{k/2}$
+  distinguishable models. **This is the budget term — it grows with the data.**
+- $\log\int\sqrt{\det I}\,d\theta$ is the log of the **Fisher (Jeffreys) volume** =
+  the number of distinguishable distributions at unit resolution = Balasubramanian's
+  geometric complexity. **This is the shape term — budget-free.**
+
+And here is the bridge to Jeffreys: $\int\sqrt{\det I}\,d\theta$ is precisely the
+*normaliser* of the Jeffreys prior $p_J(\theta)=\sqrt{\det I(\theta)}/\!\int\sqrt{\det I}$.
+The shape term of the NML complexity **is** the Jeffreys volume.
+
+## 4. From a code over data to a prior over parameters: $p_{\rm proj}$
+
+NML lives over data $x$, not over $\theta$. To get a *prior*, push it through the MLE
+map — i.e. take the law of $\hat\theta(x)$ when $x\sim p_{\rm NML}$:
+$$
+\boxed{\;p_{\rm proj}(\theta)=\int p_{\rm NML}(x)\,\delta\big(\theta-\hat\theta(x)\big)\,dx.\;}
+$$
+This is A&M's "projected maximum likelihood" prior / Quinn's "adaptive
+slab-and-spike".
+
+**Why it is Jeffreys at infinite budget.** By the same Laplace weighting as §3, the
+density of MLE values is $\propto\sqrt{\det\!\big(nI(\theta)/2\pi\big)}\propto\sqrt{\det I(\theta)}$,
+so
+$$
+p_{\rm proj}(\theta)\ \xrightarrow{\ n\to\infty\ }\ \frac{\sqrt{\det I(\theta)}}{\int\sqrt{\det I}}=p_J(\theta).
+$$
+So `p_proj` $\to$ Jeffreys as the budget grows — **the same limit `p*` has**
+(`redundancy-capacity.md`: $p^\star\to p_J$ as $n\to\infty$). The interesting,
+budget-dependent behaviour is all in the finite-$n$ corrections.
+
+**The finite-budget picture (Gaussian, spec 002's case).** With
+$p(x\mid\theta)=\mathcal N(y(\theta),\sigma^2 I_m)$,
+$$
+\max_\theta p(x\mid\theta)=(2\pi\sigma^2)^{-m/2}\exp\!\Big(-\frac{d(x,\mathcal Y)^2}{2\sigma^2}\Big),\qquad d(x,\mathcal Y)=\min_\theta\|x-y(\theta)\|,
+$$
+so $p_{\rm NML}(x)\propto e^{-d(x,\mathcal Y)^2/2\sigma^2}$ is a **tube of width
+$\sigma$ around the prediction manifold $\mathcal Y$** (uniform along $\mathcal Y$,
+Gaussian transverse), and $\hat\theta(x)$ is the nearest point of $\mathcal Y$.
+Therefore $p_{\rm proj}$ is the law of the *nearest-point projection of that
+$\sigma$-tube*:
+
+- where $\mathcal Y$ is locally flat (interior), projection is uniform;
+- at a **convex boundary / vertex**, the entire exterior halo of the tube projects
+  *onto the boundary*, piling extra weight there — an amount set by the exterior
+  solid angle times $\sigma$.
+
+So `p_proj` adapts to budget through the tube width $\sigma$: large $\sigma$ (little
+data) $\Rightarrow$ fat halo $\Rightarrow$ weight collapses onto edges (simpler,
+lower-dimensional models); small $\sigma$ $\Rightarrow$ the tube hugs $\mathcal Y$
+$\Rightarrow$ Jeffreys. This is the same edge-at-large-$\sigma$, bulk-at-small-$\sigma$
+story `p*` shows — reached by a different mechanism.
+
+## 5. The two budget-dependent priors, side by side
+
+| | capacity / infomax `p*` | NML / MDL `p_proj` |
+|---|---|---|
+| solves | $\min_q\max_\theta\,\mathbb E_{x\mid\theta}\log\frac{p}{q}$ (**expected** regret) | $\min_q\max_x\log\frac{\max_\theta p}{q}$ (**pointwise** regret) |
+| optimum value | capacity $C$ | stochastic complexity $\log Z$ |
+| equalizes | redundancy across $\theta$ | regret across $x$ |
+| the object | a **prior** (argmax of $I(\Theta;X)$), discrete, $\sim\sqrt n$ atoms | a **code over data** ($p_{\rm NML}$), made a prior via the MLE |
+| budget enters via | atom count / resolution $\sim\sqrt n$ | halo width $\sigma$ |
+| $n\to\infty$ limit | Jeffreys | Jeffreys |
+
+**Why they coincide here.** Two reasons, and they are the heart of the matter.
+
+1. *Asymptotically.* Both minimax values are the **same stochastic complexity**
+   $\frac k2\log\frac{n}{2\pi}+\log\int\sqrt{\det I}+o(1)$ — capacity via Clarke–Barron
+   (`redundancy-capacity.md`), regret via Rissanen — sharing the budget term and the
+   shape term. (They can differ at $O(1)$: the worst-case-over-data NML pays a touch
+   more than the average-case redundancy, by a constant $\sim\!k/2$ nats — the price
+   of pointwise vs expected — but this is a vanishing *rate* and does not change the
+   prior limit.) Both shape terms are the Jeffreys volume, so both priors converge to
+   Jeffreys.
+2. *In hyperribbon geometry at finite budget.* The manifold has a few stiff
+   directions and many exponentially-thin sloppy ones; resolution-adaptation then has
+   essentially **one** sensible answer — weight the few resolvable directions, collapse
+   the sloppy ones onto edges — and both universal codes find it. Their information
+   scores nearly agree (Quinn et al. Fig. 12: `p_proj` tracks `p*`, far above
+   Jeffreys).
+
+**The reading the project cares about.** Strip the two constructions to their
+content: *a good uninformative prior is the resolution map of the experiment at its
+budget* — it weights $\theta$ by what the data, at that $n$/$\sigma$, can tell apart.
+NML and capacity are two routes to that map. **Jeffreys is the $n\to\infty$ (shape
+term only) limit of both, and its budget-independence is precisely why it fails when
+the budget is finite and the model is sloppy.** Budget dependence, not discreteness,
+is the shared principle; `p*`'s discreteness is one route's incidental signature, not
+the principle itself.
+
+## 6. Where they part (one line, deferred to spec 002)
+
+Their only structural difference is the regret notion: NML weights by where the worst
+*individual* data land (the noise halo just outside convex boundaries), `p*` by
+*expected* distinguishability (Fisher length). So NML/`p_proj` over-weights sharp
+convex vertices that `p*` ignores, while `p*`'s discreteness ripples where `p_proj`'s
+cloud is smooth. Both gaps are constructible by tuning the hyperribbon; mapping them
+is the measurement spec 002 §2.6 / §4.3 sets up. *That* is what isolates whatever the
+harder capacity object buys over the cheap MDL sibling.
+
+## Connections worth noting
+
+- **Two duals, two tutorials.** `redundancy-capacity.md` is the expected-regret face
+  (capacity, `p*`); this file is the pointwise-regret face (NML, `p_proj`). `kkt.md`
+  is the optimiser that finds `p*`. `kelly.md` is the *belief* loss, a different game
+  again (note the two-hat split).
+- **MDL model selection.** $\log Z$ is the NML stochastic-complexity penalty used to
+  *choose a model* before seeing data — it depends only on the experiment's
+  resolution, not its outcome (Quinn). $=$ geometric complexity (Balasubramanian) $=$
+  "number of distinguishable distributions" (note §6). The model-selection sibling of
+  the capacity story.
+- **NML is not a Bayes mixture.** No prior makes $m_\pi=p_{\rm NML}$ exactly at finite
+  $n$; the two universal codes agree only asymptotically. `p_proj` is the
+  MLE-*pushforward* of $p_{\rm NML}$, a prior — not $p_{\rm NML}$ itself, and not a
+  mixture of the family.
+
+## Why this is the right tool, in one sentence
+
+NML / stochastic complexity is the pointwise-regret face of the *same*
+budget-dependent universal-coding problem whose expected-regret face is capacity, the
+projected-ML prior is NML read back onto parameters through the MLE, and both reduce
+to Jeffreys only at infinite budget — which is exactly why the project reads them as
+two takes on **budget dependence** rather than one approximating the other.
+
+## What a red-team finding in this region might be flagging
+
+1. **Code-vs-prior confusion.** $p_{\rm NML}$ is over *data*; `p_proj` is its
+   pushforward over *parameters*. A claim that "`p_proj` is NML" or that you can score
+   `p_proj` the way you score a code is conflating the two.
+2. **"Approximation" framing.** Treating `p_proj` as a numerical approximation of
+   `p*` misses that it is the *pointwise-regret* optimum in its own right; they are
+   siblings that coincide asymptotically, not original-and-approximation.
+3. **Forgetting the budget.** $Z=\infty$ for non-compact $\Theta$ — NML undefined.
+   Any "uninformative" claim that ignores the budget (Jeffreys) has silently taken the
+   $n\to\infty$ shape term and dropped the resolution term.
+4. **Wrong regret.** Pointwise = $\max_x$; expected = $\max_\theta\mathbb E_{x\mid\theta}$.
+   Swapping them turns NML into capacity. A "minimax" claim must say *over what*.
+5. **Constant chasing.** The $O(1)$ gap between $\log Z$ ($2\pi$) and the expected
+   minimax redundancy ($\sim\! 2\pi e$) is real but rate-vanishing; treating it as the
+   reason `p*` and `p_proj` differ as *priors* over-reads it (the prior difference is
+   the finite-$n$ edge/halo geometry of §4–§6, not the constant).
+
+## References
+
+External:
+
+- **Shtarkov, Yu. M. (1987).** Universal sequential coding of single messages.
+  *Problems of Information Transmission* 23(3). The NML distribution and its
+  minimax-pointwise-regret optimality. *(Exact pagination of the Russian original vs
+  English translation not independently verified here — flag before quoting page
+  numbers.)*
+- **Rissanen, J. (1996).** Fisher information and stochastic complexity. *IEEE Trans.
+  Inf. Theory* 42(1), 40–47. [doi:10.1109/18.481776](https://doi.org/10.1109/18.481776);
+  copy in `resources/rissanen.pdf`. The $\log Z=\frac k2\log\frac n{2\pi}+\log\int\sqrt{\det I}$
+  result and the ML-code derivation; verified against the in-repo PDF.
+- **Grünwald, P. D. (2007).** *The Minimum Description Length Principle.* MIT Press
+  (ISBN 978-0-262-07281-6). Book-length NML / stochastic-complexity treatment; the
+  asymptotic equivalence of MDL, Bayes/Jeffreys, and capacity codes.
+- For Clarke–Barron (asymptotic minimax redundancy $=$ same complexity, $p^\star\to$
+  Jeffreys) and Balasubramanian (geometric complexity), see the References of
+  `redundancy-capacity.md` rather than duplicating.
+
+In-repo:
+
+- `resources/rissanen.pdf` — the source for §3.
+- `tutorials/math/redundancy-capacity.md` — the expected-regret / capacity sibling
+  (compensation identity, equalizer, $p^\star$ discreteness, the $C_n$ expansion).
+- `tutorials/math/kkt.md` (BA optimiser for `p*`), `tutorials/math/kelly.md` (belief
+  loss).
+- `specs/002-foreign-q-prediction.md` §2.6 (the co-protagonist decision this file
+  supports), §4 (the model family and the two priors), §2.4/§4.3 (the contrastive
+  sweep).
+- `notes/prediction_objective_for_priors.md`, `notes/infomax_two_hats_and_directions.md`.
+
+## Provenance
+
+Triggered by the §2.6 decision in `specs/002-foreign-q-prediction.md` to treat the
+projected-ML prior as a budget-dependent co-protagonist of `p*`, and by the request
+to pin down the NML/MDL principle behind it and its relation to infomax. Calibrated
+to that purpose — the pointwise-regret dual, the stochastic-complexity formula and
+its budget/shape split, the MLE-pushforward, and the asymptotic-and-hyperribbon
+coincidence with capacity — deliberately *not* a general MDL course. If a later spec
+needs the full NML model-selection apparatus or the rate–distortion encoder dual,
+expand into siblings rather than growing this file past its budget-dependence scope.
+The Rissanen reference here is grounded in `resources/rissanen.pdf`; the Shtarkov
+pagination remains unverified (so flagged), and the same caveat applies to the
+Shtarkov entry in `specs/002` §8.

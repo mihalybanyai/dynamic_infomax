@@ -969,9 +969,11 @@ stays small but a `q`-subset analysis can re-key off it).
   [doi:10.1109/TIT.1972.1054753](https://doi.org/10.1109/TIT.1972.1054753). The BA
   solver (spec 000), generalised to multi-`d` here.
 - Shtarkov, Yu. M. (1987). Universal sequential coding of single messages.
-  *Problems of Information Transmission* 23(3), 175–186. The
+  *Problems of Information Transmission* 23(3). The
   normalized-maximum-likelihood (NML) distribution and its minimax *pointwise*
   regret — the object behind `p_proj` ([§2.6](#26-budget-dependence-infomax-and-nml-as-two-takes-on-one-principle)).
+  *(Page numbers vary between the Russian original and the English translation and
+  are not yet verified against the source — confirm before quoting them.)*
 - Rissanen, J. (1996). Fisher information and stochastic complexity. *IEEE Trans.
   IT* 42(1), 40–47. [doi:10.1109/18.481776](https://doi.org/10.1109/18.481776). NML
   parametric complexity `log Z = (d/2)log(N/2π)+log∫√det g`; the MDL bridge to the
@@ -986,6 +988,8 @@ stays small but a `q`-subset analysis can re-key off it).
 - In-repo: `notes/prediction_objective_for_priors.md` (the maths this spec
   formalises), `notes/infomax_two_hats_and_directions.md` (the two-hat diagnosis),
   `tutorials/math/redundancy-capacity.md` (compensation identity, equalizer),
+  `tutorials/math/nml-mdl.md` (NML / stochastic complexity — the `p_proj` sibling of
+  §2.6, the pointwise-regret dual of capacity),
   `tutorials/math/kelly.md`, `specs/000-static-infomax-fig1.md`,
   `specs/001-infomax-betting.md` and `specs/001-infomax-betting-redteam_third.md`
   (the F1 predetermined-by-`q` pathology this design guards against).
