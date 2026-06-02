@@ -154,3 +154,170 @@ My read: **Resolution 1 is the cleanest and most likely what's actually going on
 If Resolution 1 is correct, the immediate consequence is that **the MB step is normative with respect to a tractable surrogate, not the original information functional**. This is fine for cognitive modelling — most normative claims in cognitive science are with respect to a tractable approximation — but it has to be stated explicitly, and the surrogate's properties (does it preserve discreteness? does it preserve the $n$-dependence?) need to be checked in the toy biased-coin setting before moving on.
 
 Once this is settled, the path to formal cognitive arguments runs through: (i) writing down the EC update and the misspecification signal as equations, (ii) reintroducing explicit $m/n$ dependence in the surrogate, (iii) doing at least an informal fixed-point analysis of the loop in the biased-coin case. With those in hand, the daisy chain becomes a well-defined dynamical system one can make claims about.
+
+---
+
+## 7. The misspecification signal as one equation — and a β-search dual (exploratory, 2026-06-02)
+
+> **Status: adventure, not siege.** Written in low-diligence mode after a long chat thread,
+> at MB's request. The clean statements below hold in a restricted regime (well-specified
+> likelihood family, *pure-σ* misspecification); outside it they degrade to "qualitatively
+> right, quantitatively not" — flagged inline. This directly attacks §5 to-do (i): *write the
+> EC update and the misspecification signal as equations.*
+
+### 7.1 The signal, written down
+
+The agent assumes likelihood $p_\sigma(x\mid\theta)$ (noise $\sigma$ baked into the channel),
+carries the prior $\pi(\theta)$ that MB produced, and predicts the next datum with its Bayes
+marginal
+
+$$m_\sigma(x) \;=\; \int p_\sigma(x\mid\theta)\,\pi(\theta)\,d\theta .$$
+
+Reality delivers data with true marginal $q(x)$. Define the misspecification signal as
+predicted-minus-realised **predictive log-loss** — what the agent expects to pay per datum
+versus what it actually pays (in the binary case this is exactly the $\mathrm{KL}$ term in the
+Kelly readout $G=\log 2 - H - \mathrm{KL}$):
+
+$$
+\Delta(\sigma)\;=\;\underbrace{\mathbb{E}_{x\sim q}[-\log m_\sigma(x)]}_{\text{realised}}\;-\;\underbrace{\mathbb{E}_{x\sim m_\sigma}[-\log m_\sigma(x)]}_{\text{self-predicted}}\;=\;\underbrace{D(q\,\|\,m_\sigma)}_{\text{shape}}\;+\;\underbrace{\big(H(q)-H(m_\sigma)\big)}_{\text{scale}}.
+$$
+
+Two facts:
+
+1. **The shape term $D(q\|m_\sigma)$ is exactly the prior/channel-dependent term of the
+   spec-002 redundancy decomposition** $R = I_q + D(m_q\|m_\pi)$ (eq. 2.1.2), with $m_q=q$,
+   $m_\pi=m_\sigma$. So the daisy-chain misspecification signal and the foreign-$q$ betting
+   redundancy are *the same object*, read dynamically rather than statically.
+2. $\Delta(\sigma^\*)=0$ when reality is in the family ($q=m_{\sigma^\*}$): both terms vanish.
+   The loop's fixed point is correct calibration.
+
+### 7.2 What EC actually is
+
+The clean EC update is *not* "zero $\Delta$" (the scale term $H(q)-H(m_\sigma)$ is
+$\sigma$-dependent and biases that root), but **minimise the realised log-loss** — i.e.
+maximum-likelihood / minimum-redundancy fit of the noise to the data:
+
+$$
+\hat\sigma \;=\; \arg\min_\sigma\,\mathbb{E}_{x\sim q}[-\log m_\sigma(x)] \;=\; \arg\min_\sigma D(q\,\|\,m_\sigma)\qquad(\text{since }H(q)\text{ is }\sigma\text{-free}),
+$$
+
+with fixed point $\sigma=\sigma^\*$. This **resolves the "is this the betting redundancy?"
+worry** (raised in chat): betting minimises $D(m_q\|m_\pi)$ over the *prior* (→ matched prior
+$\bar q$); EC minimises the *same* divergence over the *channel $\sigma$* (→ true noise
+$\sigma^\*$). One redundancy, two arguments — the input column vs the channel column of the
+$(\min/\max)\times(\text{input}/\text{channel})$ square.
+
+**Bonus (addresses the causal-discovery note's "decomposable across components" wish).** If
+$q$ is genuinely foreign ($\notin\{m_\sigma\}$), then $\min_\sigma D(q\|m_\sigma)=D(q\|m_{\hat\sigma})>0$.
+The reducible part is EC's; the **$\sigma$-irreducible residual is the signal that the
+representation/family is wrong — MB's job** (re-coarse-grain). So the one scalar splits the
+labour: recalibrate the channel (EC) vs re-represent (MB).
+
+### 7.3 The DC is alternating optimisation of the capacity↔RD saddle
+
+Reading the two closed-form steps as corners of the square:
+
+- **MB** $=\arg\max_\pi I_\pi(\theta;X)$ at fixed channel → max-over-**input** = the
+  **capacity / least-favourable-prior** corner (design hat).
+- **EC** $=\arg\min_\sigma D(q\|m_\sigma)$ at fixed prior → min-over-**channel** = the
+  **rate–distortion / calibration** corner.
+
+So the loop alternates the two Blahut–Arimoto problems — capacity and rate–distortion — coupled
+by the real-data redundancy $D(q\|m)$ that BI estimates. It is **not** coordinate descent on a
+single functional (MB *maximises* $I$, the opposite of redundancy-minimising on the prior);
+it is alternating optimisation of the capacity↔RD *saddle*, with reality supplying one of the
+two marginals.
+
+### 7.4 A β-search dual, and what Arumugam–Van Roy actually do
+
+**Grounded reading of A&VR 2021 ("Deciding What to Learn", ICML), `resources/arumugam_vanroy.pdf`.**
+Their distortion is expected squared regret of a *target action* $\tilde A$ versus optimal,
+$d(\tilde a,e)=\mathbb{E}[(r(A^\star)-r(\tilde a))^2\mid E=e,H_t]$; rate is $I_t(E;\tilde A)$;
+the loss is $L_\beta(\tilde A\mid H_t)=I_t(E;\tilde A)+\beta\,\mathbb{E}_t[(r(A^\star)-r(\tilde A))^2]$.
+Their **BLASTS** algorithm runs Blahut–Arimoto *inside* Thompson sampling to compute, each
+period, the target that hits the RD limit at the current $\beta$ and history. So BLASTS is the
+**MB-analogue** — the inner BA solve — and the RD *curve* re-adapts each period as the posterior
+over $E$ sharpens.
+
+For most of the paper $\beta$ is a free designer preference (the slope of the RD curve, units
+*bits per squared-regret*; they sweep it). **But §6.2 introduces an actual β-tuner** (the
+`Ψ⁻¹` curve in Fig. 3): set
+
+$$
+\beta_t \;=\; \Psi_t^{-1},\qquad \Psi_t=\min_{\pi}\frac{\Delta_t(\pi)^2}{v_t(\pi)},
+$$
+
+the inverse **information ratio** ($\Delta_t$ = expected regret, $v_t$ = posterior variance of
+the mean reward; a lower bound on the info-gain ratio $\Delta_t^2/g_t$). Units match
+($\Psi$ is squared-regret-per-bit, so $\Psi^{-1}$ is bits-per-squared-regret $=\beta$), and the
+intuition is that once uncertainty is resolved $\Psi$ is small so $\beta_t$ grows and the target
+sharpens to the optimal action. It works (Fig. 3) and is equivalent to rescaling the distortion
+by $\Psi^{-1}$.
+
+**The point that matters for us:** $\Psi_t$ is computed entirely from the agent's *current
+posterior* — it is an **internal / self-consistent** pin (the resource-rational corner: $\beta$
+set by the agent's own estimate of cost-per-bit), *not* a prediction-vs-realised error. So A&VR
+**do** tune $\beta$, but with the *internal* knob. The external/forced-budget dual — pinning the
+operating point by matching a model prediction to a *realised* quantity, the way EC welds
+$\sigma$ to the real data marginal — is the move that (to our knowledge) isn't done, and is the
+DC-native one.
+
+**A DC-derived β-search (broad strokes).** Wrap the same inner BA solve in an EC-style outer
+loop whose pin is a *prediction error*, not the internal information ratio:
+
+1. **(inner / MB-analogue)** Given current $\beta_t$ and history $H_t$, run Blahut–Arimoto →
+   target $\tilde A_{\beta_t}$, with a *predicted* information rate
+   $R_t=I_t(E;\tilde A_{\beta_t})$ and predicted distortion $D_t=D(\beta_t\mid H_t)$ (closed form,
+   Blahut 1972 Cor. 5).
+2. **(BI / reality)** Act on $\tilde A_{\beta_t}$; observe; update the posterior; measure the
+   **realised** information actually acquired this period,
+   $R^{\mathrm{real}}_t=I_t(E;(A_t,O_{t+1}))$ (and/or realised distortion = achieved squared
+   regret).
+3. **(EC-analogue / β-update)** misspecification signal $\delta_t=R_t-R^{\mathrm{real}}_t$
+   (predicted *demand* for bits vs realised *supply*). If the target demands more bits than the
+   period delivers ($R_t>R^{\mathrm{real}}_t$) the agent is over-ambitious → raise the rate
+   penalty (lower $\beta$, more satisficing); if it under-uses what's available, lower it. Move
+   $\beta$ to drive $\delta_t\to 0$.
+4. **Fixed point:** $\beta$ such that the target's demanded rate equals the agent's realised
+   acquisition rate — the operating point **welded to the actual information budget the
+   environment affords**, not chosen and not read off the internal posterior alone.
+
+The correspondence to EC, side by side:
+
+| | EC (channel $\sigma$) | DC-derived β-search (operating point $\beta\!\leftrightarrow\!D$) |
+|---|---|---|
+| knob | $\sigma$ (channel noise) | $\beta$ = RD-curve slope $\leftrightarrow$ distortion $D$ |
+| inner solve | MB: BA for capacity prior | BLASTS: BA for target action (A&VR) |
+| predicted quantity | $m_\sigma$ (predicted data marginal) | $R_t$ (bits the target demands) |
+| realised signal (reality) | $q$ (real data marginal, via BI) | $R^{\mathrm{real}}_t$ (bits actually acquired) |
+| misspec signal | $D(q\|m_\sigma)$ | $R_t-R^{\mathrm{real}}_t$ |
+| update | $\sigma\leftarrow\arg\min_\sigma D(q\|m_\sigma)$ | $\beta\leftarrow$ move until $R_t=R^{\mathrm{real}}_t$ |
+| flavour | **external / reality-matched** | **external / reality-matched** |
+| A&VR §6.2 analogue | — | $\beta_t=\Psi_t^{-1}$: **internal / self-consistent** |
+
+So the landing for the whole thread: $\beta$-tuning is not absent — A&VR's $\Psi^{-1}$ is a real,
+working tuner — but it sits in the **internal** corner (set $\beta$ from the agent's own
+information ratio). The daisy chain's contribution, if it has one here, is the **external**
+dual: the EC step *is* a $\sigma$-tuner welded to realised data, and its transport to the RD
+corner is a $\beta$-tuner welded to realised acquisition. That is exactly the
+internal-capacity-vs-forced-budget distinction that motivated the whole project, now showing up
+as two different ways to close the loop on the operating point.
+
+### 7.5 Where the ice is thinnest
+
+- The signal identity (7.1) is *exact*. The reduction "EC = ML-fit $\sigma\to\sigma^\*$" (7.2) is
+  clean only in the **well-specified-family / pure-$\sigma$** regime; with location
+  misspecification or truly foreign $q$, the scale term and a suppressed
+  posterior-averaged-likelihood term re-enter. The qualitative split (EC reduces $D$, MB takes
+  the residual) survives; the tidy fixed point does not.
+- The whole section assumes MB returns the *true* expected MI. The §3–4 line-316 surrogate means
+  it returns a cross-entropy-like surrogate, which perturbs the "self-predicted" half of
+  $\Delta$. Resolve line 316 before trusting the expected-gain term.
+- The DC-derived β-search is **broad strokes, not derived**. The hard open piece is estimating
+  $R^{\mathrm{real}}_t=I_t(E;(A_t,O_{t+1}))$ online; outer-loop convergence is unanalysed (same
+  status as the DC loop itself).
+- "EC is a β-tuner under the capacity↔RD duality" rests on $\sigma\leftrightarrow D$ being a
+  genuine rate–distortion correspondence for the Gaussian channel (solid) and $\beta$ being its
+  slope (solid). The leap is the claim that nobody does the *external* β-tuner — A&VR §6.2 shows
+  the *internal* one exists, so the literature scan should be "is there an external one?" before
+  this is called a gap.
