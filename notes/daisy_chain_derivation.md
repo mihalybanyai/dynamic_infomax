@@ -188,7 +188,7 @@ Two facts:
    spec-002 redundancy decomposition** $R = I_q + D(m_q\|m_\pi)$ (eq. 2.1.2), with $m_q=q$,
    $m_\pi=m_\sigma$. So the daisy-chain misspecification signal and the foreign-$q$ betting
    redundancy are *the same object*, read dynamically rather than statically.
-2. $\Delta(\sigma^\*)=0$ when reality is in the family ($q=m_{\sigma^\*}$): both terms vanish.
+2. $\Delta(\sigma^*)=0$ when reality is in the family ($q=m_{\sigma^*}$): both terms vanish.
    The loop's fixed point is correct calibration.
 
 ### 7.2 What EC actually is
@@ -201,10 +201,10 @@ $$
 \hat\sigma \;=\; \arg\min_\sigma\,\mathbb{E}_{x\sim q}[-\log m_\sigma(x)] \;=\; \arg\min_\sigma D(q\,\|\,m_\sigma)\qquad(\text{since }H(q)\text{ is }\sigma\text{-free}),
 $$
 
-with fixed point $\sigma=\sigma^\*$. This **resolves the "is this the betting redundancy?"
+with fixed point $\sigma=\sigma^*$. This **resolves the "is this the betting redundancy?"
 worry** (raised in chat): betting minimises $D(m_q\|m_\pi)$ over the *prior* (→ matched prior
 $\bar q$); EC minimises the *same* divergence over the *channel $\sigma$* (→ true noise
-$\sigma^\*$). One redundancy, two arguments — the input column vs the channel column of the
+$\sigma^*$). One redundancy, two arguments — the input column vs the channel column of the
 $(\min/\max)\times(\text{input}/\text{channel})$ square.
 
 **Bonus (addresses the causal-discovery note's "decomposable across components" wish).** If
@@ -305,7 +305,7 @@ as two different ways to close the loop on the operating point.
 
 ### 7.5 Where the ice is thinnest
 
-- The signal identity (7.1) is *exact*. The reduction "EC = ML-fit $\sigma\to\sigma^\*$" (7.2) is
+- The signal identity (7.1) is *exact*. The reduction "EC = ML-fit $\sigma\to\sigma^*$" (7.2) is
   clean only in the **well-specified-family / pure-$\sigma$** regime; with location
   misspecification or truly foreign $q$, the scale term and a suppressed
   posterior-averaged-likelihood term re-enter. The qualitative split (EC reduces $D$, MB takes
