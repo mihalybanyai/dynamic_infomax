@@ -303,6 +303,29 @@ corner is a $\beta$-tuner welded to realised acquisition. That is exactly the
 internal-capacity-vs-forced-budget distinction that motivated the whole project, now showing up
 as two different ways to close the loop on the operating point.
 
+**Companion paper, the model-level one (A&VR 2022, "Deciding What to Model: Value-Equivalent
+Sampling", NeurIPS), `resources/arumugam_vanroy_model.pdf`.** Same RD corner, but the lossily
+compressed object is now the *environment model*, not the target action: source = posterior over
+the true MDP $M^\star$, output = surrogate $\widehat M$, rate $=I(M^\star;\widehat M)$, distortion
+$=$ **value-equivalence** loss (how far $\widehat M$'s Bellman/$Q^\star$ updates sit from
+$M^\star$'s); solved by Blahut–Arimoto (the VSRL algorithm). This is the genuinely
+*model-selection*-flavoured member of the pair, and it's the **value-weighted analogue of MB's
+coarse-graining**: MB collapses directions the *data can't resolve* (information-irrelevant,
+Fisher length); value-equivalence collapses directions that *don't change value* (task-irrelevant)
+— same "keep what matters, lossy-compress the rest", different relevance criterion. (Their
+$Q^\star$-distortion even makes $Q^\star$ a literal information bottleneck between $M^\star$ and
+$\widehat M$.) Crucially, §5.3 gives the regret bound in **two forms** — (a) fix distortion $D$
+(a desired sub-optimality), minimise rate; (b) fix **rate $R=$ agent capacity** (bits the agent
+may acquire), minimise distortion — and argues (b) is the realistic one: *"a designer may seldom
+be in a position to dictate a desired sub-optimality threshold $D$, but rather must make do with a
+known constraint on agent capacity."* That is the closest A&VR come to our forced-budget stance —
+the operating point pinned by a **hard capacity constraint**, not a free $\beta$ and not the
+$\Psi^{-1}$ self-tuner. The remaining gap to us: their $R$ is **internal** (representational
+capacity), whereas the dynamic-infomax forced budget is **external** ($\sigma$/$N$, set by the
+world). Net across the pair, A&VR span free $\beta$, internally-tuned $\beta=\Psi^{-1}$,
+distortion-constrained, and capacity-constrained operating points — everything *except* the
+external/forced one, which stays the project's distinctive.
+
 ### 7.5 Where the ice is thinnest
 
 - The signal identity (7.1) is *exact*. The reduction "EC = ML-fit $\sigma\to\sigma^*$" (7.2) is
