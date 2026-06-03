@@ -4,7 +4,7 @@
 |---|---|---|
 | [0. Context](#0-context) | reviewed | 010626 |
 | [1. Setup](#1-setup) | reviewed | 010626 |
-| [1.2 Generative model](#12-generative-model) | reviewed | 010626 |
+| [1.2 Generative model](#12-generative-model) | draft | 030626 |
 | [2. Objective](#2-objective) | reviewed | 010626 |
 | [3. The case for transfer (and how it could fail)](#3-the-case-for-transfer-and-how-it-could-fail) | reviewed | 010626 |
 | [4. Algorithm](#4-algorithm) | draft | — |
@@ -133,8 +133,9 @@ cooperativeness knob `c` ([§4.3](#43-foreign-q-family)) that selects nature's d
 
 2. `x_i ∼ 𝒩(y(θ), σ²I_m)` for `i = 1,…,N` — the `N` training observations the
 agent conditions on. Here `y(θ) ∈ ℝ^m` is the model's mean-data map, the only place
-the geometry enters; it is defined per family in [§4.1](#41-model-families), and first appears here in
-the likelihood.
+the geometry enters and first appears. What kind of object
+it is — the model manifold and its Fisher geometry — is laid out in **the model
+geometry** immediately below; the exact map per family is in [§4.1](#41-model-families).
 
 3. `x' ∼ 𝒩(y(θ), σ²I_m)` — a fresh held-out observation, the prediction target.
 
@@ -142,6 +143,178 @@ This repeats for `S_q` independent draws of `(q_c, θ, X_{1:N}, x')`. The agent
 observes only `X_{1:N}` and is scored on how well its predictive distribution
 explains the held-out `x'` — and, cumulatively, each `x_{t+1}` from `x_{1:t}`
 ([§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss)).
+
+**The model geometry.** The conceptual claims of [§0](#0-context),
+[§2](#2-objective) and [§3](#3-the-case-for-transfer-and-how-it-could-fail) are all
+statements about the geometry of the prediction set `{y(θ) : θ ∈ Θ}`. This block is
+that geometry, in the detail those claims need; the three concrete families and
+their exact maps are in [§4.1](#41-model-families).
+![Model geometry](../diagrams/002-foreign-q-prediction-geometry.svg)
+
+**The model as a manifold of predictions.** All three
+families share the Gaussian likelihood `p(x|θ) = 𝒩(y(θ), σ²I_m)`, so the model is
+fixed entirely by the **prediction map** `θ ↦ y(θ) ∈ ℝ^m`: as `θ` ranges over the
+box `Θ ⊂ ℝ^d`, `y(θ)` sweeps out a `d`-dimensional **model manifold** inside the
+`m`-dimensional data space. What the data can *resolve* on that manifold is measured
+not in the parameter coordinates `θ` but in the **Fisher metric**
+
+$$
+g_{\mu\nu}(\theta) \;=\; \frac{1}{\sigma^{2}}\sum_{t=1}^{m}
+\frac{\partial y_t}{\partial \theta_\mu}\,\frac{\partial y_t}{\partial \theta_\nu},
+\qquad \mu,\nu \in \{1,\dots,d\}.
+$$
+
+<span style="color: red">This is the Fisher information of the Gaussian
+likelihood above: with `log p(x|θ) = −‖x−y(θ)‖²/(2σ²) + const`, the score is
+`∂_μ log p = σ^{-2}(x−y(θ))·∂_μ y(θ)`, so
+`g_{μν} = 𝔼_{x|θ}[∂_μ log p · ∂_ν log p] = σ^{-4}(∂_μ y)^⊤ 𝔼[(x−y)(x−y)^⊤](∂_ν y)`,
+which collapses to the displayed sum because the noise covariance is
+`𝔼[(x−y)(x−y)^⊤] = σ²I_m`.</span>
+
+The indices `μ, ν` run over the `d` parameter coordinates and
+`t` over the `m` observation times. This `g` is the **pullback** of data-space
+distance onto parameter space: to leading order the squared change in the *prediction*
+caused by a parameter step `dθ`, measured in noise units, is the quadratic form
+
+$$
+ds^{2} \;=\; \frac{1}{\sigma^{2}}\,\big\|\,y(\theta+d\theta)-y(\theta)\,\big\|^{2}
+\;=\; \sum_{\mu,\nu} g_{\mu\nu}(\theta)\,d\theta_\mu\,d\theta_\nu ,
+$$
+
+so a move in `θ` is "charged" by how far it shifts the
+prediction, not by Euclidean distance in `θ`. Here `s` is **Fisher arc length** and
+`ds` its line element — the leading `d` in `ds` and `dθ` is a differential, *not* the
+dimension `d`. Two scales come out of this. *Locally*, the square-roots of the
+eigenvalues of `g(θ)` give the rate at which a step along each principal direction
+moves the prediction. *Globally*, the **Fisher length** `L_μ` of a direction is that
+rate integrated over the extent the box `Θ` allows,
+
+$$
+L_\mu \;=\; \int \sqrt{ds^{2}}\quad\text{along principal direction }\mu ,
+$$
+
+which counts the resolvably-distinct predictions one passes
+through from one end of the manifold to the other along that axis. This integrated
+extent is exactly what the sloppy-models literature calls the manifold's **width**
+along direction `μ` (panel a): *width* (geometric) and *Fisher length* (metric) are
+**the same** quantity `L_μ`, with the local eigenvalue as its density. A direction is
+**relevant** — equivalently **stiff** (large eigenvalue, large `L_μ`) — when `L_μ > 1`,
+so the data can tell its two ends apart, and **irrelevant** / **sloppy** (small
+eigenvalue, small `L_μ`) when `L_μ < 1`. Two derived volumes then carry the whole
+argument, the **distinguishable-prediction volume** `V_g` and the **co-volume**
+`V_⊥`:
+
+$$
+V_g \;:=\; \int_{\Theta}\!\sqrt{\det g(\theta)}\;d\theta \;\approx\; \prod_{\mu=1}^{d} L_\mu,
+\qquad
+V_\perp \;:=\!\!\prod_{\mu:\,L_\mu<1}\!\! L_\mu,
+\qquad
+p_J(\theta) \;=\; \frac{\sqrt{\det g(\theta)}}{V_g}.
+$$
+
+`V_g` — the Fisher (Riemannian) volume of the manifold, `≈`
+the product of all `d` widths — is precisely the normaliser of the **Jeffreys prior**
+`p_J = √det g / V_g`, so Jeffreys places mass in proportion to the local volume
+element `√det g`. The **co-volume** `V_⊥` collects only the *irrelevant* widths: the
+combined extent of the directions the data cannot pin down but a `√det g` measure
+still weights. That single mismatch is the mechanism behind everything below.
+
+**Hyperribbon structure (panel a).** The models of interest
+are *sloppy*: the width spectrum `L_1 ≥ L_2 ≥ ⋯ ≥ L_d` falls off roughly
+geometrically across many orders of magnitude, so a few directions are stiff and
+relevant (`L_μ > 1`) while the rest are exponentially narrower and irrelevant
+(`L_μ < 1`). A manifold is **long** along its few stiff directions (large `L_μ`: it
+spans many distinguishable predictions there) and **narrow** along its many sloppy
+ones (small `L_μ`) — "long and thin," a *hyperribbon*. Its distinguishable-prediction
+volume `V_g ≈ ∏_μ L_μ` is dominated by the handful of stiff widths, while the sloppy
+ones make up the unresolvable co-volume `V_⊥`. This is the structural fact behind
+every conceptual claim in the spec: a prior `∝ √det g` (Jeffreys) weights
+*parameter-space* volume, which is largest where `V_⊥` is largest — the **region of
+`Θ`** (not a subspace) where the irrelevant directions are at their widest; for the
+cone below, the thick base. That region contributes almost nothing to distinguishable
+predictions, and a *vanishing fraction* of them as `d` grows. An uninformative prior
+that instead tracks resolving power should weight only the relevant directions and
+discount `V_⊥`. Whether doing so helps *predict a foreign nature* is the open question
+([§2](#2-objective), [§3](#3-the-case-for-transfer-and-how-it-could-fail)); the
+geometry is what makes the question non-trivial.
+
+**The square hypercone (panel b).** The hypercone is the
+simplest manifold that shows a hyperribbon's *decisive* feature in closed form. Its
+prediction map is `y(θ) = (θ_1, r θ_2, …, r θ_d)` with a single **relevant**
+coordinate `θ_1 ∈ [0, L]` and `d−1` **irrelevant** coordinates `θ_μ ∈ [0,1]` scaled
+by the **taper** `r(θ_1) = θ_1/L`. Geometrically this is a cone: at relevant-coordinate
+value `θ_1` the cross-section is a `(d−1)`-cube of side `θ_1/L`, shrinking linearly
+from the full base (`θ_1 = L`) to a point at the tip (`θ_1 = 0`). The relevant axis
+has Fisher length `≈ L ≫ 1`; the irrelevant widths taper to zero toward the tip. The
+consequence is a **co-volume gradient**: `√{det g} ∝ θ_1^{d-1}`, growing steeply
+toward the thick base. This single non-constant factor is what punishes Jeffreys —
+its mass `∝ θ_1^{d-1}` piles at the base, and its posterior is pulled toward the thick
+end by `Δ = (d−1)/x` for data at relevant value `x` ([§9.2](#92-hypercone-posterior-deviation-eq-922)),
+*largest at the thin end* where a foreign `q` can place its data. `p*`, by contrast,
+places discrete atoms `≈ 1` Fisher length apart along the relevant axis and collapses
+the irrelevant directions onto the boundary <span style="color: red">corners (below)</span>, so its pointwise bias is bounded by the
+atom spacing — `O(1)`, independent of `d`.
+
+**Hyperribbons, hypercones, and the three families.** The
+relationship is *caricature and realisation*. The hypercone strips a hyperribbon down
+to one relevant direction and a single tunable co-volume gradient (the taper), buying
+closed forms (`√{det g} ∝ θ_1^{d-1}`, `Δ = (d−1)/x`) at the cost of realism. The
+**exponential-decay** model (`y_t(θ) = Σ_μ a_μ e^{-k_μ t}`, `k_μ = e^{-θ_μ}`; A&M
+Eq. 6) is the realistic instance of the same ribbon: a curved manifold whose FIM
+eigenvalues span many orders and whose relevant directions are *not* coordinate-aligned
+— so uniform-`θ` and log-normal fail there too, not only Jeffreys. <span style="color: red">Yes,
+this is the canonical sum-of-exponentials model of the Transtrum–Machta–Sethna
+sloppy-models programme — the thin, curved hyperribbon drawn in their
+manifold-boundary figures. Its boundary collapse is the *same* as the cone's, not a
+projection artefact: along an irrelevant, sub-resolution direction the
+capacity-achieving prior puts mass at **both** ends of the interval — the two-atom
+solution of a short bounded channel, exactly the `m=1` binomial's atoms at `0` and `1`
+(Smith 1971) — so `p*` lands atoms on the **corners** of each shrinking irrelevant
+cross-section (`≥2` per irrelevant axis), never a single interior point; the cone does
+this too (panel b: the pairs splay onto the two cone edges, merging at the tip). It is
+*two* atoms, not one, because infomax grabs the `<1` bit a sub-resolution direction
+still carries — its two endpoints are the most-distinguishable placement, while a
+single point would carry none — so this is **coarse-graining to the boundary** (one
+binary contrast, no interior detail), a literal single-point collapse only in the
+`r→0` limit at the tip, where the two endpoints merge and the bit `→ 0`.</span> <span style="color: red">And why do
+`p_U`/`p_LN` fail in exp-decay but **not** in the bare cone? Because the axis-aligned
+cone's relevant direction *is* the coordinate `θ_1`: a `θ`-uniform prior projects to
+flat on `θ_1`, already the unbiased weighting, so only Jeffreys — which carries the
+`θ_1^{d-1}` co-volume — is biased there. Coordinate priors fail only once the relevant
+direction is *misaligned* with the parameter axes, by curvature (exp-decay) or the
+rotation knob below; a `p*` win in the bare axis-aligned cone is a win over Jeffreys
+alone (note §6.3).</span> The
+**constant-cross-section** cone (panel c) is the hypercone with the taper switched
+off, `r(θ_1) = r_0`: the cross-section no longer varies along the relevant axis,
+`√{det g}` is constant, the co-volume gradient vanishes, and Jeffreys reduces to
+uniform-on-the-relevant-coordinate. Two further knobs reshape the controlled geometry
+without leaving the family — a **rotation** `θ ↦ Qθ` moving the relevant direction off
+the coordinate axes (so coordinate priors become fair competitors), and a **boundary
+curvature** sharpening convex vertices <span style="color: red">— here the *boundary*
+is the edge of the bounded model manifold `{y(θ)}` (bounded because `Θ` is a box); a
+*vertex* is a corner of it (the cone tip, or a corner of the base); *convex* means the
+manifold bends away from the corner, so the region just *outside* it — the `σ`-noise
+halo of data whose MLE projects back onto that corner — is large; *sharpening* the
+vertex means raising its curvature (a more acute corner) so the halo grows, which the
+NML-based `p_proj` over-weights while `p*` ignores it</span> (the one axis on which
+`p*` and the MDL sibling `p_proj` provably differ,
+[§3.4](#34-the-second-protagonist-infomax-vs-mdl)). The exact maps, FIM, and knob
+ranges are in [§4.1](#41-model-families).
+
+**Why the conceptual claims ride on this geometry.** Every
+load-bearing claim of the spec is a statement about `g(θ)` and its gradient. The
+co-volume *bias* A&M attribute to Jeffreys is exactly the pull of the
+`√{det g} ∝ θ_1^{d-1}` factor (panel b); its **absence** in the constant-cross-section
+model (panel c) is why that model is the negative control — with no co-volume gradient
+there is no pathology to avoid, so every prior must tie
+([§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note), test T2). The
+claimed *asymmetry* — competitor bias `O(d)` vs `p*`'s `O(1)` — is the contrast between
+a gradient that steepens with `d` and an atom spacing that does not
+([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)). And the *transfer*
+question is whether that geometric asymmetry, established by A&M on data `p*` itself
+generates, survives once nature `q` is foreign and free to place its data in `p*`'s
+atom gaps or at the thin end. The geometry above is the object on which all of these
+are adjudicated.
 
 The agent's prior `π ∈ {p*, p_J, p_U, p_LN}` (with `q̄` as a reference ceiling) is
 **decoupled from `q`**: it is chosen from the likelihood geometry and the data
@@ -299,7 +472,7 @@ T3):
   the same as "the latents are independent": independent latents with equal-length
   irrelevant directions are the *special case* the note (§6.2) calls the null; the
   operative condition is the absent co-volume *gradient*, realised here by the
-  constant-cross-section cone ([§4.1](#41-model-families), no taper).
+  constant-cross-section cone ([§1.2](#12-generative-model) panel c, [§4.1](#41-model-families); no taper).
 
 - **Sign-of-advantage vs cooperativeness `c`.** `p*` wins the cooperative end
   (`c=0`, `q≈m_{p*}`) by self-sampling, trivially. The reported quantity is whether
@@ -343,7 +516,7 @@ case for transfer.
 
 Bound (3.1.1) is worst-case; the experiment
 scores an average, and the bridge is geometric (Quinn et al. 2023). The model
-manifold is a **hyperribbon** whose widths fall off roughly geometrically, so the
+manifold is a **hyperribbon** ([§1.2](#12-generative-model)) whose widths fall off roughly geometrically, so the
 space of *distinguishable predictions* is dominated by a few stiff directions, and
 Jeffreys' weight `∝√det g` piles into the high-co-volume corner — a **vanishing
 fraction** of that space as `d` grows, swinging by orders of magnitude under tiny
@@ -1229,3 +1402,113 @@ Per instruction, **all red review-markup was stripped** from the live sections
 (content preserved); the human will re-review. Historical revision-log entries
 (including their now-stale anchors) are left untouched as the audit trail. No
 downstream artefacts exist yet, so nothing is invalidated.
+
+### 2026-06-03 — Refinement (§1.2 model geometry added; geometry figure)
+
+On request, expanded [§1.2](#12-generative-model) with a **model geometry** block, so
+the conceptual claims of [§0](#0-context) / [§2](#2-objective) /
+[§3](#3-the-case-for-transfer-and-how-it-could-fail) can be evaluated against a
+concrete picture of the manifold *before* the conceptual-part red-team — rather than
+meeting the geometry for the first time, thinly, in §4.1. The new block (inserted
+after the data-generating process, before the agent-decoupling note) covers, in five
+bold-lead paragraphs: the model as a prediction manifold with its Fisher metric,
+widths, relevant/irrelevant split, distinguishable-prediction volume and co-volume;
+the **hyperribbon** sloppy-spectrum structure; the **square hypercone** caricature
+with its taper, cross-section, co-volume gradient `√det g ∝ θ_1^{d-1}` and closed-form
+`Δ=(d−1)/x`; the **caricature↔realisation** relationship tying the hypercone, the
+exp-decay ribbon and the constant-cross-section null together with the
+rotation/curvature knobs; and a closing paragraph mapping each conceptual claim
+(co-volume bias, the `O(d)`-vs-`O(1)` asymmetry, the negative control, transfer) back
+to a property of `g(θ)`. The exact maps/FIM stay in [§4.1](#41-model-families)
+(untouched — §4 is to be revamped separately); §1.2 forward-references it.
+
+New artefact: `diagrams/002-foreign-q-prediction-geometry.py` →
+`002-foreign-q-prediction-geometry.svg`, a three-panel figure (sloppy width spectrum;
+tapering hypercone with co-volume gradient, Jeffreys pull and `p*` atoms;
+constant-cross-section null), embedded at the head of the new block.
+
+New prose in §1.2 is red `<span>`; the figure embed and the inline geometry formulas
+(backtick code, matching §1.2's existing style) are unpainted (a red `<span>` is not
+needed around code spans and the embed is not prose). [§1.2](#12-generative-model)
+flips `reviewed → draft`, dated today. Cross-references into the new block were added
+at [§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note) (negative
+control) and [§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d) (the
+hyperribbon heuristic); these are bare navigational anchors that change no claim, so —
+per the Round-1 link-ification convention — they are unpainted and §2/§3 stay
+`reviewed`. No downstream artefacts exist yet, so nothing is invalidated.
+
+### 2026-06-03 — Clarification (§1.2 model-geometry review comments resolved)
+
+A round of inline `> M:` review comments on the new §1.2 geometry block, resolved in
+place (comments removed; §1.2 stays `draft`, edited prose still red for re-review):
+
+- **Fisher metric → display LaTeX.** Now a display equation with the derivatives in
+  fraction form `∂y_t/∂θ_μ` and the index ranges stated (`μ,ν` over the `d`
+  parameters, `t` over the `m` observation times).
+- **Pullback defined.** Added the line-element display
+  `ds² = σ^{-2}‖y(θ+dθ)−y(θ)‖² = Σ g_{μν}dθ_μdθ_ν` and the gloss that `g` charges a
+  `θ`-move by how far it shifts the *prediction*.
+- **Fisher length spelled out; `d`-ambiguity removed.** `L_μ = ∫√{ds²}` is now a
+  display equation; the text states `s` is Fisher arc length, `ds` its line element,
+  and that the leading `d` is a differential, *not* the dimension `d`.
+- **Width ↔ length ↔ stiff/sloppy unified.** Width (geometric) and Fisher length
+  (metric) are stated to be the *same* quantity `L_μ`, with the local FIM eigenvalue
+  as its density; relevant = stiff = large eigenvalue = `L_μ>1`, irrelevant = sloppy =
+  small = `L_μ<1`. "Long" = has large-`L_μ` directions; "narrow" replaces the looser
+  "thin" for the small-`L_μ` ones.
+- **Symbols introduced.** `V_g` (distinguishable-prediction / Fisher volume) and `V_⊥`
+  (co-volume) now have display-equation definitions, used in the hyperribbon paragraph
+  and the figure (panel a relabelled `L_μ`; co-volume `V_⊥`).
+- **Jeffreys-mass aside made load-bearing.** "Un-normalised Jeffreys mass" → the
+  explicit `p_J = √det g / V_g`, so `V_g`'s role (Jeffreys' normaliser; mass ∝ `√det
+  g`) is the actual mechanism rather than a side remark.
+- **"Corner" de-jargoned.** "high-co-volume corner" → "the **region of `Θ`** (not a
+  subspace) where the irrelevant directions are at their widest — for the cone, the
+  thick base."
+
+Display equations are unpainted (a red `<span>` breaks `$$`), per the §2.1 convention;
+the figure was regenerated. No downstream artefacts exist yet, so nothing is
+invalidated.
+
+### 2026-06-03 — Clarification (§1.2 second comment round)
+
+A second round of inline `> M:` comments on §1.2, resolved in place; the prior round's
+markup having been accepted/stripped, **only this round's additions are red**:
+
+- **Metric ← likelihood made explicit.** Added (red) the one-line FIM derivation from
+  the Gaussian likelihood: `∂_μ log p = σ^{-2}(x−y)·∂_μ y` and
+  `g_{μν} = 𝔼[∂_μ log p · ∂_ν log p]` collapsing to the displayed sum because
+  `𝔼[(x−y)(x−y)^⊤] = σ²I_m`.
+- **Bat-wing / `p*` atom structure.** Confirmed the exp-decay model is the canonical
+  Transtrum–Machta–Sethna sum-of-exponentials hyperribbon, and corrected the atom
+  picture: along an irrelevant sub-resolution direction `p*` puts mass at **both**
+  endpoints (the two-atom short-channel solution, `m=1` binomial at `0`/`1`, Smith
+  1971), i.e. on the **corners** of each irrelevant cross-section (`≥2` per axis), not
+  one point — the same in the cone, not a projection artefact. The hypercone
+  paragraph's "onto the boundary" was upgraded (red) to "boundary corners."
+- **Why coordinate priors fail in exp-decay but not the bare cone.** Added (red): the
+  axis-aligned cone's relevant direction *is* `θ_1`, so `θ`-uniform projects to flat
+  on `θ_1` (unbiased) and only Jeffreys is biased; `p_U`/`p_LN` fail only once the
+  relevant direction is misaligned (curvature or the rotation knob), so a `p*` win in
+  the bare cone is over Jeffreys alone (note §6.3).
+- **Boundary / vertex / convex / sharpening defined.** Added (red): the *boundary* is
+  the edge of the bounded manifold `{y(θ)}`, a *vertex* a corner of it, *convex* that
+  the manifold bends away (so the exterior `σ`-halo whose MLE projects there is large),
+  and *sharpening* = raising the corner's curvature so that halo — which NML/`p_proj`
+  over-weights and `p*` ignores — grows.
+
+No equations added this round, so all changes are red-`<span>` prose. §1.2 stays
+`draft`. No downstream artefacts exist yet, so nothing is invalidated.
+
+### 2026-06-03 — Fix (geometry figure: `p*` atoms on the cone edges)
+
+Follow-up to the atom-structure clarification above. The figure had drawn `p*`'s atoms
+on the cone **spine** (one per relevant tile), which contradicts the corner-collapse
+text and is wrong for `d=2` (where panel b *is* the full manifold and the single
+irrelevant direction is the vertical axis). Corrected: each relevant tile now carries a
+**pair** of atoms on the two cone edges (the irrelevant direction's endpoints), splaying
+toward the base and merging at the tip. The §1.2 prose gained (red) the reason it is two
+atoms and not one — infomax extracts the `<1` bit a sub-resolution direction still
+carries, so "collapse" is coarse-graining to the boundary, a true single-point collapse
+only in the `r→0` (tip) limit — and the stale "figure shows only the relevant tiling"
+parenthetical was replaced. Figure regenerated.
