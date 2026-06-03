@@ -2,10 +2,10 @@
 
 | Section | Status | Date |
 |---|---|---|
-| [0. Context](#0-context) | reviewed | 010626 |
-| [1. Setup](#1-setup) | reviewed | 010626 |
+| [0. Context](#0-context) | draft | 030626 |
+| [1. Setup](#1-setup) | draft | 030626 |
 | [1.2 Generative model](#12-generative-model) | draft | 030626 |
-| [2. Objective](#2-objective) | reviewed | 010626 |
+| [2. Objective](#2-objective) | draft | 030626 |
 | [3. The case for transfer (and how it could fail)](#3-the-case-for-transfer-and-how-it-could-fail) | draft | 030626 |
 | [4. Algorithm](#4-algorithm) | draft | — |
 | [5. Properties to verify](#5-properties-to-verify) | draft | — |
@@ -38,7 +38,7 @@ infers a *foreign* nature `q` well.
 
 This spec tests the one thing that separation leaves open. It is **not** "is `p*` a
 good epistemic prior" — under a strictly proper score `p*` is dominated by the
-matched prior `q̄` *by theorem* (the compensation identity, [§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss)), and `p*` is a
+<span style="color: red">prior matched to nature (its own pullback)</span> *by theorem* (the compensation identity, [§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss)), and `p*` is a
 design object by construction. It is the **transfer** question stated in
 `notes/prediction_objective_for_priors.md` §0/§3:
 
@@ -102,7 +102,7 @@ buy anything over the cheap MDL one on held-out prediction** ([§3.4](#34-the-se
 | `p*` | Infomax / capacity-achieving prior, `argmax_π I(Θ;X)` ([§4.2](#42-prior-construction)). Discrete. |
 | `p_J` | Jeffreys prior `∝ √{det g(θ)}`, normalised on `Θ`. |
 | `p_U` | Uniform on the parameter box `Θ`. |
-| `p_LN` | Log-normal in `θ` (A&M Eq. 10): `∝ Π_μ e^{-(θ_μ-θ̄)²/2σ̄²}`. |
+| `p_LN` | <span style="color: red">Normal in `θ` (log-normal in the rate `k_μ=e^{-θ_μ}`)</span> (A&M Eq. 10): `∝ Π_μ e^{-(θ_μ-θ̄)²/2σ̄²}`. |
 | `q̄` | The hyper-averaged matched prior `= 𝔼_c[q]` (reference ceiling only, [§2.3](#23-q̄-is-the-ceiling-not-a-competitor)). |
 | `m_π(X_{1:N})` | Agent's Bayes mixture `= ∫ p(X_{1:N}\|θ) π(dθ)`. |
 | `π(θ\|X_{1:N})` | Posterior under prior `π`. |
@@ -341,8 +341,8 @@ R_N^q(\pi) \;=\; \mathbb{E}_{\theta\sim q}\,\mathbb{E}_{X_{1:N}\sim p(\cdot\mid\
 $$
 
 **Lower `R` is better:** it is a *loss* — the excess code-length /
-log-loss over an oracle that knows `θ` — with `R_N^q(π) ≥ 0`, reached only by a
-predictor matching nature.
+log-loss over an oracle that knows `θ` — with <span style="color: red">`R_N^q(π) ≥ I_q^{(N)} ≥ 0`; the floor `I_q^{(N)}` (not `0`) is reached only by a
+predictor matching nature's marginal, `m_π = m_q`</span>.
 
 **Then why expect a *maximiser* of mutual information to help
 minimise a loss?** The clash is nomenclatural: **three different "redundancies"**,
@@ -354,15 +354,16 @@ different ones. Set side by side:
 |---|---|---|---|---|
 | self-consistent (**mutual information**) | `I(π) = 𝔼_{θ∼π} r_θ(π)` | the prior `π` *itself* (`m_π` uses the same `π`) | **`max` over `π`** — *design*: pick the most-informative / least-favourable source | `p* = argmax_π I`; value `= C` (capacity) |
 | **worst-case** | `R_N^{max}(π) = max_θ r_θ(π)` | an adversarial `θ` | **`min` over `π`** — the minimax-robust code | `argmin_π R_N^{max} = p*` (**same object** as row 1, by duality) |
-| **foreign-`q` average** (this spec's score) | `R_N^q(π) = 𝔼_{θ∼q} r_θ(π) = I_q^{(N)} + D(m_q‖m_π)` | a *foreign* nature `q` | **`min` over `π`** — the loss we report | the matched prior `q̄`, **not** `p*` |
+| **foreign-`q` average** (this spec's score) | `R_N^q(π) = 𝔼_{θ∼q} r_θ(π) = I_q^{(N)} + D(m_q‖m_π)` | a *foreign* nature `q` | **`min` over `π`** — the loss we report | <span style="color: red">the prior matched to `q` (its own pullback)</span>, **not** `p*` <span style="color: red">(across the `c`-sweep the single fixed minimiser is `q̄`; see [§2.3](#23-q̄-is-the-ceiling-not-a-competitor))</span> |
 
 Reading down the *optimiser* column dissolves the clash:
 infomax's `argmax_π I` (row 1) and the minimax-robust `argmin_π R_N^{max}` (row 2)
 are the **same operation on the same object** `p*` — the two faces of the
 redundancy–capacity saddle (`redundancy-capacity.md`), so "maximising `I`" *is*
 "minimising worst-case redundancy". Our score (row 3) is a **third** redundancy, and
-its minimiser is the matched prior `q̄`
-([§2.3](#23-q̄-is-the-ceiling-not-a-competitor)), **not** `p*`. So `p*` carries **no
+its minimiser is <span style="color: red">the prior matched to `q` (its own pullback) — across the
+`c`-sweep, the single fixed minimiser is `q̄`
+([§2.3](#23-q̄-is-the-ceiling-not-a-competitor))</span>, **not** `p*`. So `p*` carries **no
 guarantee** on row 3; it can beat only the *deployable* priors, and only when their
 marginal mismatch `D(m_q‖m_π)` (the co-volume bias) exceeds `p*`'s — the open bet
 ([§2.2](#22-what-wins-means--and-what-cannot-be-asserted)). A&M's claim is
@@ -508,9 +509,12 @@ $$
 So `p*`'s foreign-`q` redundancy is **capped at capacity for
 any `q` whatsoever** — `p*` can never be catastrophic. No fixed non-infomax prior
 has this: by A&M's own score a prior's worst-case redundancy is `I_π + B(π)` with
-`B(π)=max_θ b(θ)`, and `B(p_J)` *grows with dimension* (`>500` bits at `d=26`),
-whereas `C_N` tracks only the **resolvable** complexity (`~ (d_eff/2)·log N`, roughly
-flat in nominal `d` — A&M Fig. 5). This is exactly the "tautology"
+`B(π)=max_θ b(θ)`, and `B(p_J)` *grows with dimension* (<span style="color: red">`>500` bits at
+`d=26` in the exp-decay model — A&M §3.3; `≈55` bits in the hypercone</span>),
+whereas <span style="color: red">`C_N` — the capacity of the `N`-fold channel, distinct from A&M's
+single-`σ` mutual information `I⋆` — tracks only the **resolvable** complexity: roughly
+flat in *nominal* `d` once `d>3` (A&M Fig. 5), growing only as `~(d_eff/2)·log N` in the
+budget `N` (Clarke–Barron 1990; Rissanen 1996)</span>. This is exactly the "tautology"
 [§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note) demotes to a unit
 test (T3): it cannot *fail*, but its *content* — a `d`-controlled ceiling for `p*`
 against an `O(d)` worst case for the competitors — is the load-bearing half of the
@@ -530,7 +534,7 @@ resolvable behaviours), most of `q`'s mass falls where `b_{p_J}(θ)>0` is large,
 `D(m_q‖m_{p_J})` inflates with `d` while `D(m_q‖m_{p*})` stays `O(1)`. A&M state the
 same point as a **new invariance** — *predictions should be independent of
 unobservable model detail* — which `m_{p*}` respects and `m_{p_J}` violates. Quinn
-et al. also dispatch the obvious objection that a *discrete* `p*` must mis-predict
+et al. also dispatch <span style="color: red">the discreteness objection</span> that a *discrete* `p*` must mis-predict
 when the truth lies between atoms: along a **relevant** direction the atom spacing
 *is* the resolution, so the error is no worse than rounding `θ` to its resolved
 precision (within the noise); along an **irrelevant** direction, putting weight at
@@ -1546,3 +1550,53 @@ Editing §3.2 / §3.3 flips **§3 `reviewed → draft`** (dated today), per the 
 convention; the change is a single `≈1 → O(1)` substitution in two spots and is
 trivially re-reviewable. §1.2's red is now gone but its status stays `draft` — the
 `draft → reviewed` flip is the human's, by direct edit.
+
+### 2026-06-03 — Correction + Clarification (§0, §1.1, §2.1, §3.1, §3.2; conceptual red-team pass conc01)
+
+First processing round of the conceptual red-team report
+`specs/002-foreign-q-prediction-redteam-conc01.md` (sub-agent findings F1–F8,
+human-annotated). This entry covers the confident-decision findings (F2, F3, F5, F8);
+F1, F4, F6, F7 are still open in chat and not yet applied.
+
+- **[§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss)
+  [Correction] (F2).** The "Lower `R` is better" line stated `R_N^q(π) ≥ 0`, "reached
+  only by a predictor matching nature" — conflating the trivial bound with the
+  operative floor and contradicting §2.3/§9.1. The floor is `I_q^{(N)} > 0`, not `0`.
+  Corrected to `R_N^q(π) ≥ I_q^{(N)} ≥ 0`, with the floor `I_q^{(N)}` (not `0`) reached
+  only at `m_π = m_q`.
+- **[§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss) +
+  [§0](#0-context) [Correction] (F3).** The three-redundancy table's row 3, the prose
+  restatement after it, and the §0 "dominated by the matched prior `q̄`" sentence all
+  named `q̄` as the minimiser of the *per-`q`* score. By the compensation identity
+  (2.1.2) the per-`q` minimiser is the prior matched to *that* `q` (its own pullback);
+  `q̄` minimises only the **`c`-averaged** score ([§2.3](#23-q̄-is-the-ceiling-not-a-competitor)).
+  Re-pointed all three to the pullback, each with the `c`-average→`q̄` parenthetical so
+  §2.1 is consistent with §2.3 rather than contradicting it.
+- **[§3.1](#31-the-one-guarantee-worst-case-over-q) [Clarification] (F5).** The clause
+  "`C_N` tracks only the resolvable complexity (`~(d_eff/2)·log N`, roughly flat in
+  nominal `d` — A&M Fig. 5)" attached an `N`-scaling claim to a fixed-`N` figure and
+  merged three distinct objects (the `N`-fold capacity `C_N`, A&M's single-`σ` `I⋆`,
+  and the Clarke–Barron/Rissanen budget term). Split the attribution: "flat in nominal
+  `d`" → A&M Fig. 5; "`~(d_eff/2)·log N`" → Clarke–Barron 1990 / Rissanen 1996; named
+  `C_N` as the `N`-fold capacity distinct from `I⋆`; pinned ">500 bits at `d=26`" to
+  A&M's exp-decay model (§3.3) and added the hypercone's `≈55` bits. The section's
+  claims are unchanged — only the source attributions are sharpened — hence
+  Clarification.
+- **[§1.1](#11-notation) [Correction] (F8a).** The `p_LN` label "Log-normal in `θ`" was
+  wrong: the density `∝ e^{-(θ-θ̄)²/2σ̄²}` is *normal* in `θ` and log-normal in the rate
+  `k=e^{-θ}` (A&M Eq. 10 text). Relabelled "Normal in `θ` (log-normal in the rate `k`)".
+- **[§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d) /
+  [§3.4](#34-the-second-protagonist-infomax-vs-mdl) [Clarification] (F8b, partial).**
+  Hedge-word pass: "the **obvious** objection" → "the discreteness objection" (names the
+  condition). The §3.4 "essentially **unique**" already carries its precise qualifier
+  ("in hyperribbon geometry at finite `σ`"), so it is unchanged; the "clearly has much
+  more weight" hedge the finding cited (inherited from A&M) is not present in the
+  current text. The §3.2 "the **natural** notion" hedge is the *same sentence* as F4
+  (still open as `> M?:`), so it is deferred to the F4 round to avoid pre-empting that
+  resolution.
+
+Prose edits are marked in red `<span>`, including the two §2.1 table-cell edits (inline
+spans within the cell, not a wrapped table — the changed text only). Status of
+[§0](#0-context), [§1](#1-setup), [§2](#2-objective) flipped `reviewed → draft` (dated
+today); [§3](#3-the-case-for-transfer-and-how-it-could-fail) was already `draft`. No
+downstream artefacts exist yet, so nothing is invalidated.

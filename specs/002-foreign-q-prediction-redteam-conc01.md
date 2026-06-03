@@ -74,6 +74,8 @@ bounded channel (which is discrete) rather than against uniform, so the screen t
 "no co-volume gradient ⇒ no co-volume advantage" rather than the stronger and false
 "⇒ uniform is optimal."
 
+> M: ok I think this has to do with the fact that p* is a worst-case hedge, so if q is adversarial enough, it might win no matter what. I think the red team's first suggestion is basically saying "when q is sufficiently non-adversarial to p_U". But this gets fuzzy enough that the usefulness of this as a negative control becomes questionable. We should still keep this as something to compute and evaluate, just not as a hard rejection criterion. What do you think?
+
 ---
 
 ### F2: "`R_N^q ≥ 0`, reached only by a predictor matching nature" misstates the floor [severity: medium]
@@ -94,6 +96,10 @@ number. This directly contradicts §2.3 and §9.1 two paragraphs later.
 **What would resolve it**: Change to "`R_N^q(π) ≥ I_q^{(N)} ≥ 0`; the floor
 `I_q^{(N)}` (not `0`) is reached only by a predictor matching nature's marginal,
 `m_π=m_q`." This is what §2.3 already says.
+
+> M: this finding seems correct. Change this.
+
+> C: Applied (conc01 pass). §2.1 "Lower `R` is better" now reads `R_N^q(π) ≥ I_q^{(N)} ≥ 0` with the floor `I_q^{(N)}` (not `0`) reached only at `m_π = m_q`. §2 flipped reviewed→draft; revision-log entry added (Correction).
 
 ---
 
@@ -119,6 +125,10 @@ taught to track.
 to `q` (its own pullback)"; add a parenthetical "(across the `c`-sweep, the single
 fixed minimiser is `q̄`; see §2.3)" so the table is consistent with §2.3 rather than
 contradicting it.
+
+> M: this seems correct as well.
+
+> C: Applied (conc01 pass). Row 3 of the three-redundancy table, the prose restatement immediately after it, and the §0 "dominated by the matched prior" sentence now name the prior matched to `q` (its own pullback) as the per-`q` minimiser, each with a "(across the `c`-sweep the single fixed minimiser is `q̄`; see §2.3)" parenthetical so §2.1 agrees with §2.3. §0 and §2 flipped reviewed→draft; revision-log entry added (Correction).
 
 ---
 
@@ -151,6 +161,8 @@ expectation ("we *expect*", not "so ... inflates") and name "spread over
 distinguishable outcomes" as a precise condition on `q` rather than "the natural
 notion."
 
+> M?: why does I_q^{(1)} appear in the expectation but not in the one-observation formula? Otherwise it seems true that the one-observation formula does not imply the expectation directly, but I'm not sure what could be shown about it here exactly. It would be good if this didn't have to have left to empirics.
+
 ---
 
 ### F5: §3.1 conflates A&M's fixed-`σ` mutual information `I⋆` with the `N`-fold capacity `C_N` and a `log N` rate [severity: medium]
@@ -175,6 +187,10 @@ is `≈55` bits) — fine since exp-decay is the primary model, but worth pinnin
 to A&M Fig. 5, and "`~(d_eff/2)·log N`" to Clarke–Barron 1990 / Rissanen 1996 (already
 in §8). State that `C_N` is the `N`-fold capacity, distinct from A&M's single-`σ`
 `I⋆`, and note the `>500` bits figure is the exp-decay model.
+
+> M: clarify this. it's not really a load-bearing section, but it should be correct about what claim comes from where.
+
+> C: Applied (conc01 pass). §3.1 now splits the attribution: "roughly flat in nominal `d`" → A&M Fig. 5; "`~(d_eff/2)·log N`" → Clarke–Barron 1990 / Rissanen 1996; `C_N` named as the `N`-fold capacity distinct from A&M's single-`σ` `I⋆`; ">500 bits at `d=26`" pinned to the exp-decay model (A&M §3.3), with the hypercone's `≈55` bits added. §3 was already draft; revision-log entry added (Clarification).
 
 ---
 
@@ -201,6 +217,8 @@ mean-vs-mode caveat; widen the T6 tolerance or move the test to larger `x` where
 `(d−1)/x` is actually leading-order; and add a one-line footnote that the spec reports
 `|⟨θ_1⟩−x|` and that A&M's signed `x−⟨θ_1⟩` has the opposite sign.
 
+> M: first of all let's corroborate if A&M has a sign error indeed. Once we know that we can get back to our derivation.
+
 ---
 
 ### F7: §3.3 mislabels the Bayes predictive's uncertainty as "miscalibration" the proper score "charges" [severity: low]
@@ -225,6 +243,8 @@ of the predictive's residual posterior spread — invisible to the centre-only `
 charged by a proper score." Replace "`O(σ²)`" with "`Cov_π[y|X]=O(σ²)`, so the
 calibration term is bounded independent of `d`."
 
+> M: this seems correct enough, but do confirm if it indeed is.
+
 ---
 
 ### F8: Vague-word and minor-notation flags [severity: low]
@@ -247,6 +267,10 @@ the explicit qualifier the `nml-mdl.md` tutorial gives ("in hyperribbon geometry
 
 **What would resolve it**: Fix the `p_LN` label; for each hedge-word, either name the
 precise condition or mark the statement explicitly as a heuristic expectation.
+
+> M: if you don't see anything against these suggestions, just do them.
+
+> C: Applied the unobjectionable items (conc01 pass). §1.1 `p_LN` relabelled "Normal in `θ` (log-normal in the rate `k`)" (§1 flipped reviewed→draft); §3.2 "the obvious objection" → "the discreteness objection". Two items needed no change: the §3.4 "essentially **unique**" already carries its precise qualifier "in hyperribbon geometry at finite `σ`", and the "clearly has much more weight" hedge (cited as inherited from A&M) is not present in the current on-disk text. One item deferred: the §3.2 "the **natural** notion" hedge is the same sentence as F4, which is still open as `> M?:`; editing it now would pre-empt the F4 resolution, so it is left for the F4 round. Revision-log entry added (Clarification).
 
 ## What the spec gets right
 
