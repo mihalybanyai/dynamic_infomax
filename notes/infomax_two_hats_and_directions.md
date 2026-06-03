@@ -418,6 +418,68 @@ Both are design-hat, both computable with the **Blahut–Arimoto family** alread
 in the repo (capacity/Arimoto side ↔ the project's `blahut_arimoto`; rate–
 distortion is the Blahut sibling).
 
+### 7.4 Atom count, JND count, and bits — and discrete latents
+
+§7.3's one-liner "`∫√g\,dθ` = the resolution / JND count" fuses three quantities a
+capacity-achieving prior keeps distinct; prising them apart is what makes the
+discrete-latent case behave.
+
+- **Fisher length `L = ∫√{ds²}`** — the JND count, how many `~1σ`-resolvable steps
+  fit along the direction end to end.
+- **Atom count `K(L)`** — how many mass points `p*` places, and *not* one per JND.
+  Blahut–Arimoto on the 1-D bounded Gaussian channel (`x∼N(θ,1)`, `θ∈[0,L]`; the
+  repo's `blahut_arimoto`) gives `K=2` — the two endpoints — for *all* `L ≲ 3.33`
+  (Smith's 1971 threshold `2A₀`, recovered on the grid), then a new atom roughly
+  every `~2.5` Fisher lengths (`K=3` at `L≈3.4`, `4` near `5.5`, `5` near `9`). So
+  `K ≈ 1 + L/2.5`, **linear, floored at 2** — *not* `L^{4/3}` (the `MI≈ζ\log K`,
+  `ζ≈¾` scaling is the multi-D / large-`m` Mattingly regime, not a single bounded
+  direction; checked, not assumed).
+- **Information `MI(L)`** — what those atoms actually buy. A 2-atom direction carries
+  **far less than one bit** until its ends are well separated: `≈0.04` bit at
+  `L=0.5`, `0.16` at `1`, `0.48` at `2`, `0.80` at `3.2`, reaching `\log 2` only as
+  `L→∞` (where a third atom has already taken over). The endpoints carry `O(L²)` bits
+  while close, saturating at one bit when far.
+
+**No literal submanifold (refines §6).** Because `K≥2` for any `L>0`, infomax never
+collapses a direction to a point — it returns a graded **resolution profile**
+`K(L_μ)`, never a lower-dimensional *model*. A true submanifold needs an extra
+**threshold** ("a direction under `ε` bits is not worth keeping"), which is
+budget-relative (the §8 lattice) and external to infomax; the `d_eff` in capacity
+counts (`C_N ∼ (d_eff/2)\log N`) is exactly that thresholded count. The minimum-2
+floor is, read this way, the refusal to quantise *below* a resolvable binary
+distinction.
+
+**Discrete latents, on the right currency.** The cutoff must therefore be on
+**information / distinguishability**, never on atom count. A 2-atom continuous sloppy
+direction (`L≪1`, `≪1` bit) and a 2-atom *intrinsically binary* latent whose states
+are far apart in data space (`is the sun on?`, `~1` full bit) carry the same atom
+count and `~20×` different information — only an MI cutoff separates them, keeping the
+sun and dropping the sloppy direction. Discreteness per se does not protect the sun;
+**separation** does (`KL ≈ ‖Δy‖²/2σ²`, so a binary latent with `y(0)≈y(1)` is just as
+collapsible at coarse budget, and just as resolvable once `N` is large). This is why
+the **Blahut–Arimoto / capacity** object is the right primitive — it treats discrete
+and continuous channels alike and needs no smooth manifold, whereas the Fisher-`√det
+g` geometry (its smooth special case) cannot even *see* a discrete latent (no
+tangent). Mixed models factor as *(continuous manifold, reduced by collapsing short
+directions)* `⊗` *(discrete latent, reduced by **merging states the budget cannot
+tell apart**)* — one distinguishability cutoff, both factors.
+
+**The caveat that keeps it honest (hat (i), not (ii)).** Distinguishability is a
+*resolution / coding* criterion — what the experiment can tell apart — not *decision
+stakes*. The sun is safe only because it is *both* highly resolvable *and* highly
+decision-relevant; those coincide here but need not. The genuinely hard case —
+**decision-critical yet poorly resolvable** (you care enormously whether the sun is
+on, but it is pitch dark and the data barely discriminate) — is invisible to
+`p*`/MDL, which collapses it: correct for description length, wrong for acting under
+uncertainty, where you keep the bit and propagate it. That needs a **loss-weighted**
+relevance, not an MI one — the design-vs-decision seam of §2.4 and §8. In a Gaussian
+manifold the two nearly coincide (the Fisher metric *is* the prediction-space
+metric), but in general they part, and `specs/002` scoring held-out predictive
+log-loss `D(m_q‖m_π)` rather than MI is a deliberate step onto the decision-relevant
+side. Slogan, sharpening §8: *the environment tells you what is worth distinguishing,
+the atom count how finely it bothered to — neither tells you what is worth caring
+about.*
+
 ## 8. The crux refinement: environment-side vs agent-side constraint
 
 MB's distinction: RD's constraint is **agent-side** (limited storage/compute).

@@ -6,7 +6,7 @@
 | [1. Setup](#1-setup) | reviewed | 010626 |
 | [1.2 Generative model](#12-generative-model) | draft | 030626 |
 | [2. Objective](#2-objective) | reviewed | 010626 |
-| [3. The case for transfer (and how it could fail)](#3-the-case-for-transfer-and-how-it-could-fail) | reviewed | 010626 |
+| [3. The case for transfer (and how it could fail)](#3-the-case-for-transfer-and-how-it-could-fail) | draft | 030626 |
 | [4. Algorithm](#4-algorithm) | draft | — |
 | [5. Properties to verify](#5-properties-to-verify) | draft | — |
 | [6. Report](#6-report) | draft | — |
@@ -77,7 +77,6 @@ problem under different regret notions, nearly coinciding in hyperribbon geometr
 so the sharpest form of this spec's question is not "is `p*` a good epistemic prior"
 nor "how well does `p_proj` approximate `p*`", but **does the harder capacity object
 buy anything over the cheap MDL one on held-out prediction** ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)).
-
 
 ## 1. Setup
 
@@ -164,12 +163,12 @@ g_{\mu\nu}(\theta) \;=\; \frac{1}{\sigma^{2}}\sum_{t=1}^{m}
 \qquad \mu,\nu \in \{1,\dots,d\}.
 $$
 
-<span style="color: red">This is the Fisher information of the Gaussian
+This is the Fisher information of the Gaussian
 likelihood above: with `log p(x|θ) = −‖x−y(θ)‖²/(2σ²) + const`, the score is
 `∂_μ log p = σ^{-2}(x−y(θ))·∂_μ y(θ)`, so
 `g_{μν} = 𝔼_{x|θ}[∂_μ log p · ∂_ν log p] = σ^{-4}(∂_μ y)^⊤ 𝔼[(x−y)(x−y)^⊤](∂_ν y)`,
 which collapses to the displayed sum because the noise covariance is
-`𝔼[(x−y)(x−y)^⊤] = σ²I_m`.</span>
+`𝔼[(x−y)(x−y)^⊤] = σ²I_m`.
 
 The indices `μ, ν` run over the `d` parameter coordinates and
 `t` over the `m` observation times. This `g` is the **pullback** of data-space
@@ -251,8 +250,8 @@ toward the thick base. This single non-constant factor is what punishes Jeffreys
 its mass `∝ θ_1^{d-1}` piles at the base, and its posterior is pulled toward the thick
 end by `Δ = (d−1)/x` for data at relevant value `x` ([§9.2](#92-hypercone-posterior-deviation-eq-922)),
 *largest at the thin end* where a foreign `q` can place its data. `p*`, by contrast,
-places discrete atoms `≈ 1` Fisher length apart along the relevant axis and collapses
-the irrelevant directions onto the boundary <span style="color: red">corners (below)</span>, so its pointwise bias is bounded by the
+places discrete atoms an `O(1)` Fisher length apart (`≈2`, not literally 1) along the relevant axis and collapses
+the irrelevant directions onto the boundary corners (below), so its pointwise bias is bounded by the
 atom spacing — `O(1)`, independent of `d`.
 
 **Hyperribbons, hypercones, and the three families.** The
@@ -262,8 +261,7 @@ closed forms (`√{det g} ∝ θ_1^{d-1}`, `Δ = (d−1)/x`) at the cost of real
 **exponential-decay** model (`y_t(θ) = Σ_μ a_μ e^{-k_μ t}`, `k_μ = e^{-θ_μ}`; A&M
 Eq. 6) is the realistic instance of the same ribbon: a curved manifold whose FIM
 eigenvalues span many orders and whose relevant directions are *not* coordinate-aligned
-— so uniform-`θ` and log-normal fail there too, not only Jeffreys. <span style="color: red">Yes,
-this is the canonical sum-of-exponentials model of the Transtrum–Machta–Sethna
+— so uniform-`θ` and log-normal fail there too, not only Jeffreys. This is the canonical sum-of-exponentials model of the Transtrum–Machta–Sethna
 sloppy-models programme — the thin, curved hyperribbon drawn in their
 manifold-boundary figures. Its boundary collapse is the *same* as the cone's, not a
 projection artefact: along an irrelevant, sub-resolution direction the
@@ -271,32 +269,39 @@ capacity-achieving prior puts mass at **both** ends of the interval — the two-
 solution of a short bounded channel, exactly the `m=1` binomial's atoms at `0` and `1`
 (Smith 1971) — so `p*` lands atoms on the **corners** of each shrinking irrelevant
 cross-section (`≥2` per irrelevant axis), never a single interior point; the cone does
-this too (panel b: the pairs splay onto the two cone edges, merging at the tip). It is
+this too (panel b: the pairs splay onto the two cone edges, merging at the tip). 
+
+It is
 *two* atoms, not one, because infomax grabs the `<1` bit a sub-resolution direction
 still carries — its two endpoints are the most-distinguishable placement, while a
 single point would carry none — so this is **coarse-graining to the boundary** (one
 binary contrast, no interior detail), a literal single-point collapse only in the
-`r→0` limit at the tip, where the two endpoints merge and the bit `→ 0`.</span> <span style="color: red">And why do
-`p_U`/`p_LN` fail in exp-decay but **not** in the bare cone? Because the axis-aligned
+`r→0` limit at the tip, where the two endpoints merge and the bit `→ 0`. A 2-atom
+direction in fact usually encodes *much less* than one bit — `O(L²)` bits while its
+endpoints sit `≲ 1` Fisher length apart, nearing a full bit only when they are well
+separated (BA-verified; `notes/infomax_two_hats_and_directions.md` §7.4). 
+
+`p_U`/`p_LN` fail in exp-decay but **not** in the bare cone because the axis-aligned
 cone's relevant direction *is* the coordinate `θ_1`: a `θ`-uniform prior projects to
 flat on `θ_1`, already the unbiased weighting, so only Jeffreys — which carries the
 `θ_1^{d-1}` co-volume — is biased there. Coordinate priors fail only once the relevant
 direction is *misaligned* with the parameter axes, by curvature (exp-decay) or the
 rotation knob below; a `p*` win in the bare axis-aligned cone is a win over Jeffreys
-alone (note §6.3).</span> The
-**constant-cross-section** cone (panel c) is the hypercone with the taper switched
+alone (note §6.3). 
+
+The **constant-cross-section** cone (panel c) is the hypercone with the taper switched
 off, `r(θ_1) = r_0`: the cross-section no longer varies along the relevant axis,
 `√{det g}` is constant, the co-volume gradient vanishes, and Jeffreys reduces to
 uniform-on-the-relevant-coordinate. Two further knobs reshape the controlled geometry
 without leaving the family — a **rotation** `θ ↦ Qθ` moving the relevant direction off
 the coordinate axes (so coordinate priors become fair competitors), and a **boundary
-curvature** sharpening convex vertices <span style="color: red">— here the *boundary*
+curvature** sharpening convex vertices — here the *boundary*
 is the edge of the bounded model manifold `{y(θ)}` (bounded because `Θ` is a box); a
 *vertex* is a corner of it (the cone tip, or a corner of the base); *convex* means the
 manifold bends away from the corner, so the region just *outside* it — the `σ`-noise
 halo of data whose MLE projects back onto that corner — is large; *sharpening* the
 vertex means raising its curvature (a more acute corner) so the halo grows, which the
-NML-based `p_proj` over-weights while `p*` ignores it</span> (the one axis on which
+NML-based `p_proj` over-weights while `p*` ignores it (the one axis on which
 `p*` and the MDL sibling `p_proj` provably differ,
 [§3.4](#34-the-second-protagonist-infomax-vs-mdl)). The exact maps, FIM, and knob
 ranges are in [§4.1](#41-model-families).
@@ -415,7 +420,6 @@ The contest between two priors is exactly
 $$
 \Delta R(\pi,\pi') \;=\; R_N^q(\pi) - R_N^q(\pi') \;=\; D_{\mathrm{KL}}(m_q\|m_\pi) - D_{\mathrm{KL}}(m_q\|m_{\pi'}). \tag{2.1.3}
 $$
-
 
 **Computability.** Little of `R_N^q` is closed-form in a
 curved, foreign-`q` setting; it is a Monte-Carlo estimate
@@ -543,7 +547,7 @@ deviation `Δ = (d−1)/x + O(x^{-3})` (eq. (9.2.2)). This is a **pointwise** po
 property — it references neither `p*` nor `q` — and it is *largest at the thin end*
 (`x` small), precisely where an interior/edge foreign `q` places data; so the
 deployable priors' bias **transfers** to any foreign `q` and grows like `O(d)`.
-`p*`'s posterior, a finite mixture over atoms ≈ 1 Fisher length apart **in
+`p*`'s posterior, a finite mixture over atoms an `O(1)` Fisher length apart **in
 prediction space**, has worst-case pointwise bias bounded by the atom spacing —
 `O(1)` in noise units, *independent of `d`*. Self-sampling (`x∼p*`) lands data on
 the atoms (bias `≈0`); a foreign `q` can land data in atom gaps, so `p*` pays `O(1)`
@@ -570,7 +574,7 @@ Our redundancy score therefore *contains* A&M's `Δ` (as the bias term) and adds
 term `Δ` is blind to.
 
 The split also says **the bias term is what decides the contest.** Because `p*`'s
-atoms sit ≈ 1 Fisher length apart in prediction space, its calibration term is
+atoms sit an `O(1)` Fisher length apart in prediction space, its calibration term is
 `O(σ²)` even in atom gaps — a constant-factor effect — and a smooth well-specified
 prior is the same `O(σ²)` order. So calibration *modulates* the boundary but does
 not *decide* it; the decider is the `O(d)`-vs-`O(1)` transfer of the **bias** gap
@@ -1512,3 +1516,33 @@ atoms and not one — infomax extracts the `<1` bit a sub-resolution direction s
 carries, so "collapse" is coarse-graining to the boundary, a true single-point collapse
 only in the `r→0` (tip) limit — and the stale "figure shows only the relevant tiling"
 parenthetical was replaced. Figure regenerated.
+
+### 2026-06-03 — Clarification (§1.2: a 2-atom direction encodes ≪ 1 bit)
+
+Added one red sentence in §1.2: a 2-atom direction usually encodes *much less* than
+one bit (`O(L²)` until its endpoints are well separated), with a pointer to the new
+`notes/infomax_two_hats_and_directions.md` §7.4. That §7.4 records the
+Blahut–Arimoto verification of the atom-count rule (`K=2` for `L≲3.33`, i.e. Smith's
+`2A₀`; `K≈1+L/2.5`, linear — *not* `L^{4/3}`; the 2-atom MI running 0.04→1 bit with
+separation) and the discrete-latent / decision-vs-resolution caveat. NB the §1.2
+phrase "atoms `≈1` Fisher length apart" is now known loose (BA gives `~2.5`); left
+unchanged this round pending a dedicated pass. §1.2 stays `draft`.
+
+### 2026-06-03 — Clarification (spacing phrase fixed; red stripped from §1.2; §3 → draft)
+
+The dedicated pass flagged just above, plus a red-markup cleanup:
+
+- **"≈1 Fisher length apart" → "`O(1)`".** The BA check (now
+  `notes/infomax_two_hats_and_directions.md` §7.4) gives an interior atom spacing of
+  `~2.5`, not 1, so the inaccurate "≈1" was corrected to `O(1)` in all three places it
+  appeared: §1.2 (with "`≈2`, not literally 1") and §3.2 / §3.3 (the bias/calibration
+  argument, which only needs `O(1)` and is unaffected). The exact constant is
+  geometry-dependent; §7.4 carries the BA number.
+- **Red markup stripped from §1.2.** All five `<span style="color: red">` review spans
+  (the comment-resolution edits of the prior rounds) were removed, content preserved —
+  the audit trail is in the entries above.
+
+Editing §3.2 / §3.3 flips **§3 `reviewed → draft`** (dated today), per the status
+convention; the change is a single `≈1 → O(1)` substitution in two spots and is
+trivially re-reviewable. §1.2's red is now gone but its status stays `draft` — the
+`draft → reviewed` flip is the human's, by direct edit.
