@@ -76,6 +76,10 @@ bounded channel (which is discrete) rather than against uniform, so the screen t
 
 > M: ok I think this has to do with the fact that p* is a worst-case hedge, so if q is adversarial enough, it might win no matter what. I think the red team's first suggestion is basically saying "when q is sufficiently non-adversarial to p_U". But this gets fuzzy enough that the usefulness of this as a negative control becomes questionable. We should still keep this as something to compute and evaluate, just not as a hard rejection criterion. What do you think?
 
+> M (resolved in chat): Agreed with the recommendation — narrow the hard gate to `R(p_J)=R(p_U)` (both reduce to uniform on the flat model) and demote the `p*` tie to a reported edge/hedge diagnostic, not a hard rejection criterion.
+
+> C: Applied (conc01 stage-3b). §2.4 negative-control bullet rewritten: the hard screen is now `p_J = p_U ⇒ R(p_J)=R(p_U)`; `p*` is explicitly not expected to tie (bounded-channel discreteness, Smith 1971), and its gap is a reported diagnostic. Propagated to §5 P2/T2 (test now asserts `|R(p_J)−R(p_U)|<3·MCSE` and records the `p*` gaps without asserting them), §4.1.3 (dropped the incorrect `b(θ)≡0`), and §6.1 (negative_control.png description). §2.4 edits red; §4/§5/§6 already draft (no red, per project convention). Revision-log entry added (Correction).
+
 ---
 
 ### F2: "`R_N^q ≥ 0`, reached only by a predictor matching nature" misstates the floor [severity: medium]
@@ -163,6 +167,10 @@ notion."
 
 > M?: why does I_q^{(1)} appear in the expectation but not in the one-observation formula? Otherwise it seems true that the one-observation formula does not imply the expectation directly, but I'm not sure what could be shown about it here exactly. It would be good if this didn't have to have left to empirics.
 
+> M (resolved in chat, after the math explanation): Option (a) — write the one-line algebra and name the assumption. Much better than leaving it vague. (`I_q^{(1)}` enters only on averaging `b` over `q`, via the `N=1` compensation identity; `I_q^{(1)}−I_{p_J}=o(d)` is analytically controllable, leaving `𝔼_q b = Ω(d)` as the sole empirical condition.)
+
+> C: Applied (conc01 stage-3b). §3.2: added the `N=1` compensation identity `𝔼_q b_{p_J} = I_q^{(1)} + D(m_q‖m_{p_J}) − I_{p_J}` as eq. (3.2.1); showed `D(m_q‖m_{p_J}) = 𝔼_q b − (I_q^{(1)}−I_{p_J})`; stated the analytic control `I_q^{(1)}−I_{p_J}=o(d)` (bounded resolvable complexity in hyperribbon geometry) against `B(p_J)=O(d)`; and named the sole `q`-dependent hypothesis `𝔼_q b = Ω(d)`. This also **subsumes the deferred F8 "natural notion" hedge** — that phrase is replaced by the precise condition — and downgrades the `O(1)` claim for `D(m_q‖m_{p*})` to an explicit experiment-deferred expectation (§2.2). New prose red, eq. (3.2.1) unpainted; §3 draft. Revision-log entry added (Correction).
+
 ---
 
 ### F5: §3.1 conflates A&M's fixed-`σ` mutual information `I⋆` with the `N`-fold capacity `C_N` and a `log N` rate [severity: medium]
@@ -219,6 +227,10 @@ mean-vs-mode caveat; widen the T6 tolerance or move the test to larger `x` where
 
 > M: first of all let's corroborate if A&M has a sign error indeed. Once we know that we can get back to our derivation.
 
+> M (resolved in chat): Corroborated — A&M's signed formula does carry a sign slip, but our absolute value neutralises it, so just add a note in §9.2 so it isn't forgotten. For mode-vs-mean, relabel (mode = mean to leading order) and widen the T6 tolerance rather than moving to higher `x`; the explicit caveat makes the issue clearer.
+
+> C: Applied (conc01 stage-3b). Confirmed against A&M App. A.1 (`resources/abbott_machta.pdf`): they write `Δ = x − ⟨θ_1⟩ = (d−1)/x`, but their own "weight at large `θ_1`" forces `⟨θ_1⟩ > x`, so `x−⟨θ_1⟩ < 0` — a sign slip; magnitude and direction are fine. §9.2: added a sign-convention note, relabelled (9.2.1) as the **mode** (exact root of `θ²−xθ−(d−1)=0`) vs the **mean** of (9.2.2), corrected the remainder `O(x^{-3}) → O((d−1)²x^{-3})`, and flagged that at A&M's `d=26, x≈10` the expansion is only marginal (`2.5` vs numerically-verified `≈2.08`). §5 P6/T6 relabelled mode/mean, tolerance widened to `~3·(d−1)²/x³` with positive-sign and exact-mode cross-checks. §9/§5 draft (no red). Revision-log entry added (Correction).
+
 ---
 
 ### F7: §3.3 mislabels the Bayes predictive's uncertainty as "miscalibration" the proper score "charges" [severity: low]
@@ -244,6 +256,10 @@ charged by a proper score." Replace "`O(σ²)`" with "`Cov_π[y|X]=O(σ²)`, so 
 calibration term is bounded independent of `d`."
 
 > M: this seems correct enough, but do confirm if it indeed is.
+
+> M (resolved in chat): Confirmed correct — make the suggested changes.
+
+> C: Applied (conc01 stage-3b). Confirmed both points: (i) the calibration term is the oracle-relative cost of a *correctly* propagating Bayes predictive's residual spread, not a defect — "miscalibration the score charges" is a genuine mislabel; (ii) "calibration term is `O(σ²)`" is a dimensional slip (it is a nat-valued KL), the intended `O(σ²)` object is `Cov_π[y|X]`. §3.3 reworded accordingly (oracle-relative framing; `Cov_π[y|X]=O(σ²) ⇒` calibration term `O(1)`, independent of nominal `d`); §9.4 pointer matched. §3.3 edits red; §9.4 draft (no red). Revision-log entry added (Clarification).
 
 ---
 
@@ -271,6 +287,8 @@ precise condition or mark the statement explicitly as a heuristic expectation.
 > M: if you don't see anything against these suggestions, just do them.
 
 > C: Applied the unobjectionable items (conc01 pass). §1.1 `p_LN` relabelled "Normal in `θ` (log-normal in the rate `k`)" (§1 flipped reviewed→draft); §3.2 "the obvious objection" → "the discreteness objection". Two items needed no change: the §3.4 "essentially **unique**" already carries its precise qualifier "in hyperribbon geometry at finite `σ`", and the "clearly has much more weight" hedge (cited as inherited from A&M) is not present in the current on-disk text. One item deferred: the §3.2 "the **natural** notion" hedge is the same sentence as F4, which is still open as `> M?:`; editing it now would pre-empt the F4 resolution, so it is left for the F4 round. Revision-log entry added (Clarification).
+
+> C: (follow-up, stage-3b) The deferred §3.2 "natural notion" hedge is now resolved — the F4 edit replaces the phrase with the precise condition `𝔼_q b = Ω(d)`.
 
 ## What the spec gets right
 

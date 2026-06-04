@@ -466,18 +466,32 @@ Two screens decide whether the effect is real or self-served, replacing the
 redundancy-capacity *tautology* (which cannot fail and is demoted to a unit test,
 T3):
 
-- **Negative control (flat co-volume ⇒ everyone ties).** In the constant-cross-
-  section model (no taper, [§4.1](#41-model-families)), `√det g` is constant, `b(θ)≡0`, and there is no
-  co-volume pathology to avoid: `R_N^q(p*) = R_N^q(p_J) = R_N^q(p_U)` within
-  Monte-Carlo error, at every `d`. **If `p*` "wins" here, the result is an
-  artefact** (T2). *Flat co-volume* means the
+- **Negative control (flat co-volume ⇒ <span style="color: red">the parameter-measure priors tie</span>).** <span style="color: red">In the
+  constant-cross-section model (no taper, [§4.1](#41-model-families)), `√det g` is constant, so
+  Jeffreys `∝ √det g` reduces *exactly* to uniform-on-the-relevant-coordinate:
+  **`p_J = p_U`**, hence `R_N^q(p_J) = R_N^q(p_U)` within Monte-Carlo error, at every
+  `d`. That identity is the hard screen (T2): a co-volume *gradient* is the only thing
+  that can separate `p_J` from `p_U`, so if they part on the flat model the Jeffreys
+  construction or the marginal estimator is broken.</span> *Flat co-volume* means the
   irrelevant-direction co-volume (the product of the unresolvable Fisher lengths)
-  does not vary along the relevant coordinate, so `√det g` is constant in `θ` and
-  Jeffreys reduces to uniform-on-the-relevant-coordinate (`b(θ)≡0`). It is **not**
+  does not vary along the relevant coordinate, so `√det g` is constant in `θ`. It is **not**
   the same as "the latents are independent": independent latents with equal-length
   irrelevant directions are the *special case* the note (§6.2) calls the null; the
   operative condition is the absent co-volume *gradient*, realised here by the
   constant-cross-section cone ([§1.2](#12-generative-model) panel c, [§4.1](#41-model-families); no taper).
+
+  <span style="color: red">`p*` is **not** expected to tie here, and a `p*` "win" on the flat model is **not** by
+  itself an artefact. The relevant coordinate is a *bounded* interval `θ_1 ∈ [0,L]` with
+  Gaussian likelihood — a bounded-Gaussian-mean channel — whose capacity-achieving prior
+  is **discrete** (Smith 1971), not uniform, even with constant `√det g`. So `p*` places
+  atoms (including near the boundary), `m_{p*} ≠ m_{p_U}`, and `p*` can genuinely beat the
+  uniform priors at the non-cooperative end — but by a bounded-channel *edge /
+  worst-case-hedge* mechanism that has nothing to do with co-volume. The
+  `p*`-vs-`{p_J,p_U}` gap on the flat model is therefore **reported as a diagnostic**
+  ([§6](#6-report)), not a reject criterion: it should concentrate at the boundary (the
+  thin end, where the non-cooperative `q` lives) and shrink as the scored `q` is
+  restricted to the deep interior, or as `L→∞`. Co-volume is isolated from this edge
+  effect by reading the headline against the deep-interior `q`.</span>
 
 - **Sign-of-advantage vs cooperativeness `c`.** `p*` wins the cooperative end
   (`c=0`, `q≈m_{p*}`) by self-sampling, trivially. The reported quantity is whether
@@ -528,10 +542,26 @@ manifold is a **hyperribbon** ([§1.2](#12-generative-model)) whose widths fall 
 space of *distinguishable predictions* is dominated by a few stiff directions, and
 Jeffreys' weight `∝√det g` piles into the high-co-volume corner — a **vanishing
 fraction** of that space as `d` grows, swinging by orders of magnitude under tiny
-parameter changes. Hence for **any `q` whose predictions are spread over
-distinguishable outcomes** (the natural notion of a nature that explores the
-resolvable behaviours), most of `q`'s mass falls where `b_{p_J}(θ)>0` is large, so
-`D(m_q‖m_{p_J})` inflates with `d` while `D(m_q‖m_{p*})` stays `O(1)`. A&M state the
+parameter changes. <span style="color: red">Hence for a nature `q` whose predictions are spread over
+distinguishable outcomes, most of `q`'s mass falls where `b_{p_J}(θ)>0` is large. The
+link from large *pointwise* bias to a large *data-marginal* mismatch is the `N=1`
+compensation identity applied to `p_J` (the same split as (2.1.2), [§9.1](#91-the-compensation-identity-for-the-n-fold-marginal-eq-212)):</span>
+
+$$
+\mathbb{E}_{\theta\sim q}\, b_{p_J}(\theta) \;=\; I_q^{(1)} \;+\; D_{\mathrm{KL}}\!\big(m_q \,\|\, m_{p_J}\big) \;-\; I_{p_J}. \tag{3.2.1}
+$$
+
+<span style="color: red">So `D(m_q‖m_{p_J}) = 𝔼_q b_{p_J} − (I_q^{(1)} − I_{p_J})`, and the `b`-growth transfers to
+the marginal mismatch only if the subtracted term does not cancel it. In hyperribbon
+geometry it cannot: both `I_q^{(1)}` and `I_{p_J}` are bounded by the single-observation
+*resolvable* complexity `C_1 = O(d_{eff})`, which does not grow with nominal `d` (the
+resolvable dimension is fixed by the few stiff directions), so `I_q^{(1)} − I_{p_J} =
+o(d)`, while the worst-case bias `B(p_J) = max_θ b_{p_J} = O(d)` (A&M). The **one
+genuinely `q`-dependent assumption** is then `𝔼_q b_{p_J} = Ω(d)` — that `q` puts enough
+mass, with enough spread, in the high-bias region for its average to track the max; this
+is the precise content of "spread over distinguishable outcomes". Under it,
+`D(m_q‖m_{p_J}) = Ω(d) − o(d)` grows with `d`, while `D(m_q‖m_{p*})` is *expected* to
+stay `O(1)` — asserted, not shown, and left to the experiment ([§2.2](#22-what-wins-means--and-what-cannot-be-asserted)).</span> A&M state the
 same point as a **new invariance** — *predictions should be independent of
 unobservable model detail* — which `m_{p*}` respects and `m_{p_J}` violates. Quinn
 et al. also dispatch <span style="color: red">the discreteness objection</span> that a *discrete* `p*` must mis-predict
@@ -571,16 +601,20 @@ into a **bias term** and a **calibration term** — closed form in eq. (9.4.1),
 The point of the split is the comparison to A&M. The **bias term** is a
 precision-weighted `Δ²` — *exactly A&M's quantity*, up to weighting — while the
 **calibration term** (predictive spread `Σ_π` against the noise `σ²I`) is precisely
-what `Δ` cannot see: since `Σ_π = σ²I + Cov_π[y(θ)|X_{1:N}] ⪰ σ²I`, every Bayes
-predictive is *over-dispersed* by its residual posterior uncertainty, and a proper
-score charges that miscalibration whereas `Δ` — a centre-only statistic — does not.
+what `Δ` cannot see: since `Σ_π = σ²I + Cov_π[y(θ)|X_{1:N}] ⪰ σ²I`, <span style="color: red">the calibration
+term is the *oracle-relative* cost of the predictive's residual posterior spread — the
+oracle knows `θ` and predicts with `σ²I`, the agent cannot — invisible to the
+centre-only `Δ` and charged by a proper score. It is **not** a miscalibration defect in
+`m_π`: a well-specified Bayes predictive is correctly propagating its uncertainty about
+`θ`, so the proper score charges the unavoidable cost of not knowing `θ`, not a fault.</span>
 Our redundancy score therefore *contains* A&M's `Δ` (as the bias term) and adds the
 term `Δ` is blind to.
 
 The split also says **the bias term is what decides the contest.** Because `p*`'s
-atoms sit an `O(1)` Fisher length apart in prediction space, its calibration term is
-`O(σ²)` even in atom gaps — a constant-factor effect — and a smooth well-specified
-prior is the same `O(σ²)` order. So calibration *modulates* the boundary but does
+atoms sit an `O(1)` Fisher length apart in prediction space, <span style="color: red">its excess predictive
+spread `Cov_π[y|X] = O(σ²)` even in atom gaps, so its calibration term is `O(1)` —
+bounded, independent of nominal `d` — and a smooth well-specified prior is the same
+order</span>. So calibration *modulates* the boundary but does
 not *decide* it; the decider is the `O(d)`-vs-`O(1)` transfer of the **bias** gap
 ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)). The calibration
 term is **reported** as a PIT / over-dispersion diagnostic ([§6](#6-report)) and the
@@ -736,7 +770,10 @@ All three share the Gaussian likelihood `p(x|θ)=𝒩(y(θ),σ²I_m)` and FIM
    vertex makes the NML-based `p_proj` over-weight the halo there while `p*` is
    unmoved.
 3. **Constant-cross-section cone (negative control).** As (2) but `r(θ_1)=r_0`
-   constant (taper `=0`): `√det g` constant, `b(θ)≡0`, no co-volume gradient.
+   constant (taper `=0`): `√det g` constant, so Jeffreys reduces to uniform
+   (`p_J = p_U`); no co-volume gradient. (The capacity prior `p*` stays discrete on
+   the bounded relevant axis — Smith 1971 — so it need not coincide with `p_U`; see
+   [§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note).)
 
 ### 4.2 Prior construction
 
@@ -833,11 +870,11 @@ Test functions live in `tests/test_002_foreign_q_prediction.py`. The suite pins 
 | # | Property (spec §) | Verified by |
 |---|---|---|
 | P1 | Redundancy decomposition `R_N^q(π) = I_q^{(N)} + D(m_q‖m_π)` ([§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss), [§9.1](#91-the-compensation-identity-for-the-n-fold-marginal-eq-212)) | `test_t1_redundancy_decomposition` |
-| P2 | **Negative control**: flat co-volume ⇒ `R(p*)=R(p_J)=R(p_U)` within MCSE, all `d` ([§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note)) | `test_t2_negative_control_ties` |
+| P2 | **Negative control**: flat co-volume ⇒ `R(p_J)=R(p_U)` within MCSE, all `d`; `p*` gap recorded as a diagnostic, not gated ([§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note)) | `test_t2_negative_control_ties` |
 | P3 | `p*` machinery (demoted tautology): equalizer `b(θ)=0` on `supp(p*)`, `≤0` off; `I_{p*}=C` ([§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note), [§4.2](#42-prior-construction)) | `test_t3_pstar_equalizer` |
 | P4 | Jeffreys construction: `p_J ∝ √det g` normalises; matches analytic `θ_1^{d-1}` in hypercone ([§4.2](#42-prior-construction)) | `test_t4_jeffreys_construction` |
 | P5 | Gaussian KL closed form (9.4.1) matches numeric KL of two Gaussians ([§3.3](#33-score-decomposition-bias-vs-calibration-a-diagnostic), [§9.4](#94-gaussian-biascalibration-split-eq-941)) | `test_t5_gaussian_kl_split` |
-| P6 | Hypercone closed-form `Δ=(d−1)/x` matches numeric `p_J`-posterior deviation, `1≪x≪L` ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d), [§9.2](#92-hypercone-posterior-deviation-eq-922)) | `test_t6_hypercone_delta` |
+| P6 | Hypercone deviation: numeric `p_J`-posterior **mean**-deviation matches leading `(d−1)/x` within next-order tol, sign positive, `1≪x≪L` ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d), [§9.2](#92-hypercone-posterior-deviation-eq-922)) | `test_t6_hypercone_delta` |
 | P7a | `m_π(X_{1:N})`: discrete sum (p*) vs quadrature agree ([§4.4](#44-score-estimation)) | `test_t7a_mixture_marginal_consistency` |
 | P7b | `p*` solver: grid-BA vs atomic agree on `R` where both feasible ([§4.2](#42-prior-construction)) | `test_t7b_pstar_method_agreement` |
 | P8 | Floors: `R_N^q(π) ≥ I_q^{(N)} ≥ 0` per cell; `q̄` minimises the **`c`-averaged** `R` ([§2.3](#23-q̄-is-the-ceiling-not-a-competitor)) | `test_t8_floors` |
@@ -855,12 +892,14 @@ mis-estimated score — the single tightest check that the headline quantity mea
 what [§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss) says.
 
 **T2 — Negative control.** In the constant-cross-section model (§4.1.3) at each
-`d ∈` sweep, assert `|R(p*) − R(p_J)|`, `|R(p*) − R(p_U)|`, `|R(p*) − R(p_proj)|`
-are within `3·MCSE`. This is the [§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note) falsification screen: with no
-co-volume gradient, no prior can beat another on `D(m_q‖m_π)`, so a `p*` "win" here
-(over *any* competitor, including the budget-dependent `p_proj`) exposes an
-estimator bias or a rigged comparison. The most important non-headline test in the
-suite.
+`d ∈` sweep, assert `|R(p_J) − R(p_U)|` is within `3·MCSE`. With `√det g` constant
+Jeffreys *is* uniform (`p_J = p_U`), so the two must agree; a violation exposes a
+broken Jeffreys construction or marginal estimator ([§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note)). The
+`p*`-vs-`{p_J,p_U,p_proj}` gaps are **recorded but not asserted**: on the bounded
+relevant coordinate `p*` is discrete (Smith 1971) and can win by a bounded-channel
+edge / worst-case-hedge effect unrelated to co-volume, so a `p*` "win" here is a
+reported diagnostic ([§6](#6-report)), not a fail. Still the most important
+non-headline check — but it screens the *co-volume* channel (via `p_J=p_U`), not `p*`.
 
 **T3 — `p*` equalizer (the demoted capacity tautology).** Confirm the solver
 returns a genuine capacity prior: `b(θ) = D(p(x|θ)‖m_{p*}) − I_{p*}` is `≈0` on
@@ -878,9 +917,15 @@ matches a direct numeric `D_{KL}(𝒩‖𝒩)`. Decoupled from the model; catche
 trace error in the bias/calibration decomposition used by the [§6](#6-report) diagnostic.
 
 **T6 — Hypercone `Δ`.** Construct the hypercone `p_J` posterior at observations with
-`1 ≪ x ≪ L` (e.g. `L=50`, `x≈10`, `d∈{6,11,26}` per A&M), and assert the numeric
-posterior-mean deviation matches `(d−1)/x` within `O(x^{-3})` tolerance. Cross-check
-against A&M Appendix A.1 — validates the bias mechanism the whole spec rests on.
+`1 ≪ x ≪ L` (e.g. `L=50`, `x≈10`, `d∈{6,11,26}` per A&M). The stationary-point result
+(9.2.1) is the posterior **mode**; (9.2.2) reports the **mean**, which agrees only to
+leading order (they differ at `O((d−1)²x^{-3})`). Assert (i) the numeric posterior-mean
+deviation matches the leading term `(d−1)/x` within `~3·(d−1)²/x³` (≈0.6 at `d=26, x≈10`,
+where the expansion parameter `4(d−1)/x² ≈ 1` makes `(d−1)/x` only marginal); (ii) the
+deviation is **positive** (mean above `x`, toward the thick end); and (iii) the
+closed-form mode equals the exact root of `θ² − xθ − (d−1) = 0`. Cross-check against A&M
+Appendix A.1 (see the §9.2 sign-convention note) — validates the bias mechanism the
+whole spec rests on.
 
 **T7a — Mixture-marginal consistency.** For a discrete `p*` and a coarse continuous
 prior, `log m_π(X_{1:N})` from the exact atom sum agrees with grid quadrature on a
@@ -1015,7 +1060,9 @@ Under `experiments/002-foreign-q-prediction/`:
 - `figures/R_vs_d.png` — `R_N^q(π)` vs `d` per prior (incl. `p_proj`), at fixed
   `(σ, c)`, with the `q̄` ceiling line.
 - `figures/negative_control.png` — `R(π)` vs `d` in the constant-cross-section
-  model; the curves should coincide (visual companion to T2).
+  model; `p_J` and `p_U` coincide (the T2 screen), while the `p*` gap — the
+  bounded-channel edge / worst-case-hedge diagnostic ([§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note)) — is shown and is
+  **not** expected to vanish.
 - `figures/calibration_pit.png` — PIT histogram / over-dispersion of the held-out
   `x'` under each prior's predictive (the [§3.3](#33-score-decomposition-bias-vs-calibration-a-diagnostic) calibration diagnostic).
 - `results_table.json` — per-cell summary; schema in [§6.3](#63-table-schema).
@@ -1210,15 +1257,27 @@ p(\theta_1\mid x) \propto e^{-(x-\theta_1)^2/2}\,\theta_1^{\,d-1},\qquad
 \frac{d}{d\theta_1}\Big[-\tfrac12(x-\theta_1)^2 + (d-1)\log\theta_1\Big] = 0 \;\Rightarrow\; \theta_1 = x + \frac{d-1}{\theta_1}, \tag{9.2.1}
 $$
 
-so to leading order for `1 ≪ x ≪ L` the posterior mode/mean sits at
-`θ_1 ≈ x + (d-1)/x`, giving
+the stationary point — the posterior **mode** — is the positive root of
+`θ_1² − xθ_1 − (d−1) = 0`, i.e. `θ_1 = ½(x + √(x² + 4(d−1)))`, which reduces to
+`θ_1 ≈ x + (d-1)/x` only when `x² ≫ 4(d−1)`. The posterior **mean** `⟨θ_1⟩` agrees
+with the mode to leading order (they differ at `O((d−1)²x^{-3})`), giving
 
 $$
-\Delta \;=\; \big|\langle\theta_1\rangle_{p_J(\theta_1\mid x)} - x\big| \;=\; \frac{d-1}{x} + O\!\big(x^{-3}\big). \tag{9.2.2}
+\Delta \;=\; \big|\langle\theta_1\rangle_{p_J(\theta_1\mid x)} - x\big| \;=\; \frac{d-1}{x} + O\!\big((d-1)^2 x^{-3}\big). \tag{9.2.2}
 $$
 
-The prior factor `θ_1^{d-1}` pulls the centre toward the thick end; the pull grows
-with `d` and is largest at small `x` (the thin end).
+The prior factor `θ_1^{d-1}` pulls the centre toward the thick end, so `⟨θ_1⟩ > x`;
+the pull grows with `d` and is largest at small `x` (the thin end).
+
+**Sign convention and validity.** We report the *magnitude* `Δ = |⟨θ_1⟩ − x|`. A&M
+Appendix A.1 write the signed form `Δ = x − ⟨θ_1⟩ = (d−1)/x`, but their own statement
+that `p_J` "has much more weight at large `θ_1`" forces `⟨θ_1⟩ > x`, i.e.
+`x − ⟨θ_1⟩ < 0` — so their signed expression carries a **sign slip** (it should read
+`⟨θ_1⟩ − x`). The magnitude and the direction (toward the thick base) are unaffected,
+and taking the absolute value keeps the slip from propagating. Note the leading term is
+only marginal at A&M's own test point: at `d=26, x≈10` the expansion parameter
+`4(d−1)/x² ≈ 1` is not small, so `(d−1)/x = 2.5` overshoots the true mean deviation
+(`≈2.08`, verified numerically) by ~17% — the tolerance in T6 ([§5.2](#52-test-descriptions)) is set accordingly.
 
 ### 9.3 Exponential-decay FIM
 
@@ -1248,9 +1307,10 @@ $$
 The **bias term** is a precision-weighted `Δ²` (A&M's quantity, up to weighting);
 the **calibration term** — predictive spread `Σ_π` against the noise `σ²I` — is
 exactly what `Δ` cannot see. Since `Σ_π = σ²I + Cov_π[y(θ)|X_{1:N}] ⪰ σ²I`, the
-predictive is over-dispersed by the residual posterior uncertainty about the
-prediction. The interpretation, and the consequence that calibration is `O(σ²)` so
-the bias gap decides the contest, are in
+predictive is over-dispersed (relative to the oracle's `σ²I`) by the residual
+posterior uncertainty about the prediction. The interpretation, and the consequence
+that the excess spread `Cov_π[y|X]=O(σ²)` keeps the calibration term `O(1)` so the
+bias gap decides the contest, are in
 [§3.3](#33-score-decomposition-bias-vs-calibration-a-diagnostic).
 
 ## 10. Revision log
@@ -1600,3 +1660,50 @@ spans within the cell, not a wrapped table — the changed text only). Status of
 [§0](#0-context), [§1](#1-setup), [§2](#2-objective) flipped `reviewed → draft` (dated
 today); [§3](#3-the-case-for-transfer-and-how-it-could-fail) was already `draft`. No
 downstream artefacts exist yet, so nothing is invalidated.
+
+### 2026-06-03 — Correction + Clarification (§2.4, §3.2, §3.3, §9.2, §5, §4.1, §6; conc01 stage-3b: F1/F4/F6/F7)
+
+Second processing round of the conceptual red-team report, resolving the findings the
+human had left open (uncertain / question / `> M?:`) after stage 3a. Decisions were
+taken in chat and recorded as `> M:` / `> C:` in the redteam file.
+
+- **[§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note) / §4.1.3 / §5
+  P2,T2 / §6.1 [Correction] (F1).** The negative control claimed "flat co-volume ⇒
+  `R(p*)=R(p_J)=R(p_U)`", making a `p*` "win" an artefact. That is false: the *bounded*
+  relevant coordinate is a Gaussian-mean channel whose capacity prior is discrete
+  (Smith 1971), so `p* ≠ p_U` even with constant `√det g`, and `p*` can win by a
+  bounded-channel edge / worst-case-hedge effect unrelated to co-volume. Narrowed the
+  hard screen to **`p_J = p_U ⇒ R(p_J)=R(p_U)`** (the only tie a flat `√det g` forces;
+  it catches a broken Jeffreys/marginal estimator) and **demoted the `p*` gap to a
+  reported diagnostic** (§6), not a reject criterion. Removed the incorrect `b(θ)≡0`
+  from §2.4 and §4.1.3. §2.4 edits red; §4/§5/§6 already `draft` (no red).
+- **[§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d) [Correction] (F4,
+  resolving the `> M?:`).** The `b→D(m_q‖m_{p_J})` bridge was stated as a deduction but
+  is a non-sequitur as written. Added the `N=1` compensation identity `𝔼_q b_{p_J} =
+  I_q^{(1)} + D(m_q‖m_{p_J}) − I_{p_J}` (eq. (3.2.1)), so `D(m_q‖m_{p_J}) = 𝔼_q b −
+  (I_q^{(1)}−I_{p_J})`; argued the subtracted term is `o(d)` in hyperribbon geometry
+  (bounded resolvable complexity) against `B(p_J)=O(d)`; and named the sole
+  `q`-dependent hypothesis `𝔼_q b = Ω(d)`. This **subsumes the F8 "natural notion"
+  hedge** (that phrase is replaced by the precise condition) and downgrades the `O(1)`
+  claim for `D(m_q‖m_{p*})` to an explicit experiment-deferred expectation. New prose
+  red; eq. (3.2.1) unpainted.
+- **[§3.3](#33-score-decomposition-bias-vs-calibration-a-diagnostic) / §9.4
+  [Clarification] (F7).** Reframed the calibration term: not a "miscalibration the score
+  charges" (a correctly-propagating Bayes predictive is not defective) but the
+  *oracle-relative* cost of residual posterior spread, charged by a proper score and
+  invisible to centre-only `Δ`. Fixed the dimensional slip "calibration term is `O(σ²)`"
+  → "`Cov_π[y|X]=O(σ²)`, so the calibration term is `O(1)`, independent of nominal `d`".
+  §3.3 edits red; §9.4 already `draft` (no red).
+- **[§9.2](#92-hypercone-posterior-deviation-eq-922) / §5 P6,T6 [Correction] (F6).**
+  Corroborated against A&M Appendix A.1 that their signed `Δ = x − ⟨θ_1⟩ = (d−1)/x`
+  carries a sign slip (their own "weight at large `θ_1`" forces `⟨θ_1⟩ > x`, so
+  `x−⟨θ_1⟩ < 0`); our `|⟨θ_1⟩−x|` neutralises it. Added a sign-convention note;
+  relabelled (9.2.1) as the **mode** (exact root of `θ²−xθ−(d−1)=0`) vs the **mean** of
+  (9.2.2); corrected the remainder `O(x^{-3}) → O((d−1)²x^{-3})`; and flagged that at
+  A&M's own `d=26, x≈10` the expansion is only marginal (`(d−1)/x=2.5` vs true `≈2.08`,
+  numerically verified). T6 tolerance widened to the next-order term with a
+  positive-sign assertion and an exact-mode cross-check. §9/§5 `draft` (no red).
+
+All affected sections (§2, §3, §4, §5, §6, §9) were already at `draft` from stage 3a or
+earlier, so no new status flips. No downstream artefacts exist yet, so nothing is
+invalidated.
