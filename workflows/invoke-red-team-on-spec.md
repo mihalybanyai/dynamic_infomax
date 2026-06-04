@@ -24,6 +24,13 @@ the red-team pass should run against a stabilised artifact.
   `resources/references.md` (or equivalent annotated bibliography).
 - Claude Code session is open and oriented to the project (see
   `workflows/wake-up-claude-code.md`).
+- The session is running an **approved red-teamer model at the highest
+  effort tier** (see the roster in `AGENTS.md`). The sub-agent inherits
+  both from this session. You do not have to get this right before
+  triggering: the spawn-configuration gate (`skills/red-team-spec.md`)
+  pauses for your confirmation first, so a misconfigured session can be
+  fixed there — re-trigger from a correctly-set session, a separate
+  thread if you want a different model version.
 
 ## Stage 1 — Invoke the sub-agent
 
@@ -31,8 +38,11 @@ Paste into Claude Code:
 
 ```
 All sections of [[SPEC_PATH]] are now reviewed. Per
-skills/red-team-spec.md, invoke the red-team-spec skill: spawn a
-sub-agent with the adversarial prompt in the skill, give it the
+skills/red-team-spec.md, invoke the red-team-spec skill: first run the
+spawn-configuration gate (print the reviewer roster with its
+Last-verified date and the model/effort caveats, then wait for my
+explicit "go"); only after I reply "go", spawn a sub-agent with the
+adversarial prompt in the skill, give it the
 spec and any files the spec references (PDFs in resources/, daft
 PGMs in diagrams/, anything else cited in the spec's References
 section), and have it write findings to
@@ -50,6 +60,16 @@ bibliography.
 Do not read the findings yourself or pre-filter them — just commit
 the file when the sub-agent is done.
 ```
+
+**The spawn-configuration gate runs first.** Before any sub-agent is
+spawned, Claude Code prints the reviewer roster from `AGENTS.md` with its
+Last-verified date and the model/effort inheritance caveats, then waits.
+Replying "go" both authorises the spawn and ratifies the roster as
+current — Claude Code refreshes its Last-verified date to today. If the
+roster is stale (a newer model shipped, a tier changed) or the session is
+on the wrong model/effort, stop at the gate, fix it, and re-trigger. This
+is the **only** point at which the effort tier is checked — it is not
+machine-verifiable — so do not reflexively "go" past it.
 
 The "do not pre-filter" clause matters: if the main Claude Code agent
 reads the sub-agent's output and silently drops findings it judges

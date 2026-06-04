@@ -232,6 +232,34 @@ The rules:
 the status as part of the same edit. Claude does this automatically
 when revising a `reviewed` or or `needs-revision` section; no need to be asked.
 
+### Red-team reviewer roster
+
+Red-team sub-agents are the project's main quality gate, so they run on the
+strongest available configuration, not the session default. The policy:
+
+- **Model.** The two latest models intended for *conceptual* work are the
+  approved red-teamers — the newest is the primary/default, the second is the
+  independent diversity pass (`workflows/invoke-red-team-on-spec.md`).
+- **Effort.** Always the highest available tier.
+
+Neither fact is machine-discoverable, and effort is not even machine-checkable
+from inside the agent (see the spawn-configuration gate in
+`skills/red-team-spec.md`). This table is the single source of truth.
+
+| Approved red-teamer (declared identity) | Role | Highest effort tier | Availability |
+|---|---|---|---|
+| Claude Opus 4.8 | conceptual — primary | Max | all paid tiers (not free) |
+| Claude Opus 4.7 | conceptual — diversity | Max | all paid tiers (not free) |
+
+Mechanical sibling red-teams (tests, implementation) may use a cheaper model
+(the latest Sonnet); the conceptual spec red-team does not.
+
+**Last verified:** 2026-06-04 (human). The red-team spawn-configuration gate
+prints this table at every invocation and refreshes this date on "go" — so a
+stale roster (a model shipped, a tier changed) is caught by the human noticing
+it, not by an automated check. Update the cells by direct edit whenever that
+happens.
+
 ## Reproducibility
 
 Two non-negotiables for any code in this repo:
