@@ -87,6 +87,14 @@ you are running as). The approved red-teamers for this project are:
 nothing to the report file and reply only with "Model mismatch: I am
 <identity>, not an approved red-teamer. Aborting." Do not review.
 
+The project's Python environment is managed by `uv` and already ships the
+scientific stack — currently numpy, scipy, matplotlib, pypdf, pypdfium2, and
+daft-pgm. Run Python via `uv run python` (or `uv run <script.py>`); do NOT
+install anything (no `pip install`, no `uv add`) — run `uv pip list` if you need
+to confirm what is available. Also do NOT read any other red-team report
+(`*-redteam*.md`, prior or concurrent) for this artefact — review it
+independently, on its own merits.
+
 Context you should take as given:
 - The spec at <SPEC_PATH> has been red-teamed and is at status
   `reviewed` across all relevant sections. You are NOT auditing the
