@@ -33,6 +33,49 @@ finding can, in principle, send the workflow back to any earlier stage.
 The skill names the four destinations and the workflow handles the
 dispatch.
 
+## Before invoking — the spawn-configuration gate
+
+The sub-agent inherits this session's model and effort tier. Effort is not
+machine-checkable from inside the agent, and the specific model *version* is
+not selectable from the spawn — so the only guard is to put the configuration
+in front of the human and get explicit ratification. Before spawning, the main
+agent MUST:
+
+1. **Print the roster.** Reproduce the "Red-team reviewer roster" table from
+   `AGENTS.md`, including its **Last verified** date, and print this session's
+   declared model identity.
+
+2. **Print the inheritance caveats and ask to proceed:**
+
+   > Red-team spawn check:
+   > - Model: this session is `<declared identity>`; the sub-agent inherits it.
+   >   For the diversity pass on the *other* approved model, stop now and re-run
+   >   this trigger from a session set to that model (a separate thread).
+   > - Effort: the sub-agent inherits this session's effort tier. Policy is the
+   >   highest available tier; this is NOT machine-checkable. If this session is
+   >   not at the highest tier, stop now, raise it, and re-run this trigger.
+   > - Replying "go" both spawns the red team **and** ratifies the roster above
+   >   as current — its Last verified date will be set to today. If the roster
+   >   is stale (a newer model shipped, a tier changed), fix the table first,
+   >   then reply "go".
+
+3. **Wait for an explicit "go".** Do not call the `Task` tool until the human
+   replies. Conversational acknowledgement is not "go".
+
+4. **On "go":**
+   - Set the roster's **Last verified** date in `AGENTS.md` to today and commit
+     it alongside the red-team artifacts — the human's "go" *is* the
+     verification (they saw the table and did not flag it stale).
+   - Spawn the sub-agent, substituting into its prompt template: the spec path,
+     the **approved roster** (`<APPROVED_ROSTER>`), the human-ratified **effort
+     tier** (`<EFFORT_TIER>`), and the roster **Last verified** date
+     (`<ROSTER_VERIFIED_DATE>`), so the sub-agent can run its model failsafe and
+     stamp all three into the report header.
+
+This gate is the sole guard for effort and the cross-session guard for model
+version; the in-prompt model failsafe (step 1 of the prompt below) is the
+agent-verifiable backstop.
+
 ## How to invoke
 
 Use the `Task` tool to spawn a sub-agent with the following prompt
@@ -49,6 +92,12 @@ is in <EXPERIMENT_DIR>/output/provenance.json. Consult it whenever
 "what version of the spec/code/tests was this run against?" matters
 for a finding; the spec, code, or tests may have moved on since the
 result was produced.
+
+Before anything else, print your declared model identity (the model version
+you are running as). The approved red-teamers for this project are:
+<APPROVED_ROSTER>. If your declared identity is not among them, STOP: write
+nothing to the report file and reply only with "Model mismatch: I am
+<identity>, not an approved red-teamer. Aborting." Do not review.
 
 Context: the spec is at status `reviewed` across all relevant
 sections, the test suite has been red-teamed, the implementation
@@ -188,7 +237,11 @@ top-level structure:
 # Red-team review of experiment <EXPERIMENT_NAME>
 
 Reviewer: red-team sub-agent
+Reviewer model (declared identity): <the identity you printed as your first action>
+Effort tier: <EFFORT_TIER> (human-set; not machine-verified)
+Roster verified: <ROSTER_VERIFIED_DATE>
 Date: <YYYY-MM-DD>
+Spec version: <git commit hash if available>
 Experiment commit: <git commit hash from provenance.json>
 Spec commit(s) reviewed against: <as recorded in provenance.json>
 

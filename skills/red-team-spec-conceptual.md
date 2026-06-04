@@ -11,6 +11,49 @@ the derivation that produced the spec is in context, and any check from the
 same context will tend to confirm rather than challenge it. Red-teaming
 breaks the anchor by using a fresh sub-agent with adversarial framing.
 
+## Before invoking — the spawn-configuration gate
+
+The sub-agent inherits this session's model and effort tier. Effort is not
+machine-checkable from inside the agent, and the specific model *version* is
+not selectable from the spawn — so the only guard is to put the configuration
+in front of the human and get explicit ratification. Before spawning, the main
+agent MUST:
+
+1. **Print the roster.** Reproduce the "Red-team reviewer roster" table from
+   `AGENTS.md`, including its **Last verified** date, and print this session's
+   declared model identity.
+
+2. **Print the inheritance caveats and ask to proceed:**
+
+   > Red-team spawn check:
+   > - Model: this session is `<declared identity>`; the sub-agent inherits it.
+   >   For the diversity pass on the *other* approved model, stop now and re-run
+   >   this trigger from a session set to that model (a separate thread).
+   > - Effort: the sub-agent inherits this session's effort tier. Policy is the
+   >   highest available tier; this is NOT machine-checkable. If this session is
+   >   not at the highest tier, stop now, raise it, and re-run this trigger.
+   > - Replying "go" both spawns the red team **and** ratifies the roster above
+   >   as current — its Last verified date will be set to today. If the roster
+   >   is stale (a newer model shipped, a tier changed), fix the table first,
+   >   then reply "go".
+
+3. **Wait for an explicit "go".** Do not call the `Task` tool until the human
+   replies. Conversational acknowledgement is not "go".
+
+4. **On "go":**
+   - Set the roster's **Last verified** date in `AGENTS.md` to today and commit
+     it alongside the red-team artifacts — the human's "go" *is* the
+     verification (they saw the table and did not flag it stale).
+   - Spawn the sub-agent, substituting into its prompt template: the spec path,
+     the **approved roster** (`<APPROVED_ROSTER>`), the human-ratified **effort
+     tier** (`<EFFORT_TIER>`), and the roster **Last verified** date
+     (`<ROSTER_VERIFIED_DATE>`), so the sub-agent can run its model failsafe and
+     stamp all three into the report header.
+
+This gate is the sole guard for effort and the cross-session guard for model
+version; the in-prompt model failsafe (step 1 of the prompt below) is the
+agent-verifiable backstop.
+
 ## How to invoke
 
 Use the `Task` tool to spawn a sub-agent with the following prompt template.
@@ -21,6 +64,12 @@ You are a hostile reviewer reading the conceptual and math specification at <SPE
 job is to find what is wrong with Sections <FIRST_SEC>-<LAST_SEC>. You have no investment in this work
 being correct; your reputation depends on finding real flaws that other
 reviewers would also find.
+
+Before anything else, print your declared model identity (the model version
+you are running as). The approved red-teamers for this project are:
+<APPROVED_ROSTER>. If your declared identity is not among them, STOP: write
+nothing to the report file and reply only with "Model mismatch: I am
+<identity>, not an approved red-teamer. Aborting." Do not review.
 
 Read the Sections <FIRST_SEC>-<LAST_SEC>, but ignore any other sections in the spec. Also read any files it references (notes, prior specs,
 diagrams). Then attack it.
@@ -77,12 +126,15 @@ If you cannot find substantial flaws, say so directly. Do not invent
 concerns to seem thorough. A short report with three real flaws is more
 valuable than a long report with twenty fake ones.
 
-Write your findings to `<SPEC_PATH_WITHOUT_EXTENSION>-redteam.md` in the
+Write your findings to `<SPEC_PATH_WITHOUT_EXTENSION>-redteam-conc.md` in the
 following format:
 
 # Conceptual red-team review of <SPEC_NAME>
 
 Reviewer: red-team sub-agent
+Reviewer model (declared identity): <the identity you printed as your first action>
+Effort tier: <EFFORT_TIER> (human-set; not machine-verified)
+Roster verified: <ROSTER_VERIFIED_DATE>
 Date: <YYYY-MM-DD>
 Spec version: <git commit hash if available>
 
