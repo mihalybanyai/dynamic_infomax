@@ -2,11 +2,11 @@
 
 | Section | Status | Date |
 |---|---|---|
-| [0. Context](#0-context) | draft | 030626 |
-| [1. Setup](#1-setup) | draft | 030626 |
-| [1.2 Generative model](#12-generative-model) | draft | 030626 |
-| [2. Objective](#2-objective) | draft | 030626 |
-| [3. The case for transfer (and how it could fail)](#3-the-case-for-transfer-and-how-it-could-fail) | draft | 030626 |
+| [0. Context](#0-context) | reviewed | 040626 |
+| [1. Setup](#1-setup) | reviewed | 040626 |
+| [1.2 Generative model](#12-generative-model) | reviewed | 040626 |
+| [2. Objective](#2-objective) | reviewed | 040626 |
+| [3. The case for transfer (and how it could fail)](#3-the-case-for-transfer-and-how-it-could-fail) | reviewed | 040626 |
 | [4. Algorithm](#4-algorithm) | draft | — |
 | [5. Properties to verify](#5-properties-to-verify) | draft | — |
 | [6. Report](#6-report) | draft | — |
@@ -38,7 +38,7 @@ infers a *foreign* nature `q` well.
 
 This spec tests the one thing that separation leaves open. It is **not** "is `p*` a
 good epistemic prior" — under a strictly proper score `p*` is dominated by the
-<span style="color: red">prior matched to nature (its own pullback)</span> *by theorem* (the compensation identity, [§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss)), and `p*` is a
+prior matched to nature (its own pullback) *by theorem* (the compensation identity, [§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss)), and `p*` is a
 design object by construction. It is the **transfer** question stated in
 `notes/prediction_objective_for_priors.md` §0/§3:
 
@@ -102,7 +102,7 @@ buy anything over the cheap MDL one on held-out prediction** ([§3.4](#34-the-se
 | `p*` | Infomax / capacity-achieving prior, `argmax_π I(Θ;X)` ([§4.2](#42-prior-construction)). Discrete. |
 | `p_J` | Jeffreys prior `∝ √{det g(θ)}`, normalised on `Θ`. |
 | `p_U` | Uniform on the parameter box `Θ`. |
-| `p_LN` | <span style="color: red">Normal in `θ` (log-normal in the rate `k_μ=e^{-θ_μ}`)</span> (A&M Eq. 10): `∝ Π_μ e^{-(θ_μ-θ̄)²/2σ̄²}`. |
+| `p_LN` | Normal in `θ` (log-normal in the rate `k_μ=e^{-θ_μ}`) (A&M Eq. 10): `∝ Π_μ e^{-(θ_μ-θ̄)²/2σ̄²}`. |
 | `q̄` | The hyper-averaged matched prior `= 𝔼_c[q]` (reference ceiling only, [§2.3](#23-q̄-is-the-ceiling-not-a-competitor)). |
 | `m_π(X_{1:N})` | Agent's Bayes mixture `= ∫ p(X_{1:N}\|θ) π(dθ)`. |
 | `π(θ\|X_{1:N})` | Posterior under prior `π`. |
@@ -341,8 +341,8 @@ R_N^q(\pi) \;=\; \mathbb{E}_{\theta\sim q}\,\mathbb{E}_{X_{1:N}\sim p(\cdot\mid\
 $$
 
 **Lower `R` is better:** it is a *loss* — the excess code-length /
-log-loss over an oracle that knows `θ` — with <span style="color: red">`R_N^q(π) ≥ I_q^{(N)} ≥ 0`; the floor `I_q^{(N)}` (not `0`) is reached only by a
-predictor matching nature's marginal, `m_π = m_q`</span>.
+log-loss over an oracle that knows `θ` — with `R_N^q(π) ≥ I_q^{(N)} ≥ 0`; the floor `I_q^{(N)}` (not `0`) is reached only by a
+predictor matching nature's marginal, `m_π = m_q`.
 
 **Then why expect a *maximiser* of mutual information to help
 minimise a loss?** The clash is nomenclatural: **three different "redundancies"**,
@@ -354,16 +354,16 @@ different ones. Set side by side:
 |---|---|---|---|---|
 | self-consistent (**mutual information**) | `I(π) = 𝔼_{θ∼π} r_θ(π)` | the prior `π` *itself* (`m_π` uses the same `π`) | **`max` over `π`** — *design*: pick the most-informative / least-favourable source | `p* = argmax_π I`; value `= C` (capacity) |
 | **worst-case** | `R_N^{max}(π) = max_θ r_θ(π)` | an adversarial `θ` | **`min` over `π`** — the minimax-robust code | `argmin_π R_N^{max} = p*` (**same object** as row 1, by duality) |
-| **foreign-`q` average** (this spec's score) | `R_N^q(π) = 𝔼_{θ∼q} r_θ(π) = I_q^{(N)} + D(m_q‖m_π)` | a *foreign* nature `q` | **`min` over `π`** — the loss we report | <span style="color: red">the prior matched to `q` (its own pullback)</span>, **not** `p*` <span style="color: red">(across the `c`-sweep the single fixed minimiser is `q̄`; see [§2.3](#23-q̄-is-the-ceiling-not-a-competitor))</span> |
+| **foreign-`q` average** (this spec's score) | `R_N^q(π) = 𝔼_{θ∼q} r_θ(π) = I_q^{(N)} + D(m_q‖m_π)` | a *foreign* nature `q` | **`min` over `π`** — the loss we report | the prior matched to `q` (its own pullback), **not** `p*` (across the `c`-sweep the single fixed minimiser is `q̄`; see [§2.3](#23-q̄-is-the-ceiling-not-a-competitor)) |
 
 Reading down the *optimiser* column dissolves the clash:
 infomax's `argmax_π I` (row 1) and the minimax-robust `argmin_π R_N^{max}` (row 2)
 are the **same operation on the same object** `p*` — the two faces of the
 redundancy–capacity saddle (`redundancy-capacity.md`), so "maximising `I`" *is*
 "minimising worst-case redundancy". Our score (row 3) is a **third** redundancy, and
-its minimiser is <span style="color: red">the prior matched to `q` (its own pullback) — across the
+its minimiser is the prior matched to `q` (its own pullback) — across the
 `c`-sweep, the single fixed minimiser is `q̄`
-([§2.3](#23-q̄-is-the-ceiling-not-a-competitor))</span>, **not** `p*`. So `p*` carries **no
+([§2.3](#23-q̄-is-the-ceiling-not-a-competitor)), **not** `p*`. So `p*` carries **no
 guarantee** on row 3; it can beat only the *deployable* priors, and only when their
 marginal mismatch `D(m_q‖m_π)` (the co-volume bias) exceeds `p*`'s — the open bet
 ([§2.2](#22-what-wins-means--and-what-cannot-be-asserted)). A&M's claim is
@@ -466,13 +466,13 @@ Two screens decide whether the effect is real or self-served, replacing the
 redundancy-capacity *tautology* (which cannot fail and is demoted to a unit test,
 T3):
 
-- **Negative control (flat co-volume ⇒ <span style="color: red">the parameter-measure priors tie</span>).** <span style="color: red">In the
+- **Negative control (flat co-volume ⇒ the parameter-measure priors tie<).** In the
   constant-cross-section model (no taper, [§4.1](#41-model-families)), `√det g` is constant, so
   Jeffreys `∝ √det g` reduces *exactly* to uniform-on-the-relevant-coordinate:
   **`p_J = p_U`**, hence `R_N^q(p_J) = R_N^q(p_U)` within Monte-Carlo error, at every
   `d`. That identity is the hard screen (T2): a co-volume *gradient* is the only thing
   that can separate `p_J` from `p_U`, so if they part on the flat model the Jeffreys
-  construction or the marginal estimator is broken.</span> *Flat co-volume* means the
+  construction or the marginal estimator is broken. *Flat co-volume* means the
   irrelevant-direction co-volume (the product of the unresolvable Fisher lengths)
   does not vary along the relevant coordinate, so `√det g` is constant in `θ`. It is **not**
   the same as "the latents are independent": independent latents with equal-length
@@ -480,7 +480,7 @@ T3):
   operative condition is the absent co-volume *gradient*, realised here by the
   constant-cross-section cone ([§1.2](#12-generative-model) panel c, [§4.1](#41-model-families); no taper).
 
-  <span style="color: red">`p*` is **not** expected to tie here, and a `p*` "win" on the flat model is **not** by
+  `p*` is **not** expected to tie here, and a `p*` "win" on the flat model is **not** by
   itself an artefact. The relevant coordinate is a *bounded* interval `θ_1 ∈ [0,L]` with
   Gaussian likelihood — a bounded-Gaussian-mean channel — whose capacity-achieving prior
   is **discrete** (Smith 1971), not uniform, even with constant `√det g`. So `p*` places
@@ -491,7 +491,7 @@ T3):
   ([§6](#6-report)), not a reject criterion: it should concentrate at the boundary (the
   thin end, where the non-cooperative `q` lives) and shrink as the scored `q` is
   restricted to the deep interior, or as `L→∞`. Co-volume is isolated from this edge
-  effect by reading the headline against the deep-interior `q`.</span>
+  effect by reading the headline against the deep-interior `q`.
 
 - **Sign-of-advantage vs cooperativeness `c`.** `p*` wins the cooperative end
   (`c=0`, `q≈m_{p*}`) by self-sampling, trivially. The reported quantity is whether
@@ -523,12 +523,12 @@ $$
 So `p*`'s foreign-`q` redundancy is **capped at capacity for
 any `q` whatsoever** — `p*` can never be catastrophic. No fixed non-infomax prior
 has this: by A&M's own score a prior's worst-case redundancy is `I_π + B(π)` with
-`B(π)=max_θ b(θ)`, and `B(p_J)` *grows with dimension* (<span style="color: red">`>500` bits at
-`d=26` in the exp-decay model — A&M §3.3; `≈55` bits in the hypercone</span>),
-whereas <span style="color: red">`C_N` — the capacity of the `N`-fold channel, distinct from A&M's
+`B(π)=max_θ b(θ)`, and `B(p_J)` *grows with dimension* (`>500` bits at
+`d=26` in the exp-decay model — A&M §3.3; `≈55` bits in the hypercone),
+whereas `C_N` — the capacity of the `N`-fold channel, distinct from A&M's
 single-`σ` mutual information `I⋆` — tracks only the **resolvable** complexity: roughly
 flat in *nominal* `d` once `d>3` (A&M Fig. 5), growing only as `~(d_eff/2)·log N` in the
-budget `N` (Clarke–Barron 1990; Rissanen 1996)</span>. This is exactly the "tautology"
+budget `N` (Clarke–Barron 1990; Rissanen 1996). This is exactly the "tautology"
 [§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note) demotes to a unit
 test (T3): it cannot *fail*, but its *content* — a `d`-controlled ceiling for `p*`
 against an `O(d)` worst case for the competitors — is the load-bearing half of the
@@ -542,16 +542,16 @@ manifold is a **hyperribbon** ([§1.2](#12-generative-model)) whose widths fall 
 space of *distinguishable predictions* is dominated by a few stiff directions, and
 Jeffreys' weight `∝√det g` piles into the high-co-volume corner — a **vanishing
 fraction** of that space as `d` grows, swinging by orders of magnitude under tiny
-parameter changes. <span style="color: red">Hence for a nature `q` whose predictions are spread over
+parameter changes. Hence for a nature `q` whose predictions are spread over
 distinguishable outcomes, most of `q`'s mass falls where `b_{p_J}(θ)>0` is large. The
 link from large *pointwise* bias to a large *data-marginal* mismatch is the `N=1`
-compensation identity applied to `p_J` (the same split as (2.1.2), [§9.1](#91-the-compensation-identity-for-the-n-fold-marginal-eq-212)):</span>
+compensation identity applied to `p_J` (the same split as (2.1.2), [§9.1](#91-the-compensation-identity-for-the-n-fold-marginal-eq-212)):
 
 $$
 \mathbb{E}_{\theta\sim q}\, b_{p_J}(\theta) \;=\; I_q^{(1)} \;+\; D_{\mathrm{KL}}\!\big(m_q \,\|\, m_{p_J}\big) \;-\; I_{p_J}. \tag{3.2.1}
 $$
 
-<span style="color: red">So `D(m_q‖m_{p_J}) = 𝔼_q b_{p_J} − (I_q^{(1)} − I_{p_J})`, and the `b`-growth transfers to
+So `D(m_q‖m_{p_J}) = 𝔼_q b_{p_J} − (I_q^{(1)} − I_{p_J})`, and the `b`-growth transfers to
 the marginal mismatch only if the subtracted term does not cancel it. In hyperribbon
 geometry it cannot: both `I_q^{(1)}` and `I_{p_J}` are bounded by the single-observation
 *resolvable* complexity `C_1 = O(d_{eff})`, which does not grow with nominal `d` (the
@@ -561,10 +561,10 @@ genuinely `q`-dependent assumption** is then `𝔼_q b_{p_J} = Ω(d)` — that `
 mass, with enough spread, in the high-bias region for its average to track the max; this
 is the precise content of "spread over distinguishable outcomes". Under it,
 `D(m_q‖m_{p_J}) = Ω(d) − o(d)` grows with `d`, while `D(m_q‖m_{p*})` is *expected* to
-stay `O(1)` — asserted, not shown, and left to the experiment ([§2.2](#22-what-wins-means--and-what-cannot-be-asserted)).</span> A&M state the
+stay `O(1)` — asserted, not shown, and left to the experiment ([§2.2](#22-what-wins-means--and-what-cannot-be-asserted)). A&M state the
 same point as a **new invariance** — *predictions should be independent of
 unobservable model detail* — which `m_{p*}` respects and `m_{p_J}` violates. Quinn
-et al. also dispatch <span style="color: red">the discreteness objection</span> that a *discrete* `p*` must mis-predict
+et al. also dispatch the discreteness objection that a *discrete* `p*` must mis-predict
 when the truth lies between atoms: along a **relevant** direction the atom spacing
 *is* the resolution, so the error is no worse than rounding `θ` to its resolved
 precision (within the noise); along an **irrelevant** direction, putting weight at
@@ -601,20 +601,20 @@ into a **bias term** and a **calibration term** — closed form in eq. (9.4.1),
 The point of the split is the comparison to A&M. The **bias term** is a
 precision-weighted `Δ²` — *exactly A&M's quantity*, up to weighting — while the
 **calibration term** (predictive spread `Σ_π` against the noise `σ²I`) is precisely
-what `Δ` cannot see: since `Σ_π = σ²I + Cov_π[y(θ)|X_{1:N}] ⪰ σ²I`, <span style="color: red">the calibration
+what `Δ` cannot see: since `Σ_π = σ²I + Cov_π[y(θ)|X_{1:N}] ⪰ σ²I`, the calibration
 term is the *oracle-relative* cost of the predictive's residual posterior spread — the
 oracle knows `θ` and predicts with `σ²I`, the agent cannot — invisible to the
 centre-only `Δ` and charged by a proper score. It is **not** a miscalibration defect in
 `m_π`: a well-specified Bayes predictive is correctly propagating its uncertainty about
-`θ`, so the proper score charges the unavoidable cost of not knowing `θ`, not a fault.</span>
+`θ`, so the proper score charges the unavoidable cost of not knowing `θ`, not a fault.
 Our redundancy score therefore *contains* A&M's `Δ` (as the bias term) and adds the
 term `Δ` is blind to.
 
 The split also says **the bias term is what decides the contest.** Because `p*`'s
-atoms sit an `O(1)` Fisher length apart in prediction space, <span style="color: red">its excess predictive
+atoms sit an `O(1)` Fisher length apart in prediction space, its excess predictive
 spread `Cov_π[y|X] = O(σ²)` even in atom gaps, so its calibration term is `O(1)` —
 bounded, independent of nominal `d` — and a smooth well-specified prior is the same
-order</span>. So calibration *modulates* the boundary but does
+order. So calibration *modulates* the boundary but does
 not *decide* it; the decider is the `O(d)`-vs-`O(1)` transfer of the **bias** gap
 ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)). The calibration
 term is **reported** as a PIT / over-dispersion diagnostic ([§6](#6-report)) and the
