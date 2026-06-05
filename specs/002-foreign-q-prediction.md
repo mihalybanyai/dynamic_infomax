@@ -2,11 +2,11 @@
 
 | Section | Status | Date |
 |---|---|---|
-| [0. Context](#0-context) | draft | — |
-| [1. Setup](#1-setup) | draft | — |
-| [1.2 Generative model](#12-generative-model) | draft | — |
-| [2. Objective](#2-objective) | draft | — |
-| [3. The case for transfer (and how it could fail)](#3-the-case-for-transfer-and-how-it-could-fail) | draft | — |
+| [0. Context](#0-context) | reviewed | 050626 |
+| [1. Setup](#1-setup) | reviewed | 050626 |
+| [1.2 Generative model](#12-generative-model) | reviewed | 050626 |
+| [2. Objective](#2-objective) | reviewed | 050626 |
+| [3. The case for transfer (and how it could fail)](#3-the-case-for-transfer-and-how-it-could-fail) | reviewed | 050626 |
 | [4. Algorithm](#4-algorithm) | draft | — |
 | [5. Properties to verify](#5-properties-to-verify) | draft | — |
 | [6. Report](#6-report) | draft | — |
@@ -37,7 +37,7 @@ so what they establish is that `p*` codes *its own* source unbiasedly, not that 
 infers a *foreign* nature `q` well.
 
 This spec tests the one thing that separation leaves open. It is **not** "is `p*` a
-good epistemic prior" — under a strictly proper score `p*` is dominated by <span style="color: red">any prior whose Bayes mixture matches nature's marginal (e.g. `q` itself in identifiable models; in sloppy/overparametrised models the matching priors form a larger equivalence class — the condition is on the *marginal*, not a unique prior, cf. [§2.3](#23-q̄-is-the-ceiling-not-a-competitor))</span> *by theorem* (the compensation identity, [§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss)), and `p*` is a
+good epistemic prior" — under a strictly proper score `p*` is dominated by any prior whose Bayes mixture matches nature's marginal (e.g. `q` itself in identifiable models; in sloppy/overparametrised models the matching priors form a larger equivalence class — the condition is on the *marginal*, not a unique prior, cf. [§2.3](#23-q̄-is-the-ceiling-not-a-competitor)) *by theorem* (the compensation identity, [§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss)), and `p*` is a
 design object by construction. It is the **transfer** question stated in
 `notes/prediction_objective_for_priors.md` §0/§3:
 
@@ -61,7 +61,7 @@ control** (a model with no co-volume pathology, where every prior must tie) and 
 **cooperativeness sweep** over `q` (does `p*` win only when nature happens to live
 where it expects?) — so the headline is not fixed in advance by an unstated choice
 of `q`, the failure that sank `specs/001-infomax-betting-redteam_third.md` (its F1
-finding). <span style="color: red">The asymmetry — the competitors' co-volume bias climbing steeply with `d` (empirically, A&M: `>500` bits at `d=26` in exp-decay, `≈55` in the hypercone) against `p*`'s bounded penalty — is characterised</span> in [§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d).
+finding). The asymmetry — the competitors' co-volume bias climbing steeply with `d` (empirically, A&M: `>500` bits at `d=26` in exp-decay, `≈55` in the hypercone) against `p*`'s bounded penalty — is characterised in [§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d).
 
 A second strand follows from the same logic. The property that really matters here
 is **budget dependence**: an uninformative prior should be a function of the
@@ -97,16 +97,16 @@ buy anything over the cheap MDL one on held-out prediction** ([§3.4](#34-the-se
 | `c` | The q-family cooperativeness knob ([§4.3](#43-foreign-q-family)): `c=0` cooperative (`q≈m_{p*}`-pullback), `c=1` non-cooperative. |
 | `m_q(X_{1:N})` | Nature's `N`-fold data marginal `= ∫ p(X_{1:N}\|θ) q(dθ)`. |
 | `π` | Agent's prior, one of `{p*, p_J, p_U, p_LN, q̄}`. |
-| `p*` | Infomax / capacity-achieving prior, <span style="color: red">`argmax_π I(Θ;X_{1:N})` — the capacity achiever of the **budget-`N`** channel `θ→X_{1:N}` (equivalently the single-observation achiever at effective noise `σ/√N`)</span> ([§4.2](#42-prior-construction)). <span style="color: red">Discrete for the model classes in this spec (bounded-parameter Gaussian channels; Smith 1971).</span> |
+| `p*` | Infomax / capacity-achieving prior, `argmax_π I(Θ;X_{1:N})` — the capacity achiever of the **budget-`N`** channel `θ→X_{1:N}` (equivalently the single-observation achiever at effective noise `σ/√N`) ([§4.2](#42-prior-construction)). Discrete for the model classes in this spec (bounded-parameter Gaussian channels; Smith 1971). |
 | `p_J` | Jeffreys prior `∝ √{det g(θ)}`, normalised on `Θ`. |
 | `p_U` | Uniform on the parameter box `Θ`. |
 | `p_LN` | Normal in `θ` (log-normal in the rate `k_μ=e^{-θ_μ}`) (A&M Eq. 10): `∝ Π_μ e^{-(θ_μ-θ̄)²/2σ̄²}`. |
 | `q̄` | The hyper-averaged matched prior `= 𝔼_c[q]` (reference ceiling only, [§2.3](#23-q̄-is-the-ceiling-not-a-competitor)). |
 | `m_π(X_{1:N})` | Agent's Bayes mixture `= ∫ p(X_{1:N}\|θ) π(dθ)`. |
 | `π(θ\|X_{1:N})` | Posterior under prior `π`. |
-| <span style="color: red">`I(Θ;X_1)`</span> | <span style="color: red">Single-observation</span> mutual information `= 𝔼_π D_{KL}(p(x\|θ)‖m_π)`<span style="color: red">, `x` one observation; the `N`-fold `I(Θ;X_{1:N})` is its budget-`N` analogue (used for `p*`/`C`), and A&M's `I⋆` is this single-`σ` version</span>. |
-| `C` | Channel capacity `= ` <span style="color: red">`sup_π I(Θ;X_{1:N}) ≡ C_N` (budget-`N`; the [§3.1](#31-the-one-guarantee-worst-case-over-q) ceiling)</span>. |
-| <span style="color: red">`b_π(θ)`</span> | Bias pressure `= D_{KL}(p(x\|θ)‖m_π) − ` <span style="color: red">`I_π(Θ;X_1)` for a given agent prior `π`</span> (A&M Eq. 5)<span style="color: red">; `b(θ)` is shorthand when `π` is fixed by context</span>. |
+| `I(Θ;X_1)` | Single-observation mutual information `= 𝔼_π D_{KL}(p(x\|θ)‖m_π)`, `x` one observation; the `N`-fold `I(Θ;X_{1:N})` is its budget-`N` analogue (used for `p*`/`C`), and A&M's `I⋆` is this single-`σ` version. |
+| `C` | Channel capacity `= ` `sup_π I(Θ;X_{1:N}) ≡ C_N` (budget-`N`; the [§3.1](#31-the-one-guarantee-worst-case-over-q) ceiling). |
+| `b_π(θ)` | Bias pressure `= D_{KL}(p(x\|θ)‖m_π) − ` `I_π(Θ;X_1)` for a given agent prior `π` (A&M Eq. 5); `b(θ)` is shorthand when `π` is fixed by context. |
 | `Δ(x)` | Posterior deviation `= σ^{-1}\|y(θ̂_x) − 𝔼_{π(θ\|x)} y(θ)\|` (A&M Eq. 9). |
 | `R_N^q(π)` | The headline score: redundancy / cumulative held-out predictive log-loss ([§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss)). |
 | `I_q^{(N)}` | Matched floor `= 𝔼_{θ∼q} D_{KL}(p(X_{1:N}\|θ)‖m_q)` (prior-independent). |
@@ -309,9 +309,9 @@ load-bearing claim of the spec is a statement about `g(θ)` and its gradient. Th
 co-volume *bias* A&M attribute to Jeffreys is exactly the pull of the
 `√{det g} ∝ θ_1^{d-1}` factor (panel b); its **absence** in the constant-cross-section
 model (panel c) is why that model is the negative control — with no co-volume gradient
-there is no pathology to avoid, so <span style="color: red">the parameter-measure priors `p_J` and `p_U` must coincide (`p*` need *not* tie — it is discrete on the bounded coordinate; a pipeline check, not a screen)</span>
+there is no pathology to avoid, so the parameter-measure priors `p_J` and `p_U` must coincide (`p*` need *not* tie — it is discrete on the bounded coordinate; a pipeline check, not a screen)
 ([§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note), test T2). The
-claimed *asymmetry* — <span style="color: red">the competitors' bias climbing steeply with `d` (empirical, A&M) vs `p*`'s bounded `O(1)`</span> — is the contrast between
+claimed *asymmetry* — the competitors' bias climbing steeply with `d` (empirical, A&M) vs `p*`'s bounded `O(1)` — is the contrast between
 a gradient that steepens with `d` and an atom spacing that does not
 ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)). And the *transfer*
 question is whether that geometric asymmetry, established by A&M on data `p*` itself
@@ -460,9 +460,9 @@ not being matched. "Does `p*` beat `q̄`" is a non-question.
 
 ### 2.4 The falsification structure (the §5.0 go/no-go of the note)
 
-<span style="color: red">One screen</span> decides whether the effect is real or self-served, replacing the
+One screen decides whether the effect is real or self-served, replacing the
 redundancy-capacity *tautology* (which cannot fail and is demoted to a unit test,
-T3).<span style="color: red"> The flat-co-volume *negative control* that used to sit beside it is no longer
+T3). The flat-co-volume *negative control* that used to sit beside it is no longer
 a falsification screen: on the constant-cross-section model (no taper, [§4.1](#41-model-families))
 `√det g` is constant, so Jeffreys `∝ √det g` reduces *exactly* to
 uniform-on-the-relevant-coordinate (`p_J = p_U`) — an **algebraic identity**, not a fact
@@ -472,9 +472,9 @@ test (T2, [§5](#5-properties-to-verify)). `p*` is **not** expected to tie there
 bounded relevant coordinate `θ_1 ∈ [0,L]` it is discrete (Smith 1971) and can win by a
 bounded-channel *edge / worst-case-hedge* effect unrelated to co-volume, recorded as a
 diagnostic ([§6](#6-report)), not a reject criterion; co-volume is isolated from that
-edge effect by reading the headline against a deep-interior `q`.</span>
+edge effect by reading the headline against a deep-interior `q`.
 
-<span style="color: red">**Sign-of-advantage vs cooperativeness `c`** is the live screen.</span> `p*` wins the cooperative end
+**Sign-of-advantage vs cooperativeness `c`** is the live screen. `p*` wins the cooperative end
 (`c=0`, `q≈m_{p*}`) by self-sampling, trivially. The reported quantity is whether
 `min_{π'} ΔR(p*,π') < 0` *persists* into the non-cooperative range (`c→1`). Win
 across realistic `c` ⇒ transfer (positive result); win only at `c≈0` ⇒
@@ -502,16 +502,16 @@ R_N^q(p^\star) \;=\; \mathbb{E}_{\theta\sim q}\, D_{\mathrm{KL}}\!\big(p(X_{1:N}
 $$
 
 So `p*`'s foreign-`q` redundancy is **capped at capacity for
-any `q` whatsoever** — `p*` can never be catastrophic. <span style="color: red">The deployable priors lack it (shown for Jeffreys, and empirically for log-normal — A&M p. 7; `p_U`/`p_LN` are taken to inherit the same co-volume growth on the hyperribbon, not separately proven):</span> by A&M's own score a prior's worst-case redundancy is `I_π + B(π)` with
-`B(π)=max_θ b(θ)`, and `B(p_J)` <span style="color: red">grows rapidly with dimension — empirically, for these models, not a proven hyperribbon rate</span> (`>500` bits at
+any `q` whatsoever** — `p*` can never be catastrophic. The deployable priors lack it (shown for Jeffreys, and empirically for log-normal — A&M p. 7; `p_U`/`p_LN` are taken to inherit the same co-volume growth on the hyperribbon, not separately proven): by A&M's own score a prior's worst-case redundancy is `I_π + B(π)` with
+`B(π)=max_θ b(θ)`, and `B(p_J)` grows rapidly with dimension — empirically, for these models, not a proven hyperribbon rate (`>500` bits at
 `d=26` in the exp-decay model — A&M §3.3; `≈55` bits in the hypercone),
 whereas `C_N` — the capacity of the `N`-fold channel, distinct from A&M's
 single-`σ` mutual information `I⋆` — tracks only the **resolvable** complexity: roughly
-flat in *nominal* `d` once `d>3` <span style="color: red">because both `C_N` and `I⋆` are governed by the saturating resolvable dimension `d_eff` (A&M Fig. 5 shows that saturation for `I⋆`)</span>, growing only as `~(d_eff/2)·log N` in the
+flat in *nominal* `d` once `d>3` because both `C_N` and `I⋆` are governed by the saturating resolvable dimension `d_eff` (A&M Fig. 5 shows that saturation for `I⋆`), growing only as `~(d_eff/2)·log N` in the
 budget `N` (Clarke–Barron 1990; Rissanen 1996). This is exactly the "tautology"
 [§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note) demotes to a unit
 test (T3): it cannot *fail*, but its *content* — a `d`-controlled ceiling for `p*`
-against <span style="color: red">a competitor worst case that climbs steeply with `d` (empirically; A&M)</span> — is the load-bearing half of the
+against a competitor worst case that climbs steeply with `d` (empirically; A&M) — is the load-bearing half of the
 case for transfer.
 
 ### 3.2 The heuristic: the average-case asymmetry in high `d`
@@ -532,7 +532,7 @@ $$
 $$
 
 So `D(m_q‖m_{p_J}) = 𝔼_q b_{p_J} − (I_q^{(1)} − I_{p_J})`, and the `b`-growth transfers to
-the marginal mismatch only if the subtracted term does not cancel it. <span style="color: red">This needs one
+the marginal mismatch only if the subtracted term does not cancel it. This needs one
 explicit geometric assumption: for sloppy hyperribbon models at fixed `σ`, the resolvable
 dimension is `d_eff = O(1)` in nominal `d` — a handful of stiff directions regardless of
 `d` (A&M Fig. 2, Quinn §2). Under it both `I_q^{(1)}` and `I_{p_J}` are bounded by the
@@ -542,20 +542,20 @@ that grows with `d`. That numerator is the worst-case bias `B(p_J) = max_θ b_{p
 grows rapidly with `d` empirically (A&M: `>500` bits at `d=26` in exp-decay, `≈55` in the
 hypercone — not a proven rate, but far above the `O(1)` it races). The **one genuinely
 `q`-dependent assumption** is then that `𝔼_q b_{p_J}` tracks that growth — `q` puts enough
-mass, with enough spread, in the high-bias region for its average to follow the max</span>; this
-is the precise content of "spread over distinguishable outcomes". <span style="color: red">Under it `D(m_q‖m_{p_J})`
+mass, with enough spread, in the high-bias region for its average to follow the max; this
+is the precise content of "spread over distinguishable outcomes". Under it `D(m_q‖m_{p_J})`
 is (a quantity growing with `d`) `− O(1)`, so it grows with `d`. `D(m_q‖m_{p*})`, by
 contrast, is bounded by the capacity ceiling `C_N` for *every* `q` (flat in nominal `d`;
 [§3.1](#31-the-one-guarantee-worst-case-over-q)) and is *expected* to be far smaller still
-— the worst case is guaranteed, the average is left to the experiment</span> ([§2.2](#22-what-wins-means--and-what-cannot-be-asserted)). A&M state the
+— the worst case is guaranteed, the average is left to the experiment ([§2.2](#22-what-wins-means--and-what-cannot-be-asserted)). A&M state the
 same point as a **new invariance** — *predictions should be independent of
 unobservable model detail* — which `m_{p*}` respects and `m_{p_J}` violates. Quinn
 et al. also dispatch the discreteness objection that a *discrete* `p*` must mis-predict
 when the truth lies between atoms: along a **relevant** direction the atom spacing
-<span style="color: red">is `O(1)` resolutions</span>, so the error is no worse than rounding `θ` to its resolved
+is `O(1)` resolutions, so the error is no worse than rounding `θ` to its resolved
 precision (within the noise); along an **irrelevant** direction, putting weight at
 the boundary is just what an effective theory does (the discarded detail does not
-move predictions). <span style="color: red">These are *intuition*, not a bound: they speak to the
+move predictions). These are *intuition*, not a bound: they speak to the
 self-consistent posterior bias, not to `D(m_q‖m_{p*})` for an arbitrary `q`. The actual
 guarantee on the marginal mismatch is the §3.1 capacity ceiling — `D(m_q‖m_{p*}) ≤ C_N`
 for every `q`, finite because `m_{p*}` is a Gaussian *mixture* with full support over data
@@ -564,7 +564,7 @@ never diverges the way a prior-space KL would). Quinn's replies are then the geo
 reason the *typical* mismatch sits well below that ceiling — the atoms tile the manifold
 at the resolution scale, so any `q`-generated datum lands within `O(1)` Fisher length of
 an atom's prediction. None of this leans on A&M's self-sampling ([§1.1](#11-notation)),
-the part of their result that does *not* transfer.</span>
+the part of their result that does *not* transfer.
 
 The asymmetry has a concrete closed form in the hypercone (A&M Appendix A.1; derived
 in [§9.2](#92-hypercone-posterior-deviation-eq-922)). With one relevant coordinate
@@ -573,7 +573,7 @@ for an observation at relevant-coordinate value `x` (with `1 ≪ x ≪ L`) has m
 deviation `Δ = (d−1)/x + O(x^{-3})` (eq. (9.2.2)). This is a **pointwise** posterior
 property — it references neither `p*` nor `q` — and it is *largest at the thin end*
 (`x` small), precisely where an interior/edge foreign `q` places data; so the
-deployable priors' bias **transfers** to any foreign `q` and grows like <span style="color: red">the hypercone closed form `(d−1)`</span>.
+deployable priors' bias **transfers** to any foreign `q` and grows like the hypercone closed form `(d−1)`.
 `p*`'s posterior, a finite mixture over atoms an `O(1)` Fisher length apart **in
 prediction space**, has worst-case pointwise bias bounded by the atom spacing —
 `O(1)` in noise units, *independent of `d`*. Self-sampling (`x∼p*`) lands data on
@@ -586,18 +586,19 @@ once the self-sampling flattery is removed is the open empirical question.
 This subsection is **interpretive, not part of the headline**: it decomposes the
 per-step held-out loss into two readable pieces so we can see *why* one prior beats
 another and connect the score to A&M's `Δ`. Approximating each prior's
-posterior-predictive as a Gaussian `m_π(x'|X_{1:N}) ≈ 𝒩(μ_π, Σ_π)` (<span style="color: red">exact for the smooth priors in the Gaussian-manifold limit,</span> a heuristic for
-the discrete `p*`, whose true predictive is a finite mixture), the per-step <span style="color: red">held-out KL is the standard KL between two Gaussians, which splits</span>
-into a **bias term** and a **calibration term** <span style="color: red">(eq. (3.3.1)):</span>
+posterior-predictive as a Gaussian `m_π(x'|X_{1:N}) ≈ 𝒩(μ_π, Σ_π)` (exact for the smooth priors in the Gaussian-manifold limit, a heuristic for
+the discrete `p*`, whose true predictive is a finite mixture), the per-step held-out KL is the standard KL between two Gaussians, which splits
+into a **bias term** and a **calibration term** (eq. (3.3.1)):
 
 $$
 D_{\mathrm{KL}}\!\big(\mathcal{N}(y(\theta),\sigma^2 I)\,\|\,\mathcal{N}(\mu_\pi,\Sigma_\pi)\big)
-= \tfrac12\Big[\underbrace{(\mu_\pi-y(\theta))^{\!\top}\Sigma_\pi^{-1}(\mu_\pi-y(\theta))}_{\text{bias term}}
+= \\
+\tfrac12\Big[\underbrace{(\mu_\pi-y(\theta))^{\!\top}\Sigma_\pi^{-1}(\mu_\pi-y(\theta))}_{\text{bias term}}
 + \underbrace{\sigma^2\,\mathrm{tr}\,\Sigma_\pi^{-1}-m+\log\tfrac{\det\Sigma_\pi}{\sigma^{2m}}}_{\text{calibration term}}\Big]. \tag{3.3.1}
 $$
 
 The point of the split is the comparison to A&M. The **bias term** is a
-precision-weighted `Δ²` — <span style="color: red">the held-out analogue of A&M's quantity, up to the precision weighting *and* the reference point (the truth `y(θ_true)` here vs A&M's in-sample MLE `y(θ̂_x)`, which differ by `O(σ)` for held-out data; see [§4](#4-algorithm))</span> — while the
+precision-weighted `Δ²` — the held-out analogue of A&M's quantity, up to the precision weighting *and* the reference point (the truth `y(θ_true)` here vs A&M's in-sample MLE `y(θ̂_x)`, which differ by `O(σ)` for held-out data; see [§4](#4-algorithm)) — while the
 **calibration term** (predictive spread `Σ_π` against the noise `σ²I`) is precisely
 what `Δ` cannot see: since `Σ_π = σ²I + Cov_π[y(θ)|X_{1:N}] ⪰ σ²I`, the calibration
 term is the *oracle-relative* cost of the predictive's residual posterior spread — the
@@ -605,7 +606,7 @@ oracle knows `θ` and predicts with `σ²I`, the agent cannot — invisible to t
 centre-only `Δ` and charged by a proper score. It is **not** a miscalibration defect in
 `m_π`: a well-specified Bayes predictive is correctly propagating its uncertainty about
 `θ`, so the proper score charges the unavoidable cost of not knowing `θ`, not a fault.
-Our redundancy score therefore *contains* <span style="color: red">the held-out analogue of</span> A&M's `Δ` (as the bias term) and adds the
+Our redundancy score therefore *contains* the held-out analogue of A&M's `Δ` (as the bias term) and adds the
 term `Δ` is blind to.
 
 The split also says **the bias term is what decides the contest.** Because `p*`'s
@@ -627,7 +628,7 @@ by a different route than `p*`. The principle: an uninformative prior should be 
 *function of the resolving power* of the experiment (`σ`, equivalently `N`),
 weighting parameter regions by what the data *at that budget* can tell apart. Both
 priors below are explicit functions of `σ`, and **Jeffreys is the `σ→0`
-(infinite-budget) limit of both** <span style="color: red">(in the interior / in mutual information; the boundary atoms persist — see "Why they coincide" below)</span> — its budget-*independence* is exactly the
+(infinite-budget) limit of both** (in the interior / in mutual information; the boundary atoms persist — see "Why they coincide" below) — its budget-*independence* is exactly the
 property that sinks it in high `d` ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)).
 Meta-cognitively: a resolution-limited agent's "prior" is fixed by what it can
 learn, not by a budget-free notion of ignorance — and there is more than one
@@ -635,30 +636,30 @@ budget-dependent way to be uninformative.
 
 **The two constructions.**
 
-- **Capacity / infomax — `p*`.** <span style="color: red">`argmax_π I(Θ;X_{1:N})`</span>: the
+- **Capacity / infomax — `p*`.** `argmax_π I(Θ;X_{1:N})`: the
   least-favourable / minimax-**expected**-redundancy prior (Bernardo's
   reference-prior lineage; `redundancy-capacity.md`). Its `σ`-dependence is the atom
   count `~√N`.
 - **NML / MDL — `p_proj`.** `p_NML(x) = max_θ p(x|θ)/Z` is
-  the **Shtarkov (1987) normalized-maximum-likelihood** distribution <span style="color: red">over the *data*</span>, with `log Z`
+  the **Shtarkov (1987) normalized-maximum-likelihood** distribution over the *data*, with `log Z`
   the **Rissanen (1996) parametric (stochastic) complexity** (Grünwald 2007);
   `p_proj` is its pushforward through the MLE map `θ̂(x)` (A&M App. A.3
-  "projected-ML" / Quinn §5.2 "adaptive slab-and-spike") <span style="color: red">— a *prior* over `θ`, distinct from the code `p_NML` it is built from (`nml-mdl.md` §4: no prior's Bayes mixture equals `p_NML` at finite `N`)</span>. Its `σ`-dependence is the
-  halo width `σ`. <span style="color: red">`p_proj` solves *neither* minimax exactly — not the expected-redundancy one `p*` solves, nor the pointwise-regret one `p_NML` solves — but it is not arbitrary: the MLE `θ̂` is precisely the statistic `p_NML` weights by (`p_NML(x) ∝ p(x|θ̂)`), so pushing it forward carries NML's stochastic-complexity weighting into θ-space. Its pedigree is MDL, left uncited by A&M/Quinn, who present it as an ad-hoc easy approximation of `p*`.</span>
+  "projected-ML" / Quinn §5.2 "adaptive slab-and-spike") — a *prior* over `θ`, distinct from the code `p_NML` it is built from (`nml-mdl.md` §4: no prior's Bayes mixture equals `p_NML` at finite `N`). Its `σ`-dependence is the
+  halo width `σ`. `p_proj` solves *neither* minimax exactly — not the expected-redundancy one `p*` solves, nor the pointwise-regret one `p_NML` solves — but it is not arbitrary: the MLE `θ̂` is precisely the statistic `p_NML` weights by (`p_NML(x) ∝ p(x|θ̂)`), so pushing it forward carries NML's stochastic-complexity weighting into θ-space. Its pedigree is MDL, left uncited by A&M/Quinn, who present it as an ad-hoc easy approximation of `p*`.
 
-**Why they coincide here.** <span style="color: red">`p*` and `p_NML` solve *different* but kindred
+**Why they coincide here.** `p*` and `p_NML` solve *different* but kindred
 universal-coding problems — `p*` minimises worst-case **expected** redundancy
 `max_θ 𝔼_{x|θ} log[p/q]` (a prior), `p_NML` the worst-case **pointwise** regret
 `max_x[log max_θ p(x|θ) − log q]` (a code) — and `p_proj` is the MDL-motivated prior that
 approximates `p*` by the `p_NML` route. The approximation has no tighter characterisation
-than this: `p_proj` and `p*` converge to the *same* object and are *both* budget-dependent.</span>
+than this: `p_proj` and `p*` converge to the *same* object and are *both* budget-dependent.
 They nearly agree on our models for two
 reasons: *(i) asymptotically*, both carry the same stochastic complexity
 `(d/2)log(N/2π) + log∫√det g` (Clarke–Barron 1990; Rissanen 1996) — the shared
-`σ→0` limit, which is Jeffreys <span style="color: red">in the interior / in mutual information; the worst-case bias keeps both discrete at the boundary, so this convergence is *not uniform* (A&M §2.1: `B_J ↛ 0`) — exactly the non-uniformity the corner-1 contrast below exploits</span>; *(ii) in hyperribbon geometry at finite `σ`*,
+`σ→0` limit, which is Jeffreys in the interior / in mutual information; the worst-case bias keeps both discrete at the boundary, so this convergence is *not uniform* (A&M §2.1: `B_J ↛ 0`) — exactly the non-uniformity the corner-1 contrast below exploits; *(ii) in hyperribbon geometry at finite `σ`*,
 resolution-adaptation is essentially **unique** (weight the few stiff directions,
 collapse the sloppy ones onto edges), so both land on nearly the same prior and
-nearly the same MI (Quinn et al. Fig. 12<span style="color: red">, empirically</span>). <span style="color: red">So they are two budget-dependent universal-coding objects converging to the same limit, not an approximation-and-original pair with a provable optimality gap.</span> The live question is <span style="color: red">therefore</span> not "how well does `p_proj`
+nearly the same MI (Quinn et al. Fig. 12, empirically). So they are two budget-dependent universal-coding objects converging to the same limit, not an approximation-and-original pair with a provable optimality gap. The live question is therefore not "how well does `p_proj`
 approximate `p*`" but **"does the harder capacity object buy anything over the cheap
 MDL one on held-out prediction"** (the [§3.6](#36-falsification) falsification).
 
@@ -728,9 +729,20 @@ neither.
 
 ## 4. Algorithm
 
-Three caveats carry from [§3](#3-the-case-for-transfer-and-how-it-could-fail) into
+Four caveats carry from [§3](#3-the-case-for-transfer-and-how-it-could-fail) into
 the implementation:
 
+- **Budget `N` via effective noise.** `p*` is the capacity prior of the **budget-`N`
+  channel** ([§1.1](#11-notation), [§3.1](#31-the-one-guarantee-worst-case-over-q)),
+  `argmax_π I(Θ;X_{1:N})`. By Gaussian sufficiency the `N` i.i.d. observations reduce to
+  one observation of the sample mean `x̄ ∼ 𝒩(y(θ), σ²/N · I_m)`, so the **entire pipeline
+  is built at the effective noise `σ_eff = σ/√N`** — `p*`, the FIM and Jeffreys, the Bayes
+  mixtures, and the score all use `σ_eff`. This is the route that makes the budget-`N`
+  definition computable without ever forming the `N`-fold output alphabet; the **explicit
+  `N`-fold channel** is built only as a cross-check (T7c / the AtomicPriors `repeat`
+  reference, [§5.2](#52-test-descriptions)/[§5.5](#55-atomicpriorsjl-reference-fixtures)).
+  Throughout §4, "build at `σ`" means "build at `σ_eff`"; a cell is keyed by `(σ, N)` and
+  only `σ_eff` enters the math.
 - **Reference point.** A&M's `Δ` uses the in-sample MLE `θ̂_x`; the held-out bias
   term (eq. (3.3.1)) uses `y(θ_true)`. For held-out data `θ̂_{x'} ≈` projection of
   `x'`; we score against `y(θ_true)` throughout. The hypercone closed form
@@ -774,17 +786,47 @@ All three share the Gaussian likelihood `p(x|θ)=𝒩(y(θ),σ²I_m)` and FIM
    the bounded relevant axis — Smith 1971 — so it need not coincide with `p_U`; see
    [§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note).)
 
+**Model construction (new src code — pseudocode).** A family is a prediction map `y(θ)`
+plus its FIM at the effective noise; the rotation `Q` and the vertex-curvature knob act on
+the base map. (For exp-decay the output dimension is `m` observation times; for the
+hypercone families it is `d`.)
+
+```python
+def build_model(family, d, m, sigma, N, *, taper=1.0, rotation=0.0, curvature=0.0):
+    sigma_eff = sigma / sqrt(N)                 # budget-N sufficiency (§4.0)
+    times = linspace(1.0, 5.0, m)              # A&M observation window
+
+    def y(theta):                               # theta (..., d) -> y (..., m_out)
+        if family == "exp_decay":               # A&M Eq. 6, k_mu = e^{-theta_mu}
+            k = exp(-theta)                                     # (..., d)
+            return (1/d) * sum(exp(-k[..., :, None] * times), axis=-2)   # (..., m)
+        # hypercone / constant-cross-section: embedding in R^d
+        th = rotate(theta, rotation)            # Q theta -> relevant dir off-axis
+        r  = (th[..., 0] / L) if taper > 0 else r0          # cross-section scale
+        base = concat([th[..., :1], r[..., None] * th[..., 1:]], axis=-1)
+        return sharpen_vertex(base, curvature)  # convex-vertex curvature (p* vs p_proj)
+
+    def fim(theta):                             # g_{mu nu} = sigma_eff^-2 Σ_t ∂_mu y_t ∂_nu y_t
+        J = jacobian(y)(theta)                  # (..., m_out, d); closed form for exp-decay (§9.3)
+        return (swapaxes(J, -1, -2) @ J) / sigma_eff**2     # (..., d, d)
+
+    return Model(y=y, fim=fim, sigma_eff=sigma_eff, box=parameter_box(family, d))
+```
+
 ### 4.2 Prior construction
 
-- **`p*` — discrete infomax prior.** *Primary method (small `d`):* multi-dimensional
-  Blahut–Arimoto on a `θ`-grid of `G` cells per axis, generalising spec 000's 1-D
-  solver, with the continuous-output `f_KL(θ)=D(p(x|θ)‖m_π)` estimated by the
-  kernel-density approximation of A&M Appendix A.2 (Eq. A1) or by Monte-Carlo over
-  `x`. *Cross-check / larger `d`:* atomic optimisation (L-BFGS over atom positions
-  and weights) per A&M Appendix A.2, i.e. the method of `mcabbott/AtomicPriors.jl`.
-  The two methods must agree on `R` (T7b) where both are feasible. **The `p*`
-  solver is the principal new infrastructure and the main feasibility risk — see
-  [§7](#7-open-questions) OQ-1.**
+- **`p*` — discrete infomax prior of the budget-`N` channel.** Built at the **effective
+  noise `σ_eff = σ/√N`** (§4.0), so it realises `argmax_π I(Θ;X_{1:N})` by sufficiency.
+  *Primary method (small `d`):* multi-dimensional Blahut–Arimoto on a `θ`-grid of `G` cells
+  per axis, **reusing spec 000's BA loop** (`src/infomax/ba.py`) with the continuous-output
+  `f_KL(θ)=D(p(x|θ)‖m_π)` estimated by the kernel/Gaussian approximation of A&M App. A.2
+  (Eq. A1) or Monte-Carlo over `x` — the one piece 000's finite-output sum cannot supply
+  ([§4.5](#45-code-reuse-and-changes-to-spec-000-modules)). *Cross-check / larger `d`:*
+  atomic optimisation (L-BFGS over atom positions and weights) per A&M App. A.2 /
+  `AtomicPriors.jl`. The two methods must agree on `R` where both are feasible (T7b), and
+  both must reproduce the AtomicPriors `optim!`/`repeat` reference (T12,
+  [§5.5](#55-atomicpriorsjl-reference-fixtures)). **The `p*` solver is the principal new
+  infrastructure and the main feasibility risk — see [§7](#7-open-questions) OQ-1.**
 - **`p_J` — Jeffreys.** `∝ √det g(θ)`, normalised over `Θ` by grid quadrature.
   Closed-form FIM from [§4.1](#41-model-families); in the hypercone, cross-checked against the analytic
   `p_J(θ_1) ∝ θ_1^{d-1}` (T4).
@@ -792,14 +834,40 @@ All three share the Gaussian likelihood `p(x|θ)=𝒩(y(θ),σ²I_m)` and FIM
 - **`p_LN` — log-normal** in `θ` (A&M Eq. 10), `θ̄=0`, `σ̄=1` per coordinate
   (auto-chosen; please confirm — see [§7](#7-open-questions) OQ-3).
 - **`p_proj` — projected-ML / NML prior (co-protagonist, [§3.4](#34-the-second-protagonist-infomax-vs-mdl)).**
-  The law of the MLE `θ̂(x)` for `x ∼ p_NML ∝ max_θ p(x|θ)` (A&M App. A.3; Quinn
-  §5.2). For Gaussian noise `p_NML` is a band of width `σ` around the manifold `Y`,
-  so the sampler draws `x` near `Y` and projects to its MLE; `m_{p_proj}` is then
-  evaluated like any continuous prior (quadrature, or directly from the sampled
-  cloud). It is **not** a control — it is the second *budget-dependent* prior, and
-  its gap to `p*` is a headline read ([§3.4](#34-the-second-protagonist-infomax-vs-mdl),
-  [§6](#6-report)). Exact sampler pinned at implementation ([§7](#7-open-questions) OQ-6).
+  The **MLE-pushforward** of the Shtarkov NML code `p_NML(x) ∝ max_θ p(x|θ)`: the law of
+  `θ̂(x)` for `x ∼ p_NML` (A&M App. A.3; Quinn §5.2). It is a *prior*, distinct from the
+  code it is built from, and solves neither minimax exactly — the MDL-motivated
+  approximation of `p*` ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)), carried as the
+  second **budget-dependent** prior (built at `σ_eff`), **not** a control. For Gaussian
+  noise `p_NML` is a band of width `σ_eff` around the manifold `Y`, so the sampler draws
+  `x` near `Y` and projects to its MLE; `m_{p_proj}` is evaluated like any continuous prior
+  (quadrature, or from the sampled cloud). Its gap to `p*` is a headline read
+  ([§3.4](#34-the-second-protagonist-infomax-vs-mdl), [§6](#6-report)); the sampler is
+  pinned in the pseudocode below (resolving OQ-6).
 - **`q̄` — reference ceiling** `= 𝔼_c[q]`, computed from the q-family ([§4.3](#43-foreign-q-family)).
+
+**Prior construction (new src code — pseudocode).** Grid-BA reuses 000's loop; the atomic
+optimiser and the `p_proj` sampler are new. All build at `model.sigma_eff`.
+
+```python
+def build_pstar_gridBA(model, G, *, method="grid_ba", tol=1e-8, mc_x=4096):
+    grid = cell_centred_grid(model.box, G)          # (n_cells=G**d, d); flattens d-dim box
+    # f_KL for a CONTINUOUS Gaussian output: 000's finite-output sum is replaced by
+    # the A&M App. A.2 kernel estimate (or MC over x). This is the only new BA piece.
+    def f_kl(masses):                               # D_KL[p(.|theta_i) || m_pi] per cell
+        return gaussian_fkl(model.y(grid), model.sigma_eff, masses, mc_x)   # (n_cells,)
+    if method == "atomic":                          # cross-check / larger d (AtomicPriors-style)
+        return atomic_optimise(model, init=grid, objective="mutual_info")   # LBFGS on (atoms, weights)
+    result = blahut_arimoto(f_kl=f_kl, n_cells=G**d, tol=tol)   # src/infomax/ba.py, f_KL injected
+    return extract_atoms(GridPrior(grid, result.masses))       # src/infomax/atoms.py (d-dim)
+
+def build_pproj(model, n_samples, rng):
+    # x ~ p_NML ∝ max_theta p(x|theta): a sigma_eff-band around the manifold Y.
+    th  = sample_on_manifold_by_area(model, n_samples, rng)     # theta with y(theta) ~ uniform on Y
+    x   = model.y(th) + model.sigma_eff * rng.normal(size=(n_samples, model.m_out))
+    th_hat = mle_project(model, x)                  # argmin_theta ||x - y(theta)||  (the MLE map)
+    return CloudPrior(atoms=th_hat)                 # m_{p_proj}(x') = mean_j N(x'; y(th_hat_j), sigma_eff^2 I)
+```
 
 ### 4.3 Foreign-`q` family
 
@@ -826,38 +894,87 @@ the atom spacing — stresses `p*`'s discreteness) and a *boundary/vertex-concen
 (cooperative ≈ near `p*`'s atoms; non-cooperative ≈ interior gaps and edges) or run
 as a second knob; pinned in [§7](#7-open-questions) OQ-2.
 
+**`q`-family sampler (new src code — pseudocode; anchors are OQ-2).** The scaffold is
+fixed (a `c`-mixture of two prediction-space anchors, pulled back to `Θ`); only the two
+anchor distributions await a human choice.
+
+```python
+def sample_q(model, pstar, c, n, rng):
+    # Anchors defined in PREDICTION space, pulled back to theta (OQ-2 pins these two):
+    #   q_coop: y(theta) ~ uniform over distinguishable predictions  =>  m_q ~ m_{pstar}
+    #   q_non : mass on the thin end and in the gaps between pstar's atoms / on edges
+    take_non = rng.random(n) < c                     # mixture q_c = (1-c) q_coop + c q_non
+    theta = where(take_non[:, None],
+                  draw_q_non(model, pstar, n, rng),  # OQ-2
+                  draw_q_coop(model, pstar, n, rng)) # OQ-2
+    shape = where(take_non, "non", "coop")           # per-sample q-shape, recorded (§6.3)
+    return theta, shape                              # (n, d), (n,)
+```
+
+`q̄ = 𝔼_c[q]` (the reference ceiling) is the same scaffold marginalised over the `c`-grid.
+
 ### 4.4 Score estimation
 
 For each cell `(model, d, σ, taper, rotation, c)`:
 
 ```
-1.  Build y(·), FIM g(·) on the θ-box.
-2.  Construct priors: p* (BA / atomic), p_J ∝ √det g, p_U, p_LN, p_proj (§3.4), q̄.
+1.  model = build_model(family, d, m, σ, N)        # builds at σ_eff = σ/√N (§4.1)
+2.  priors = {p*, p_J, p_U, p_LN, p_proj, q̄}        # all constructed at σ_eff (§4.2)
 3.  For s = 1 .. S_q:
-        θ_s        ~ q_c                                   # nature's truth
-        X_{1:N}    ~ p(·|θ_s)          (N i.i.d. draws)    # training sample
+        θ_s, shape ← sample_q(model, p*, c, rng)     # nature's truth + q-shape tag (§4.3)
+        x̄_s   ~ 𝒩(y(θ_s), σ_eff² I)                  # sufficient statistic of X_{1:N}
         for each prior π:
-            log m_π(X_{1:N}) = log ∫ p(X_{1:N}|θ') π(dθ')   # mixture marginal
-            R_s(π)  = log p(X_{1:N}|θ_s) − log m_π(X_{1:N})  # per-sample redundancy
-        record R_s(π) for all π, plus q-sample metadata.
+            log m_π(x̄_s) = log ∫ p(x̄_s|θ') π(dθ')     # mixture marginal at σ_eff
+            R_s(π) = log p(x̄_s|θ_s) − log m_π(x̄_s)    # per-sample redundancy
+        record R_s(π) for all π, plus `shape`.
 4.  R_N^q(π) = mean_s R_s(π);  report MCSE.
 5.  Decomposition cross-check: estimate I_q^{(N)} and D(m_q‖m_π) separately,
         verify R_N^q(π) = I_q^{(N)} + D(m_q‖m_π)  (T1).
 ```
 
-**`m_π(X_{1:N})` evaluation.** Discrete `p*`: exact finite sum
-`logsumexp_a [log λ_a + log p(X_{1:N}|θ_a)]`. Continuous priors: grid quadrature
-over `Θ` for small `d`; for the badly-behaved case where `X_{1:N}` is far from the
-prior's mass (A&M Appendix A.4), Bennett's method / importance sampling. All in
-log-space.
+**Why one draw of `x̄` at `σ_eff`, not `N` draws.** For the Gaussian, `x̄` is sufficient and
+`p(X_{1:N}|θ) = p(X_{1:N}|x̄)·p(x̄|θ)` with the first factor `θ`-independent; it cancels in
+the log-ratio of *every* prior (`m_π(X_{1:N}) = p(X_{1:N}|x̄)·m_π(x̄)`), so
+`R_N^q(π) = 𝔼[log p(x̄|θ) − log m_π(x̄)]` with `x̄ ∼ 𝒩(y(θ), σ_eff² I)` **exactly** — the
+budget `N` enters only through `σ_eff`. Drawing the literal `X_{1:N}` and forming the
+`N`-fold marginal is therefore unnecessary for the headline; it is built once as the
+**T7c cross-check** (and matched against AtomicPriors `repeat`, [§5.5](#55-atomicpriorsjl-reference-fixtures)).
 
-**Single-step held-out diagnostic.** Optionally draw a fresh `x' ∼ p(·|θ_s)` after
-the `N` training draws and record the one-step loss `−log m_π(x'|X_{1:N})` and the
-PIT of `x'` under `m_π(·|X_{1:N})` — feeds the calibration diagnostic ([§3.3](#33-score-decomposition-bias-vs-calibration-a-diagnostic), [§6](#6-report)).
+**`m_π(x̄)` evaluation.** Discrete `p*`: exact finite sum
+`logsumexp_a [log λ_a + log p(x̄|θ_a)]`. Continuous priors: grid quadrature over `Θ` for
+small `d`; for the badly-behaved case where `x̄` is far from the prior's mass (A&M App.
+A.4), Bennett's method / importance sampling. `p_proj`: mean over the sampled MLE cloud.
+All in log-space.
+
+**Single-step held-out diagnostic.** Optionally draw a fresh `x' ∼ 𝒩(y(θ_s), σ_eff² I)`
+and record the one-step loss `−log m_π(x')` and the PIT of `x'` under `m_π` — feeds the
+calibration diagnostic ([§3.3](#33-score-decomposition-bias-vs-calibration-a-diagnostic),
+[§6](#6-report)). (Here the held-out target is itself a budget-`N` summary at `σ_eff`.)
 
 **Randomness.** One child RNG per cell, spawned from a single experiment seed
 (`manage-randomness.md`); BA itself is deterministic. Seed pinned in [§5](#5-properties-to-verify) Sweep
 design.
+
+### 4.5 Code reuse and changes to spec-000 modules
+
+The implementation **extends `src/infomax/`** rather than forking it. What is reused,
+generalised, or new:
+
+| Module | Spec-000 role | Spec-002 change |
+|---|---|---|
+| `ba.py` | 1-D Blahut–Arimoto loop over a finite output | **Altered (back-compatible):** the loop is already output-agnostic; make `f_KL` an injected callable so the continuous-Gaussian estimate (A&M App. A.2 / MC over `x`) replaces the finite-output sum. 000 keeps passing its finite-output `f_KL`. |
+| `prior.py` | `GridPrior` over scalar `θ` | **Generalised:** `θ_grid` shape `(n_cells, d)`; add `CloudPrior` (sample-backed, for `p_proj`). 1-D is a special case. |
+| `atoms.py` | atom extraction (scalar position) | **Generalised:** atom position becomes a `d`-vector. |
+| `likelihood.py` | Bernoulli `p(x\|θ)` | **Added, not altered:** Gaussian likelihood + the `y`-maps/FIM of §4.1; `binomial_log_likelihood` untouched. |
+| `jeffreys.py` | Bernoulli closed form | **Added, not altered:** multi-`d` `p_J ∝ √det g`; Bernoulli path untouched. |
+| *(new)* `models.py`, `pproj.py`, `qfamily.py`, `score.py` | — | the §4.1/§4.2/§4.3/§4.4 pseudocode. |
+
+**Regression gate (hard, = T0).** `ba.py`, `prior.py`, and `atoms.py` are *shared* with
+spec 000, so a change to any of them can silently break the 000 result. Before **any**
+spec-002 number is trusted, **`tests/test_000_static_infomax_fig1.py` must be re-run and
+pass unchanged**, and — if those modules touched its output — the 000 eye test re-approved.
+This gate (T0, [§5.1](#51-property-to-tests-table)) is a precondition for the 002 eye test
+and the rest of the suite.
 
 ## 5. Properties to verify
 
@@ -868,6 +985,7 @@ Test functions live in `tests/test_002_foreign_q_prediction.py`. The suite pins 
 
 | # | Property (spec §) | Verified by |
 |---|---|---|
+| P0 | **Spec-000 regression gate** ([§4.5](#45-code-reuse-and-changes-to-spec-000-modules)): `tests/test_000_static_infomax_fig1.py` passes unchanged after the shared-module edits (`ba.py`/`prior.py`/`atoms.py`); 000 eye test re-approved if its output moved | `pytest tests/test_000_static_infomax_fig1.py` (precondition) |
 | P1 | Redundancy decomposition `R_N^q(π) = I_q^{(N)} + D(m_q‖m_π)` ([§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss), [§9.1](#91-the-compensation-identity-for-the-n-fold-marginal-eq-212)) | `test_t1_redundancy_decomposition` |
 | P2 | **Pipeline check** (demoted negative control): flat co-volume ⇒ `p_J = p_U` pointwise (FIM→quadrature), and `R(p_J)=R(p_U)` *exactly* under common random numbers, all `d`; `p*` gap recorded as a diagnostic, not gated ([§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note)) | `test_t2_pipeline_pJ_equals_pU` |
 | P3 | `p*` machinery (demoted tautology): equalizer `b(θ)=0` on `supp(p*)`, `≤0` off; `I_{p*}=C` ([§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note), [§4.2](#42-prior-construction)) | `test_t3_pstar_equalizer` |
@@ -876,13 +994,23 @@ Test functions live in `tests/test_002_foreign_q_prediction.py`. The suite pins 
 | P6 | Hypercone deviation: numeric `p_J`-posterior **mean**-deviation matches leading `(d−1)/x` within next-order tol, sign positive, `1≪x≪L` ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d), [§9.2](#92-hypercone-posterior-deviation-eq-922)) | `test_t6_hypercone_delta` |
 | P7a | `m_π(X_{1:N})`: discrete sum (p*) vs quadrature agree ([§4.4](#44-score-estimation)) | `test_t7a_mixture_marginal_consistency` |
 | P7b | `p*` solver: grid-BA vs atomic agree on `R` where both feasible ([§4.2](#42-prior-construction)) | `test_t7b_pstar_method_agreement` |
+| P7c | **Budget-`N` equivalence**: `p*` and `R` built at `σ_eff=σ/√N` agree with the explicit `N`-fold channel `θ→X_{1:N}` (small `d, N`) ([§4](#4-algorithm), [§4.4](#44-score-estimation)) | `test_t7c_budget_n_equivalence` |
 | P8 | Floors: `R_N^q(π) ≥ I_q^{(N)} ≥ 0` per cell; `q̄` minimises the **`c`-averaged** `R` ([§2.3](#23-q̄-is-the-ceiling-not-a-competitor)) | `test_t8_floors` |
 | P9 | A&M prior-side reproduction: `I_{p*}(d) ≥ I_{p_J}(d)` and `B_{p*}(d) ≤ B_{p_J}(d)`, all `d` ([§0](#0-context); A&M Fig. 5) | `test_t9_am_prior_side_dominance` |
 | P10 | Determinism: fixed seed ⇒ identical `R` arrays across runs ([§4.4](#44-score-estimation)) | `test_t10_seed_determinism` |
-| P11 | `p_proj` construction: `p_NML` normalises; `I_{p_proj}(d) ≈ I_{p*}(d) ≫ I_{p_J}(d)` (Quinn Fig. 12) ([§3.4](#34-the-second-protagonist-infomax-vs-mdl), [§4.2](#42-prior-construction)) | `test_t11_pproj_construction` |
+| P11 | `p_proj` construction & sampler: MLE projection recovers `θ̂`; `p_NML` normalises; `I_{p_proj}(d) ≈ I_{p*}(d) ≫ I_{p_J}(d)` (Quinn Fig. 12) ([§3.4](#34-the-second-protagonist-infomax-vs-mdl), [§4.2](#42-prior-construction)) | `test_t11_pproj_construction` |
+| P12 | **AtomicPriors.jl references** ([§5.5](#55-atomicpriorsjl-reference-fixtures)): exp-decay `y`/FIM, `p*` atoms + `I_{p*}` + `B_{p*}`, `C_N` via `repeat`, and `mutual` of a fixed prior match the frozen Julia golden values | `test_t12_atomicpriors_reference` |
+| P13 | Model construction: `y`-maps + FIM correct (autodiff vs §9.3 closed form; rotation `Q` and curvature knob act as specified) ([§4.1](#41-model-families)) | `test_t13_model_and_fim` |
+| P14 | `q`-family sampler: `q_c` mixes `coop`/`non` in proportion `c`, the `q`-shape tag is recorded, and `q̄=𝔼_c[q]` marginalises correctly ([§4.3](#43-foreign-q-family)) | `test_t14_qfamily_sampler` |
 | — | **Headline** `min_{π'∈{p_J,p_U,p_LN,p_proj}} ΔR(p*,π') < 0`, and the `p*`-vs-`p_proj` sign across the interior↔boundary axis | *not tested — the open questions ([§3.6](#36-falsification), [§3.4](#34-the-second-protagonist-infomax-vs-mdl)); asserting either would make the experiment unfalsifiable* |
 
 ### 5.2 Test descriptions
+
+**T0 — Spec-000 regression gate.** Before anything else, run the spec-000 suite
+(`tests/test_000_static_infomax_fig1.py`) after the §4.5 edits to the shared modules
+(`ba.py`/`prior.py`/`atoms.py`); it must pass **unchanged**, and if those edits move the
+000 figure the 000 eye test is re-approved. A 000 regression means the multi-`d`
+generalisation broke the base case — fixed before any 002 number is trusted.
 
 **T1 — Redundancy decomposition.** For a fixed cheap cell, estimate `R_N^q(π)`
 directly via (2.1.1) and independently via `I_q^{(N)} + D(m_q‖m_π)` (separate MC of
@@ -935,7 +1063,12 @@ prior, `log m_π(X_{1:N})` from the exact atom sum agrees with grid quadrature o
 shared support to tight tolerance. **T7b — `p*` method agreement.** Where both
 grid-BA and the atomic optimiser are feasible (small `d`), the resulting `R_N^q`
 agree within MCSE + solver tolerance. Defends against a solver-specific artefact
-driving the result.
+driving the result. **T7c — Budget-`N` equivalence.** At small `(d, N)` where the explicit
+`N`-fold channel is tractable, `p*` and `R_N^q` built at `σ_eff = σ/√N` agree (within
+solver + MCSE tolerance) with those from the literal `θ → X_{1:N}` likelihood — the
+sufficiency reduction of [§4.4](#44-score-estimation). Pairs with the AtomicPriors `repeat`
+reference (T12), the two together pinning the budget-`N` construction the §3.1 guarantee
+depends on.
 
 **T8 — Floors.** *(a) Per cell:* `R_N^q(π) ≥ I_q^{(N)} ≥ 0` for every prior `π`
 (the prior-dependent term `D(m_q‖m_π) ≥ 0`), with the per-cell minimum attained by
@@ -961,7 +1094,31 @@ information as `p*` and far more than Jeffreys: `I_{p_proj}(d) ≈ I_{p*}(d) ≫
 I_{p_J}(d)` over the `d`-sweep (Quinn Fig. 12). Validates the second
 budget-dependent prior ([§3.4](#34-the-second-protagonist-infomax-vs-mdl))
 before it enters the foreign-`q` contest; a `p_proj` whose MI tracks Jeffreys
-rather than `p*` signals a broken NML / MLE-projection construction.
+rather than `p*` signals a broken NML / MLE-projection construction. The sampler half
+(draw `x ∼ p_NML`, project to the MLE `θ̂`) is checked by recovering a known `θ̂` from
+synthetic `x` placed near a chosen manifold point.
+
+**T12 — AtomicPriors.jl references.** Cross-check the Python implementation against frozen
+golden values from `mcabbott/AtomicPriors.jl` ([§5.5](#55-atomicpriorsjl-reference-fixtures)),
+an independent Julia implementation of the same infomax objects: (a) exp-decay `y(θ)` and
+FIM at sampled `θ`; (b) the capacity prior `p*` (atom positions/weights up to label
+permutation, `I_{p*}`, `B_{p*}`) at a small-`d` exp-decay cell, from Julia `optim!`/`nlopt!`;
+(c) the **`N`-fold capacity `C_N`** from Julia `repeat` + `mutual`, against our `σ_eff` build
+— the budget-`N` definition's strongest external check; (d) `mutual` of a fixed prior.
+Agreement to the fixtures' recorded tolerance. A divergence flags a wrong model, FIM, MI
+estimator, or budget reduction.
+
+**T13 — Model and FIM.** For each family, the analytic FIM (exp-decay closed form, §9.3)
+matches autodiff of `y`; the rotation `Q` moves the relevant direction off-axis (so
+uniform-`θ` stops being trivially unbiased — note §6.3); the curvature knob sharpens the
+named convex vertex. Catches a wrong `y`-map, a Jacobian/`σ_eff` slip, or a knob wired to
+the wrong axis.
+
+**T14 — `q`-family sampler.** Over a `c`-grid the fraction of `non` draws tracks `c`
+(binomial tolerance), each sample carries the correct `coop`/`non` tag, and the empirical
+`q̄` from pooling the `c`-grid matches the constructed `𝔼_c[q]`. Catches a mis-weighted
+mixture or a dropped shape tag (the §6.3 `q`-subset analysis needs it). The anchors
+`q_coop`/`q_non` are OQ-2 — T14 tests the scaffold, not the anchor choice.
 
 We do **not** test: the headline sign ([§2.2](#22-what-wins-means--and-what-cannot-be-asserted)); exact `p*` atom positions at
 intermediate `d` (no closed form); behaviour at `d` beyond the solver's feasible
@@ -1038,10 +1195,42 @@ flagged for ratification.
   absolute mean. (Auto-chosen; please confirm.)
 - **Seed.** Single experiment seed `20260601`; one child stream per cell via
   `rng.spawn`, cells enumerated in fixed lexicographic order.
-- **Test-suite subset.** T1, T3, T5, T7, T10 run at a single cheap cell
-  (`exp-decay, d=2, σ=0.1, c=0.5`); T2 over the `d`-sweep in the control model; T6
-  at `d∈{6,11,26}` (hypercone, analytic — no solver needed); T9 and T11 over the
-  full `d`-sweep. The experiment script ([§6](#6-report)) runs the full cross-product.
+- **Test-suite subset.** **T0 runs first (precondition).** T1, T3, T5, T7a, T10, T13, T14
+  at a single cheap cell (`exp-decay, d=2, σ=0.1, N=1, c=0.5`); T2 over the `d`-sweep in the
+  control model; T6 at `d∈{6,11,26}` (hypercone, analytic — no solver); T7b/T7c at small
+  `(d,N)` where both methods / the `N`-fold are feasible; T9, T11 over the full `d`-sweep;
+  T12 at the frozen AtomicPriors reference cells ([§5.5](#55-atomicpriorsjl-reference-fixtures)).
+  The experiment script ([§6](#6-report)) runs the full cross-product.
+
+### 5.5 AtomicPriors.jl reference fixtures
+
+`mcabbott/AtomicPriors.jl` (in `resources/AtomicPriors.jl/`) is the companion code to A&M
+and Quinn — an independent Julia implementation of the exp-decay model (`yexp`), the
+capacity prior (`optim!`/`nlopt!`/`adam!` over `mutual`), mutual information
+(`mutual`/`entropy`), the Bayes predictive (`fbayes`/`predict`), and the **`N`-fold
+channel** (`repeat`). We use it as an external oracle for T12 **without** adding a Julia
+runtime dependency to the suite:
+
+- **Generation (dev-time, manual).** A committed `tests/fixtures/atomicpriors/generate.jl`
+  builds a few small fixed cells, runs the Julia routines, and writes golden values +
+  tolerances to `tests/fixtures/atomicpriors/*.json`, recording the AtomicPriors git commit,
+  Julia version, and seed alongside each value (provenance, per `manage-randomness.md`). Run
+  once when (re)generating; **not** part of `pytest`.
+- **Consumption (every run).** `test_t12_atomicpriors_reference` loads the JSON and compares
+  the Python outputs to the frozen values — no Julia at test time.
+- **Parameterisation bridge.** Julia `yexp` uses `k_μ = −log θ_μ` (compact `θ∈[0,1]`) or
+  `k_μ = exp θ_μ` (`loglog` reparam), whereas this spec uses A&M's `k_μ = e^{−θ_μ}`
+  (§4.1.1). `generate.jl` applies the matching reparam so both compute the *same* model;
+  this bridge is asserted by the `y`/FIM fixture (T12a) before the `p*`/`C_N` fixtures are
+  trusted.
+- **What is frozen.** (a) `y(θ)`, FIM at ~10 sampled `θ`; (b) `p*` atoms/weights, `I_{p*}`,
+  `B_{p*}` at `exp-decay, d∈{2,3}, σ=0.1`; (c) `C_N = sup_π I(Θ;X_{1:N})` via `repeat(L,N)`
+  for `N∈{1,2,4}` at `d=2`; (d) `mutual` of a fixed grid prior. Julia is a **dev-only**
+  dependency ([§7](#7-open-questions) OQ-7).
+
+Fixture (c) — the `repeat`-based `C_N` — is the independent confirmation that the `σ_eff`
+single-observation build equals the budget-`N` capacity object, the construction the F1 fix
+turned on.
 
 ## 6. Report
 
@@ -1086,7 +1275,8 @@ exp-decay (primary) and rotated-hypercone (controlled) models.
 
 `results_table.json` — one row per `(model, d, σ, taper, rotation, c)` cell:
 
-- `model`, `d`, `sigma`, `taper`, `rotation`, `curvature`, `c` — the cell key.
+- `model`, `d`, `sigma`, `N`, `taper`, `rotation`, `curvature`, `c` — the cell key
+  (`sigma_eff = sigma/√N` is the operative noise; record both `sigma` and `N`).
 - `R_mean[π]`, `R_mcse[π]` for `π ∈ {p*, p_J, p_U, p_LN, p_proj, q̄}` (nats).
 - `delta_R_best` — `min_{π'∈{p_J,p_U,p_LN,p_proj}} (R[p*] − R[π'])` and its MCSE (the
   headline statistic), and `delta_R_pproj = R[p*] − R[p_proj]` separately (the
@@ -1107,7 +1297,8 @@ stays small but a `q`-subset analysis can re-key off it).
 3. `R` vs `d` with the `q̄` ceiling.
 4. Calibration diagnostic.
 5. A table embedding `d`, `c`, `delta_R_best`, and the gap to `q̄`.
-6. Test results: T1–T10 pass/fail with achieved tolerances.
+6. Test results: T0–T14 pass/fail with achieved tolerances (T0 the spec-000 regression
+   gate, T12 the AtomicPriors cross-checks).
 7. Notes: the §2.4 verdict (transfer / self-served), solver-method caveats (OQ-1),
    and anything surprising.
 
@@ -1138,22 +1329,23 @@ stays small but a `q`-subset analysis can re-key off it).
   boundary location) with exp-decay as the realism check? Either way the controlled
   model needs a **tunable convex-vertex curvature** ([§4.1](#41-model-families)) —
   the only axis on which `p*` and `p_proj` provably differ ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)). [?]
-- **OQ-5.** Discreteness is **not** assumed to be the load-bearing property (per the
-  discussion behind this spec); a resolution-adapted *smooth* prior might capture
-  the same benefit. [§3.5](#35-what-would-sink-it)
-  (failure mode 2) sharpens this from "nice to have" to *required for attribution*:
-  Quinn et al.'s **projected-maximum-likelihood prior** `p_proj` (the smooth
-  near-optimal prior of A&M App. A.3 / Quinn §5.2) should join the competitor set
-  `π'`, because a `p*` win that `p_proj` also achieves implicates
-  *resolution-adaptation*, not *discreteness* — and beating only Jeffreys / uniform
-  / log-normal merely re-derives A&M. Open: include `p_proj` in the headline
-  lineup now (the principled choice), or defer it to a follow-up once the
-  Jeffreys-class contest is mapped? [?]
-- **OQ-6 (`p_proj` sampler).** The concrete sampler for `p_NML` / `p_proj` —
-  rejection from a box enclosing the `σ`-tube, or sample-on-`Y`-(by area)-then-add-
-  `σ`-noise-then-project-to-MLE — and the `m_{p_proj}` estimator (sampled cloud vs
-  quadrature). A&M/Quinn assert it is "easy to sample" but pin no recipe; choose one
-  and verify against T11 ([§4.2](#42-prior-construction)). [?]
+- **OQ-5 (RESOLVED — `p_proj` is in the headline lineup).** Resolved in favour of including
+  `p_proj` now, not deferring. [§3.4](#34-the-second-protagonist-infomax-vs-mdl) establishes
+  it as a budget-dependent *co-protagonist* (not a control), and the headline statistic
+  ([§2.2](#22-what-wins-means--and-what-cannot-be-asserted), [§5.1](#51-property-to-tests-table),
+  [§6.3](#63-table-schema)) is `min` over `{p_J, p_U, p_LN, p_proj}`. The motivation stands:
+  a `p*` win that `p_proj` also achieves implicates *resolution-adaptation*, not
+  *discreteness* — beating only Jeffreys/uniform/log-normal would merely re-derive A&M.
+- **OQ-6 (RESOLVED — `p_proj` sampler).** Pinned in [§4.2](#42-prior-construction):
+  sample on `Y` by area, add `σ_eff` noise, project to the MLE `θ̂`; `m_{p_proj}` is the mean
+  over the sampled MLE cloud. Verified by T11 (construction/MI) and T12 (against
+  AtomicPriors). The earlier rejection-from-a-box alternative is dropped as needlessly
+  expensive.
+- **OQ-7 (dependency, minor).** `AtomicPriors.jl` is a **dev-time-only** reference: it
+  generates the T12 golden fixtures ([§5.5](#55-atomicpriorsjl-reference-fixtures)) and is
+  never imported by the suite. It needs Julia ≥ 1.6 to (re)generate fixtures — record this
+  under *Local setup* in `README.md` (and note under "what we deliberately don't install"
+  that Julia is **not** in the uv env). Decided: fixtures stay frozen, never called live.
 
 ## 8. References
 
@@ -1837,3 +2029,38 @@ A&M's quantity, up to the precision weighting *and* the reference point (see §4
 edits red. (F3 reviewed and left as-is: its "derived" overclaim was already fixed in conc03 F6,
 and conc03 F3 supplied the `≤ C_N` bound that grounds "does not grow with dimension" as a
 worst-case statement, with §0 already flagging the win as experimental.)
+
+### 2026-06-05 — Refinement (§4–§7; align algorithm/tests/report with the revised §0–§3)
+
+Reworked §4–§7 to match the conceptual content settled across the three conceptual red-team
+rounds and to specify the new src-level code as pseudocode (human request). No §0–§3 claim
+changed — this is the downstream build/test spec catching up. All of §4–§7 were already
+`draft` and stay `draft` (to be reviewed as new; no red marking).
+
+- **§4 budget-`N` (the conc03-F1 carry-over).** Added the **`σ_eff = σ/√N`** caveat (§4.0)
+  and threaded it through: `p*`, FIM/Jeffreys, mixtures, and the score all build at `σ_eff`,
+  so the §1.1 budget-`N` definition is computed via Gaussian sufficiency without forming the
+  `N`-fold output. The §4.4 estimator now scores the sufficient statistic `x̄` at `σ_eff`
+  (exact — the within-sample scatter cancels in every prior's log-ratio). Resolves the loose
+  end flagged in the conc03-F1 round (§4.2 had still built `p*` single-shot at nominal `σ`).
+- **Pseudocode for new src code (§4.1–§4.4).** `build_model` (`y`-maps + FIM, rotation /
+  curvature knobs), `build_pstar_gridBA` (reusing 000's BA loop with an injected
+  continuous-Gaussian `f_KL`) + atomic cross-check, `build_pproj` (NML→MLE pushforward),
+  `sample_q` (the `c`-mixture scaffold; anchors stay OQ-2), and the §4.4 score loop.
+- **§4.5 (new) — spec-000 code reuse + regression gate.** Table of which `src/infomax/`
+  modules are reused / generalised (`ba.py` `f_KL` injection; `prior.py`/`atoms.py` to
+  `d`-dim) / added (Gaussian `likelihood.py`, multi-`d` `jeffreys.py`, new `models`/`pproj`/
+  `qfamily`/`score`), plus the hard gate **T0**: re-run and pass
+  `tests/test_000_static_infomax_fig1.py` (and re-approve the 000 eye test if touched) before
+  any 002 number is trusted.
+- **§5 tests.** Added T0 (000 regression), T7c (budget-`N` ≡ explicit `N`-fold), T12
+  (AtomicPriors.jl golden-fixture cross-checks), T13 (model/FIM), T14 (`q`-family); extended
+  T11 (sampler). New **§5.5** specifies the AtomicPriors fixture mechanism: a dev-time
+  `generate.jl` emits frozen JSON golden values (with provenance + the `k_μ` parameterisation
+  bridge), `pytest` consumes them with no Julia runtime dependency, and the `repeat`-based
+  `C_N` fixture externally confirms the budget-`N` build.
+- **§6/§7.** Cell key gains `N`/`σ_eff`; report test results now T0–T14. OQ-5 (include
+  `p_proj`) and OQ-6 (sampler) marked RESOLVED; OQ-7 added (Julia dev-only dependency, to be
+  recorded in `README.md` *Local setup*).
+
+No downstream artefacts exist yet, so nothing is invalidated.
