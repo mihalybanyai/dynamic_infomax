@@ -59,6 +59,10 @@ sufficiency (`D(p(X_{1:N}|θ)‖m_{p*}) = D(p(x̄|θ)‖m_{p*})`, `x̄ ∼ 𝒩(
 equalizer applies to the object actually being bounded. Make §4.2 build `p*` at the same
 effective noise (or say explicitly that `σ` there *is* the effective budget noise).
 
+> M: this issue was corrected in another red team pass (conc03, F1)
+
+> C: Confirmed — no action needed. §1.1 was redefined to `p* = argmax_π I(Θ;X_{1:N})` (budget-`N` capacity prior, `C ≡ C_N`) in the conc03 F1 round (2026-06-05), with the single-observation `I(Θ;X_1)` kept distinct for `b_π(θ)`. This finding is already resolved.
+
 ---
 
 ### F2: Geometry figure panel (c) ("every prior ties") contradicts the post-F1 §2.4 text [severity: medium]
@@ -81,6 +85,10 @@ the figure actively misleads about what T2 screens.
 "`p_J = p_U` here (hard screen T2); `p*` may still win by an edge effect (diagnostic, §6)" — or
 at minimum drop the universal "every prior ties." Re-run
 `diagrams/002-foreign-q-prediction-geometry.py`.
+
+> M: section 2.4 has been rewritten in another red team pass (conc03, F7), so we should just drop that text from the figure
+
+> C: Applied (conc02 pass). Dropped "every prior ties (control T2, §2.4)" from panel (c) of `diagrams/002-foreign-q-prediction-geometry.svg`; SVG regenerated via `uv run`, docstring updated. **One thing to flag:** the same panel also still asserted `b(θ) ≡ 0` — the exact claim conc01 removed from the prose but left in the figure — so while regenerating I corrected it to the true consequence `p_J = p_U`; the panel now reads "pipeline check T2 (`p*` need not tie)", matching the conc03-F7 §2.4 rewrite. You only asked to drop the "every prior ties" text, so say if you'd rather I leave the second label blank than carry the corrected note. Revision-log entry added (Correction).
 
 ---
 
@@ -106,6 +114,8 @@ the expectation it is (e.g. "a penalty *expected* to stay bounded in dimension, 
 experiment tests"), and change "is **derived** in §3.2" to "is *argued* (competitor side) and
 *conjectured* (`p*` side) in §3.2," matching §3.2's own hedging.
 
+> M: this section has been rewritten in another red team pass (conc03, F2). Do you think this problem still exists?
+
 ---
 
 ### F4: §3.3 calls the bias term "exactly A&M's quantity, up to weighting," but it also differs in reference point (truth vs MLE) [severity: low]
@@ -129,6 +139,12 @@ the two "bias terms" are not equal even up to weighting. The claim that the prop
 reference point (truth vs in-sample MLE; see §4)**," or soften "exactly A&M's quantity" to "the
 held-out analogue of A&M's `Δ`." A one-clause cross-reference to the §4 caveat suffices.
 
+> M: first of all, 9.4 is unnecessary, let's have that one equation and the rest of the info all there in 3.3 and delete 9.4. Otherwise this is a bit hard to evaluate for me, but seems vaguely correct?
+
+> C: Merge applied (conc02 pass): the Gaussian KL is now inline in §3.3 as **eq. (3.3.1)** and **§9.4 is deleted**; all references updated (`(9.4.1)→(3.3.1)` in §4 ×2, P5, T5; the dead §9.4 link dropped). The finding's *other* half — whether "exactly A&M's quantity, up to weighting" should also flag the reference-point difference (held-out **truth** `y(θ_true)` vs A&M's in-sample **MLE** `y(θ̂_x)`) — I'm bringing back to you in chat (you flagged it "seems vaguely correct?"), so §3.3's wording on that point is unchanged for now. Revision-log entry added (Clarification).
+
+> C: (follow-up) Confirmed correct and applied. §3.3 now reads "the **held-out analogue** of A&M's quantity, up to the precision weighting *and* the reference point (truth `y(θ_true)` here vs A&M's in-sample MLE `y(θ̂_x)`, differing by `O(σ)`; see §4)", and "*contains* the held-out analogue of A&M's `Δ`". Second revision-log entry added (Clarification).
+
 ---
 
 ### F5: §3.1 supports a property of the `N`-fold capacity `C_N` by citing A&M Fig. 5, which plots the single-`σ` `I⋆` [severity: low]
@@ -150,6 +166,10 @@ the conc01 F5 split-attribution that did not fully land.
 because both `C_N` and `I⋆` are governed by the saturating resolvable dimension `d_eff` (A&M
 Fig. 5 shows the saturation for `I⋆`)" — so Fig. 5 supports `I⋆`'s saturation and the text, not
 the figure, carries `C_N`'s inheritance of it.
+
+> M: seems correct. Agree?
+
+> C: Agree, applied (conc02 pass). The conclusion (`C_N` flat in nominal `d`) holds, but Fig. 5 plots the single-`σ` `I⋆`, not `C_N`. Added the inheritance step in §3.1: both `C_N` and `I⋆` are governed by the saturating `d_eff`, whose saturation Fig. 5 shows *for `I⋆`* — so the figure now supports `I⋆` and the text carries `C_N`'s inheritance. Revision-log entry added (Clarification).
 
 ---
 
@@ -173,6 +193,10 @@ this" rhetoric.
 empirically log-normal) show worst-case redundancy growing with `d`," or add a one-line argument
 / citation that `p_U` and `p_LN` inherit the same co-volume growth on the hyperribbon.
 
+> M: seems ok to make this change
+
+> C: Applied (conc02 pass). §3.1's "No fixed non-infomax prior has this" → "The deployable priors lack it (shown for Jeffreys, and empirically for log-normal — A&M p. 7; `p_U`/`p_LN` taken to inherit the same co-volume growth on the hyperribbon, not separately proven)". Revision-log entry added (Clarification).
+
 ---
 
 ### F7: "the atom spacing *is* the resolution" is imprecise given the spec's own `≈2` Fisher-length spacing [severity: low]
@@ -191,6 +215,10 @@ apart" was corrected to `O(1)` elsewhere) and missed here.
 
 **What would resolve it**: Replace "the atom spacing *is* the resolution" with "the atom spacing
 is `O(1)` resolutions," consistent with the `≈2` correction applied in §1.2 and §3.3.
+
+> M: correct, apply
+
+> C: Applied (conc02 pass). §3.2 "the atom spacing *is* the resolution" → "the atom spacing **is `O(1)` resolutions**", consistent with the BA-verified `≈2` interior spacing corrected elsewhere (§1.2/§3.3). The `O(1)` discretisation conclusion is unchanged. Revision-log entry added (Clarification).
 
 ## What the spec gets right
 

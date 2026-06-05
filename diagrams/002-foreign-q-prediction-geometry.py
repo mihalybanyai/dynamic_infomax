@@ -26,10 +26,11 @@ Three panels, left to right:
       p* instead places atoms ≈1 Fisher length apart along the relevant axis and
       collapses the irrelevant ones onto the boundary.
 
-  (c) Constant cross-section cone (taper 0, the negative control of §2.4). Same
+  (c) Constant cross-section cone (taper 0, the flat-co-volume null of §2.4). Same
       family with r(theta_1)=r0 constant: no co-volume gradient, sqrt(det g)
-      constant, b(theta)≡0, Jeffreys = uniform on the relevant coordinate. With
-      no pathology to avoid, every prior must tie -- the falsification screen T2.
+      constant, so Jeffreys = uniform on the relevant coordinate (p_J = p_U). This
+      is a numerical-pipeline check (T2), not a falsification screen; p* need not
+      tie (discrete on the bounded coordinate).
 
 The exp-decay model (§4.1.1) is the realistic curved instance of the panel-(a)
 ribbon; the hypercone (b) is its exactly-solvable caricature; (c) is (b) with the
@@ -159,9 +160,9 @@ ax2c = draw_cone(axC, lambda t: 0.7 * np.ones_like(t),
                  "(c) constant cross-section: the null", taper=False)
 ax2c.text(5.15, 1.0, r"$\sqrt{\det g}=$ const", color=JEFF, fontsize=9,
           va="center", ha="left", rotation=90)
-axC.text(2.5, 0.62, r"no co-volume gradient $\Rightarrow b(\theta)\equiv 0$",
+axC.text(2.5, 0.62, r"no co-volume gradient $\Rightarrow p_J = p_U$",
          color=ACCENT, fontsize=9, ha="center")
-axC.text(2.5, -0.74, "every prior ties (control T2, §2.4)",
+axC.text(2.5, -0.74, "pipeline check T2 ($p^*$ need not tie)",
          color=ACCENT, fontsize=8.5, ha="center")
 
 
