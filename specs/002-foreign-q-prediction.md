@@ -763,13 +763,13 @@ the implementation:
 All three share the Gaussian likelihood `p(x|θ)=𝒩(y(θ),σ²I_m)` and FIM
 `g_{μν}(θ)=σ^{-2}Σ_t ∂_μ y_t ∂_ν y_t`.
 
-1. **Exponential-decay (primary; A&M Eq. 6).**
+1. **Exponential-decay (<span style="color: red">realism model</span>; A&M Eq. 6).**
    `y_t(θ) = Σ_{μ=1}^d a_μ e^{-k_μ t}`, `k_μ = e^{-θ_μ}`, `a_μ = 1/d`, observed at
    `m` times `t`. `∂_μ y_t = a_μ t k_μ e^{-k_μ t}` (closed-form FIM, [§9.3](#93-exponential-decay-fim)). This is
    the model where uniform-`θ` and log-normal demonstrably fail (curved manifold,
    relevant directions not coordinate-aligned), and the eye-test anchor (A&M
    Fig. 5).
-2. **Square hypercone (analytic companion; A&M Appendix A.1).**
+2. **Square hypercone (<span style="color: red">analytic/controlled model</span>; A&M Appendix A.1).**
    `y(θ) = (θ_1, r θ_2, …, r θ_d)`, `r(θ_1)=θ_1/L`, `0≤θ_1≤L`, `0≤θ_μ≤1`. Gives the
    closed-form `Δ=(d−1)/x` (9.2.2) for the calibration cross-check (T6). A **tunable
    rotation** `θ ↦ Q θ` of the embedding (orthogonal `Q`, angle swept, [§5](#5-properties-to-verify) sweep)
@@ -821,12 +821,7 @@ def build_model(family, d, m, sigma, N, *, taper=1.0, rotation=0.0, curvature=0.
   per axis, **reusing spec 000's BA loop** (`src/infomax/ba.py`) with the continuous-output
   `f_KL(θ)=D(p(x|θ)‖m_π)` estimated by the kernel/Gaussian approximation of A&M App. A.2
   (Eq. A1) or Monte-Carlo over `x` — the one piece 000's finite-output sum cannot supply
-  ([§4.5](#45-code-reuse-and-changes-to-spec-000-modules)). *Cross-check / larger `d`:*
-  atomic optimisation (L-BFGS over atom positions and weights) per A&M App. A.2 /
-  `AtomicPriors.jl`. The two methods must agree on `R` where both are feasible (T7b), and
-  both must reproduce the AtomicPriors `optim!`/`repeat` reference (T12,
-  [§5.5](#55-atomicpriorsjl-reference-fixtures)). **The `p*` solver is the principal new
-  infrastructure and the main feasibility risk — see [§7](#7-open-questions) OQ-1.**
+  ([§4.5](#45-code-reuse-and-changes-to-spec-000-modules)). <span style="color: red">*Larger `d` (`d > d_switch`):* rather than port the atomic optimiser, **delegate `p*` to `mcabbott/AtomicPriors.jl`** (`optim!`/`nlopt!`) via `juliacall` — the canonical implementation A&M published with. `d_switch` is a **parameter** ([§5.4](#54-sweep-design)): the empirical, machine-dependent cross-over where Python grid-BA stops being feasible/accurate, fixed once both paths exist and are profiled. In the small-`d` overlap both run (the T7b cross-check); both reproduce the AtomicPriors `optim!`/`repeat` reference (T12, [§5.5](#55-atomicpriorsjl-reference-fixtures)). Julia is therefore a **runtime** dependency of the experiment's `d > d_switch` path only — not of the test suite ([§5.5](#55-atomicpriorsjl-reference-fixtures)/OQ-7); its version is provenance-recorded and its RNG seeded across the boundary (T10).</span> **The `p*` solver is the principal new infrastructure and the main feasibility risk — see [§7](#7-open-questions) OQ-1.**
 - **`p_J` — Jeffreys.** `∝ √det g(θ)`, normalised over `Θ` by grid quadrature.
   Closed-form FIM from [§4.1](#41-model-families); in the hypercone, cross-checked against the analytic
   `p_J(θ_1) ∝ θ_1^{d-1}` (T4).
@@ -967,7 +962,7 @@ generalised, or new:
 | `atoms.py` | atom extraction (scalar position) | **Generalised:** atom position becomes a `d`-vector. |
 | `likelihood.py` | Bernoulli `p(x\|θ)` | **Added, not altered:** Gaussian likelihood + the `y`-maps/FIM of §4.1; `binomial_log_likelihood` untouched. |
 | `jeffreys.py` | Bernoulli closed form | **Added, not altered:** multi-`d` `p_J ∝ √det g`; Bernoulli path untouched. |
-| *(new)* `models.py`, `pproj.py`, `qfamily.py`, `score.py` | — | the §4.1/§4.2/§4.3/§4.4 pseudocode. |
+| *(new)* `models.py`, `pstar.py`, `pproj.py`, `qfamily.py`, `score.py` | — | the §4.1/§4.2/§4.3/§4.4 pseudocode; <span style="color: red">`pstar.py` holds grid-BA **and** the `juliacall`→AtomicPriors bridge for `d > d_switch` (OQ-1)</span>. |
 
 **Regression gate (hard, = T0).** `ba.py`, `prior.py`, and `atoms.py` are *shared* with
 spec 000, so a change to any of them can silently break the 000 result. Before **any**
@@ -1137,8 +1132,7 @@ correctness anchor for the prior-side machinery.
 
 - **Configuration.** Exponential-decay model (§4.1.1), `m=26` times in `1≤t≤5`,
   `σ=0.1`, `a_μ=1/d`; `d` swept over the solver-feasible range
-  (`d ∈ {1,2,3,4}` for grid-BA; extend toward A&M's `d≤26` only if the atomic
-  method is used — see [§7](#7-open-questions) OQ-1). Priors `p*`, `p_J`. Seed `20260601`
+  (`d ∈ {1,2,3,4}` for grid-BA; <span style="color: red">extend toward A&M's `d≤26` via the `d > d_switch` AtomicPriors path</span> — see [§7](#7-open-questions) OQ-1). Priors `p*`, `p_J`. Seed `20260601`
   (auto-chosen — today's date per `manage-randomness.md`; please confirm).
 - **Output.** A two-panel figure
   `tests/figures/002_foreign_q_prediction/eyetest_am_fig5.png`: `I/log2` and
@@ -1164,10 +1158,9 @@ check; it must complete and write a non-empty figure before review.
 Values the test code uses, pinned here (not in the test file). Auto-decisions are
 flagged for ratification.
 
-- **Dimension `d`.** `d ∈ {1, 2, 3, 4}` (grid-BA-feasible). *Why:* `d=1` is the
-  spec-000 sanity floor; `d=2` is A&M's Fig. 1 minimal setting (small effect — the
-  boundary, note §6); `d=3,4` show the trend. Reaching A&M's dramatic `d≥11`
-  requires the atomic solver and is **deferred** ([§7](#7-open-questions) OQ-1).
+- **Dimension `d`.** Swept as far as the solver allows: `d=1` is the spec-000 sanity
+  floor; `d=2` is A&M's Fig. 1 minimal setting (small effect — the boundary, note §6);
+  higher `d` show the trend toward A&M's dramatic `d≥11`. <span style="color: red">**`d_switch`** (deferred parameter, OQ-1): grid-BA for `d ≤ d_switch`, AtomicPriors via `juliacall` for `d > d_switch`; its value is an **empirical, per-machine** choice made once both paths are profiled, not fixed here.</span>
 - **Noise / budget `σ`.** `σ ∈ {0.05, 0.1, 0.2, 0.4}` with `N=1`, *or* `σ=0.1` with
   `N ∈ {1,2,4,8}` (equivalent via `σ/√N`). *Why:* `σ=0.1` matches A&M; the spread
   spans "far from asymptopia" (large `σ`, small `N`) to nearer it. (Auto-chosen
@@ -1304,13 +1297,7 @@ stays small but a `q`-subset analysis can re-key off it).
 
 ## 7. Open questions
 
-- **OQ-1 (blocking infrastructure).** The multi-`d` `p*` solver is the principal new
-  build and the feasibility ceiling. Grid-BA is `O(G^d)` and realistically caps at
-  `d≈4`; A&M's dramatic regime (`d≥11`) needs the atomic L-BFGS optimiser
-  (`AtomicPriors.jl`-style). *Decision needed:* port the atomic optimiser now (wider
-  `d`, more faithful, more work) or ship grid-BA first (small-`d` boundary only) and
-  defer the atomic method? The spec is written so grid-BA suffices for the minimal-
-  setting result; the atomic method is required only to reach A&M's `d`. [?]
+- **OQ-1 (RESOLVED — grid-BA below `d_switch`, AtomicPriors above).** <span style="color: red">Resolved: rather than port A&M's atomic L-BFGS optimiser to Python, the experiment **delegates `p*` to `mcabbott/AtomicPriors.jl`** (`optim!`/`nlopt!`) via `juliacall` for `d > d_switch`, keeping Python grid-BA (`O(G^d)`) as the primary, self-contained path for `d ≤ d_switch`. `d_switch` is a **parameter, not a fixed `d`** — the cross-over where grid-BA stops being feasible/accurate is an empirical, machine-dependent choice fixed once both implementations exist and are profiled (the small-`d` overlap where both run is the T7b/T12 cross-check). Consequences: Julia becomes a **runtime** dependency of the experiment's high-`d` path (the *test suite* stays Julia-free on frozen fixtures, [§5.5](#55-atomicpriorsjl-reference-fixtures)/OQ-7); `provenance.json` records the Julia + AtomicPriors versions; Julia's RNG is seeded across the boundary for determinism (T10). The minimal-setting headline runs entirely on Python grid-BA.</span>
 - **OQ-2 (definition).** The exact `q_{coop}`/`q_{non}` parameterisation ([§4.3](#43-foreign-q-family)). It
   must be defined in prediction space and span cooperative→non-cooperative; the
   concrete family (e.g. mixtures of pulled-back uniforms on manifold edges vs
@@ -1319,16 +1306,19 @@ stays small but a `q`-subset analysis can re-key off it).
   **interior↔boundary** axis ([§3.4](#34-the-second-protagonist-infomax-vs-mdl),
   [§4.3](#43-foreign-q-family)) so the `p*`-vs-`p_proj` contest is mapped, not only
   `p*`-vs-Jeffreys. [?]
+
+> M: what are some reasonably different ways this could be done? Can we visualise them (I assume via some projection to 2D)?
+
+> C: Three candidates drawn/sketched and visualised in `notes/q-family-visualisation.md` (parameter- and prediction-space 2D projections, exp-decay `d=2`): (A) atom-anchored/`p*`-relative, (B) geometry-relative/Fisher, (C) prediction-space targeted. Recommendation there: a **two-knob** design — cooperativeness `c` done geometry-relative (B, `p*`-independent), plus a separate interior↔boundary selector (C-style) for the `p*`-vs-`p_proj` corner, with (A) kept as a diagnostic. OQ-2 stays **open** pending your pick; the chosen family then gets written into §4.3.
+
 - **OQ-3 (convention).** `p_LN` meta-parameters `(θ̄, σ̄)` — A&M use `(0,1)`; do we
   follow, or tune to make `p_LN` the *strongest* deployable competitor (A&M note a
   tuned variational prior can approximate `p*`)? The honest competitor is the best
   deployable non-infomax prior ([§2.2](#22-what-wins-means--and-what-cannot-be-asserted)), which argues for at least a light tune. [?]
-- **OQ-4 (scope).** Primary model = exp-decay (curved, all competitors fail) with
-  the rotated hypercone as the controlled companion. Is that the right split, or
-  should the controlled rotated-hypercone be primary (closed-form `Δ`, cleaner
-  boundary location) with exp-decay as the realism check? Either way the controlled
-  model needs a **tunable convex-vertex curvature** ([§4.1](#41-model-families)) —
-  the only axis on which `p*` and `p_proj` provably differ ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)). [?]
+
+> M: how would the tuning happen? With what exact algorithm?
+
+- **OQ-4 (RESOLVED — two co-equal models, distinct roles).** <span style="color: red">No model is "primary"; the two are the *caricature ↔ realisation* pair of [§1.2](#12-generative-model), carried together. The **rotated hypercone** is the *analytic/controlled* model (closed-form `Δ=(d−1)/x` (T6), the negative control, and the tunable convex-vertex curvature — the only axis on which `p*` and `p_proj` provably differ, [§3.4](#34-the-second-protagonist-infomax-vs-mdl)); **exp-decay** is the *realism* model (curved, non-aligned, all competitors fail, A&M Fig. 5). The transfer-vs-`c` headline runs on **both**, and agreement across the controlled and realistic models is itself evidence. The only build requirement — the controlled model's curvature knob — is already in [§4.1](#41-model-families).</span>
 - **OQ-5 (RESOLVED — `p_proj` is in the headline lineup).** Resolved in favour of including
   `p_proj` now, not deferring. [§3.4](#34-the-second-protagonist-infomax-vs-mdl) establishes
   it as a budget-dependent *co-protagonist* (not a control), and the headline statistic
@@ -1341,11 +1331,7 @@ stays small but a `q`-subset analysis can re-key off it).
   over the sampled MLE cloud. Verified by T11 (construction/MI) and T12 (against
   AtomicPriors). The earlier rejection-from-a-box alternative is dropped as needlessly
   expensive.
-- **OQ-7 (dependency, minor).** `AtomicPriors.jl` is a **dev-time-only** reference: it
-  generates the T12 golden fixtures ([§5.5](#55-atomicpriorsjl-reference-fixtures)) and is
-  never imported by the suite. It needs Julia ≥ 1.6 to (re)generate fixtures — record this
-  under *Local setup* in `README.md` (and note under "what we deliberately don't install"
-  that Julia is **not** in the uv env). Decided: fixtures stay frozen, never called live.
+- **OQ-7 (dependency).** <span style="color: red">`AtomicPriors.jl` enters in two roles: (i) **dev-time**, generating the frozen T12 golden fixtures ([§5.5](#55-atomicpriorsjl-reference-fixtures)) — the **test suite never imports Julia**; and (ii) **runtime**, supplying `p*` for `d > d_switch` in the experiment via `juliacall` (OQ-1). So Julia ≥ 1.6 is needed both to (re)generate fixtures and to run the high-`d` experiment, but **not** for `pytest` or the small-`d` headline. Record under *Local setup* in `README.md` (Julia is **not** in the uv env; note it under "what we deliberately don't install"); `provenance.json` captures the Julia + AtomicPriors versions for any run that used the `d > d_switch` path.</span>
 
 ## 8. References
 
@@ -2062,5 +2048,33 @@ changed — this is the downstream build/test spec catching up. All of §4–§7
 - **§6/§7.** Cell key gains `N`/`σ_eff`; report test results now T0–T14. OQ-5 (include
   `p_proj`) and OQ-6 (sampler) marked RESOLVED; OQ-7 added (Julia dev-only dependency, to be
   recorded in `README.md` *Local setup*).
+
+No downstream artefacts exist yet, so nothing is invalidated.
+
+### 2026-06-06 — Refinement (§4.1, §4.2, §4.5, §5.4, §7; resolve OQ-1/OQ-4/OQ-7, picture OQ-2)
+
+Acting on the `> M:` answers the human added to §7. Edits in red (the human is reviewing
+§4–§7 as new, so red marks just this round's delta). Sections were already `draft`; no
+status flips.
+
+- **OQ-1 (RESOLVED).** Instead of porting A&M's atomic optimiser to Python, the experiment
+  **delegates `p*` to `AtomicPriors.jl` via `juliacall` for `d > d_switch`**, with Python
+  grid-BA the primary path for `d ≤ d_switch`. **`d_switch` is a parameter** — an empirical,
+  per-machine cross-over fixed once both paths are profiled, not a number set now.
+  Propagated to §4.2 (`p*` construction), §4.5 (`pstar.py` holds grid-BA + the bridge),
+  §5.4 (`d`-sweep / `d_switch`), and the §5.3 eye-test config. Julia is now a **runtime**
+  dependency of the experiment's high-`d` path (the test suite stays Julia-free on frozen
+  fixtures) — OQ-7 updated accordingly, and `provenance.json` records the Julia +
+  AtomicPriors versions; Julia RNG seeded across the boundary for T10.
+- **OQ-4 (RESOLVED).** Dropped the "primary vs companion" framing: the rotated hypercone
+  (analytic/controlled) and exp-decay (realism) are **co-equal**, the caricature↔realisation
+  pair of §1.2; the headline runs on both and cross-model agreement is evidence. The §4.1
+  family labels were relabelled to match ("realism model" / "analytic/controlled model").
+- **OQ-2 (pictured, still open).** Added `notes/q-family-visualisation.md` + the exploratory
+  `notes/q-family-viz/q_family_viz.py` (untrusted): three candidate `q`-families drawn in
+  2D (parameter and prediction space), with a two-knob recommendation. OQ-2 stays open
+  pending the human's pick; the chosen family then gets written into §4.3.
+- **OQ-3 still open** — discussed in chat (a max-entropy hyperparameter choice for `p_LN`
+  degenerates; leaning to an un-tuned standard default), not yet written in.
 
 No downstream artefacts exist yet, so nothing is invalidated.
