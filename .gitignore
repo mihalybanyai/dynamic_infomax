@@ -49,6 +49,10 @@ experiments/*/checkpoints/
 *.pt
 *.pth
 
+# An implementation dowloaded from Michael Abbott's github:
+# https://github.com/mcabbott/AtomicPriors.jl
+resources/AtomicPriors*
+
 # Transcripts that might contain sensitive info — review before committing
 # (Comment out the next line if you want to commit transcripts by default)
 # transcripts/
