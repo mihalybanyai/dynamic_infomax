@@ -56,6 +56,16 @@ recurring confusions, so they are worth stating in excruciating detail.
   only through `h`. As the box below shows, this lets us work entirely with
   `h` and lose nothing, so from here on "the data" *is* `h`, ranging over the
   `n+1` values `\{0,\dots,n\}`.
+- **Random variables `Θ`, `X_n` (capitals).** Lowercase `θ` and `h` are
+  *values*; the matching **random variables** are written in capitals — `Θ`
+  for the parameter, `X_n` for the data. The subscript is deliberate:
+  `X_n ≡ h ∼ Binomial(n,θ)` is the **bundled outcome of all `n` tosses** (the
+  sufficient statistic, ranging over `\{0,\dots,n\}`), *not* a single toss —
+  one toss is just the `n=1` case `X_1`. So `n` is the toss budget, carried
+  *implicitly* by every `I(Θ;X_n)` and by the capacity `C` below, surfacing
+  explicitly only when we count atoms (`∼√n`) or expand `C_n`. By sufficiency
+  the mutual information of `X_n` equals that of the full sequence `x`, so
+  reading `X_n` as `h` loses nothing.
 - **Explicit arguments, no dots.** We spell the argument out —
   `p(h\mid\theta)`, `q_A(h)`, `m_\pi(h)` — rather than write the placeholder
   dot `p(\cdot\mid\theta)`. The thing inside a KL is the *whole
@@ -191,7 +201,7 @@ $$
 \min_{q_A}\; \mathbb{E}_{\theta\sim\pi_A}\,r_\theta(q_A)
 \;=\; \mathbb{E}_{\theta\sim\pi_A}\,r_\theta(m_{\pi_A})
 \;=\; \mathbb{E}_{\theta\sim\pi_A}\,D\big(p(h\mid\theta)\,\|\,m_{\pi_A}\big)
-\;=\; I(\Theta;X).
+\;=\; I(\Theta;X_n).
 $$
 
 So once you have committed to a working prior `π_A`, **not** building your
@@ -200,7 +210,7 @@ predictor from it (using some `q_A \ne m_{\pi_A}`) is strictly worse. The
 `q_A`,
 
 $$
-\mathbb{E}_{\pi_A}\,r_\theta(q_A) \;=\; I(\Theta;X) + D\big(m_{\pi_A}\,\|\,q_A\big) \;\ge\; I(\Theta;X),
+\mathbb{E}_{\pi_A}\,r_\theta(q_A) \;=\; I(\Theta;X_n) + D\big(m_{\pi_A}\,\|\,q_A\big) \;\ge\; I(\Theta;X_n),
 $$
 
 with equality iff `q_A = m_{\pi_A}`; the cost of not using your own working
@@ -212,7 +222,7 @@ against*. If nature's true distribution over `θ` differs from `π_A`, then
 Three readings of the identity:
 
 - *Dependence (generalised correlation).* The same number is the statistical
-  **dependence** between `Θ` and `X` in the joint `π_A(θ)·p(h|θ)` — formally
+  **dependence** between `Θ` and `X_n` in the joint `π_A(θ)·p(h|θ)` — formally
   `I = D( joint ‖ π_A ⊗ m_{π_A} )`, the KL from the joint to the product of its
   marginals (zero iff independent, growing with coupling). It is literally
   *one integral grouped two ways*: `E_{θ,h} log[ p(h|θ) / m_{π_A}(h) ]` read as
@@ -223,30 +233,30 @@ Three readings of the identity:
   price, not a lower one?* Because the price is a **regret to the oracle**, not
   an absolute coding cost: `I` is the **value of `θ` as side-information**. The
   θ-blind code `m_{π_A}` pays for the predictability it *cannot* exploit — the
-  more `X` depends on `θ`, the more the oracle who knows `θ` beats it, so the
+  more `X_n` depends on `θ`, the more the oracle who knows `θ` beats it, so the
   bigger the gap. Independence ⇒ `θ` is worthless ⇒ zero gap, the floor. The
   high-predictability of a strongly-dependent channel is real but *locked
   behind `θ`*, which the blind code lacks.)
 - *Meaning (price).* The expected nats you pay, using the predictor that
   integrates the likelihood over your working prior, **equal the mutual
-  information** `I(Θ;X)` between latent and observation, for the fixed
+  information** `I(Θ;X_n)` between latent and observation, for the fixed
   likelihood and that `π_A` — *provided* `θ` is averaged under `π_A` (the
   matched, self-consistent case). The mixture is the **universal code**: the
   best single code against a `π_A`-random source, its irreducible average
   redundancy being `I` itself.
-- *Identity.* `I(Θ;X) = H(Θ) − H(Θ|X) = E_θ r_θ(m_{π_A})` — "uncertainty
+- *Identity.* `I(Θ;X_n) = H(Θ) − H(Θ|X_n) = E_θ r_θ(m_{π_A})` — "uncertainty
   removed by the data" and "average cumulative regret-to-oracle" are the same
   number (note §3).
 
-**What makes `I(Θ;X)` larger or smaller?** With the likelihood fixed, `I` is a
-*concave* function of `π_A`, and reading it as `H(Θ) − H(Θ|X)` says what it
+**What makes `I(Θ;X_n)` larger or smaller?** With the likelihood fixed, `I` is a
+*concave* function of `π_A`, and reading it as `H(Θ) − H(Θ|X_n)` says what it
 rewards: spread `π_A` over θ-values the data can actually *tell apart*.
 
 - A **point mass** `π_A = δ_{θ_0}` gives `I = 0` — no uncertainty to resolve
   (`H(Θ)=0`).
 - Spreading over θ-values whose likelihoods `p(h|θ)` heavily **overlap**
   (nearly indistinguishable) also gives little — the data barely cuts `H(Θ)`,
-  so `H(Θ|X) ≈ H(Θ)`.
+  so `H(Θ|X_n) ≈ H(Θ)`.
 - `I` is **largest** when `π_A` puts mass on **well-separated, highly
   distinguishable** θ — for the Bernoulli channel, weighted toward the
   endpoints `0` and `1`, where the `Binomial(n,θ)` output laws are most nearly
@@ -267,12 +277,12 @@ The **channel capacity** is the largest average redundancy any prior can
 extract:
 
 $$
-C \;=\; \sup_{\pi}\, I(\Theta;X).
+C \;=\; \sup_{\pi}\, I(\Theta;X_n).
 $$
 
 A prior achieving the sup is **capacity-achieving**. Capacity is a property of
 the **likelihood / channel alone** — the prior is maximised out — namely the
-most Θ–X dependence (equivalently, the largest average redundancy) the channel
+most `Θ–X_n` dependence (equivalently, the largest average redundancy) the channel
 *can be made to* induce, over all input priors.
 
 Now a **role shift**, worth stating carefully because it is easy to mis-map.
@@ -290,7 +300,7 @@ optimisation `\sup_\pi I`:
   scored by the plug-in decision rule — and lives in the note: there a
   committed `p*` is catastrophic, whereas here a committed `m_{p*}` is robust.)
 - **A designer, constructively** — picking the input distribution that makes
-  the experiment *most informative*, i.e. maximising `I(Θ;X)` (Bernardo's
+  the experiment *most informative*, i.e. maximising `I(Θ;X_n)` (Bernardo's
   reference-prior / infomax design objective). The designer maximises
   **information**, which is a good thing — *not* its own coding cost. The
   agent-as-coder never maximises its cost; minimisation is always the coder's
@@ -305,7 +315,7 @@ player's move order:
 
 - **Maximin (average / Bayesian redundancy).** Nature randomises `θ` with a
   prior `π`; the agent then picks the best code:
-  $\sup_\pi \inf_{q_A} \mathbb{E}_\pi D = \sup_\pi I(\Theta;X) = C$.
+  $\sup_\pi \inf_{q_A} \mathbb{E}_\pi D = \sup_\pi I(\Theta;X_n) = C$.
 - **Minimax (worst-case redundancy).** The agent commits to a code
   `q_A`; nature then picks the worst single `θ`:
   $\inf_{q_A} \sup_\theta D\big(p(h\mid\theta)\,\|\,q_A\big)$.
@@ -314,7 +324,7 @@ The **redundancy–capacity theorem** says these coincide,
 
 $$
 \inf_{q_A}\,\sup_\theta\, D\big(p(h\mid\theta)\,\|\,q_A\big)
-\;=\;\sup_\pi\, I(\Theta;X)\;=\;C,
+\;=\;\sup_\pi\, I(\Theta;X_n)\;=\;C,
 $$
 
 under mild regularity, whose terms are worth unpacking:
@@ -394,8 +404,7 @@ support. Two intuitions for *why* the optimum equalises:
   file describe the same fixed point** — one from the convex-optimisation
   side, one from the coding-game side.
 
-Your reading of the mechanism is exactly right, and it shows both players'
-views of one condition: a support `θ` whose redundancy sat *below* `C` would be
+A support `θ` whose redundancy sat *below* `C` would be
 a wasted slot — shifting its mass onto the `C`-valued points raises the average
 `I` (the optimiser, equivalently nature maximising), so the optimum will not let
 it persist; and from nature's side a below-`C` `θ` is an *easier* target (the
