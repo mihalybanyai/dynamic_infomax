@@ -248,6 +248,7 @@ from inside the agent (see the spawn-configuration gate in
 
 | Approved red-teamer (declared identity) | Role | Highest effort tier | Availability |
 |---|---|---|---|
+| Claude Fable 5 | conceptual — experimental | Max | all paid tiers (not free), but will be excluded later |
 | Claude Opus 4.8 | conceptual — primary | Max | all paid tiers (not free) |
 | Claude Opus 4.7 | conceptual — diversity | Max | all paid tiers (not free) |
 

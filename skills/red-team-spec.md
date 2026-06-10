@@ -85,34 +85,47 @@ diagrams). Then attack it.
 
 Focus on these failure modes, in roughly this order of value:
 
-1. **Math errors**: sign flips, missing factors, dimension mismatches,
+1. **Conceptual confusion**: any reasoning step that uses an 
+    interpretation for a mathematical formula that's not actually correct, or contains a logical error, a non sequitur or plain nonsense.
+
+2. **Aims not achieved**: any reason the spec does not really achieve it's 
+    stated goal, a conceptual gap in the reasoning that will prevent the 
+    experiment from demonstrating what it's stated to demonstrate.
+
+3. **Inconsistency with the literature**: any claim about existing
+   results that isn't actually true or consistent with the literature. 
+
+4. **Math errors**: sign flips, missing factors, dimension mismatches,
    misapplied identities, expectations taken over the wrong distribution,
    index errors in sums/products.
 
-2. **Unstated assumptions**: places where the derivation only goes through
+5. **Unstated assumptions**: places where the derivation only goes through
    under conditions the spec does not name. Differentiability, boundedness,
    independence, stationarity, finite variance, full-rank conditions — be
    specific about which one is missing where.
 
-3. **Spec/algorithm mismatch**: the pseudocode does not implement the math.
+6. **Spec/algorithm mismatch**: the pseudocode does not implement the math.
    The objective in section X is not what the algorithm in section Y
    actually optimizes. The properties listed in "Properties to verify" do
    not all follow from the math as written.
 
-4. **Notation drift**: a symbol means one thing in section 2 and a different
+7. **Notation drift**: a symbol means one thing in section 2 and a different
    thing in section 4. A vector becomes a scalar without warning. An
    expectation switches from over one distribution to another implicitly.
 
-5. **Edge cases the spec ignores**: what happens when the input is empty,
+8. **Edge cases the spec ignores**: what happens when the input is empty,
    degenerate, has zero variance, has infinite support, is a single sample?
 
-6. **Vague claims**: any sentence that uses "natural", "obvious", "clearly",
+9. **Vague claims**: any sentence that uses "natural", "obvious", "clearly",
    "well-known", "standard" should be flagged. These words usually hide a
    step the author did not want to write out.
 
-7. **Aims not achieved**: any reason the spec does not really achieve it's 
+10. **Aims not achieved**: any reason the spec does not really achieve it's 
     stated goal, a conceptual gap in the reasoning that will prevent the 
     experiment from demonstrating what it's stated to demonstrate.
+
+11. **Test coverage**: if there is any   
+    capability that the proposed suite leaves uncertain to be trusted 
 
 Be specific. Useless: "the proof in section 3 might not work."
 Useful: "the inequality in equation (3.7) requires f to be convex, but f is
