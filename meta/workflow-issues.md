@@ -217,6 +217,23 @@ Be short — same level of compression as the Reproducibility section (under 30 
 
 The updated AGENTS.md should go into the bootstrap.py as well.
 
+### Spawn-configuration gate vs autonomous invocation [skills]
+
+*Opened 2026-06-11*
+
+The red-team-spec spawn gate (print roster, wait for explicit "go")
+collided with an autonomous fire-and-forget trigger on 2026-06-10: the
+trigger named the model and effort inline, the session was flagged
+"user not watching; do not block on questions", and the main agent
+treated the named configuration as pre-ratification — printed the
+roster but spawned without pausing. The human did not intend that.
+Needed: an explicit reconciliation in `skills/red-team-spec.md` and the
+Stage-1 template of `workflows/invoke-red-team-on-spec.md` — e.g. a
+literal pre-ratification token ("gate: go") that a trigger must contain
+for the pause to be skipped, with the default remaining halt-at-gate
+even in autonomous sessions (the gate is the only effort-tier check;
+halting and resuming on the human's reply is the acceptable cost).
+
 ---
 
 ## Resolved / dismissed
