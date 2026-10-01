@@ -2,6 +2,18 @@
 
 Research project on [one-line description here].
 
+## TODO
+
+- Theory
+  - complete spec 002
+- Experiment
+  - create the folder structure
+  - process handwritten notes
+- Meta-science
+  - create the landing page
+- Technical
+  - red tem skills are very redundant
+
 ## Artifacts in need of action
 
 - specs/001-infomax-betting.md: review from 1.2 onward
