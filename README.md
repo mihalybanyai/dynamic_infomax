@@ -67,6 +67,10 @@ Not strictly required — the diagram's source is human-readable, and
 GitHub's web view renders mermaid blocks natively when browsing the
 repo online. The extension just makes local reading nicer.
 
+Additional extensions useful for reading:
+- Markdown Footnotes by Matt Bierner
+- Rich Markdown Diff by phine-apps
+
 ### Python environment
 
 From the repo root:
