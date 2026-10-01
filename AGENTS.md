@@ -247,14 +247,14 @@ machine-checkable from inside the agent (see the spawn-configuration gate in
 
 | Approved red-teamer (declared identity) | Role | Highest effort tier | Availability |
 |---|---|---|---|
-| Claude Fable 5 | conceptual — experimental | Max | all paid tiers (not free), but will be excluded later |
-| Claude Opus 4.8 | conceptual — primary | Max | all paid tiers (not free) |
-| Claude Opus 4.7 | conceptual — diversity | Max | all paid tiers (not free) |
+| Claude Fable 5.1 | conceptual — experimental | Max | not included in Pro tier without usage credits |
+| Claude Opus 5.5 | conceptual — primary | Max | all paid tiers (not free) |
+| Claude Opus 4.8 | conceptual — diversity | Max | all paid tiers (not free) |
 
 Mechanical sibling red-teams (tests, implementation) may use a cheaper model
 (the latest Sonnet); the conceptual spec red-team does not.
 
-**Last verified:** 2026-06-11 (human). The spawn-configuration gate prints
+**Last verified:** 2026-10-01 (human). The spawn-configuration gate prints
 this table at every invocation and refreshes this date on "go", so a stale
 roster (a model shipped, a tier changed) is caught by the human noticing it,
 not by an automated check. Update the cells by direct edit.
