@@ -27,7 +27,7 @@ the red-team pass should run against a stabilised artifact.
 - The session is running an **approved red-teamer model at the highest
   effort tier** (see the roster in `AGENTS.md`). The sub-agent inherits
   both from this session. You do not have to get this right before
-  triggering: the spawn-configuration gate (`skills/red-team-spec.md`)
+  triggering: the spawn-configuration gate (`skills/red-team.md` §1)
   pauses for your confirmation first, so a misconfigured session can be
   fixed there — re-trigger from a correctly-set session, a separate
   thread if you want a different model version.

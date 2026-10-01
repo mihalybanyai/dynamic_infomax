@@ -9,6 +9,12 @@ loads skills from here as needed.
 - `write-math-spec.md` — turning an idea into a specification in `specs/`
 - `derive-test-suite.md` — going from spec to test suite before code
 - `document-experiment.md` — structuring an entry in `experiments/`
+- `manage-randomness.md` — seeds, generators and provenance for any code
+- `red-team.md` — the shared core of all red-teams: spawn gate, sub-agent rules, report
+  shape, annotation, resolution
+- `red-team-spec.md`, `red-team-spec-conceptual.md`, `red-team-tests.md`,
+  `red-team-implementation.md`, `red-team-result.md` — what each red-team stage attacks;
+  each builds on `red-team.md`
 
 ## Adding a new skill
 

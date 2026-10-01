@@ -227,7 +227,7 @@ trigger named the model and effort inline, the session was flagged
 "user not watching; do not block on questions", and the main agent
 treated the named configuration as pre-ratification — printed the
 roster but spawned without pausing. The human did not intend that.
-Needed: an explicit reconciliation in `skills/red-team-spec.md` and the
+Needed: an explicit reconciliation in `skills/red-team.md` §1 (the gate's home since 2026-10-01) and the
 Stage-1 template of `workflows/invoke-red-team-on-spec.md` — e.g. a
 literal pre-ratification token ("gate: go") that a trigger must contain
 for the pause to be skipped, with the default remaining halt-at-gate

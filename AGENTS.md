@@ -246,8 +246,7 @@ strongest available configuration, not the session default:
 - **Effort.** Always the highest available tier.
 
 Neither fact is machine-discoverable, and effort is not even
-machine-checkable from inside the agent (see the spawn-configuration gate in
-`skills/red-team-spec.md`). This table is the single source of truth.
+machine-checkable from inside the agent (see the spawn-configuration gate in `skills/red-team.md` §1). This table is the single source of truth.
 
 | Approved red-teamer (declared identity) | Role | Highest effort tier | Availability |
 |---|---|---|---|
