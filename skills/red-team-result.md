@@ -177,6 +177,12 @@ For each result claim, ask:
    (basic training check)? Does the model behave reasonably on a
    held-out example you manually understand?
 
+10. **Hidden or unmarked claims**: a claim the conclusion depends on
+    that appears only in an appendix, a footnote, or a sibling file of
+    the report; a claim neither shown in the report nor checked by code
+    that carries no `[read: …]`, `[recalled]`, or `[guess]` tag
+    (`AGENTS.md`, *Epistemic tags*).
+
 NOT in scope for the sub-agent:
 
 - Style/formatting issues in the report (the human owns those).
@@ -232,12 +238,17 @@ For each finding:
   implementation), say so.
 
 **Ordering**: list findings in order of descending severity (high
-first, then medium, then low). Within a severity level, order by
+first, then medium). Within a severity level, order by
 the checklist category above (bug-as-feature first, then trivial
 baseline, then confound, etc.). Number findings F1, F2, F3, …
 *after* ordering. Do not include counts of findings by severity in
 the summary — the list below is the source of truth, and counts
 produced separately tend to drift from the actual list.
+
+**Minor findings**: low-severity findings get no F-block. List them
+under a `## Minor` heading directly after the F-blocks, one line each
+(`m1 — <location> — <concern> — <fix>`), so the human can answer them
+in bulk.
 
 Write the report to `<EXPERIMENT_DIR>/redteam-result.md`. Suggested
 top-level structure:
@@ -272,6 +283,10 @@ picture. No counts.>
 ---
 
 ### F2: ...
+
+## Minor
+
+- m1 — <location> — <concern> — <fix>
 
 ## What the experiment gets right
 
@@ -317,6 +332,7 @@ and why. The conventions match the other red-team skills:
   experiment code, a figure (regenerated), an upstream artifact via
   a routing tag, or none (dismissed / accepted as limitation). When
   multiple artifacts are touched, list them all.
+- A single `> M:` may answer the whole Minor list (e.g. "apply all except m3").
 
 Example:
 

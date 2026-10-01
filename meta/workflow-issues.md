@@ -234,6 +234,21 @@ for the pause to be skipped, with the default remaining halt-at-gate
 even in autonomous sessions (the gate is the only effort-tier check;
 halting and resuming on the human's reply is the acceptable cost).
 
+### Review brevity and epistemic-tag conventions after 3 sessions [conventions]
+
+*Opened 2026-10-01*
+
+Adopted in a meta-science session on 2026-10-01: session types, the
+necessity test with core/apparatus split, provenance tags (`[read: …]`,
+`[recalled]`, `[guess]`), and `## Minor` one-line lists in red-team
+reports (`AGENTS.md` *Brevity*, *Epistemic tags*; red-team skills). There
+are deliberately no word budgets. After three science sessions, check:
+are the tags used, and are they annoying? Is load-bearing content drifting
+into appendices or footnotes, and does the red-team catch it? Do Minor
+lists cut review time? Baseline to compare against: red-team files so far
+carry 106 `> M:` and 5 `> M?:` annotations; whether that ratio reflects
+real understanding or waving-through is the human's call.
+
 ---
 
 ## Resolved / dismissed

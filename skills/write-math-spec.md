@@ -34,7 +34,9 @@ to any particular tensor shape convention. It describes the math.
    …); subsections are `### X.Y` and subsubsections `#### X.Y.Z` (see
    "Numbering and links"). A spec needs at least:
 
-   - **Context** — one paragraph: what problem this solves, what came before.
+   - **Context** — one paragraph, opening with at most three lines on what
+     the spec establishes or tests; then what problem this solves, what
+     came before.
    - **Setup** — definitions of all symbols. Use a notation table if there are
      more than 5 symbols.
    - **Generative model** (if applicable) — a plate-notation diagram for any
@@ -79,6 +81,21 @@ to any particular tensor shape convention. It describes the math.
 
 5. **Ask before guessing.** If the source is ambiguous on a definition or
    choice, ask the human collaborator. Do not silently pick a convention.
+
+## Brevity and provenance
+
+`AGENTS.md` (*Brevity*, *Epistemic tags*) applies in full. In a spec:
+
+- **The main sections are the core**; the Derivations appendix and
+  footnotes are the apparatus. Every result the spec relies on is stated in
+  a main section, since the main sections' status rows are what review
+  covers. The apparatus only supports results stated there.
+- **Apply the necessity test while writing.** A passage the argument does
+  not need (a side remark, an alternative not taken, a historical aside)
+  goes to a footnote, where the human may delete it.
+- **Tag claims** that are neither shown in the spec nor checked by code:
+  `[read: …]`, `[recalled]`, `[guess]`. Claims about the literature are the
+  usual case.
 
 ## Status table
 
@@ -580,7 +597,8 @@ reads on; a reviewer who wants to check it has every step in one place.
 - Appendix equations carry their own section-scoped tags (`\tag{9.1.1}`),
   so adding an intermediate step never renumbers the main sections.
 - It is reference material, not the main read: the appendix introduces no
-  result the main sections don't already state.
+  result the main sections don't already state (see "Brevity and
+  provenance"; the spec red-team checks this).
 
 ## Revision log
 

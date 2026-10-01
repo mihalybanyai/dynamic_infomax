@@ -120,12 +120,17 @@ Focus on these failure modes, in roughly this order of value:
    "well-known", "standard" should be flagged. These words usually hide a
    step the author did not want to write out.
 
-10. **Aims not achieved**: any reason the spec does not really achieve it's 
-    stated goal, a conceptual gap in the reasoning that will prevent the 
-    experiment from demonstrating what it's stated to demonstrate.
-
-11. **Test coverage**: if there is any   
+10. **Test coverage**: if there is any   
     capability that the proposed suite leaves uncertain to be trusted 
+
+11. **Hidden load-bearing content**: a claim the argument depends on that
+    appears only in an appendix, a footnote, or a sibling file, not in a
+    main section.
+
+12. **Unmarked provenance**: a claim neither shown in the spec nor checked
+    by code that carries no `[read: …]`, `[recalled]`, or `[guess]` tag
+    (`AGENTS.md`, *Epistemic tags*); or a `[read: …]` tag whose source does
+    not say what is claimed.
 
 Be specific. Useless: "the proof in section 3 might not work."
 Useful: "the inequality in equation (3.7) requires f to be convex, but f is
@@ -142,9 +147,14 @@ For each finding, state:
   the concern.
 
 **Ordering**: list findings in order of descending severity (high first,
-then medium, then low). Within a severity level, order by location in the
+then medium). Within a severity level, order by location in the
 spec (earliest section first). Number findings F1, F2, F3, ... *after*
 ordering, so F1 is the highest-severity, earliest-located finding.
+
+**Minor findings**: low-severity findings get no F-block. List them
+under a `## Minor` heading directly after the F-blocks, one line each
+(`m1 — <location> — <concern> — <fix>`), so the human can answer them
+in bulk.
 
 If you cannot find substantial flaws, say so directly. Do not invent
 concerns to seem thorough. A short report with three real flaws is more
@@ -185,6 +195,10 @@ the actual list.>
 
 ### F2: ...
 
+## Minor
+
+- m1 — <location> — <concern> — <fix>
+
 ## What the spec gets right
 
 <one paragraph, briefly. Not flattery — this is so the author knows what
@@ -207,6 +221,8 @@ with the `> C:` blockquote prefix, two newlines below the human's response,
 recording what was actually done (e.g., "> C: Applied as suggested in
 commit a3f4d12; section §1.4 status flipped to draft and revision log
 entry added.").
+
+A single `> M:` may answer the whole Minor list (e.g. "apply all except m3").
 
 Example after a full resolution cycle:
 

@@ -194,6 +194,11 @@ inefficiencies, then doc inaccuracies, then doc omissions). Number
 findings F1, F2, F3, ... *after* ordering, so F1 is the
 highest-severity finding in the highest-priority category.
 
+**Minor findings**: low-severity findings get no F-block. List them
+under a `## Minor` heading directly after the F-blocks, one line each
+(`m1 — <location> — <concern> — <fix>`), so the human can answer them
+in bulk.
+
 If you cannot find substantial issues in a category, say so directly.
 Do not invent concerns to seem thorough.
 
@@ -232,6 +237,10 @@ counts of findings by severity; the list is the source of truth.>
 
 ### F2: ...
 
+## Minor
+
+- m1 — <location> — <concern> — <fix>
+
 ## What the implementation gets right
 
 <one paragraph, briefly. So the author knows what not to inadvertently
@@ -244,7 +253,7 @@ Same convention as `skills/red-team-spec.md` and `skills/red-team-tests.md`:
 the human appends responses with `> M:` (or appropriate initial) and
 Claude or the human appends confirmations with `> C:`, two newlines
 between each. The redteam file becomes the audit trail for the
-implementation red-team pass.
+implementation red-team pass. A single `> M:` may answer the whole Minor list (e.g. "apply all except m3").
 
 `> M?:` (with the question mark) is used for findings the human is not
 equipped to evaluate without further explanation — typically when the

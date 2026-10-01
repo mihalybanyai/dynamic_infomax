@@ -137,10 +137,15 @@ distribution, a specific input where the answer is known in closed form),
 flag whether it is tested and recommend adding it if not.
 
 **Ordering**: list findings in order of descending severity (high first,
-then medium, then low). Within a severity level, order coverage-gap
+then medium). Within a severity level, order coverage-gap
 findings (Part 1) before vacuous-test findings (Part 2), and within each
 of those order by spec section or test function name (earliest first).
 Number findings F1, F2, F3, ... *after* ordering.
+
+**Minor findings**: low-severity findings get no F-block. List them
+under a `## Minor` heading directly after the F-blocks, one line each
+(`m1 — <location> — <concern> — <fix>`), so the human can answer them
+in bulk.
 
 Write your findings to `<TEST_PATH_WITHOUT_EXTENSION>-redteam.md`,
 mirroring the format below. Do not include counts of findings by
@@ -176,6 +181,10 @@ would pass>
 
 ### F2: ...
 
+## Minor
+
+- m1 — <location> — <concern> — <fix>
+
 ## What the test suite gets right
 
 <one paragraph, briefly. So the author knows what not to break.>
@@ -186,7 +195,7 @@ would pass>
 Same convention as `skills/red-team-spec.md`: the human appends responses
 with `> M:` (or appropriate initial) and Claude or the human appends
 confirmations with `> C:`, two newlines between each. The redteam file
-becomes the audit trail for the test red-team pass.
+becomes the audit trail for the test red-team pass. A single `> M:` may answer the whole Minor list (e.g. "apply all except m3").
 
 Example after resolution:
 
