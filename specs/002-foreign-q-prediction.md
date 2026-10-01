@@ -32,6 +32,24 @@ the opposite-seeming claim. In [**ribbon-geometry**](../GLOSSARY.md#hyperribbon)
 unresolvable [**co-volume**](../GLOSSARY.md#co-volume), and `p*` does not [read: A&M §2.2, Figs. 3–5].
 Log-normal also degrades as parameters are added, less severely [read: A&M §2.2].
 
+**An example.** A detective wants to know whether an intruder was in and out, which
+suggests they knew where the valuables were, or stayed to search. The door's alarm log
+times the visit to within about a minute. He also profiles the intruder from traces of their habits: specks of ash, a stray coat
+fibre, a smudge on the window. Each trace grows with the time spent, so reading a habit
+needs the duration (a big pile of ash means a heavy smoker or a long stay), but every
+trace is too faint to tell apart from the room's ordinary clutter.
+A seemingly neutral detective counts two *scenarios* (a scenario being a duration plus
+a strength for every habit) as different whenever their traces would differ, however
+slightly. He then favours long stays: the longer the stay, the
+wider the range each trace could span, and across the habits these ranges multiply. If
+the log says 3 minutes, modelling 25 habits makes him conclude nearly 7, and modelling
+100 almost 12: a search, not an in-and-out. The shift comes from his prior, not from the
+evidence, and it grows with the number of invisible habits he chose to model. A detective who weighs only the scenarios the evidence can tell apart is not swayed by the
+habits [guess]; whether he also predicts real intruders better is what this spec tests.
+In the terms of [§1.2](#12-generative-model), the duration is a
+[relevant direction](../GLOSSARY.md#relevant-and-irrelevant-directions), the habits are irrelevant ones, and the growth of
+their traces with time is the co-volume gradient behind Jeffreys' bias[^0-detective].
+
 **Why A&M do not settle it.** Their [bias pressure](../GLOSSARY.md#bias-pressure) `b(θ)`, which scores how
 strongly a prior disfavours parameter value `θ`, is measured against the data
 distribution that same prior predicts; `b = 0` is `p*`'s
@@ -72,6 +90,109 @@ The two solve the same [universal-coding](../GLOSSARY.md#universal-coding) probl
 [regret](../GLOSSARY.md#redundancy-and-regret) notions and nearly coincide on hyperribbons, so the sharpest question
 is whether the harder capacity object buys anything over the cheap MDL one on held-out
 prediction ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)).
+
+[^0-detective]: **The example in detail.** It is A&M's square hypercone
+    ([§1.2](#12-generative-model), [§9.2](#92-hypercone-posterior-deviation-eq-922)) dressed as a detective case. A *scenario* is one point
+    `θ = (θ_1, …, θ_26)`: a duration and an intensity for every habit.
+
+    - *Duration* `θ_1 ∈ [0, L]`, `L = 50` minutes, timed by the alarm log with one
+      minute of noise (`σ = 1`): about 50 distinguishable durations, a relevant
+      direction. The log is a noisy measurement, not ground truth. "In and out or a
+      search?" needs the duration only to within a few minutes.
+    - *Habits* `θ_μ ∈ [0, 1]`, `μ = 2, …, 26`: how strongly the intruder smokes, sheds
+      fibres, touches the glass, and so on. The detective models them to profile the
+      intruder, which is exactly what the faint traces cannot deliver.
+    - *Traces.* Habit `μ` adds an expected amount `(θ_1/L)·θ_μ` to its trace (ash,
+      fibres, smudges). It is measured against the room's ordinary clutter, whose natural
+      variation is the one-unit noise. Even the strongest habit over the longest stay
+      adds only one unit, so each habit is an irrelevant direction. The factor `θ_1/L`
+      is the taper `r(θ_1)`.
+    - *Co-volume.* At duration `θ_1` the possible trace patterns fill a 25-dimensional
+      cube of side `θ_1/L`, with volume `∝ θ_1^{25}`: the cone's cross-section.
+
+    *The seemingly neutral detective* uses Jeffreys. Counting scenarios by how different their evidence would look is the only weighting that does not depend on how the
+    habits are measured (per hour, per minute, on a log scale); that is Jeffreys'
+    appeal. With a prior flat in duration the estimate would be the log reading `x` itself, so
+    any departure comes from the prior. His estimate is the posterior mode
+    `t = (x + √(x² + 4(d−1)))/2`, from eq. (9.2.1), for `d − 1` modelled habits: 6.7
+    minutes for `x = 3` with 25 habits, 11.6 with 100, and 12.1 for `x = 10` with 25
+    (A&M's own example). The pull is largest for short visits and grows with every habit
+    he models, so the same evidence gives different conclusions depending on an
+    invisible modelling choice. A&M name the principle this violates: predictions should be independent of
+    unobservable model details [read: A&M §2.2].
+
+    *Why model them jointly.* The traces tie the two questions: a trace's size is habit
+    × time, so no profile can be read without the duration. This coupling is the taper.
+
+    *No continuum needed.* The bias needs a distinguishability metric and a prior that
+    counts scenarios more finely than the evidence can tell them apart. Count scenarios on
+    a grid of spacing `ε` in trace units: at duration `θ_1` there are
+    `(θ_1/(Lε))^{d−1}` of them whenever `ε < θ_1/L`, so the tilt between two durations,
+    `(θ_1/θ_1')^{d−1}`, is Jeffreys' at every such `ε`; Jeffreys is the `ε → 0` limit.
+    At the evidence's own resolution (`ε` about one noise unit, wider than every
+    cross-section) each duration holds a single scenario and the tilt vanishes. Counting
+    at that resolution is roughly what `p*` does [guess: `p*` is the optimal version,
+    not a uniform grid]. With discrete scenarios, counting is legitimate when they are
+    real, equally likely individuals: that is a base rate, part of nature. The bias
+    concerns counts of modelling distinctions, such as how many habits the detective
+    chose to model.
+
+    *A textile-only detective* drops the habits from his model. His prior is flat in
+    duration, so he is unbiased. But he must choose what to drop, he misses a habit once
+    better instruments make its trace readable, and in effect he fixes each dropped
+    habit at one value. A&M argue that avoiding this measure-induced bias, not
+    overfitting, is the real job of model selection [read: A&M §3].
+
+    *The infomax detective* (`p*`) weighs only distinguishable scenarios, and his weights
+    form a shortlist although every quantity is continuous:
+
+    - durations about 2.5 minutes apart, so about 20 candidates [read: two-hats note
+      §7.4, for a one-dimensional bounded channel; the 26-dimensional spacing has not
+      been computed];
+    - habits only at "never" or "always": a trace spanning at most one noise unit is
+      below the width (about 3.3 units) at which a middle value would pay off [read:
+      two-hats note §7.4; Quinn §5.1]. For brief visits the two extremes leave identical
+      traces and merge (panel b of the geometry figure); for long stays a few habit
+      profiles survive [guess];
+    - his estimate should stay within about one candidate spacing of the log reading,
+      however many habits he models [guess; settled by the computation named in the
+      §1.2 footnote on `p*`'s bias].
+
+    More evidence (better instruments, or `N` repeated measurements) stretches every
+    Fisher length by `√N`. The duration grid refines, habits join the shortlist as their
+    traces become readable, and in the infinite-data limit the shortlist becomes the
+    continuum the neutral detective counts. Only there is Jeffreys right [read: A&M
+    §2.1]. In a real investigation the list of suspects plays the shortlist's role; here
+    the shortlist is computed from how much the evidence can resolve.
+
+    *Controls and coordinates.* Traces left only on entry, such as mud on the doormat,
+    do not grow with the stay: no taper, and the neutral detective is unbiased. This is
+    the constant-cross-section control [read: A&M App. A.1]. A detective with uniform
+    priors on duration and on habit *rates* is unbiased too. One with uniform priors on
+    duration and on total *trace amounts* ("how much ash") reproduces Jeffreys' bias
+    exactly, because those coordinates fill the cone uniformly. So which coordinate prior
+    fails depends on an arbitrary choice of variables.
+
+    *The projected-ML detective* (`p_proj`) imagines every evidence pattern the room
+    could show, credits each to its best-fitting scenario, and weights scenarios by the patterns they
+    collect. Extreme scenarios (habits at "never" or "always", durations at 0
+    or 50 minutes) also collect the patterns that fall just outside the possible range,
+    so they get extra weight [read: A&M App. A.3].
+
+    *Nature.* Staying near the log reading is A&M's notion of unbiasedness (a small
+    posterior deviation `Δ` from the maximum-likelihood estimate), not proof of better
+    predictions. The city's actual intruders, with their real durations and habits, are
+    the foreign `q`. If most linger, the neutral detective's pull happens to point the
+    right way. If most are in and out, his bias is at its worst, while a true duration
+    can also fall between the infomax detective's candidates. Which detective predicts
+    real intruders better on average is this spec's question.
+
+    *Limits.* A&M's one-dimensional treatment ignores the little that the 25 faint traces
+    jointly reveal about the duration, an `O(d/L²)` correction of about 1% here [read:
+    A&M App. A.1]. The example has none of exp-decay's curvature or misalignment, and the
+    habit range `[0, 1]` is stipulated. Holmes's least realistic trait may be that he
+    stays unbiased while reasoning from scant evidence over countless barely visible
+    details.
 
 [^0-am-data]: A&M compare bias pressure with the posterior deviation `Δ` (defined in
     [§1.1](#11-notation)) at 100 observations drawn from `p*`'s data distribution, in
@@ -2085,3 +2206,18 @@ fixes: FIM, BA, "cell", test IDs, "coordinate priors", "pointwise bias" (now: th
 posterior deviation `Δ`), "Gaussian-manifold limit", `B_J`, `θ̂_x`, the `x` of the
 hypercone, and the `D(·‖·)` shorthand. In the notation table, the `m_q` row now precedes
 the `c` row. No claims changed.
+
+### 2026-10-01 — Refinement (§0; illustrative example)
+
+Added "An example" to §0: a detective asking whether an intruder was in and out or
+searched, while profiling them from faint habit traces that grow with the time spent.
+The example does not treat staying near the log reading as correct: the objection to
+the Jeffreys detective is that his conclusion depends on how many invisible habits he
+models, and which detective predicts real intruders better is left to the spec. It is the square hypercone with a story attached.
+The footnote `[^0-detective]` maps every element to §1.2 (duration = relevant
+coordinate, habits = irrelevant coordinates, trace growth = taper, trace patterns =
+co-volume) and covers the Jeffreys, model-selection, `p*` and `p_proj` detectives, the
+budget limit, the controls and the foreign `q`. The detective's estimates are the
+posterior mode of eq. (9.2.1); claims about `p*`'s shortlist beyond the
+one-dimensional BA result are `[guess]`. The idea of the example is MB's; the text is a
+Claude draft.
