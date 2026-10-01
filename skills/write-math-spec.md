@@ -93,6 +93,8 @@ to any particular tensor shape convention. It describes the math.
 - **Apply the necessity test while writing.** A passage the argument does
   not need (a side remark, an alternative not taken, a historical aside)
   goes to a footnote, where the human may delete it.
+- **Link, don't define, general terms.** Niche terms link to `GLOSSARY.md` at first use
+  in each section (add an entry if missing); the spec defines only its own objects.
 - **Tag claims** that are neither shown in the spec nor checked by code:
   `[read: …]`, `[recalled]`, `[guess]`. Claims about the literature are the
   usual case.

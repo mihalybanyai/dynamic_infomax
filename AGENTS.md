@@ -71,6 +71,10 @@ Text too long to review does not get reviewed; it gets waved through. So:
   Each apparatus item is pointed to from the core claim it supports. A
   load-bearing claim found only in the apparatus is a defect; red-teams
   check for it.
+- **Define once, link everywhere.** Terms a computational neuroscientist, cognitive
+  scientist or theoretical ML researcher may not know are defined in `GLOSSARY.md` and
+  linked at first use in each section, not defined inline. A document defines only its
+  own core objects. Glossary entries link to each other the same way.
 - **Deletion is cheap.** Git is the archive. Cut freely; the human sees the
   cuts in `git diff`.
 - **Archives are not reading obligations.** `transcripts/` and resolved
@@ -145,6 +149,7 @@ the time spent reading a misformatted draft.
 
 ## Directory map
 
+- `GLOSSARY.md` — definitions of terms used across the repo; documents link here.
 - `notes/` — ideas and sketches we develop.
 - `resources/` — pre-existing material: papers, prior drafts, LaTeX sources.
 - `specs/` — math and algorithm specifications: what we will do, before code.
