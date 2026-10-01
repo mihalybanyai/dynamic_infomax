@@ -71,6 +71,10 @@ Text too long to review does not get reviewed; it gets waved through. So:
   Each apparatus item is pointed to from the core claim it supports. A
   load-bearing claim found only in the apparatus is a defect; red-teams
   check for it.
+- **Readable top to bottom.** A linear reader must be able to parse every sentence:
+  each symbol, acronym, label (test IDs, finding IDs) and document nickname is defined
+  or linked at or before its first use. Forward references are explicit pointers
+  (`see §4.1`), never bare use.
 - **Define once, link everywhere.** Terms a computational neuroscientist, cognitive
   scientist or theoretical ML researcher may not know are defined in `GLOSSARY.md` and
   linked at first use in each section, not defined inline. A document defines only its

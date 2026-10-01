@@ -198,6 +198,13 @@ optimises your expected score; *strictly* proper if the true belief is the uniqu
 (Gneiting & Raftery 2007). Log-loss is strictly proper: `𝔼_{x∼p}[−log q(x)]` is minimised
 uniquely at `q = p`.
 
+### Pullback
+
+Carrying a structure from one space back to another through a map. Here: a map `y(θ)`
+from parameters to predictions turns distance between predictions into a distance
+between parameter values. The [Fisher information metric](#fisher-information-metric)
+of a Gaussian model is the pullback of data-space distance, in noise units.
+
 ### Pushforward
 
 The distribution of `f(X)` when `X` has distribution `P`.

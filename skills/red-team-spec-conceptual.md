@@ -120,6 +120,10 @@ Focus on these failure modes, in roughly this order of value:
     (`AGENTS.md`, *Epistemic tags*); or a `[read: …]` tag whose source does
     not say what is claimed.
 
+10. **Linear-reader breaks**: a symbol, acronym, label or coined term used
+    before it is defined, linked to `GLOSSARY.md`, or pointed to (`AGENTS.md`,
+    *Readable top to bottom*).
+
 Be specific. Useless: "the proof in section 3 might not work."
 Useful: "the inequality in equation (3.7) requires f to be convex, but f is
 defined in section 2 as a difference of two convex functions, which is not

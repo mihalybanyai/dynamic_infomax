@@ -93,6 +93,13 @@ to any particular tensor shape convention. It describes the math.
 - **Apply the necessity test while writing.** A passage the argument does
   not need (a side remark, an alternative not taken, a historical aside)
   goes to a footnote, where the human may delete it.
+- **Write for a linear reader** (`AGENTS.md`, *Readable top to bottom*). Common
+  breaks: a symbol from §1 used in §0, an acronym (FIM, BA) never expanded, a test or
+  red-team finding ID with no pointer, "the note" without saying which note, a coined
+  term ("pointwise bias") never defined. §0 is the strictest case: it precedes the
+  notation table, so it uses words, not symbols, except for objects it introduces.
+  In the notation table, order rows so each uses only symbols above it where
+  practical.
 - **Link, don't define, general terms.** Niche terms link to `GLOSSARY.md` at first use
   in each section (add an entry if missing); the spec defines only its own objects.
 - **Tag claims** that are neither shown in the spec nor checked by code:
