@@ -249,6 +249,22 @@ lists cut review time? Baseline to compare against: red-team files so far
 carry 106 `> M:` and 5 `> M?:` annotations; whether that ratio reflects
 real understanding or waving-through is the human's call.
 
+### Visibility levels: private source repo, generated public repo [meta]
+
+*Opened 2026-10-01*
+
+The repo is public, and git history still holds
+`resources/google_doc_export.md` (added `cad0a8a`, removed `da9b9eb`):
+old prose, partly by others, not meant for publication. A history purge
+was costed on 2026-10-01 (git-filter-repo, force-push, GitHub Support
+request; it rewrites 148 of 149 commit hashes and breaks hashes cited in
+`provenance.json` and red-team notes) and deliberately skipped: the doc is
+low-sensitivity. The plan instead, once the publication layer and the
+integration of more personal notes make visibility matter: make this repo
+private, and generate the public publication repo from it, copying files
+across by an explicit allowlist. Until then, assume anything committed
+here is public, history included.
+
 ---
 
 ## Resolved / dismissed
