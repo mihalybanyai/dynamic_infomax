@@ -249,6 +249,16 @@ lists cut review time? Baseline to compare against: red-team files so far
 carry 106 `> M:` and 5 `> M?:` annotations; whether that ratio reflects
 real understanding or waving-through is the human's call.
 
+### Apply symbol-choice rules to older documents [conventions]
+
+*Opened 2026-10-04*
+
+*Symbol choice* in `skills/write-math-spec.md` (dimension `D`, `d` only for
+differentials, `𝟙` for the identity, one meaning per bare letter and per
+decoration, no lookalikes) was adopted on 2026-10-04 and applied to spec 002 and
+`GLOSSARY.md`. Specs 000 and 001, `notes/` and `tutorials/` predate it. Open:
+whether they are renamed or kept as records.
+
 ### Visibility levels: private source repo, generated public repo [meta]
 
 *Opened 2026-10-01*

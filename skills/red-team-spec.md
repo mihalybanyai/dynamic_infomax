@@ -44,8 +44,9 @@ Failure modes, roughly in order of value:
 6. **Spec/algorithm mismatch**: the pseudocode does not implement the math; the
    algorithm optimises something other than the stated objective; the properties to
    verify do not all follow from the math as written.
-7. **Notation drift**: a symbol changes meaning between sections; a vector silently
-   becomes a scalar; an expectation switches distribution implicitly.
+7. **Notation drift or clash**: a symbol changes meaning between sections; a vector
+   silently becomes a scalar; an expectation switches distribution implicitly; a symbol
+   breaks *Symbol choice* in `skills/write-math-spec.md`.
 8. **Edge cases the spec ignores**: empty, degenerate, zero-variance, infinite-support or
    single-sample inputs.
 9. **Vague claims**: any sentence using "natural", "obvious", "clearly", "well-known" or

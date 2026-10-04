@@ -246,6 +246,36 @@ convention, not a free choice. The rules below apply from spec 001
 onward; spec 000 predates them and uses plain code-fence ASCII math, so
 do not take it as the model.
 
+### Symbol choice
+
+A reader takes each glyph in its most common meaning first, so a symbol clash costs a
+re-read at every use. Choose symbols by these rules (adopted 2026-10-04; specs 000–001
+predate them):
+
+1. **Reserved glyphs.** Where differentials or derivatives appear, `d` is never a
+   variable; a dimension is `D`. `π` and `e` are the constants; either may name a
+   variable only where a constant cannot appear: with arguments (`π(θ)`), as a subscript
+   (`m_π`), or as an argument or optimisation variable (`R(π)`, `sup_π`). `I` is for
+   information quantities; the identity matrix is `𝟙`, written as that literal character
+   also inside `$$…$$`, because KaTeX (VSCode's preview) renders `\mathbb{1}` as a plain
+   `1`. `Σ`, `Δ` and `δ` are not reserved: with a subscript or a definition they may name
+   a covariance (`Σ_π`) or a deviation.
+2. **`p` names only probability distributions**, told apart by their arguments
+   (`p(x|θ)`, `p(θ)`), or by a sub- or superscript where arguments cannot (`p_J`, `p*`).
+   It is never a scalar probability, a parameter, a count or an index.
+3. **One meaning per letter per document.** A bare letter never carries two meanings
+   (spec 002 once used `t` for observation time and for the prequential step).
+   Subscripted variants may name different objects when the subscript makes the role
+   clear (`m` the observation count, `m_π` a mixture).
+4. **One meaning per decoration per document**, stated in the notation table. Default:
+   hat = estimate, bar = average or expectation, star = optimum.
+5. **No lookalike pairs in one document:** `ν/v`, `ρ/p`, `κ/k`, `ω/w`, `χ/x`, `ε/∈`,
+   `l/1/I`, `O/0`.
+6. **Translate borrowed notation that clashes**, and record the source's symbol in the
+   notation table (Abbott & Machta's `d` is spec 002's `D`).
+
+Recheck the notation table against these rules whenever it changes.
+
 ### Displayed equations use LaTeX, not code fences
 
 Every *displayed* equation goes in a `$$…$$` LaTeX block so it renders
@@ -253,7 +283,7 @@ as real math in Obsidian, VSCode preview, and GitHub/MathJax:
 
 ```markdown
 $$
-f(\hat\pi) \;=\; 2\,\hat\pi - 1. \tag{1.3.1}
+f(\hat\mu) \;=\; 2\,\hat\mu - 1. \tag{1.3.1}
 $$
 ```
 

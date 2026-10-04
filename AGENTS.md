@@ -36,13 +36,14 @@ reviewer, or a future collaborator can audit. Hence:
 
 ### Session types
 
-Every session is either **science** (specs, notes, code, tests,
-experiments) or **meta-science** (`AGENTS.md`, `skills/`, `workflows/`,
-`meta/`: how we work and communicate). Declare the type in the first message
-and in the handoff. Don't switch mid-session: a workflow issue noticed in a
-science session becomes an entry under "Open" in `meta/workflow-issues.md`
-(title, date, category, one paragraph); a science item noticed in a meta
-session goes to a GitHub issue or the handoff.
+Every session starts with one main intention, either **science** (specs,
+notes, code, tests, experiments) or **meta-science** (`AGENTS.md`, `skills/`,
+`workflows/`, `meta/`: how we work and communicate). Declare it in the first
+message and in the handoff, and carry it forward. Branching into the other
+territory is fine when the work calls for it: keep those changes in their own
+commits and name them in the handoff. An item from the other territory left
+unhandled becomes an entry under "Open" in `meta/workflow-issues.md` (title,
+date, category, one paragraph) or, for science, a GitHub issue or the handoff.
 
 At the start of a substantial session, skim `meta/workflow-issues.md` for
 relevant open items. Address what's cheap inline; note the rest in your plan.
