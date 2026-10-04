@@ -348,21 +348,27 @@ independent of `D` [guess][^1-pstar-bias].
 
 **Three families: caricature and realisation.** The hypercone strips a hyperribbon to one
 relevant direction and one tunable co-volume gradient, buying closed forms at the cost of
-realism. The **exponential-decay** model (`y_t(θ) = Σ_μ a_μ e^{-k_μ t}`,
-`k_μ = e^{-θ_μ}`; A&M Eq. 6) is the realistic instance: a curved manifold whose Fisher-metric eigenvalues span many orders [read: A&M §2.1, citing Transtrum et al. 2010] and whose
-relevant directions are not coordinate-aligned. So priors defined in parameter coordinates fail there, not only Jeffreys: log-normal [read: A&M §2.2], and uniform-`θ` [guess][^1-uniform]. In the bare
-cone they do not. Its relevant direction *is* `θ_1`, so a `θ`-uniform prior projects to
-flat on `θ_1`, already unbiased, and only Jeffreys is biased; a `p*` win in the
-axis-aligned cone is a win over Jeffreys alone (note §6.3). The **constant-cross-section**
-cone (panel c) switches the taper off (`r = r_0`): `√det g` is constant and Jeffreys
-reduces to uniform on the relevant coordinate [read: A&M App. A.1]. Two knobs reshape the
-controlled family. A **rotation** `θ ↦ Qθ` moves the relevant direction off the
-coordinate axes, making coordinate priors fair competitors. A **boundary curvature** knob
-sharpens a convex vertex, whose [noise halo](../GLOSSARY.md#noise-halo) `p_proj` over-weights [read: A&M
-App. A.3: `p_proj` "has extra weight on the edges"] while `p*` is expected to be unmoved
-[guess]: the axis on which the two are expected to differ
-([§3.4](#34-the-second-protagonist-infomax-vs-mdl)). Exact maps, Fisher metrics and knob ranges are
-in [§4.1](#41-model-families).
+realism. Exp-decay is the realistic instance.
+
+| | Square hypercone (panel b) | Constant cross-section (panel c) | Exponential decay (panel d) |
+|---|---|---|---|
+| Map | `y = (θ_1, rθ_2, …, rθ_D)`, `r = θ_1/L` | same, with `r = r_0` constant | `y_t = Σ_μ a_μ e^{-k_μ t}`, `k_μ = e^{-θ_μ}` (A&M Eq. 6) |
+| Role | analytic caricature: closed forms | pipeline check ([§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note), T2) | realism |
+| Co-volume gradient | `√det g ∝ θ_1^{D-1}` | none: `√det g` constant | yes, with Fisher eigenvalues spanning many orders [read: A&M §2.1, citing Transtrum et al. 2010] |
+| Relevant direction | `θ_1`, on a coordinate axis | `θ_1` | curved, off the axes |
+| Biased priors | Jeffreys only: uniform-`θ` projects to flat on `θ_1` | none: `p_J = p_U` [read: A&M App. A.1] | Jeffreys and log-normal [read: A&M §2.2]; uniform-`θ` [guess][^1-uniform] |
+
+Two knobs reshape the hypercone:
+
+- **Rotation** `θ ↦ Qθ` moves the relevant direction off the axes, so coordinate priors
+  can fail there too. Without it, a `p*` win in the cone is a win over Jeffreys alone
+  (note §6.3).
+- **Boundary curvature** sharpens a convex vertex, whose [noise halo](../GLOSSARY.md#noise-halo) `p_proj`
+  over-weights [read: A&M App. A.3: `p_proj` "has extra weight on the edges"] while `p*`
+  is expected to be unmoved [guess]. This is the axis on which the two are expected to
+  differ ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)).
+
+Exact maps, Fisher metrics and knob ranges are in [§4.1](#41-model-families).
 
 **Why the claims ride on this geometry.** Each load-bearing claim reduces to `g(θ)` and
 its gradient. The co-volume bias is the pull of `√det g ∝ θ_1^{D-1}`; its absence makes
@@ -1474,6 +1480,9 @@ stays small but a `q`-subset analysis can re-key off it).
   rate. Any choice is a stand-in for an attention mechanism, and the choice may decide
   the comparison. Related: the Neyman–Scott problem (`[^3-lineage]`) would be a clean
   extra test of whether `p*` removes a co-volume bias without any ranking.
+- **OQ-9 (definition, deferred to the §4 pass).** The exp-decay parameter box `Θ` is not
+  specified (`parameter_box` in [§4.1](#41-model-families)). Panel (d) of the geometry
+  figure uses `θ_μ ∈ [−1, 3]` for illustration, taken from `notes/q-family-viz/`.
 
 ## 8. References
 
@@ -2414,3 +2423,19 @@ lineup, P15/T15, the `delta_R_pref` column, a note in OQ-5, and two references i
 Adding `p_ref` is MB's decision. The closed form is Claude's derivation; its key step,
 Schur complement `= σ^{-2}`, was checked numerically in chat (finite-difference FIM at
 600 random points, `D ∈ {3, 8, 26}`, error below `1e-8`). T15 checks it in code.
+
+### 2026-10-04 — Clarification (§1.2; three-families table)
+
+The "Three families" paragraph is now a table comparing the hypercone, the
+constant-cross-section cone and exp-decay (map, role, co-volume gradient, relevant
+direction, biased priors), followed by two bullets for the rotation and curvature knobs.
+No claims changed.
+
+### 2026-10-04 — Refinement (§1.2, §7; geometry figure panel d)
+
+The geometry figure gains panel (d), now laid out 2×2: exp-decay with two rates,
+observed at `t = 1` and `5`, drawn in prediction space. It shows the curvature, the
+coordinate lines crossing the manifold obliquely, and the manifold narrowing below the
+noise scale at both ends. The table's exp-decay column points to it. The panel's
+parameter box and `σ` are illustrative; the box is the new OQ-9, deferred to the §4
+pass at MB's request. No claims changed.

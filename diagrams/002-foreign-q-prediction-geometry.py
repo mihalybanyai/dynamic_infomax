@@ -5,7 +5,7 @@ Unlike the PGM (which draws *nature's* sampling process), this figure draws the
 the hyperribbon structure, the hypercone caricature, and the constant-cross-
 section null. It is the visual companion to the "model geometry" block of §1.2.
 
-Three panels, left to right:
+Four panels, (a) and (b) on top, (c) and (d) below:
 
   (a) Hyperribbon Fisher-width spectrum. The model manifold {y(theta)} is long
       and thin: its Fisher widths W_mu (square-roots of the FIM eigenvalues, in
@@ -32,9 +32,18 @@ Three panels, left to right:
       is a numerical-pipeline check (T2), not a falsification screen; p* need not
       tie (discrete on the bounded coordinate).
 
-The exp-decay model (§4.1.1) is the realistic curved instance of the panel-(a)
-ribbon; the hypercone (b) is its exactly-solvable caricature; (c) is (b) with the
-taper switched off. Exact maps and FIM are in §4.1 / §9.
+  (d) Exp-decay with two rates (§4.1.1), observed at t = 1 and 5: the model manifold
+      drawn directly in prediction space. It is curved and folded along the line
+      of equal rates; the lines of fixed theta_1 and fixed theta_2 cross it
+      obliquely, so neither coordinate follows its long axis; and it narrows below
+      the noise scale at both ends, a co-volume gradient that arises without a
+      built-in taper. The box theta in [-1, 3]^2 (from notes/q-family-viz/) and
+      sigma = 0.04 are illustrative; spec 002 has not fixed the exp-decay box
+      (OQ-9).
+
+The exp-decay model is the realistic curved instance of the panel-(a) ribbon; the
+hypercone (b) is its exactly-solvable caricature; (c) is (b) with the taper switched
+off. Exact maps and FIM are in §4.1 / §9.
 
 Run:    python diagrams/002-foreign-q-prediction-geometry.py
 Output: diagrams/002-foreign-q-prediction-geometry.svg
@@ -56,7 +65,7 @@ ACCENT = "#2e7d32"     # annotations
 
 plt.rcParams.update({"font.size": 10, "svg.fonttype": "none"})
 
-fig, (axA, axB, axC) = plt.subplots(1, 3, figsize=(13.5, 4.4))
+fig, ((axA, axB), (axC, axD)) = plt.subplots(2, 2, figsize=(11.5, 9.2))
 
 
 # ---- panel (a): hyperribbon Fisher-width spectrum -------------------------
@@ -166,9 +175,49 @@ axC.text(2.5, -0.74, "pipeline check T2 ($p^*$ need not tie)",
          color=ACCENT, fontsize=8.5, ha="center")
 
 
+# ---- panel (d): exp-decay with two rates, in prediction space --------------
+T_OBS = np.array([1.0, 5.0])        # observation times (spec pseudocode, m = 2)
+TH_LO, TH_HI = -1.0, 3.0            # illustrative box (OQ-9); decay rate k = e^{-theta}
+SIGMA_D = 0.04                      # illustrative noise scale
+
+
+def y_expdecay(th1, th2):
+    k1, k2 = np.exp(-th1), np.exp(-th2)
+    return np.stack([0.5 * (np.exp(-k1 * t) + np.exp(-k2 * t)) for t in T_OBS], -1)
+
+
+s = np.linspace(TH_LO, TH_HI, 300)
+# the map is symmetric under swapping the rates; draw the half theta_1 <= theta_2
+edge1 = y_expdecay(np.full_like(s, TH_LO), s)          # theta_1 at its lower end
+edge2 = y_expdecay(s, np.full_like(s, TH_HI))          # theta_2 at its upper end
+fold = y_expdecay(s[::-1], s[::-1])                    # equal rates
+axD.add_patch(Polygon(np.vstack([edge1, edge2, fold]), closed=True,
+                      facecolor=IRREL, edgecolor="none", alpha=0.45))
+for v in np.linspace(TH_LO, TH_HI, 9):
+    a = s[s >= v]
+    P = y_expdecay(np.full_like(a, v), a)
+    axD.plot(P[:, 0], P[:, 1], color=RELEVANT, lw=0.9, alpha=0.85)
+    b = s[s <= v]
+    P = y_expdecay(b, np.full_like(b, v))
+    axD.plot(P[:, 0], P[:, 1], color="#8a8a8a", lw=0.9, ls="--")
+axD.plot(fold[:, 0], fold[:, 1], color="k", lw=1.6)
+axD.add_patch(plt.Circle((0.45, 0.12), SIGMA_D, fill=False, color=JEFF, lw=1.4))
+axD.text(0.50, 0.12, r"noise $\sigma$", color=JEFF, va="center", fontsize=9)
+axD.text(0.17, 0.06, "width < $\\sigma$", color="#555555", fontsize=8.5, ha="center")
+axD.text(0.84, 0.70, "width < $\\sigma$", color="#555555", fontsize=8.5, ha="right")
+axD.plot([], [], color=RELEVANT, label=r"$\theta_1$ fixed")
+axD.plot([], [], color="#8a8a8a", ls="--", label=r"$\theta_2$ fixed")
+axD.plot([], [], color="k", lw=1.6, label="equal rates (fold)")
+axD.legend(loc="upper left", fontsize=8, frameon=False)
+axD.set_xlabel(r"prediction at $t=1$")
+axD.set_ylabel(r"prediction at $t=5$")
+axD.set_title("(d) exp-decay, two rates: curved, misaligned, tapering", fontsize=10.5)
+axD.set_aspect("equal", adjustable="box")
+
+
 fig.suptitle(
     "Model geometry for spec 002: hyperribbon structure, the hypercone caricature, "
-    "and the no-gradient null",
+    "the no-gradient null,\nand the exp-decay realisation",
     fontsize=11.5,
 )
 fig.tight_layout(rect=(0, 0, 1, 0.95))
