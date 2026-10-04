@@ -67,7 +67,7 @@ gives the global version `V_⊥`.
 A prior an agent can actually adopt before seeing data, using only the model and the
 data budget, without knowing [nature's](#nature) distribution. In spec 002, the "deployable
 non-infomax" priors are the standard defaults ([Jeffreys](#jeffreys-prior), uniform-`θ`, log-normal), with
-`p_proj` added to the headline lineup. The matched prior `q̄` is not deployable: it
+`p_proj` and the ranked [reference prior](#reference-prior) `p_ref` added to the headline lineup. The matched prior `q̄` is not deployable: it
 requires knowing nature.
 
 ### Effective dimensionality
@@ -231,7 +231,10 @@ saddle point [read: A&M Eqs. 3–4, citing their refs 10–12]. More:
 Bernardo's (1979) prior that maximises the information expected from an experiment,
 defined in the limit of infinitely many repetitions, where it becomes [Jeffreys](#jeffreys-prior). The
 finite-repetition versions are discrete; Abbott & Machta object to calling `p*` a
-reference prior for this reason [read: A&M App. A.8].
+reference prior for this reason [read: A&M App. A.8]. With several parameters it is built in
+sequence, ranked by interest: the less interesting parameters are integrated out under
+their conditional prior before the more interesting ones get theirs. This avoids some of
+Jeffreys' failures in many dimensions [read: Kass & Wasserman 1996 §3.5.2].
 
 ### Relevant and irrelevant directions
 

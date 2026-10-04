@@ -135,6 +135,47 @@ Near a boundary truth a smooth prior gives `μ̂` bounded away from 0/1, so it
 betting it is actually *safer*). The driver is the minimax-vs-average mismatch
 plus Jeffreys-is-infomax, not competitor implosion.
 
+### 2.6 Why Bernardo took the limit (added 2026-10-04)
+
+The step from `p*` to the reference prior is the limit of infinitely many repetitions
+of the experiment. The sources give two reasons for taking it:
+
+- **Bernardo's own, conceptual.** A reference prior maximises the information still
+  *missing* relative to perfect knowledge, and perfect knowledge is only approached as
+  repetitions grow without bound; the limit is part of the concept, not an
+  approximation [read: Bernardo 2005, preprint pp. 15–16; Berger, Bernardo & Sun 2009,
+  arXiv p. 11]. He also presents as properties that the limit simplifies derivation and
+  makes the prior independent of the sample size for i.i.d. data [read: Bernardo 2005,
+  preprint pp. 16, 19].
+- **Kass & Wasserman's account, practical.** The finite-data maximiser is discrete
+  (Berger, Bernardo & Mendoza 1989, not read), and that is why the limit was taken
+  [read: Kass & Wasserman 1996 p. 1355].
+
+**MB's reading.** Bernardo answers a different question: ignorance relative to an
+unconstrained truth-seeker, not relative to what a situated agent can resolve with its
+budget. This is the disembodied stance of statistical inference, and a reason
+budget-conscious priors are thin in the literature.
+
+Consequences (Claude's interpretation):
+
+1. **The limit brings the co-volume bias back.** With unlimited repetitions every
+   direction becomes resolvable, so the irrelevant directions' volume counts and
+   Jeffreys returns. Ranking the parameters was then needed to repair the
+   multiparameter failures [read: Berger, Bernardo & Sun 2009 §1; Kass & Wasserman 1996
+   §3.5.2].
+2. **"Discrete is wrong" is a hat-(ii) judgement.** As a belief, a discrete prior over a
+   continuous parameter declares most values impossible. As a design or predictive
+   object discreteness costs little: the data marginal of a discrete prior is smooth.
+   Spec 002 tests the predictive side.
+3. **The step was open by Bernardo's own logic** [guess]. He accepts that a reference
+   prior depends on the experiment's design, because it is not a belief [read: Bernardo
+   2005, preprint pp. 19–20]. Dependence on the amount of data is the most basic design
+   dependence.
+4. **Ranking or budget (MB's corollary).** The co-volume bias can be removed by ranking
+   the parameters, an attention-like mechanism, or by budget-consciousness. Which works
+   better, and which organisms use, is empirical: spec 002 §3.5 compares the two on
+   prediction, and `empirics/README.md` holds the behavioural side.
+
 ## 3. "Bits = regret": what infomax actually maximises
 
 $$

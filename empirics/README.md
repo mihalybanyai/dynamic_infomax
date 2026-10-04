@@ -16,6 +16,11 @@ Each lead below gets its own file once someone works on it.
   Related work: infomax as a principle of perceptual coding (Linsker 1988; Laughlin
   1981) [recalled]. Also support theory: splitting a hypothesis into more detailed
   sub-scenarios raises its judged probability (Tversky & Koehler 1994) [recalled].
+- **Ranking versus budget** (MB's corollary). The co-volume bias can be removed by
+  ranking the parameters by interest, an attention-like mechanism, or by
+  budget-consciousness. Which do organisms use, where, and how well does each work?
+  Spec 002 §3.5 compares the two priors on prediction; the behavioural question is open.
+  Background: `notes/infomax_two_hats_and_directions.md` §2.6.
 - **Repertoire dependence as a test.** A volume-counting prior's conclusions move with
   the size of a repertoire the evidence cannot see: spices known, faces known, tuning
   parameters modelled (spec 002, footnote `[^1-everyday]`). Do human estimates move with
