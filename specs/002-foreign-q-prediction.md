@@ -224,12 +224,13 @@ prediction ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)).
 | `q` | Nature's distribution over `θ` (the *foreign* truth). |
 | `m_q(X_{1:N})` | Nature's `N`-fold data marginal `∫ p(X_{1:N}\|θ) q(dθ)`. |
 | `c` | Cooperativeness of `q` ([§4.3](#43-foreign-q-family)): `c=0` cooperative (`m_q` close to `p*`'s predictions), `c=1` non-cooperative. |
-| `π` | Agent's prior, one of `{p*, p_proj, p_J, p_U, p_LN}`, with `q̄` as reference ceiling. |
+| `π` | Agent's prior, one of `{p*, p_proj, p_J, p_U, p_LN, p_ref}`, with `q̄` as reference ceiling. |
 | `p*` | Infomax ([capacity](../GLOSSARY.md#channel-capacity)-achieving) prior of the budget-`N` channel `θ→X_{1:N}`: `argmax_π I(Θ;X_{1:N})`, equivalently the single-observation achiever at noise `σ/√N` ([§4.2](#42-prior-construction)). Discrete[^1-discrete]. |
 | `p_proj` | Projected-ML / NML prior: the [pushforward](../GLOSSARY.md#pushforward) of the [NML distribution](../GLOSSARY.md#normalized-maximum-likelihood-nml) through the MLE map `θ̂(x)` ([§3.4](#34-the-second-protagonist-infomax-vs-mdl), [§4.2](#42-prior-construction)). |
 | `p_J` | [Jeffreys prior](../GLOSSARY.md#jeffreys-prior) `∝ √{det g(θ)}`, normalised on `Θ`. |
 | `p_U` | Uniform on the parameter box `Θ`. |
 | `p_LN` | Normal in `θ`, i.e. log-normal in the rate `k_μ = e^{-θ_μ}` (A&M Eq. 10): `∝ Π_μ e^{-(θ_μ-θ̄)²/2τ²}` (A&M's `σ̄` is `τ`). |
+| `p_ref` | [Reference prior](../GLOSSARY.md#reference-prior) with the relevant direction ranked first: the irrelevant directions are integrated out under their conditional prior before the relevant one gets its prior ([§3.5](#35-a-third-route-ordering-instead-of-budget), [§4.2](#42-prior-construction)). Hypercone families only until OQ-8. |
 | `q̄` | Hyper-averaged matched prior `𝔼_c[q]`; reference ceiling only ([§2.3](#23-q̄-is-the-ceiling-not-a-competitor)). |
 | `m_π(X_{1:N})` | Agent's Bayes mixture `∫ p(X_{1:N}\|θ) π(dθ)`. |
 | `π(θ\|X_{1:N})` | Posterior under prior `π`. |
@@ -275,7 +276,7 @@ Each *cell*, one setting of model, `D`, `σ`, `N`, the geometry knobs and `c`, r
 only `X_{1:N}` and is scored on predicting `x'` and, cumulatively, each `x_{i+1}` from
 `x_{1:i}` ([§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss)).
 
-**Agent ≠ nature.** The agent's prior `π ∈ {p*, p_proj, p_J, p_U, p_LN}` (with `q̄` as
+**Agent ≠ nature.** The agent's prior `π ∈ {p*, p_proj, p_J, p_U, p_LN, p_ref}` (with `q̄` as
 reference ceiling) is chosen from the likelihood geometry and the budget `N`/`σ` alone,
 **decoupled from `q`**, as in spec 001. The decoupling is what makes the held-out score
 test transfer rather than self-consistency, and why `π` is absent from the diagram.
@@ -516,8 +517,8 @@ unit tests (T4–T6, [§5.2](#52-test-descriptions)), not the headline number.
 with `D` ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)), outweighs what
 `p*` pays against a foreign `q` (its `O(1)` atom spacing and `D_KL(m_q‖m_{p*})`). The
 headline statistic is the gap to the **best** competitor,
-`min_{π' ∈ {p_J, p_U, p_LN, p_proj}} δR(p*, π')`, as a function of
-`(D, σ, taper, rotation, c)`.
+`min_{π' ∈ {p_J, p_U, p_LN, p_proj, p_ref}} δR(p*, π')`, as a function of
+`(D, σ, taper, rotation, c)`, with `p_ref` included where it is defined (OQ-8).
 
 We **cannot** assert the sign of this gap and must not: that `p*` wins is the open
 question, and asserting it would make the experiment unfalsifiable
@@ -701,7 +702,7 @@ mutual information (the boundary atoms persist; see below) [read: A&M §2.1; Qui
 
 **The two constructions.**
 
-- **Capacity / infomax, `p*`:** `argmax_π I(Θ;X_{1:N})`, the [least-favourable](../GLOSSARY.md#least-favourable-prior) / [minimax](../GLOSSARY.md#minimax)-**expected**-redundancy prior, in the [reference-prior](../GLOSSARY.md#reference-prior) lineage. Its
+- **Capacity / infomax, `p*`:** `argmax_π I(Θ;X_{1:N})`, the [least-favourable](../GLOSSARY.md#least-favourable-prior) / [minimax](../GLOSSARY.md#minimax)-**expected**-redundancy prior, in the [reference-prior](../GLOSSARY.md#reference-prior) lineage ([§3.5](#35-a-third-route-ordering-instead-of-budget)). Its
   `σ`-dependence is the atom count (`~√N` in 1-D, spec 000).
 - **NML / MDL, `p_proj`:** `p_NML(x) = max_θ p(x|θ)/Z` is the [normalized-maximum-likelihood](../GLOSSARY.md#normalized-maximum-likelihood-nml) distribution over the *data* (Shtarkov 1987), with normaliser `Z` and [parametric complexity](../GLOSSARY.md#parametric-complexity) `log Z` (Rissanen 1996; Grünwald 2007). `p_proj` is its [pushforward](../GLOSSARY.md#pushforward) through the MLE map `θ̂(x)` [read: A&M App. A.3; Quinn §5.2, as the "adaptive slab-and-spike"
   prior]: a *prior* over `θ`, distinct from the code `p_NML` it is built from (no prior's
@@ -730,7 +731,7 @@ route. They nearly agree on our models for two reasons:
 So they are two budget-dependent [universal-coding](../GLOSSARY.md#universal-coding) objects converging to the same limit,
 not an approximation with a provable optimality gap. The live question is therefore not
 how well `p_proj` approximates `p*`, but **does the harder capacity object buy anything
-over the cheap MDL one on held-out prediction** ([§3.6](#36-falsification)).
+over the cheap MDL one on held-out prediction** ([§3.7](#37-falsification)).
 
 **Where they part, and whether it is reachable here.** Their one structural difference is
 expected versus pointwise regret. NML weights by where the worst *individual* data land
@@ -762,7 +763,58 @@ measures.
     log-likelihood-ratio statistic, which separates expected redundancy from pointwise
     regret. Settled by: reading Clarke & Barron (1994).
 
-### 3.5 What would sink it
+### 3.5 A third route: ordering instead of budget
+
+`p*` and `p_proj` avoid the co-volume bias through the budget. The classical fix needs no
+budget: a [reference prior](../GLOSSARY.md#reference-prior) with the parameters ranked by
+interest. The irrelevant directions get a prior conditional on the relevant one and are
+integrated out; only then does the relevant direction get its prior, from that marginal
+model [read: Kass & Wasserman 1996 §3.5.2; Berger, Bernardo & Sun 2009 §1]. Their volume
+therefore never tilts it. `p_ref` is this prior with the relevant direction ranked
+first[^3-lineage].
+
+In the hypercone the Fisher information left for the relevant coordinate, once the
+irrelevant ones are accounted for, is `1/σ²` everywhere[^3-schur]. So `p_ref` is uniform
+in the relevant coordinate and, at each value of it, uniform across the cross-section of
+`Θ` ([§4.2](#42-prior-construction)). In the axis-aligned cone that is `p_U`; under
+rotation the two differ, because `p_U` inherits a tilt from the rotated box. `p_ref` is
+the principled form of the textile-only detective (footnote to [§0](#0-context)), who
+drops the habits where `p_ref` integrates them out.
+
+Ranking needs a mechanism that picks the direction of interest, something like attention;
+`p*` needs none by construction. Whether `p*` removes the bias as well as `p_ref` does is
+part of this spec's question, read off `δR(p*, p_ref)` ([§6.3](#63-table-schema)). Which
+route organisms take is an empirical question outside this spec
+([`empirics/`](../empirics/README.md)). In exp-decay the relevant directions are curved
+and vary across `Θ`, so no ranking is given: choosing one is OQ-8
+([§7](#7-open-questions)), and until then `p_ref` competes in the hypercone families
+only.
+
+[^3-lineage]: A reference prior maximises the same mutual information as `p*`, but in
+    the limit of infinitely many repetitions of the experiment [read: Bernardo 2005,
+    preprint pp. 15–16]. The finite-data maximiser was known to be discrete (Berger, Bernardo &
+    Mendoza 1989, not read), and Kass & Wasserman give that as the reason Berger and
+    Bernardo took the limit [read: Kass & Wasserman 1996 p. 1355]. Bernardo's stated
+    reason is conceptual: a reference prior maximises the information still missing
+    relative to perfect knowledge, which only unlimited data approach [read: Bernardo
+    2005, preprint p. 16]. Ranking the parameters was proposed to avoid problems such as
+    marginalization paradoxes [read: Berger, Bernardo & Sun 2009 §1]. In the
+    Neyman–Scott problem (pairs of observations, each pair with its own mean, and a
+    common variance) Jeffreys' estimate of the variance converges to half the truth;
+    ranking the variance first makes it consistent [read: Kass & Wasserman 1996 §3.5.2].
+
+[^3-schur]: From (1.2.1) for the hypercone map, with `r = θ_1/L`:
+    `g_{11} = σ^{-2}(1 + Σ_μ θ_μ²/L²)`, `g_{1μ} = σ^{-2} r θ_μ/L` and `g_{μμ} = σ^{-2} r²`
+    for `μ ≥ 2`, zero between different irrelevant coordinates. The information left
+    for `θ_1` is the Schur complement `g_{11} − Σ_μ g_{1μ}²/g_{μμ} = σ^{-2}`, and the
+    irrelevant block has `√det ∝ r^{D−1}`, constant across each cross-section. In the
+    Berger–Bernardo formula `π(ω, λ) ∝ j_ω(λ) exp{∫ j_ω(λ') log S(ω, λ') dλ'}`, with
+    `S = √(det g / det g_{λλ})` and `j_ω` the conditional Jeffreys density normalised
+    over the cross-section [read: Kass & Wasserman 1996 §3.5.2], both factors are then
+    constant, which gives the uniform form. Under rotation the same holds in the
+    coordinates `Qθ`.
+
+### 3.6 What would sink it
 
 None of the above proves that `p*` *wins the average-case contest this spec scores*.
 Several things can make it lose:
@@ -786,11 +838,14 @@ Several things can make it lose:
    *good* in absolute terms, since `C_N` itself can be sizeable at the small `N` this spec
    targets. `p*`'s case is **robustness / insurance**, not average-case optimality: a
    premium wasted on benign `q` (`notes/infomax_two_hats_and_directions.md` §3).
+5. **Ordering may do the job.** If `p_ref` matches `p*` where it is defined
+   ([§3.5](#35-a-third-route-ordering-instead-of-budget)), the bias is removable without a budget, and `p*`'s remaining
+   advantage is only that it needs no ranking.
 
-### 3.6 Falsification
+### 3.7 Falsification
 
 The expectation is *supported* if `min_{π'} δR(p*,π') < 0` persists across the
-cooperativeness sweep **with `p_proj` among the `π'`**. It is *refuted* if `p*` ties or
+cooperativeness sweep **with `p_proj`, and `p_ref` where defined, among the `π'`**. It is *refuted* if `p*` ties or
 loses to the best resolution-adapted prior, or wins only at `c≈0`. Bound (3.1.1)
 forecloses neither.
 
@@ -906,6 +961,12 @@ def build_model(family, D, m, sigma, N, *, taper=1.0, rotation=0.0, curvature=0.
   (quadrature, or from the sampled cloud). Its gap to `p*` is a headline read
   ([§3.4](#34-the-second-protagonist-infomax-vs-mdl), [§6](#6-report)); the sampler is
   pinned in the pseudocode below (resolving OQ-6).
+- **`p_ref` — reference prior, relevant direction first ([§3.5](#35-a-third-route-ordering-instead-of-budget)).** Hypercone
+  families only (OQ-8). With the vertex-curvature knob off it has a closed form: density
+  `∝ 1/A((Qθ)_1)` on `Θ`, where `A(s)` is the volume of the cross-section
+  `{θ ∈ Θ : (Qθ)_1 = s}`; with `Q = 𝟙` this is `p_U`. With curvature on, evaluate the
+  Berger–Bernardo formula of `[^3-schur]` by quadrature from the FIM, in the coordinates
+  `Qθ`. Budget-independent, like `p_J`.
 - **`q̄` — reference ceiling** `= 𝔼_c[q]`, computed from the q-family ([§4.3](#43-foreign-q-family)).
 
 **Prior construction (new src code — pseudocode).** Grid-BA reuses 000's loop; the atomic
@@ -981,7 +1042,7 @@ For each cell `(model, D, σ, taper, rotation, c)`:
 
 ```
 1.  model = build_model(family, D, m, σ, N)        # builds at σ_eff = σ/√N (§4.1)
-2.  priors = {p*, p_J, p_U, p_LN, p_proj, q̄}        # all constructed at σ_eff (§4.2)
+2.  priors = {p*, p_J, p_U, p_LN, p_proj, p_ref, q̄} # at σ_eff (§4.2); p_ref: hypercone only
 3.  For s = 1 .. S_q:
         θ_s, shape ← sample_q(model, p*, c, rng)     # nature's truth + q-shape tag (§4.3)
         x̄_s   ~ 𝒩(y(θ_s), σ_eff² 𝟙)                  # sufficient statistic of X_{1:N}
@@ -1064,7 +1125,8 @@ Test functions live in `tests/test_002_foreign_q_prediction.py`. The suite pins 
 | P12 | **AtomicPriors.jl references** ([§5.5](#55-atomicpriorsjl-reference-fixtures)): exp-decay `y`/FIM, `p*` atoms + `I_{p*}` + `B_{p*}`, `C_N` via `repeat`, and `mutual` of a fixed prior match the frozen Julia golden values | `test_t12_atomicpriors_reference` |
 | P13 | Model construction: `y`-maps + FIM correct (autodiff vs §9.3 closed form; rotation `Q` and curvature knob act as specified) ([§4.1](#41-model-families)) | `test_t13_model_and_fim` |
 | P14 | `q`-family sampler: `q_c` mixes `coop`/`non` in proportion `c`, the `q`-shape tag is recorded, and `q̄=𝔼_c[q]` marginalises correctly ([§4.3](#43-foreign-q-family)) | `test_t14_qfamily_sampler` |
-| — | **Headline** `min_{π'∈{p_J,p_U,p_LN,p_proj}} δR(p*,π') < 0`, and the `p*`-vs-`p_proj` sign across the interior↔boundary axis | *not tested — the open questions ([§3.6](#36-falsification), [§3.4](#34-the-second-protagonist-infomax-vs-mdl)); asserting either would make the experiment unfalsifiable* |
+| P15 | `p_ref` construction: equals `p_U` in the axis-aligned cone; flat marginal on the relevant coordinate under rotation; Schur complement `σ^{-2}` ([§3.5](#35-a-third-route-ordering-instead-of-budget), [§4.2](#42-prior-construction)) | `test_t15_pref_construction` |
+| — | **Headline** `min_{π'∈{p_J,p_U,p_LN,p_proj,p_ref}} δR(p*,π') < 0`, and the `p*`-vs-`p_proj` sign across the interior↔boundary axis | *not tested — the open questions ([§3.7](#37-falsification), [§3.4](#34-the-second-protagonist-infomax-vs-mdl)); asserting either would make the experiment unfalsifiable* |
 
 ### 5.2 Test descriptions
 
@@ -1181,6 +1243,12 @@ the wrong axis.
 `q̄` from pooling the `c`-grid matches the constructed `𝔼_c[q]`. Catches a mis-weighted
 mixture or a dropped shape tag (the §6.3 `q`-subset analysis needs it). The anchors
 `q_coop`/`q_non` are OQ-2 — T14 tests the scaffold, not the anchor choice.
+
+**T15 — `p_ref` construction.** (a) At random `θ` in the hypercone, the Schur complement
+`g_{11} − g_{1λ} g_{λλ}^{-1} g_{λ1}` of the numerical FIM equals `σ^{-2}` (`[^3-schur]`).
+(b) Axis-aligned cone: `p_ref = p_U` pointwise. (c) Rotated cone: `p_ref` normalises, and
+its marginal on `(Qθ)_1` is flat to quadrature tolerance, while `p_U`'s is not. (d)
+Constant cross-section: `p_ref = p_U = p_J`.
 
 We do **not** test: the headline sign ([§2.2](#22-what-wins-means--and-what-cannot-be-asserted)); exact `p*` atom positions at
 intermediate `D` (no closed form); behaviour at `D` beyond the solver's feasible
@@ -1304,7 +1372,7 @@ Under `experiments/002-foreign-q-prediction/`:
 - `figures/am_fig5_reproduction.png` — `I/log2` and `max_θ b/log2` vs `D` (the
   eye-test figure, exp-decay), priors `p*`, `p_J`, `p_LN`, `p_proj` (the last
   reproducing Quinn Fig. 12: `p_proj` tracks `p*`, not Jeffreys).
-- `figures/transfer_vs_c.png` — the headline: `min_{π'∈{p_J,p_U,p_LN,p_proj}} δR(p*,π')`
+- `figures/transfer_vs_c.png` — the headline: `min_{π'∈{p_J,p_U,p_LN,p_proj,p_ref}} δR(p*,π')`
   and the gap to `q̄`, vs cooperativeness `c`, one panel per `D`. The [§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note) sign-of-advantage curve.
 - `figures/pstar_vs_pproj.png` — `δR(p*,p_proj)` across the interior↔boundary axis
   and the curvature knob, localising where the two budget-dependent siblings diverge
@@ -1337,10 +1405,11 @@ exp-decay (primary) and rotated-hypercone (controlled) models.
 
 - `model`, `D`, `sigma`, `N`, `taper`, `rotation`, `curvature`, `c` — the cell key
   (`sigma_eff = sigma/√N` is the operative noise; record both `sigma` and `N`).
-- `R_mean[π]`, `R_mcse[π]` for `π ∈ {p*, p_J, p_U, p_LN, p_proj, q̄}` (nats).
-- `delta_R_best` — `min_{π'∈{p_J,p_U,p_LN,p_proj}} (R[p*] − R[π'])` and its MCSE (the
+- `R_mean[π]`, `R_mcse[π]` for `π ∈ {p*, p_J, p_U, p_LN, p_proj, p_ref, q̄}` (nats; `p_ref` empty outside the hypercone families).
+- `delta_R_best` — `min_{π'∈{p_J,p_U,p_LN,p_proj,p_ref}} (R[p*] − R[π'])` and its MCSE (the
   headline statistic), and `delta_R_pproj = R[p*] − R[p_proj]` separately (the
-  sibling-divergence read, [§3.4](#34-the-second-protagonist-infomax-vs-mdl)).
+  sibling-divergence read, [§3.4](#34-the-second-protagonist-infomax-vs-mdl)), and
+  `delta_R_pref = R[p*] − R[p_ref]` (budget versus ordering, [§3.5](#35-a-third-route-ordering-instead-of-budget)).
 - `I_pstar`, `I_pJ`, `I_pproj`, `B_pstar`, `B_pJ` (bits) — the A&M/Quinn prior-side scores.
 - `pstar_n_atoms`, `pstar_method` (`grid-BA` / `atomic`).
 - `S_q`, `seed_stream` — provenance.
@@ -1390,7 +1459,7 @@ stays small but a `q`-subset analysis can re-key off it).
   `p_proj` now, not deferring. [§3.4](#34-the-second-protagonist-infomax-vs-mdl) establishes
   it as a budget-dependent *co-protagonist* (not a control), and the headline statistic
   ([§2.2](#22-what-wins-means--and-what-cannot-be-asserted), [§5.1](#51-property-to-tests-table),
-  [§6.3](#63-table-schema)) is `min` over `{p_J, p_U, p_LN, p_proj}`. The motivation stands:
+  [§6.3](#63-table-schema)) is `min` over `{p_J, p_U, p_LN, p_proj}`, and `p_ref` where defined (OQ-8). The motivation stands:
   a `p*` win that `p_proj` also achieves implicates *resolution-adaptation*, not
   *discreteness* — beating only Jeffreys/uniform/log-normal would merely re-derive A&M.
 - **OQ-6 (RESOLVED — `p_proj` sampler).** Pinned in [§4.2](#42-prior-construction):
@@ -1399,6 +1468,12 @@ stays small but a `q`-subset analysis can re-key off it).
   AtomicPriors). The earlier rejection-from-a-box alternative is dropped as needlessly
   expensive.
 - **OQ-7 (dependency).** <span style="color: red">`AtomicPriors.jl` enters in two roles: (i) **dev-time**, generating the frozen T12 golden fixtures ([§5.5](#55-atomicpriorsjl-reference-fixtures)) — the **test suite never imports Julia**; and (ii) **runtime**, supplying `p*` for `D > D_switch` in the experiment via `juliacall` (OQ-1). So Julia ≥ 1.6 is needed both to (re)generate fixtures and to run the high-`D` experiment, but **not** for `pytest` or the small-`D` headline. Record under *Local setup* in `README.md` (Julia is **not** in the uv env; note it under "what we deliberately don't install"); `provenance.json` captures the Julia + AtomicPriors versions for any run that used the `D > D_switch` path.</span>
+- **OQ-8 (definition).** Which direction does `p_ref` rank first in exp-decay, where the
+  relevant directions are curved and vary across `Θ` ([§3.5](#35-a-third-route-ordering-instead-of-budget))? Candidates:
+  the stiffest FIM eigen-direction at each `θ`, or a fixed coordinate such as the slowest
+  rate. Any choice is a stand-in for an attention mechanism, and the choice may decide
+  the comparison. Related: the Neyman–Scott problem (`[^3-lineage]`) would be a clean
+  extra test of whether `p*` removes a co-volume bias without any ranking.
 
 ## 8. References
 
@@ -1430,6 +1505,15 @@ stays small but a `q`-subset analysis can re-key off it).
   15(1), 8–27.
   [link](https://www.kybernetika.cz/content/1979/1/8). The compensation identity
   (2.1.2).
+- Bernardo, J. M. (2005). Reference analysis. In D. K. Dey & C. R. Rao (eds.),
+  *Bayesian Thinking: Modeling and Computation*, Handbook of Statistics 25, 17–90.
+  Elsevier. [Preprint](https://www.uv.es/~bernardo/RefAna.pdf); page numbers cited in
+  this spec are the preprint's. Why reference priors take the infinite-data limit
+  ([§3.5](#35-a-third-route-ordering-instead-of-budget)).
+- Berger, J. O., Bernardo, J. M. & Sun, D. (2009). The formal definition of reference
+  priors. *Ann. Statist.* 37(2), 905–938.
+  [arXiv:0904.0156](https://arxiv.org/abs/0904.0156). Sequential (ranked) reference
+  priors ([§3.5](#35-a-third-route-ordering-instead-of-budget)).
 - Stein, C. (1959). An example of wide discrepancy between fiducial and confidence
   intervals. *Ann. Math. Statist.* 30(4), 877–880.
   [doi:10.1214/aoms/1177706072](https://doi.org/10.1214/aoms/1177706072). A flat
@@ -2314,3 +2398,19 @@ other ways (Stein 1959; Kass & Wasserman 1996 §4.2.2, both read), and that whic
 describes human judgement is open. §8 gains the two references. The examples are MB's
 selection from Claude's drafts. Also fixed three dimension subscripts the `D` rename
 missed (`L_D`, and `θ_D` in §1.2 and §4.1). No claims changed.
+
+### 2026-10-04 — Refinement (§1, §2.2, §3.4–§3.7, §4.2, §4.4, §5, §6, §7, §8; reference prior `p_ref`)
+
+New competitor `p_ref`: the reference prior with the relevant direction ranked first
+(Berger–Bernardo). It joins the lineup and the headline minimum where it is defined, the
+hypercone families; exp-decay waits on the new OQ-8 (which direction to rank first). New
+§3.5 presents it as a route to removing the co-volume bias by ranking instead of budget.
+Footnote `[^3-schur]` derives its closed form in the hypercone: `p_ref = p_U` in the
+axis-aligned cone, and density `∝ 1/A((Qθ)_1)` under rotation. Footnote `[^3-lineage]`
+gives its relation to `p*` and why Berger and Bernardo took the infinite-data limit.
+The old §3.5 and §3.6 are now §3.6 and §3.7; the sink list gains item 5 and the
+falsification criterion includes `p_ref`. Also: the §4.2 construction, the §4.4
+lineup, P15/T15, the `delta_R_pref` column, a note in OQ-5, and two references in §8.
+Adding `p_ref` is MB's decision. The closed form is Claude's derivation; its key step,
+Schur complement `= σ^{-2}`, was checked numerically in chat (finite-difference FIM at
+600 random points, `D ∈ {3, 8, 26}`, error below `1e-8`). T15 checks it in code.
