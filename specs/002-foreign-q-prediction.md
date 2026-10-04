@@ -326,7 +326,7 @@ prior**, which therefore places mass in proportion to `√det g`. The co-volume 
 collects only the irrelevant widths: extent the data cannot pin down but a `√det g`
 measure still weights. That mismatch is the mechanism behind everything below.
 
-**Hyperribbons (panel a).** In the models of interest the manifold is a [*hyperribbon*](../GLOSSARY.md#hyperribbon): its widths `L_1 ≥ L_2 ≥ ⋯ ≥ L_d` fall off roughly geometrically, leaving a few stiff directions and many exponentially narrower sloppy ones. Jeffreys weights parameter-space
+**Hyperribbons (panel a).** In the models of interest the manifold is a [*hyperribbon*](../GLOSSARY.md#hyperribbon): its widths `L_1 ≥ L_2 ≥ ⋯ ≥ L_D` fall off roughly geometrically, leaving a few stiff directions and many exponentially narrower sloppy ones. Jeffreys weights parameter-space
 volume, which is largest in the **region of `Θ`** where the irrelevant widths are widest
 (for the cone below, the thick base). That region holds nearly all of Jeffreys' mass
 [read: A&M §2.2, Fig. 3] yet few distinguishable predictions: at `D=26` Jeffreys captures
@@ -334,10 +334,10 @@ under 1 bit [read: A&M Fig. 5]. A prior that tracks resolving power should disco
 `V_⊥`; whether that helps *predict a foreign nature* is the open question.
 
 **The square hypercone (panel b)** is the simplest manifold with a hyperribbon's decisive
-feature in closed form [read: A&M App. A.1]: `y(θ) = (θ_1, r θ_2, …, r θ_d)`, with one
+feature in closed form [read: A&M App. A.1]: `y(θ) = (θ_1, r θ_2, …, r θ_D)`, with one
 relevant coordinate `θ_1 ∈ [0, L]` and `D−1` irrelevant ones `θ_μ ∈ [0,1]` scaled by the
 **taper** `r(θ_1) = θ_1/L`. The cross-section shrinks linearly from the base (`θ_1 = L`)
-to a point at the tip, so `√det g ∝ θ_1^{D-1}`: a **co-volume gradient** toward the thick
+to a point at the tip, so `√det g ∝ θ_1^{D-1}`: a **co-volume gradient**[^1-everyday] toward the thick
 base. This one factor is what punishes Jeffreys. Its mass piles at the base, and for an observation at relevant-coordinate value `x` its posterior mean is pulled toward the thick end by `Δ = (D−1)/x`
 ([§9.2](#92-hypercone-posterior-deviation-eq-922)), *largest at the thin end*, where a
 foreign `q` can place data. `p*` instead places [atoms](../GLOSSARY.md#atom) an `O(1)` Fisher length apart along
@@ -376,6 +376,36 @@ asymmetry is a gradient that steepens with `D` against an atom spacing that does
     `g_{μν} = 𝔼_{x|θ}[∂_μ log p · ∂_ν log p] = σ^{-4}(∂_μ y)^⊤ 𝔼[(x−y)(x−y)^⊤](∂_ν y)`,
     which collapses to (1.2.1) because `𝔼[(x−y)(x−y)^⊤] = σ²𝟙_m`. Indices `μ, ν` run
     over the `D` parameters, `t` over the `m` observation times.
+
+[^1-everyday]: **Everyday co-volume gradients.** In each, one quantity the evidence
+    pins down scales how strongly many others show, and those others stay below
+    resolution. The detective of [§0](#0-context) is one: duration × habits.
+
+    - *Neural gain.* A neuron's firing rate to each stimulus is a gain `γ` times a
+      tuning curve with `D − 1` shape parameters, normalised to sum to one. The spike
+      count pins down `γ`, but with few spikes all tuning curves look alike: `γ = 0` is
+      the tip. Under Poisson noise the Fisher information is `1/γ` along the gain,
+      proportional to `γ` along each shape direction, and zero between the two (the
+      normalisation), so `√det g ∝ γ^{(D−2)/2}`.
+      Jeffreys favours high gain, the more so the more shape parameters it models.
+    - *Seasoning.* Taste tells reliably how strongly a dish is seasoned, but each spice
+      adds the strength times its share of the blend, so in a mild dish all blends taste
+      alike. A taster who counts distinguishable dishes leans toward "strongly
+      seasoned", the more so the larger their spice rack.
+    - *A face down the street.* A person's distance is judged well from their height in
+      view, but facial detail fades with distance, so far away all faces look alike (the
+      tip is at infinity). An observer who counts distinguishable people judges the
+      figure nearer, the more faces they know.
+
+    In each case the conclusion moves with the size of a repertoire (shape parameters,
+    spices, faces) that the evidence cannot see. Not every prior does this: one uniform
+    in the parameters as written (gain and shape, strength and blend) has no such pull.
+    Uniform priors fail in other ways. They depend on the parametrisation, and in many
+    dimensions a uniform prior on a vector badly overstates its length, a case where
+    uniform and Jeffreys coincide [read: Stein 1959; Kass & Wasserman 1996 §4.2.2].
+    Together the two failures point to priors set by what the data budget can resolve,
+    such as `p*`; whether those predict better is what this spec tests. Which kind of
+    prior describes human judgement, and in which situations, is open as far as we know.
 
 [^1-spacing]: About 2.5 Fisher lengths per atom on a 1-D bounded Gaussian channel, from
     the repo's Blahut–Arimoto (`notes/infomax_two_hats_and_directions.md` §7.4).
@@ -807,7 +837,7 @@ All three share the Gaussian likelihood `p(x|θ)=𝒩(y(θ),σ²𝟙_m)` and FIM
    relevant directions not coordinate-aligned), and the eye-test anchor (A&M
    Fig. 5).
 2. **Square hypercone (<span style="color: red">analytic/controlled model</span>; A&M Appendix A.1).**
-   `y(θ) = (θ_1, r θ_2, …, r θ_d)`, `r(θ_1)=θ_1/L`, `0≤θ_1≤L`, `0≤θ_μ≤1`. Gives the
+   `y(θ) = (θ_1, r θ_2, …, r θ_D)`, `r(θ_1)=θ_1/L`, `0≤θ_1≤L`, `0≤θ_μ≤1`. Gives the
    closed-form `Δ=(D−1)/x` (9.2.2) for the calibration cross-check (T6). A **tunable
    rotation** `θ ↦ Q θ` of the embedding (orthogonal `Q`, angle swept, [§5](#5-properties-to-verify) sweep)
    moves the relevant direction off the coordinate axes so that uniform-`θ` is no
@@ -1400,6 +1430,15 @@ stays small but a `q`-subset analysis can re-key off it).
   15(1), 8–27.
   [link](https://www.kybernetika.cz/content/1979/1/8). The compensation identity
   (2.1.2).
+- Stein, C. (1959). An example of wide discrepancy between fiducial and confidence
+  intervals. *Ann. Math. Statist.* 30(4), 877–880.
+  [doi:10.1214/aoms/1177706072](https://doi.org/10.1214/aoms/1177706072). A flat
+  prior on a many-dimensional normal mean overstates its length; footnote
+  `[^1-everyday]`.
+- Kass, R. E. & Wasserman, L. (1996). The selection of prior distributions by formal
+  rules. *JASA* 91(435), 1343–1370.
+  [doi:10.1080/01621459.1996.10477003](https://doi.org/10.1080/01621459.1996.10477003).
+  Review of default priors; §4.2.2 on Stein's example.
 - Bernardo, J. M. (1979). Reference posterior distributions for Bayesian inference.
   *JRSS-B* 41(2), 113–147.
   [doi:10.1111/j.2517-6161.1979.tb01066.x](https://doi.org/10.1111/j.2517-6161.1979.tb01066.x).
@@ -2265,3 +2304,13 @@ Symbols now follow *Symbol choice* in `skills/write-math-spec.md`, adopted today
 - The detective footnote's grid spacing is `h`, not `ε`, a lookalike of `∈`.
 
 No claims changed.
+
+### 2026-10-04 — Refinement (§1.2, §8; everyday co-volume gradients)
+
+New footnote `[^1-everyday]` on "co-volume gradient" in §1.2: three everyday cases
+(neural gain × tuning shape, seasoning strength × blend, distance × facial detail). It
+also states that the bias needs a volume-counting prior, that uniform priors fail in
+other ways (Stein 1959; Kass & Wasserman 1996 §4.2.2, both read), and that which prior
+describes human judgement is open. §8 gains the two references. The examples are MB's
+selection from Claude's drafts. Also fixed three dimension subscripts the `D` rename
+missed (`L_D`, and `θ_D` in §1.2 and §4.1). No claims changed.
