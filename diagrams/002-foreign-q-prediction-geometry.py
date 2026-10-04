@@ -17,12 +17,12 @@ Three panels, left to right:
 
   (b) Square hypercone (taper r = theta_1/L). The analytic caricature that
       isolates the single feature driving the co-volume pathology: a co-volume
-      GRADIENT. One relevant axis theta_1 (Fisher length ~ L) with d-1 irrelevant
+      GRADIENT. One relevant axis theta_1 (Fisher length ~ L) with D-1 irrelevant
       directions whose extent r(theta_1)=theta_1/L tapers linearly to the tip, so
-      the cross-sectional (co-)volume element sqrt(det g) ∝ theta_1^{d-1} grows
+      the cross-sectional (co-)volume element sqrt(det g) ∝ theta_1^{D-1} grows
       toward the thick base. Jeffreys piles its mass at the base (a vanishing
-      fraction of distinguishable predictions as d grows) and its posterior is
-      pulled there -- the closed-form bias Delta=(d-1)/x, largest at the thin end.
+      fraction of distinguishable predictions as D grows) and its posterior is
+      pulled there -- the closed-form bias Delta=(D-1)/x, largest at the thin end.
       p* instead places atoms ≈1 Fisher length apart along the relevant axis and
       collapses the irrelevant ones onto the boundary.
 
@@ -60,8 +60,8 @@ fig, (axA, axB, axC) = plt.subplots(1, 3, figsize=(13.5, 4.4))
 
 
 # ---- panel (a): hyperribbon Fisher-width spectrum -------------------------
-d = 8
-mu = np.arange(1, d + 1)
+D = 8
+mu = np.arange(1, D + 1)
 # Fisher lengths (= manifold widths) falling geometrically: the sloppy spectrum
 L = 30.0 * (0.30 ** (mu - 1))
 relevant = L > 1.0
@@ -71,14 +71,14 @@ axA.bar(mu[relevant], L[relevant], color=RELEVANT, width=0.7,
 axA.bar(mu[~relevant], L[~relevant], color=IRREL, width=0.7,
         label="irrelevant ($L_\\mu<1$, sloppy)")
 axA.axhline(1.0, color=JEFF, ls="--", lw=1.3)
-axA.text(d + 0.35, 1.0, r"$L_\mu=1$" "\n(resolution)", color=JEFF,
+axA.text(D + 0.35, 1.0, r"$L_\mu=1$" "\n(resolution)", color=JEFF,
          va="center", ha="left", fontsize=8.5)
 axA.set_yscale("log")
 axA.set_xlabel(r"parameter direction $\mu$  (FIM eigen-index)")
 axA.set_ylabel(r"Fisher length $L_\mu$ = width  (units of $\sigma$)")
 axA.set_title("(a) hyperribbon: a sloppy width spectrum", fontsize=10.5)
 axA.set_xticks(mu)
-axA.set_xlim(0.4, d + 1.9)
+axA.set_xlim(0.4, D + 1.9)
 axA.legend(loc="upper right", fontsize=8, frameon=False)
 axA.annotate(r"co-volume $V_\perp$" "\n" r"$=\prod_{L_\mu<1} L_\mu$",
              xy=(6.0, L[5]), xytext=(4.55, 0.016),
@@ -91,8 +91,8 @@ def draw_cone(ax, r_of_theta, title, *, taper):
     """Side view of the (square) hypercone manifold along the relevant axis.
 
     The filled envelope shows one representative irrelevant direction's extent
-    +/- r(theta_1)/2; the co-volume is the product over all d-1 such directions.
-    For d=2 there is exactly one irrelevant direction, so this panel IS the full
+    +/- r(theta_1)/2; the co-volume is the product over all D-1 such directions.
+    For D=2 there is exactly one irrelevant direction, so this panel IS the full
     model manifold (drawn centred about the spine rather than the one-sided
     [0, r] of the literal map; same triangle).
     """
@@ -125,7 +125,7 @@ def draw_cone(ax, r_of_theta, title, *, taper):
     # Jeffreys co-volume density sqrt(det g) on a twin axis
     ax2 = ax.twinx()
     if taper:
-        sdg = (th / L) ** (d - 1)          # ∝ theta_1^{d-1}
+        sdg = (th / L) ** (D - 1)          # ∝ theta_1^{D-1}
     else:
         sdg = np.ones_like(th)             # constant cross-section
     ax2.plot(th, sdg, color=JEFF, lw=2.0)
@@ -143,7 +143,7 @@ def draw_cone(ax, r_of_theta, title, *, taper):
 # ---- panel (b): tapering hypercone (co-volume gradient) -------------------
 ax2b = draw_cone(axB, lambda t: t / 5.0, "(b) hypercone (taper): co-volume gradient",
                  taper=True)
-ax2b.text(5.15, 1.0, r"$\sqrt{\det g}\propto\theta_1^{\,d-1}$",
+ax2b.text(5.15, 1.0, r"$\sqrt{\det g}\propto\theta_1^{\,D-1}$",
           color=JEFF, fontsize=9, va="center", ha="left", rotation=90)
 axB.annotate("Jeffreys mass\n& posterior pull", xy=(4.55, 0.0), xytext=(2.5, 0.62),
              fontsize=8.5, color=JEFF, ha="center",

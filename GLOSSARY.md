@@ -74,7 +74,7 @@ requires knowing nature.
 
 The number of parameter directions the data can actually resolve, often far below the
 nominal parameter count in [sloppy models](#sloppy-model). Abbott & Machta define it from how the
-[capacity](#channel-capacity) grows as noise shrinks, `I⋆ ∼ d_eff log(1/σ)` [read: A&M Eq. 8].
+[capacity](#channel-capacity) grows as noise shrinks, `I⋆ ∼ D_eff log(1/σ)` [read: A&M Eq. 8].
 
 ### Empirical and hierarchical Bayes
 
@@ -97,9 +97,12 @@ units of noise standard deviations; it is the central object of information geom
 
 ### Fisher length
 
-The length of a path in parameter space measured with the [Fisher metric](#fisher-information-metric). Along a
-direction it counts roughly how many distinguishable predictions lie end to end [read:
-A&M §1]. The [sloppy-models literature](#sloppy-model) calls the Fisher length of the model manifold
+The length of a path in parameter space measured with the [Fisher metric](#fisher-information-metric), also
+called *Fisher arc length*. An infinitesimal step `dθ` has length
+`ds = √(Σ_{μν} g_{μν}(θ) dθ_μ dθ_ν)`, with `g` the Fisher information matrix, and a path
+has length `∫ ds` along it. In a model with Gaussian noise of scale `σ`, `ds` is how far
+the step moves the predicted mean, in units of `σ`. Along a direction the Fisher length
+counts roughly how many distinguishable predictions lie end to end [read: A&M §1]. The [sloppy-models literature](#sloppy-model) calls the Fisher length of the model manifold
 along a principal direction its *width*; widths scale like the square roots of the
 Fisher eigenvalues [read: A&M App. A.7].
 
@@ -170,7 +173,7 @@ complexity. No prior's [Bayes mixture](#bayes-mixture) equals it at finite sampl
 
 The log-normaliser of the [NML](#normalized-maximum-likelihood-nml) distribution: the [minimax](#minimax) [pointwise regret](#redundancy-and-regret) of a model
 class, a measure of how many distinguishable data patterns it can fit. Asymptotically
-`(d/2) log(N/2π) + log ∫√det g` [read: Rissanen 1996, Thm. 1]. The *stochastic
+`(D/2) log(N/2π) + log ∫√det g` for `D` parameters and `N` observations [read: Rissanen 1996, Thm. 1]. The *stochastic
 complexity* of a data set is its NML [code length](#code-length).
 
 ### Posterior deviation

@@ -17,7 +17,7 @@ Structure:
     p*'s atom gaps / on the thin end). Fixed input, OUTSIDE the plates.
   - Outer plate (s = 1, ..., S_q): independent draws of the data-generating
     density q_s and the truth theta_s ~ q_s. The likelihood geometry
-    (taper, rotation, dimension d, noise sigma) is fixed across draws and is
+    (taper, rotation, dimension D, noise sigma) is fixed across draws and is
     described in the spec, not drawn here.
   - theta ~ q: nature's true parameter for this draw.
   - Training plate (i = 1, ..., N): the observations x_i ~ p(x|theta) the
@@ -50,7 +50,7 @@ pgm.add_edge("theta", "x")
 pgm.add_edge("theta", "xp")
 
 # Fixed likelihood inputs collected in one double-circled node: the noise scale
-# sigma and the geometry config psi (dimension d, observation times, taper,
+# sigma and the geometry config psi (dimension D, observation times, taper,
 # rotation). Constant across draws, so OUTSIDE the S_q plate; it feeds every
 # observation. Answers the review note "can sigma and other parameters be put on
 # the generative model".
