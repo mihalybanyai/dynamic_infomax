@@ -160,6 +160,8 @@ the time spent reading a misformatted draft.
 - `specs/` — math and algorithm specifications: what we will do, before code.
 - `src/` — implementation code. `tests/` — one test suite per `src/` module.
 - `experiments/` — one subdirectory per experiment, each with its own `PLAN.md`.
+- `empirics/` — behavioural evidence on which priors humans and animals use; same line
+  of thinking as the specs, but no spec depends on it.
 - `docs/` — user-facing documentation of each spec's artefacts.
 - `diagrams/` — Mermaid, TikZ, SVG.
 - `skills/` — procedures for Claude (see `skills/README.md`).

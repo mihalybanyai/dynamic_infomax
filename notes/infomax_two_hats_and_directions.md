@@ -17,7 +17,7 @@ it), for two uses: (1) a get-to-the-point-but-detailed reminder for MB, and
 - `tutorials/math/kelly.md` — the Kelly / log-loss identity used throughout.
 - `specs/000-static-infomax-fig1.md` + `resources/mattingly_paper.pdf` — the
   finite-data infomax prior `p*` and its convergence to Jeffreys.
-- `notes/infomax_betting_experiment.md`, `notes/real_world_analogues.md` — the
+- `notes/infomax_betting_experiment.md`, `empirics/real_world_analogues.md` — the
   prior framing this discussion revises.
 
 **Confidence flags.** The load-bearing *external* results (Clarke–Barron;
