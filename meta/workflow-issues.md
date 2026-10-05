@@ -149,6 +149,11 @@ Revisit if the project grows large enough that `resources/`
 itself becomes unwieldy — git LFS or external paper storage may then
 be appropriate.
 
+*Update 2026-10-05.* The annotated bibliography moves to `literature/`,
+a map of the field organised by cluster (MB's request). PDFs stay in
+`resources/`. `resources/references.md` is absorbed cluster by cluster;
+until its five entries have a home, both exist.
+
 ### Skills vs. workflows: maintain the boundary [conventions]
 
 *Opened 2026-05-18*

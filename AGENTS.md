@@ -157,6 +157,8 @@ the time spent reading a misformatted draft.
 - `GLOSSARY.md` — definitions of terms used across the repo; documents link here.
 - `notes/` — ideas and sketches we develop.
 - `resources/` — pre-existing material: papers, prior drafts, LaTeX sources.
+- `literature/` — map of the field: clusters of prior work, what our claims take from
+  each, and what the human should read.
 - `specs/` — math and algorithm specifications: what we will do, before code.
 - `src/` — implementation code. `tests/` — one test suite per `src/` module.
 - `experiments/` — one subdirectory per experiment, each with its own `PLAN.md`.
