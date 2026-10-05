@@ -225,7 +225,7 @@ prediction ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)).
 | `m_q(X_{1:N})` | Nature's `N`-fold data marginal `∫ p(X_{1:N}\|θ) q(dθ)`. |
 | `c` | Cooperativeness of `q` ([§4.3](#43-foreign-q-family)): `c=0` cooperative (`m_q` close to `p*`'s predictions), `c=1` non-cooperative. |
 | `π` | Agent's prior, one of `{p*, p_proj, p_J, p_U, p_LN, p_ref}`, with `q̄` as reference ceiling. |
-| `p*` | Infomax ([capacity](../GLOSSARY.md#channel-capacity)-achieving) prior of the budget-`N` channel `θ→X_{1:N}`: `argmax_π I(Θ;X_{1:N})`, equivalently the single-observation achiever at noise `σ/√N` ([§4.2](#42-prior-construction)). Discrete[^1-discrete]. |
+| `p*` | Infomax ([capacity](../GLOSSARY.md#channel-capacity)-achieving) prior of the budget-`N` channel `θ→X_{1:N}`: `argmax_π I_π(Θ;X_{1:N})`, equivalently the single-observation achiever at noise `σ/√N` ([§4.2](#42-prior-construction)). Discrete[^1-discrete]. |
 | `p_proj` | Projected-ML / NML prior: the [pushforward](../GLOSSARY.md#pushforward) of the [NML distribution](../GLOSSARY.md#normalized-maximum-likelihood-nml) through the MLE map `θ̂(x)` ([§3.4](#34-the-second-protagonist-infomax-vs-mdl), [§4.2](#42-prior-construction)). |
 | `p_J` | [Jeffreys prior](../GLOSSARY.md#jeffreys-prior) `∝ √{det g(θ)}`, normalised on `Θ`. |
 | `p_U` | Uniform on the parameter box `Θ`. |
@@ -234,13 +234,13 @@ prediction ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)).
 | `q̄` | Hyper-averaged matched prior `𝔼_c[q]`; reference ceiling only ([§2.3](#23-q̄-is-the-ceiling-not-a-competitor)). |
 | `m_π(X_{1:N})` | Agent's Bayes mixture `∫ p(X_{1:N}\|θ) π(dθ)`. |
 | `π(θ\|X_{1:N})` | Posterior under prior `π`. |
-| `I(Θ;X_1)` | Single-observation mutual information `𝔼_π D_{KL}(p(x\|θ)‖m_π)`; `I(Θ;X_{1:N})` is its budget-`N` analogue (used for `p*` and `C`). A&M's `I⋆` is the single-`σ` value for `p*`. |
+| `I_π(Θ;X_{1:N})` | Mutual information between `Θ ∼ π` and the training sample `X_{1:N} ∼ p(·\|Θ)`: `𝔼_{θ∼π} D_{KL}(p(X_{1:N}\|θ)‖m_π)`. The subscript names the distribution of `Θ` (a prior `π`, or nature's `q`); `I_π(Θ;X_1)` is the single-observation version; the short form `I_π` means the budget-`N` one. A&M's `I⋆` is `I_{p*}(Θ;X_1)`. |
 | `D_eff` | [Effective dimensionality](../GLOSSARY.md#effective-dimensionality): the number of resolvable parameter directions (A&M Eq. 8). |
-| `C` | Channel capacity `sup_π I(Θ;X_{1:N}) ≡ C_N` ([§3.1](#31-the-one-guarantee-worst-case-over-q)). |
-| `b_π(θ)` | [Bias pressure](../GLOSSARY.md#bias-pressure) `D_{KL}(p(x\|θ)‖m_π) − I_π(Θ;X_1)` (A&M Eq. 5); `b(θ)` when `π` is clear from context. |
+| `C` | Channel capacity `sup_π I_π(Θ;X_{1:N}) ≡ C_N` ([§3.1](#31-the-one-guarantee-worst-case-over-q)). |
+| `b_π(θ)` | [Bias pressure](../GLOSSARY.md#bias-pressure) `D_{KL}(p(x\|θ)‖m_π) − I_π(Θ;X_1)` (A&M Eq. 5); `b(θ)` when `π` is clear from context. Its worst case is `B(π) = max_θ b_π(θ)`. |
 | `Δ(x)` | [Posterior deviation](../GLOSSARY.md#posterior-deviation) `σ^{-1}\|y(θ̂_x) − 𝔼_{π(θ\|x)} y(θ)\|` (A&M Eq. 9), with `θ̂_x` the maximum-likelihood estimate for `x`. |
 | `R_N^q(π)` | The headline score: redundancy = cumulative held-out predictive log-loss ([§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss)). |
-| `I_q^{(N)}` | Matched floor `𝔼_{θ∼q} D_{KL}(p(X_{1:N}\|θ)‖m_q)` (prior-independent). |
+| `I_q` | Matched floor `I_q(Θ;X_{1:N})`: nature's own mutual information, prior-independent ([§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss)). |
 | `G` | Per-axis grid resolution of the discrete `p*` solver ([§4.2](#42-prior-construction)). |
 
 All logs in nats; bits `= nats/log 2` at report time.
@@ -454,7 +454,7 @@ R_N^q(\pi)
 $$
 
 **Lower is better.** `R` is the excess [code length](../GLOSSARY.md#code-length) (log-loss) over an oracle that knows
-`θ`, with `R_N^q(π) ≥ I_q^{(N)} ≥ 0`. The floor `I_q^{(N)}`, not `0`, is reached only by a
+`θ`, with `R_N^q(π) ≥ I_q(Θ;X_{1:N}) ≥ 0`. The floor `I_q`, not `0`, is reached only by a
 predictor that matches nature's marginal, `m_π = m_q`.
 
 **Why expect a *maximiser* of mutual information to help minimise a loss?** Three
@@ -464,9 +464,9 @@ ones:
 
 | "redundancy" | definition (from `r_θ(π)`) | `θ` ranges over | the operation on it | the optimiser |
 |---|---|---|---|---|
-| self-consistent (**mutual information**) | `I(π) = 𝔼_{θ∼π} r_θ(π)` | the prior `π` *itself* (`m_π` uses the same `π`) | **`max` over `π`** — *design*: pick the most-informative / least-favourable source | `p* = argmax_π I`; value `= C` (capacity) |
+| self-consistent (**mutual information**) | `I_π(Θ;X_{1:N}) = 𝔼_{θ∼π} r_θ(π)` | the prior `π` *itself* (`m_π` uses the same `π`) | **`max` over `π`** — *design*: pick the most-informative / least-favourable source | `p* = argmax_π I_π`; value `= C` (capacity) |
 | **worst-case** | `R_N^{max}(π) = max_θ r_θ(π)` | an adversarial `θ` | **`min` over `π`** — the minimax-robust code | `argmin_π R_N^{max} = p*` (**same object** as row 1, by duality) |
-| **foreign-`q` average** (this spec's score) | `R_N^q(π) = 𝔼_{θ∼q} r_θ(π) = I_q^{(N)} + D_KL(m_q‖m_π)` | a *foreign* nature `q` | **`min` over `π`** — the loss we report | the prior matched to `q` (its own pullback), **not** `p*` (across the `c`-sweep the single fixed minimiser is `q̄`; see [§2.3](#23-q̄-is-the-ceiling-not-a-competitor)) |
+| **foreign-`q` average** (this spec's score) | `R_N^q(π) = 𝔼_{θ∼q} r_θ(π) = I_q + D_KL(m_q‖m_π)` | a *foreign* nature `q` | **`min` over `π`** — the loss we report | the prior matched to `q` (its own pullback), **not** `p*` (across the `c`-sweep the single fixed minimiser is `q̄`; see [§2.3](#23-q̄-is-the-ceiling-not-a-competitor)) |
 
 Reading down the *optimiser* column dissolves the clash. Rows 1 and 2 are the same
 operation on the same object `p*`, the two faces of the [redundancy–capacity saddle](../GLOSSARY.md#redundancy-capacity-theorem) [read: A&M Eqs. 3–4]: maximising `I` *is* minimising
@@ -484,11 +484,11 @@ By the **compensation identity** (Topsøe 1979; derived in
 `N`-fold data marginals `m_q` and `m_π`,
 
 $$
-\boxed{\;R_N^q(\pi) \;=\; \underbrace{I_q^{(N)}}_{\text{matched floor, }\pi\text{-free}} \;+\; \underbrace{D_{\mathrm{KL}}\!\big(m_q \,\|\, m_\pi\big)}_{\text{the only }\pi\text{-dependent term}}\;}\tag{2.1.2}
+\boxed{\;R_N^q(\pi) \;=\; \underbrace{I_q(\Theta;X_{1:N})}_{\text{matched floor, }\pi\text{-free}} \;+\; \underbrace{D_{\mathrm{KL}}\!\big(m_q \,\|\, m_\pi\big)}_{\text{the only }\pi\text{-dependent term}}\;}\tag{2.1.2}
 $$
 
 with the prior-independent **matched floor**
-`I_q^{(N)} = 𝔼_{θ∼q} D_KL(p(X_{1:N}|θ)‖m_q)`, the redundancy nature would pay against its
+`I_q(Θ;X_{1:N}) = 𝔼_{θ∼q} D_KL(p(X_{1:N}|θ)‖m_q)`, the redundancy nature would pay against its
 own marginal. The whole prior-dependence of the score is the **marginal mismatch**
 `D_KL(m_q‖m_π)`, and the contest between two priors is exactly
 
@@ -534,7 +534,7 @@ question, and asserting it would make the experiment unfalsifiable
 ### 2.3 `q̄` is the ceiling, not a competitor
 
 Two floors must be kept apart. *Per cell* (fixed `c`, nature `= q_c`), the floor of
-`R_N^q` is `I_q^{(N)}`, attained by the prior whose marginal matches *that* `q_c`, not by
+`R_N^q` is `I_q`, attained by the prior whose marginal matches *that* `q_c`, not by
 `q̄`. *Across the `c`-sweep*, by (2.1.2) the single fixed prior that minimises the
 **`c`-averaged** `R` is the one whose marginal matches nature's hyper-average,
 `m_π = 𝔼_c[m_q]`, i.e. `q̄ = 𝔼_c[q]` ([hierarchical / empirical Bayes](../GLOSSARY.md#empirical-and-hierarchical-bayes); note §5.3). So no
@@ -585,13 +585,13 @@ R_N^q(p^\star) \;=\; \mathbb{E}_{\theta\sim q}\, D_{\mathrm{KL}}\!\big(p(X_{1:N}
 $$
 
 So `p*`'s foreign-`q` redundancy is **capped at capacity for any `q`**: `p*` can never be
-catastrophic. The deployable priors have no such cap. A prior's worst-case redundancy is
-`I_π + B(π)`, with `B(π) = max_θ b_π(θ)` (from the definition of `b`), and `B(p_J)` grows
+catastrophic. The deployable priors have no such cap. A prior's worst-case single-observation redundancy is
+`I_π(Θ;X_1) + B(π)`, with `B(π) = max_θ b_π(θ)` (from the definition of `b`), and `B(p_J)` grows
 rapidly with `D`: over 500 bits at `D=26` in exp-decay, about 55 in the hypercone [read:
 A&M §3; App. A.1]. This is empirical for these models, not a proven rate. Log-normal's `B`
 rises too [read: A&M Fig. 5]; `p_U` is assumed to behave alike [guess][^1-uniform].
 
-`C_N`, by contrast, tracks only the **resolvable** complexity. At `N=1` it is A&M's `I⋆`,
+`C_N`, by contrast, tracks only the **resolvable** complexity. At `N=1` it is `I_{p*}(Θ;X_1)`,
 which is flat in nominal `D` once `D>3` [read: A&M §2.2, Fig. 5]. Since budget `N` acts as
 noise `σ/√N`, `C_N` grows like `(D_eff/2) log N`, with `D_eff` the [effective dimensionality](../GLOSSARY.md#effective-dimensionality) [read: A&M Eq. 8, §2.1]; that it stays
 flat in `D` at `N>1` is the same saturation at smaller noise [guess]. The bound cannot
@@ -611,16 +611,16 @@ compensation identity applied to `p_J` (the split (2.1.2),
 [§9.1](#91-the-compensation-identity-for-the-n-fold-marginal-eq-212)):
 
 $$
-\mathbb{E}_{\theta\sim q}\, b_{p_J}(\theta) \;=\; I_q^{(1)} \;+\; D_{\mathrm{KL}}\!\big(m_q \,\|\, m_{p_J}\big) \;-\; I_{p_J}. \tag{3.2.1}
+\mathbb{E}_{\theta\sim q}\, b_{p_J}(\theta) \;=\; I_q(\Theta;X_1) \;+\; D_{\mathrm{KL}}\!\big(m_q \,\|\, m_{p_J}\big) \;-\; I_{p_J}(\Theta;X_1). \tag{3.2.1}
 $$
 
-So `D_KL(m_q‖m_{p_J}) = 𝔼_q b_{p_J} − (I_q^{(1)} − I_{p_J})`, and the growth of `b` carries
+So `D_KL(m_q‖m_{p_J}) = 𝔼_q b_{p_J} − (I_q(Θ;X_1) − I_{p_J}(Θ;X_1))`, and the growth of `b` carries
 over to the marginal mismatch unless the subtracted term cancels it. Two assumptions close
 the gap:
 
 1. **Bounded resolvable dimension.** For sloppy hyperribbon models at fixed `σ`,
-   `D_eff = O(1)` in nominal `D` [read: A&M Fig. 5, `I⋆` flat once `D>3`; Quinn §2]. Then
-   `I_q^{(1)}` and `I_{p_J}` both lie in `[0, C_1]` with `C_1 = O(D_eff) = O(1)`, so the
+   `D_eff = O(1)` in nominal `D` [read: A&M Fig. 5, `I_{p*}(Θ;X_1)` flat once `D>3`; Quinn §2]. Then
+   `I_q(Θ;X_1)` and `I_{p_J}(Θ;X_1)` both lie in `[0, C_1]` with `C_1 = O(D_eff) = O(1)`, so the
    subtracted term is bounded and cannot cancel a numerator that grows with `D`. The
    numerator's worst case `B(p_J)` grows rapidly with `D` (§3.1), empirically and not at
    a proven rate.
@@ -644,7 +644,7 @@ lands on its atoms, but `O(1)` plus `D_KL(m_q‖m_{p*})` on data in the gaps
 [guess][^1-pstar-bias]. Whether that net favours `p*` is the open empirical question.
 
 [^3-finite]: The bound follows from (2.1.2) and (3.1.1):
-    `D_KL(m_q‖m_{p*}) = R_N^q(p*) − I_q^{(N)} ≤ C_N`. It is finite because `m_{p*}` is a
+    `D_KL(m_q‖m_{p*}) = R_N^q(p*) − I_q ≤ C_N`. It is finite because `m_{p*}` is a
     Gaussian mixture with full support on data space: the likelihood smears out the zeros
     between atoms, so the score never diverges the way a prior-space KL would.
 
@@ -708,7 +708,7 @@ mutual information (the boundary atoms persist; see below) [read: A&M §2.1; Qui
 
 **The two constructions.**
 
-- **Capacity / infomax, `p*`:** `argmax_π I(Θ;X_{1:N})`, the [least-favourable](../GLOSSARY.md#least-favourable-prior) / [minimax](../GLOSSARY.md#minimax)-**expected**-redundancy prior, in the [reference-prior](../GLOSSARY.md#reference-prior) lineage ([§3.5](#35-a-third-route-ordering-instead-of-budget)). Its
+- **Capacity / infomax, `p*`:** `argmax_π I_π(Θ;X_{1:N})`, the [least-favourable](../GLOSSARY.md#least-favourable-prior) / [minimax](../GLOSSARY.md#minimax)-**expected**-redundancy prior, in the [reference-prior](../GLOSSARY.md#reference-prior) lineage ([§3.5](#35-a-third-route-ordering-instead-of-budget)). Its
   `σ`-dependence is the atom count (`~√N` in 1-D, spec 000).
 - **NML / MDL, `p_proj`:** `p_NML(x) = max_θ p(x|θ)/Z` is the [normalized-maximum-likelihood](../GLOSSARY.md#normalized-maximum-likelihood-nml) distribution over the *data* (Shtarkov 1987), with normaliser `Z` and [parametric complexity](../GLOSSARY.md#parametric-complexity) `log Z` (Rissanen 1996; Grünwald 2007). `p_proj` is its [pushforward](../GLOSSARY.md#pushforward) through the MLE map `θ̂(x)` [read: A&M App. A.3; Quinn §5.2, as the "adaptive slab-and-spike"
   prior]: a *prior* over `θ`, distinct from the code `p_NML` it is built from (no prior's
@@ -862,7 +862,7 @@ the implementation:
 
 - **Budget `N` via effective noise.** `p*` is the capacity prior of the **budget-`N`
   channel** ([§1.1](#11-notation), [§3.1](#31-the-one-guarantee-worst-case-over-q)),
-  `argmax_π I(Θ;X_{1:N})`. By Gaussian sufficiency the `N` i.i.d. observations reduce to
+  `argmax_π I_π(Θ;X_{1:N})`. By Gaussian sufficiency the `N` i.i.d. observations reduce to
   one observation of the sample mean `x̄ ∼ 𝒩(y(θ), σ²/N · 𝟙_m)`, so the **entire pipeline
   is built at the effective noise `σ_eff = σ/√N`** — `p*`, the FIM and Jeffreys, the Bayes
   mixtures, and the score all use `σ_eff`. This is the route that makes the budget-`N`
@@ -883,7 +883,7 @@ the implementation:
   split (eq. (3.3.1)) is interpretive, used for the diagnostic decomposition, not
   for the headline number.
 - **Finite `N`.** The mismatch `D_KL(m_q‖m_π)` is the `O(1)` term that washes out as
-  `N→∞` (interior posteriors agree, `I_q^{(N)}~(D/2)\log N → ∞`). The test must live
+  `N→∞` (interior posteriors agree, `I_q ~ (D/2) log N → ∞`). The test must live
   at **finite `N`** — the "far from asymptopia" regime.
 
 ### 4.1 Model families
@@ -944,7 +944,7 @@ def build_model(family, D, m, sigma, N, *, taper=1.0, rotation=0.0, curvature=0.
 ### 4.2 Prior construction
 
 - **`p*` — discrete infomax prior of the budget-`N` channel.** Built at the **effective
-  noise `σ_eff = σ/√N`** (§4.0), so it realises `argmax_π I(Θ;X_{1:N})` by sufficiency.
+  noise `σ_eff = σ/√N`** (§4.0), so it realises `argmax_π I_π(Θ;X_{1:N})` by sufficiency.
   *Primary method (small `D`):* multi-dimensional Blahut–Arimoto on a `θ`-grid of `G` cells
   per axis, **reusing spec 000's BA loop** (`src/infomax/ba.py`) with the continuous-output
   `f_KL(θ)=D_KL(p(x|θ)‖m_π)` estimated by the kernel/Gaussian approximation of A&M App. A.2
@@ -1057,8 +1057,8 @@ For each cell `(model, D, σ, taper, rotation, c)`:
             R_s(π) = log p(x̄_s|θ_s) − log m_π(x̄_s)    # per-sample redundancy
         record R_s(π) for all π, plus `shape`.
 4.  R_N^q(π) = mean_s R_s(π);  report MCSE.
-5.  Decomposition cross-check: estimate I_q^{(N)} and D_KL(m_q‖m_π) separately,
-        verify R_N^q(π) = I_q^{(N)} + D_KL(m_q‖m_π)  (T1).
+5.  Decomposition cross-check: estimate I_q and D_KL(m_q‖m_π) separately,
+        verify R_N^q(π) = I_q + D_KL(m_q‖m_π)  (T1).
 ```
 
 **Why one draw of `x̄` at `σ_eff`, not `N` draws.** For the Gaussian, `x̄` is sufficient and
@@ -1115,7 +1115,7 @@ Test functions live in `tests/test_002_foreign_q_prediction.py`. The suite pins 
 | # | Property (spec §) | Verified by |
 |---|---|---|
 | P0 | **Spec-000 regression gate** ([§4.5](#45-code-reuse-and-changes-to-spec-000-modules)): `tests/test_000_static_infomax_fig1.py` passes unchanged after the shared-module edits (`ba.py`/`prior.py`/`atoms.py`); 000 eye test re-approved if its output moved | `pytest tests/test_000_static_infomax_fig1.py` (precondition) |
-| P1 | Redundancy decomposition `R_N^q(π) = I_q^{(N)} + D_KL(m_q‖m_π)` ([§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss), [§9.1](#91-the-compensation-identity-for-the-n-fold-marginal-eq-212)) | `test_t1_redundancy_decomposition` |
+| P1 | Redundancy decomposition `R_N^q(π) = I_q + D_KL(m_q‖m_π)` ([§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss), [§9.1](#91-the-compensation-identity-for-the-n-fold-marginal-eq-212)) | `test_t1_redundancy_decomposition` |
 | P2 | **Pipeline check** (demoted negative control): flat co-volume ⇒ `p_J = p_U` pointwise (FIM→quadrature), and `R(p_J)=R(p_U)` *exactly* under common random numbers, all `D`; `p*` gap recorded as a diagnostic, not gated ([§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note)) | `test_t2_pipeline_pJ_equals_pU` |
 | P3 | `p*` machinery (demoted tautology): equalizer `b(θ)=0` on `supp(p*)`, `≤0` off; `I_{p*}=C` ([§2.4](#24-the-falsification-structure-the-50-gono-go-of-the-note), [§4.2](#42-prior-construction)) | `test_t3_pstar_equalizer` |
 | P4 | Jeffreys construction: `p_J ∝ √det g` normalises; matches analytic `θ_1^{D-1}` in hypercone ([§4.2](#42-prior-construction)) | `test_t4_jeffreys_construction` |
@@ -1124,11 +1124,11 @@ Test functions live in `tests/test_002_foreign_q_prediction.py`. The suite pins 
 | P7a | `m_π(X_{1:N})`: discrete sum (p*) vs quadrature agree ([§4.4](#44-score-estimation)) | `test_t7a_mixture_marginal_consistency` |
 | P7b | `p*` solver: grid-BA vs atomic agree on `R` where both feasible ([§4.2](#42-prior-construction)) | `test_t7b_pstar_method_agreement` |
 | P7c | **Budget-`N` equivalence**: `p*` and `R` built at `σ_eff=σ/√N` agree with the explicit `N`-fold channel `θ→X_{1:N}` (small `D, N`) ([§4](#4-algorithm), [§4.4](#44-score-estimation)) | `test_t7c_budget_n_equivalence` |
-| P8 | Floors: `R_N^q(π) ≥ I_q^{(N)} ≥ 0` per cell; `q̄` minimises the **`c`-averaged** `R` ([§2.3](#23-q̄-is-the-ceiling-not-a-competitor)) | `test_t8_floors` |
-| P9 | A&M prior-side reproduction: `I_{p*}(D) ≥ I_{p_J}(D)` and `B_{p*}(D) ≤ B_{p_J}(D)`, all `D` ([§0](#0-context); A&M Fig. 5) | `test_t9_am_prior_side_dominance` |
+| P8 | Floors: `R_N^q(π) ≥ I_q ≥ 0` per cell; `q̄` minimises the **`c`-averaged** `R` ([§2.3](#23-q̄-is-the-ceiling-not-a-competitor)) | `test_t8_floors` |
+| P9 | A&M prior-side reproduction: `I_{p*} ≥ I_{p_J}` and `B(p*) ≤ B(p_J)` at every `D` ([§0](#0-context); A&M Fig. 5) | `test_t9_am_prior_side_dominance` |
 | P10 | Determinism: fixed seed ⇒ identical `R` arrays across runs ([§4.4](#44-score-estimation)) | `test_t10_seed_determinism` |
-| P11 | `p_proj` construction & sampler: MLE projection recovers `θ̂`; `p_NML` normalises; `I_{p_proj}(D) ≈ I_{p*}(D) ≫ I_{p_J}(D)` (Quinn Fig. 12) ([§3.4](#34-the-second-protagonist-infomax-vs-mdl), [§4.2](#42-prior-construction)) | `test_t11_pproj_construction` |
-| P12 | **AtomicPriors.jl references** ([§5.5](#55-atomicpriorsjl-reference-fixtures)): exp-decay `y`/FIM, `p*` atoms + `I_{p*}` + `B_{p*}`, `C_N` via `repeat`, and `mutual` of a fixed prior match the frozen Julia golden values | `test_t12_atomicpriors_reference` |
+| P11 | `p_proj` construction & sampler: MLE projection recovers `θ̂`; `p_NML` normalises; `I_{p_proj} ≈ I_{p*} ≫ I_{p_J}` at every `D` (Quinn Fig. 12) ([§3.4](#34-the-second-protagonist-infomax-vs-mdl), [§4.2](#42-prior-construction)) | `test_t11_pproj_construction` |
+| P12 | **AtomicPriors.jl references** ([§5.5](#55-atomicpriorsjl-reference-fixtures)): exp-decay `y`/FIM, `p*` atoms + `I_{p*}` + `B(p*)`, `C_N` via `repeat`, and `mutual` of a fixed prior match the frozen Julia golden values | `test_t12_atomicpriors_reference` |
 | P13 | Model construction: `y`-maps + FIM correct (autodiff vs §9.3 closed form; rotation `Q` and curvature knob act as specified) ([§4.1](#41-model-families)) | `test_t13_model_and_fim` |
 | P14 | `q`-family sampler: `q_c` mixes `coop`/`non` in proportion `c`, the `q`-shape tag is recorded, and `q̄=𝔼_c[q]` marginalises correctly ([§4.3](#43-foreign-q-family)) | `test_t14_qfamily_sampler` |
 | P15 | `p_ref` construction: equals `p_U` in the axis-aligned cone; flat marginal on the relevant coordinate under rotation; Schur complement `σ^{-2}` ([§3.5](#35-a-third-route-ordering-instead-of-budget), [§4.2](#42-prior-construction)) | `test_t15_pref_construction` |
@@ -1143,7 +1143,7 @@ Test functions live in `tests/test_002_foreign_q_prediction.py`. The suite pins 
 generalisation broke the base case — fixed before any 002 number is trusted.
 
 **T1 — Redundancy decomposition.** For a fixed cheap cell, estimate `R_N^q(π)`
-directly via (2.1.1) and independently via `I_q^{(N)} + D_KL(m_q‖m_π)` (separate MC of
+directly via (2.1.1) and independently via `I_q + D_KL(m_q‖m_π)` (separate MC of
 each term); assert agreement within combined MCSE. Defends against a mis-derived or
 mis-estimated score — the single tightest check that the headline quantity means
 what [§2.1](#21-the-score-redundancy--cumulative-held-out-predictive-log-loss) says.
@@ -1200,7 +1200,7 @@ sufficiency reduction of [§4.4](#44-score-estimation). Pairs with the AtomicPri
 reference (T12), the two together pinning the budget-`N` construction the §3.1 guarantee
 depends on.
 
-**T8 — Floors.** *(a) Per cell:* `R_N^q(π) ≥ I_q^{(N)} ≥ 0` for every prior `π`
+**T8 — Floors.** *(a) Per cell:* `R_N^q(π) ≥ I_q ≥ 0` for every prior `π`
 (the prior-dependent term `D_KL(m_q‖m_π) ≥ 0`), with the per-cell minimum attained by
 the prior matched to *that* `q_c`. *(b) Across `c`:* among the fixed priors, the
 `c`-averaged `R` is minimised by `q̄` ([§2.3](#23-q̄-is-the-ceiling-not-a-competitor)). A per-cell violation means the score
@@ -1208,8 +1208,8 @@ or the marginal estimator is wrong; a violation of (b) means the `q̄` construct
 is wrong. Note `q̄` need **not** win per cell — only on the `c`-average — so this
 test does *not* assert `R(q̄) ≤ R(π)` cellwise.
 
-**T9 — A&M prior-side reproduction.** Over the `D`-sweep, `I_{p*}(D) ≥ I_{p_J}(D)`
-and `B_{p*}(D) ≤ B_{p_J}(D)` (worst-case bias). This is A&M's *established* result
+**T9 — A&M prior-side reproduction.** At every `D` of the sweep, `I_{p*} ≥ I_{p_J}`
+and `B(p*) ≤ B(p_J)` (worst-case bias). This is A&M's *established* result
 (Fig. 5) — known shape, not our headline — so it is a legitimate quantitative check
 that the prior-side machinery (model, `p*`, MI/`b` estimators, Jeffreys) is correct
 before the foreign-`q` scoring runs.
@@ -1220,8 +1220,8 @@ arrays. Standard reproducibility guard (`manage-randomness.md`).
 **T11 — `p_proj` construction.** `p_NML ∝ max_θ p(x|θ)` integrates to a finite `Z`
 on the compact `Θ` and normalises, and the resulting `p_proj` reproduces the
 A&M/Quinn result that a *resolution-adapted* prior captures essentially the same
-information as `p*` and far more than Jeffreys: `I_{p_proj}(D) ≈ I_{p*}(D) ≫
-I_{p_J}(D)` over the `D`-sweep (Quinn Fig. 12). Validates the second
+information as `p*` and far more than Jeffreys: `I_{p_proj} ≈ I_{p*} ≫
+I_{p_J}` at every `D` of the sweep (Quinn Fig. 12). Validates the second
 budget-dependent prior ([§3.4](#34-the-second-protagonist-infomax-vs-mdl))
 before it enters the foreign-`q` contest; a `p_proj` whose MI tracks Jeffreys
 rather than `p*` signals a broken NML / MLE-projection construction. The sampler half
@@ -1232,7 +1232,7 @@ synthetic `x` placed near a chosen manifold point.
 golden values from `mcabbott/AtomicPriors.jl` ([§5.5](#55-atomicpriorsjl-reference-fixtures)),
 an independent Julia implementation of the same infomax objects: (a) exp-decay `y(θ)` and
 FIM at sampled `θ`; (b) the capacity prior `p*` (atom positions/weights up to label
-permutation, `I_{p*}`, `B_{p*}`) at a small-`D` exp-decay cell, from Julia `optim!`/`nlopt!`;
+permutation, `I_{p*}`, `B(p*)`) at a small-`D` exp-decay cell, from Julia `optim!`/`nlopt!`;
 (c) the **`N`-fold capacity `C_N`** from Julia `repeat` + `mutual`, against our `σ_eff` build
 — the budget-`N` definition's strongest external check; (d) `mutual` of a fixed prior.
 Agreement to the fixtures' recorded tolerance. A divergence flags a wrong model, FIM, MI
@@ -1263,7 +1263,7 @@ range ([§7](#7-open-questions) OQ-1).
 ### 5.3 Eye test (manual gate before the full suite)
 
 **Anchor — A&M (2023), Figure 5.** The figure plots, vs dimension `D` (same data,
-same noise across `D`): *(top)* mutual information `I(X;Θ)/log 2` — the optimal
+same noise across `D`): *(top)* mutual information `I_π(Θ;X_1)/log 2` — the optimal
 prior roughly **flat/high**, Jeffreys **declining to < 1 bit**; *(bottom)*
 worst-case bias `max_θ b(θ)/log 2` — `≈ 0` for `p*`, **rising** for Jeffreys. This
 is A&M's established result with an unambiguous known shape, freely available
@@ -1279,7 +1279,7 @@ correctness anchor for the prior-side machinery.
   `tests/figures/002_foreign_q_prediction/eyetest_am_fig5.png`: `I/log2` and
   `max_θ b/log2` vs `D`, one line per prior.
 - **Acceptance.** Human-reviewed against the *known* features: `I_{p*}` flat-to-
-  gently-varying while `I_{p_J}` declines; `B_{p*}≈0` while `B_{p_J}` rises with
+  gently-varying while `I_{p_J}` declines; `B(p*)≈0` while `B(p_J)` rises with
   `D`. A figure where Jeffreys does **not** degrade, or where `p*` is not flat,
   exposes a wrong FIM, a mis-normalised Jeffreys, or a broken MI/`b` estimator —
   before any foreign-`q` number is trusted. Outcome recorded in
@@ -1358,7 +1358,7 @@ runtime dependency to the suite:
   this bridge is asserted by the `y`/FIM fixture (T12a) before the `p*`/`C_N` fixtures are
   trusted.
 - **What is frozen.** (a) `y(θ)`, FIM at ~10 sampled `θ`; (b) `p*` atoms/weights, `I_{p*}`,
-  `B_{p*}` at `exp-decay, D∈{2,3}, σ=0.1`; (c) `C_N = sup_π I(Θ;X_{1:N})` via `repeat(L,N)`
+  `B(p*)` at `exp-decay, D∈{2,3}, σ=0.1`; (c) `C_N = sup_π I_π(Θ;X_{1:N})` via `repeat(L,N)`
   for `N∈{1,2,4}` at `D=2`; (d) `mutual` of a fixed grid prior. Julia is a **dev-only**
   dependency ([§7](#7-open-questions) OQ-7).
 
@@ -1584,14 +1584,14 @@ $$
 R_N^q(\pi)
  &= \mathbb{E}_{\theta\sim q}\int p(X_{1:N}\mid\theta)\,\log\frac{p(X_{1:N}\mid\theta)}{m_\pi(X_{1:N})}\,dX_{1:N} \\
  &= \mathbb{E}_{\theta\sim q}\int p(X_{1:N}\mid\theta)\Big[\log\frac{p(X_{1:N}\mid\theta)}{m_q(X_{1:N})} + \log\frac{m_q(X_{1:N})}{m_\pi(X_{1:N})}\Big]dX_{1:N} \\
- &= I_q^{(N)} + \int m_q(X_{1:N})\,\log\frac{m_q(X_{1:N})}{m_\pi(X_{1:N})}\,dX_{1:N} \\
- &= I_q^{(N)} + D_{\mathrm{KL}}\!\big(m_q \,\|\, m_\pi\big),
+ &= I_q(\Theta;X_{1:N}) + \int m_q(X_{1:N})\,\log\frac{m_q(X_{1:N})}{m_\pi(X_{1:N})}\,dX_{1:N} \\
+ &= I_q(\Theta;X_{1:N}) + D_{\mathrm{KL}}\!\big(m_q \,\|\, m_\pi\big),
 \end{aligned}
 \tag{9.1.1}
 $$
 
 where line 3 uses `𝔼_{θ∼q} p(X_{1:N}|θ) = m_q(X_{1:N})` in the second term and
-`I_q^{(N)} := 𝔼_{θ∼q} D_{KL}(p(X_{1:N}|θ)‖m_q)` in the first. The first term is
+`I_q(Θ;X_{1:N}) := 𝔼_{θ∼q} D_{KL}(p(X_{1:N}|θ)‖m_q)` in the first. The first term is
 prior-independent; the second is `≥ 0`, zero iff `m_π = m_q`. Minimising over fixed
 priors of the `c`-average gives `m_π = 𝔼_c[m_q]`, attained by `π = q̄` ([§2.3](#23-q̄-is-the-ceiling-not-a-competitor)).
 
@@ -2439,3 +2439,17 @@ coordinate lines crossing the manifold obliquely, and the manifold narrowing bel
 noise scale at both ends. The table's exp-decay column points to it. The panel's
 parameter box and `σ` are illustrative; the box is the new OQ-9, deferred to the §4
 pass at MB's request. No claims changed.
+
+### 2026-10-04 — Clarification (§1.1–§5, §9; mutual-information notation)
+
+Mutual information was written six ways (`I(Θ;X_1)`, `I_π(Θ;X_1)`, `I(π)`, `I_{p*}`,
+`I_q^{(N)}`, A&M's `I⋆`), none of which showed both whose information and about what.
+It is now `I_π(Θ;X_{1:N})`: the subscript names the distribution of `Θ` (a prior, or
+nature's `q`), the brackets name the variables, and the short form `I_π` means the
+budget-`N` case. The matched floor is `I_q(Θ;X_{1:N})`, written out where it is defined
+and in displayed equations. Single-observation quantities, where the bias pressure `b`
+is used at A&M's values (§3.1, (3.2.1), the eye test), are written `I_π(Θ;X_1)`, which
+makes explicit that §3.1's worst-case redundancy `I_π(Θ;X_1) + B(π)` is per
+observation. The worst-case bias is `B(π)` throughout (was also `B_{p*}(D)`), now
+defined in the `b_π` row. `results_table.json` column names are unchanged. No claims
+changed.
