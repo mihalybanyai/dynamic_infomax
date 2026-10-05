@@ -454,7 +454,7 @@ R_N^q(\pi)
 $$
 
 **Lower is better.** `R` is the excess [code length](../GLOSSARY.md#code-length) (log-loss) over an oracle that knows
-`θ`, with `R_N^q(π) ≥ I_q(Θ;X_{1:N}) ≥ 0`. The floor `I_q`, not `0`, is reached only by a
+`θ`[^2-oracle], with `R_N^q(π) ≥ I_q(Θ;X_{1:N}) ≥ 0`. The floor `I_q`, not `0`, is reached only by a
 predictor that matches nature's marginal, `m_π = m_q`.
 
 **Why expect a *maximiser* of mutual information to help minimise a loss?** Three
@@ -515,6 +515,20 @@ closed-form pieces (FIM, Jeffreys density, the hypercone `Δ = (D−1)/x` of
 [§9.2](#92-hypercone-posterior-deviation-eq-922), the Gaussian KL split of
 [§3.3](#33-score-decomposition-bias-vs-calibration-a-diagnostic)) feed the controls and
 unit tests (T4–T6, [§5.2](#52-test-descriptions)), not the headline number.
+
+[^2-oracle]: **Why excess over an oracle, not raw log-loss.** The two rank priors
+    identically: the oracle's term `𝔼_q log p(X_{1:N}|θ)` is the same for every prior.
+    The excess is reported because (a) it isolates what a prior can affect: raw log-loss
+    adds the noise entropy, `(Nm/2) log(2πeσ²)`, which shifts with `σ`, `N` and `m`
+    across the sweep and would swamp the differences between priors, while the excess
+    has a meaningful zero (the oracle) and floor (`I_q`); (b) it does not depend on how
+    the data are represented: the raw log-density of continuous data shifts with the
+    units of `x`, and scoring `X_{1:N}` or its sufficient statistic `x̄` gives different
+    raw numbers but the same excess, which is what lets [§4.4](#44-score-estimation)
+    simulate a single `x̄`; (c) the identities and bounds of §2.1 and
+    [§3.1](#31-the-one-guarantee-worst-case-over-q) are stated in it. The oracle exists
+    only in simulation. On real data only the raw held-out log-likelihood can be
+    computed, and its differences between priors equal the differences in excess.
 
 ### 2.2 What "wins" means — and what cannot be asserted
 
@@ -1562,7 +1576,7 @@ stays small but a `q`-subset analysis can re-key off it).
   equivalence of MDL, Bayes/Jeffreys, and capacity codes ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)).
 - Clarke, B. S. & Barron, A. R. (1990). Information-theoretic asymptotics of Bayes
   methods. *IEEE Trans. IT* 36(3), 453–471.
-  [doi:10.1109/18.50382](https://doi.org/10.1109/18.50382). The stochastic-complexity
+  [doi:10.1109/18.54897](https://doi.org/10.1109/18.54897). The stochastic-complexity
   expansion shared by the capacity and NML codes ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)).
 - In-repo: `notes/prediction_objective_for_priors.md` (the maths this spec
   formalises), `notes/infomax_two_hats_and_directions.md` (the two-hat diagnosis),
@@ -2453,3 +2467,17 @@ makes explicit that §3.1's worst-case redundancy `I_π(Θ;X_1) + B(π)` is per
 observation. The worst-case bias is `B(π)` throughout (was also `B_{p*}(D)`), now
 defined in the `b_π` row. `results_table.json` column names are unchanged. No claims
 changed.
+
+### 2026-10-05 — Clarification (§2.1; why redundancy, not raw log-loss)
+
+Footnote `[^2-oracle]` on §2.1's "excess over an oracle": the two scores rank priors
+identically; the excess is reported for its meaningful zero across the sweep, its
+independence of the data representation (which licenses §4.4's single-`x̄` simulation),
+and because §2.1's and §3.1's identities and bounds are stated in it. Raised by MB in
+chat. No claims changed.
+
+### 2026-10-05 — Correction (§8; Clarke & Barron 1990 DOI)
+
+The DOI given for Clarke & Barron (1990) resolved to an unrelated paper (Ozarow 1990,
+*IEEE TIT* 36:156–161). Replaced by `10.1109/18.54897`, checked against Crossref. Found
+while building `literature/`. No claims changed.
