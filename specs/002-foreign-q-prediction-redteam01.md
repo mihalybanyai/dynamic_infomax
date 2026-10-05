@@ -70,6 +70,13 @@ the OQ-5 resolution was not propagated to the defining sentence.)
 consistently; include `p_proj` in §2.2's set; keep per-competitor ΔR columns
 so the report can show which competitor is binding per cell.
 
+> C: (2026-10-05) Verified at MB's request in chat: `min_{π'} δR(p*,π') = R(p*) − max_{π'} R(π')`,
+> the gap to the worst competitor. Fixed in the §2 rewrite of 2026-10-05: §2.4 defines the
+> gap to the best deployable prior as `max_{π'} δS(π,π')`, for each protagonist and both
+> scores, and drops the pass/fail reading (MB decided in chat that no overall winner is
+> declared). The secondary point is moot: `p_proj` is now a protagonist, not a competitor.
+> Still to propagate to §3.6, §5.1, §6.1 and §6.3 (listed in the spec's revision log).
+
 ---
 
 ### F2: §4.2 `build_pproj` does not sample `p_proj` — the convolution sampler under-weights exactly the boundary halos that define the co-protagonist [severity: high]
