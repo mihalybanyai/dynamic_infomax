@@ -2,8 +2,8 @@
 
 This is the generative model of NATURE (the external environment), NOT what
 the agent assumes — exactly as in spec 001. The agent never sees q or the
-q-family knob c; it reasons through one fixed prior
-pi in {p*, p_J, p_U, p_LN} (plus q-bar as a reference ceiling) chosen from
+nature selector nu; it reasons through one fixed prior
+pi in {p*, p_lat, p_proj, p_J, p_U, p_LN, p_ref} (plus q-bar as a reference ceiling) chosen from
 the likelihood geometry and the data budget alone, never coupled to q. That
 decoupling (agent != nature) is the whole point: it is what lets the
 held-out predictive log-loss test whether p*'s A&M-unbiasedness transfers to
@@ -12,9 +12,9 @@ from this nature-only diagram and described in prose.
 
 Structure:
 
-  - c (q-family / "cooperativeness" knob): fixes which foreign nature q is
-    sampled, swept from cooperative (q ~ m_{p*}) to non-cooperative (mass in
-    p*'s atom gaps / on the thin end). Fixed input, OUTSIDE the plates.
+  - nu (the nature, spec sec 2.3): fixes which foreign nature q is sampled -- a
+    tilt t of the family q_t ~ (sqrt det g)^t, a stress nature, or a
+    self-sampling control. Fixed input, OUTSIDE the plates.
   - Outer plate (s = 1, ..., S_q): independent draws of the data-generating
     density q_s and the truth theta_s ~ q_s. The likelihood geometry
     (taper, rotation, dimension D, noise sigma) is fixed across draws and is
@@ -22,8 +22,8 @@ Structure:
   - theta ~ q: nature's true parameter for this draw.
   - Training plate (i = 1, ..., N): the observations x_i ~ p(x|theta) the
     agent conditions on to form its posterior.
-  - x' : a fresh held-out observation x' ~ p(x|theta), the prediction target
-    the log-loss scores. Observed only at scoring time, never conditioned on
+  - x' : a fresh held-out observation x' ~ p(x|theta), the target of the
+    one-step score r_N. Observed only at scoring time, never conditioned on
     (cf. spec 001's shaded-node convention).
 
 Run:    python diagrams/002-foreign-q-prediction-pgm.py
@@ -33,18 +33,18 @@ import daft
 
 pgm = daft.PGM()
 
-# q-family knob c: an input parameter, fixed across q-samples, so it sits
+# Nature selector nu: an input parameter, fixed across q-samples, so it sits
 # OUTSIDE the outer plate. Drawn as a fixed (double-circle) node.
-pgm.add_node("c", r"$c$", x=0.5, y=2.0, fixed=True)
+pgm.add_node("nu", r"$\nu$", x=0.5, y=2.0, fixed=True)
 
-# Generative chain: q ~ c, theta ~ q, then both the training x_i and the
+# Generative chain: q ~ nu, theta ~ q, then both the training x_i and the
 # held-out x' are drawn from p(.|theta).
 pgm.add_node("q",     r"$q$",      x=2.5, y=3.0)
 pgm.add_node("theta", r"$\theta$", x=2.5, y=2.0)
 pgm.add_node("x",     r"$x_i$",    x=1.8, y=1.0, observed=True)
 pgm.add_node("xp",    r"$x'$",     x=3.4, y=1.0, observed=True)
 
-pgm.add_edge("c",     "q")
+pgm.add_edge("nu",    "q")
 pgm.add_edge("q",     "theta")
 pgm.add_edge("theta", "x")
 pgm.add_edge("theta", "xp")
