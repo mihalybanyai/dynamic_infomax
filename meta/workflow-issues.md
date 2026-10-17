@@ -239,6 +239,11 @@ for the pause to be skipped, with the default remaining halt-at-gate
 even in autonomous sessions (the gate is the only effort-tier check;
 halting and resuming on the human's reply is the acceptable cost).
 
+*2026-10-17:* effort is now set at spawn (`skills/red-team.md` §2), so
+the gate is no longer the effort check. It still guards the model
+version and the roster, so the reconciliation is still needed, at lower
+stakes.
+
 ### Review brevity and epistemic-tag conventions after 3 sessions [conventions]
 
 *Opened 2026-10-01*
