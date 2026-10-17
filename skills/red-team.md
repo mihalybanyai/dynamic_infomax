@@ -28,44 +28,49 @@ report details); and stage-specific notes on resolving. The stage workflows in
 
 ## 1. The spawn-configuration gate (main agent, before spawning)
 
-The sub-agent inherits this session's model and effort tier. Effort is not
-machine-checkable from inside the agent, and the model *version* cannot be selected at
-spawn, so the only guard is to put the configuration in front of the human and get
-explicit ratification. Before spawning, the main agent MUST:
+The main agent sets the sub-agent's effort at spawn (§2), so this session's own effort
+tier does not matter. The model is different: the sub-agent inherits this session's
+model, and the model *version* cannot be selected at spawn (the `Agent` tool's `model`
+parameter picks a family, not a version). The gate therefore puts the model and the
+roster in front of the human for explicit ratification. Before spawning, the main agent
+MUST:
 
 1. **Print the roster.** Reproduce the "Red-team reviewer roster" table from
    `AGENTS.md`, with its **Last verified** date, and print this session's declared model
    identity.
-2. **Print the inheritance caveats and ask to proceed:**
+2. **Print the spawn check and ask to proceed:**
 
    > Red-team spawn check:
    > - Model: this session is `<declared identity>`; the sub-agent inherits it. For the
    >   diversity pass on the *other* approved model, stop now and re-run this trigger
    >   from a session set to that model (a separate thread).
-   > - Effort: the sub-agent inherits this session's effort tier. Policy is the highest
-   >   available tier; this is NOT machine-checkable. If this session is not at the
-   >   highest tier, stop now, raise it, and re-run this trigger.
+   > - Effort: the sub-agent will be spawned at `<effort>`, the roster's highest tier.
    > - Replying "go" both spawns the red team **and** ratifies the roster above as
    >   current: its Last verified date will be set to today. If the roster is stale (a
    >   newer model shipped, a tier changed), fix the table first, then reply "go".
 
-3. **Wait for an explicit "go".** Do not call the `Task` tool until the human replies.
+3. **Wait for an explicit "go".** Do not call the `Agent` tool until the human replies.
    Conversational acknowledgement is not "go".
 4. **On "go":** set the roster's **Last verified** date in `AGENTS.md` to today and
    commit it with the red-team artefacts (the human's "go" *is* the verification), then
    spawn (§2).
 
-The gate is the sole guard for effort and the cross-session guard for model version;
-the sub-agent's identity check (§3, rule 1) is the agent-verifiable backstop.
+The gate is the cross-session guard for model version and the human check that the
+roster is current; the sub-agent's identity check (§3, rule 1) is the agent-verifiable
+backstop for the model.
 
 ## 2. Spawning (main agent)
 
-Use the `Task` tool with the stage skill's prompt template. Substitute the stage's
-placeholders and the gate's: the **approved roster** (`<APPROVED_ROSTER>`), the
-human-ratified **effort tier** (`<EFFORT_TIER>`) and the roster's **Last verified** date
-(`<ROSTER_VERIFIED_DATE>`). Every template tells the sub-agent to read §3 below and the
-stage's sub-agent brief; do not paste their contents into the prompt instead, so each
-rule keeps one home.
+Call the `Agent` tool with:
+
+- **`effort`**: the roster's "Highest effort tier", lower-cased (`max`). This skill is
+  the explicit instruction the tool requires before `effort` is set.
+- **`model`**: unset, so the sub-agent inherits the model ratified at the gate.
+- **`prompt`**: the stage skill's prompt template. Substitute the stage's placeholders
+  and these: the **approved roster** (`<APPROVED_ROSTER>`), the **effort** you passed
+  (`<EFFORT_TIER>`) and the roster's **Last verified** date (`<ROSTER_VERIFIED_DATE>`).
+  Every template tells the sub-agent to read §3 below and the stage's sub-agent brief;
+  do not paste their contents into the prompt instead, so each rule keeps one home.
 
 ## 3. Sub-agent rules (every red-team sub-agent follows these)
 
@@ -116,7 +121,7 @@ rule keeps one home.
 
     Reviewer: red-team sub-agent
     Reviewer model (declared identity): <the identity printed under rule 1>
-    Effort tier: <EFFORT_TIER> (human-set; not machine-verified)
+    Effort tier: <EFFORT_TIER> (set at spawn by the main agent; not verifiable here)
     Roster verified: <ROSTER_VERIFIED_DATE>
     Date: <YYYY-MM-DD>
     Spec version: <git commit hash if available>

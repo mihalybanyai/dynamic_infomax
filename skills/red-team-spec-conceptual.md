@@ -7,9 +7,9 @@
 
 ## Prompt template
 
-Run the spawn-configuration gate (`skills/red-team.md` §1), then spawn with this,
-substituting `<FIRST_SEC>` and `<LAST_SEC>` with the section numbers bounding the
-conceptual content:
+Run the spawn-configuration gate and spawn as in `skills/red-team.md` §1–§2, with
+this prompt, substituting `<FIRST_SEC>` and `<LAST_SEC>` with the section numbers
+bounding the conceptual content:
 
 ```
 You are a hostile reviewer of Sections <FIRST_SEC>–<LAST_SEC> of the conceptual and

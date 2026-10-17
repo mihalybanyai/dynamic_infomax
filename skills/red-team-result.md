@@ -20,7 +20,7 @@ any earlier stage; the routing tags name where.
 
 ## Prompt template
 
-Run the spawn-configuration gate (`skills/red-team.md` §1), then spawn with:
+Run the spawn-configuration gate and spawn as in `skills/red-team.md` §1–§2, with:
 
 ```
 You are reviewing the experimental result documented in <EXPERIMENT_DIR>/REPORT.md.

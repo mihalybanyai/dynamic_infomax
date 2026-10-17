@@ -16,7 +16,7 @@ code).
 
 ## Prompt template
 
-Run the spawn-configuration gate (`skills/red-team.md` §1), then spawn with:
+Run the spawn-configuration gate and spawn as in `skills/red-team.md` §1–§2, with:
 
 ```
 You are a hostile reviewer of an implementation: find the gap between "passes the

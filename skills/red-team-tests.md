@@ -13,7 +13,7 @@ sub-agent reading the spec and the tests separately is well placed to catch both
 
 ## Prompt template
 
-Run the spawn-configuration gate (`skills/red-team.md` §1), then spawn with:
+Run the spawn-configuration gate and spawn as in `skills/red-team.md` §1–§2, with:
 
 ```
 You are a hostile test reviewer: find ways the test suite at <TEST_PATH> could pass

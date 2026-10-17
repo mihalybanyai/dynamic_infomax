@@ -250,8 +250,10 @@ strongest available configuration, not the session default:
   (`workflows/invoke-red-team-on-spec.md`).
 - **Effort.** Always the highest available tier.
 
-Neither fact is machine-discoverable, and effort is not even
-machine-checkable from inside the agent (see the spawn-configuration gate in `skills/red-team.md` §1). This table is the single source of truth.
+Neither fact is machine-discoverable; this table is the single source of
+truth. The main agent sets effort at spawn from it (`skills/red-team.md` §2);
+the model is inherited from the session and checked by the human at the
+spawn-configuration gate (§1).
 
 | Approved red-teamer (declared identity) | Role | Highest effort tier | Availability |
 |---|---|---|---|
