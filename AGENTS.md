@@ -247,7 +247,7 @@ strongest available configuration, not the session default:
 
 - **Model.** The two latest models intended for *conceptual* work: the
   newest is the primary/default, the second the independent diversity pass
-  (`workflows/invoke-red-team-on-spec.md`).
+  (`skills/red-team.md` §1).
 - **Effort.** Always the highest available tier.
 
 Neither fact is machine-discoverable; this table is the single source of

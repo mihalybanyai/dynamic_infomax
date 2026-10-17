@@ -23,8 +23,9 @@ A red-team breaks the anchor with a fresh sub-agent under adversarial framing.
 
 Each stage skill has the same parts: when to use it; a short prompt template; a
 **sub-agent brief** (reading order and scope, checklist, stage-specific finding rules,
-report details); and stage-specific notes on resolving. The stage workflows in
-`workflows/invoke-red-team-on-*.md` orchestrate a whole pass.
+report details); and stage-specific notes on resolving. A whole pass is orchestrated
+by `workflows/invoke-red-team.md` (shared stages) and `invoke-red-team-on-*.md` (per
+stage).
 
 ## 1. The spawn-configuration gate (main agent, before spawning)
 
@@ -167,8 +168,8 @@ what they answer.
 - **`> M?:`**: the human cannot evaluate the finding yet; the question itself needs
   unpacking, not just its answer. It is discussed in chat before any `> C:`: Claude gives
   an explainer calibrated to what the evaluation needs, and the human upgrades to `> M:`
-  once able to judge. Recurring concepts are promoted to `tutorials/` (see the stage
-  workflow).
+  once able to judge. Recurring concepts are promoted to `tutorials/`
+  (`workflows/invoke-red-team.md`, *`> M?:` explanations*).
 - **`> C:`**: what was actually done: the commit, the artefacts touched, status flips and
   revision-log entries, or that the finding was dismissed or routed upstream.
 
@@ -201,7 +202,8 @@ Each finding ends in one of three ways, recorded in its `> C:`:
 
 Status flips follow the project's direction asymmetry: Claude flips backwards on
 revision, the human flips forwards on review. The report is committed together with the
-changes it caused. Stage-by-stage processing is in `workflows/invoke-red-team-on-*.md`.
+changes it caused. Stage-by-stage processing is in `workflows/invoke-red-team.md` and
+`invoke-red-team-on-*.md`.
 
 ## 6. When to skip
 

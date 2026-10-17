@@ -70,6 +70,13 @@ on, other workflows it composes with.
 - `wake-up-claude-code.md` — session start for Claude Code (desktop
   panel or CLI)
 - `wake-up-claude-chat.md` — session start for chat.claude.ai
+- `implement-spec.md` — from a red-teamed test suite to a passing,
+  documented implementation
+- `invoke-red-team.md` — the shared core of every red-team pass:
+  invoke, annotate, decide, spec edits
+- `invoke-red-team-on-spec.md`, `invoke-red-team-on-tests.md`,
+  `invoke-red-team-on-impl.md`, `invoke-red-team-on-result.md` — what
+  each pass adds; each builds on `invoke-red-team.md`
 
 ## Maintenance
 

@@ -21,7 +21,10 @@ read `skills/red-team.md` §3 (sub-agent rules) and the "Sub-agent brief" sectio
 ### Reading order and scope
 
 Read the spec, and any files it references (notes, prior specs, diagrams). Then attack
-it.
+it. Primary sources are PDFs in `resources/`: use them for any check that depends on a
+source paper. Other references are mapped in `literature/`: look one up only when a
+finding needs a derivation from it verified, and do not ingest the bibliography up
+front.
 
 ### Checklist
 

@@ -89,15 +89,9 @@ code. The artefact in "What the … gets right" is the implementation.
 ## After the report
 
 Processing follows the four stages of `workflows/invoke-red-team-on-impl.md` (decide,
-update spec if needed, regenerate code and docs, re-run tests one by one), because
-findings here can touch up to three artefacts and regenerated code must be verified
-against the suite before the pass closes. Modified code files flip to `pending-tests` in
-`CODEGEN_LOG.md` and back to `done` once all tests pass.
-
-**If a test fails on the re-run**, report it and decide with the human; the workflow
-does not pre-commit to a cause. The edit may be wrong (revisit its `> C:`), the failure
-may be a new finding the red-team missed (add it as the next F-number and triage it), or
-the test may be wrong (route as `[test-gap]`).
+update spec if needed, regenerate code and docs, re-run tests one by one, including what
+to do when a test fails), because findings here can touch up to three artefacts and
+regenerated code must be verified against the suite before the pass closes.
 
 **Additional prerequisites** (beyond `skills/red-team.md` §6): the spec is `reviewed`
 in every section the implementation covers, and the test suite is complete and passing.

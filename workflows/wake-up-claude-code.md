@@ -91,8 +91,8 @@ workflows but sentence-templates for the `[[TASK_DESCRIPTION]]` slot:
   `skills/write-math-spec.md`, [next step it unlocks] is now
   permitted. Proceed with [next step]."
 
-- **Invoke a red-team pass**: see the (forthcoming)
-  `workflows/invoke-red-team-on-spec.md`.
+- **Invoke a red-team pass**: see `workflows/invoke-red-team.md` and its
+  stage workflows.
 
 ## Related
 
