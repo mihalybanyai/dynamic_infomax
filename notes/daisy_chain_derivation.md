@@ -16,7 +16,7 @@ Two interlocked dynamics: the representation re-coarse-grains each cycle (MB), t
 |---|---|---|
 | **Derivation step at line 316** (this document's focus) | Empirical form works, derived form doesn't, no clean justification | Calling the MB step normative |
 | Explicit dependence on $m/n$ | Hidden by the synthetic-observation trick | Claims about horizon effects |
-| Uncertainty over $n$ | Mentioned, not addressed | Realistic agent models |
+| Uncertainty over $n$ | Bounded for prior choice under log-loss (2026-10-20): mixing the budget-specific priors $\pi_{n_k}$ over a grid of budgets with weights $w_k$ costs at most $\log(1/w_k)$ more than $\pi_{n_k}$ at budget $n_k$, on every nature, since $m_{\mathrm{mix}}\ge w_k\,m_{\pi_{n_k}}$. Open off the grid, under decision losses, and where the agent must commit (capacity limits, experimental design) | Realistic agent models |
 | EC update rule | Gestured at (Młynarski-style); not written down | Closing the loop formally |
 | Misspecification signal definition | "Expected − realised bits" but no single equation | Same |
 | MI as a special case of representational planning | Section empty (`\todo`) | Embedding claim |
@@ -344,3 +344,16 @@ external/forced one, which stays the project's distinctive.
   slope (solid). The leap is the claim that nobody does the *external* β-tuner — A&VR §6.2 shows
   the *internal* one exists, so the literature scan should be "is there an external one?" before
   this is called a gap.
+- **The signal (7.1) and EC (7.2) are log-loss objects** (added 2026-10-20, from a chat
+  thread). Under log-loss, Bayes concentrates on the model element closest in KL to the data
+  [recalled: Berk 1966], which is also the element the score prefers, so misspecification never
+  forces a change of update. Under a decision loss (a threshold act rather than a forecast) the
+  KL-closest element need not decide best. Example: truth $P(\text{rain})=0.6$, act iff
+  $P>\tfrac12$, two atoms $\{0.45, 0.99\}$; Bayes settles on $0.45$, wrong on 60% of days,
+  while $0.99$ is wrong on 40%. A misspecified agent then has to choose its update: Bayes, a
+  loss-weighted (Gibbs) posterior [recalled: Bissiri, Holmes & Walker 2016], or tempered Bayes
+  with learning rate $\eta<1$ [read: van Erven, Grünwald, Mehta, Reid & Williamson 2015, *JMLR*
+  16, Ex. 2.2]. Whether hedging over hypotheses stays cheap is governed by *stochastic
+  mixability*, a joint property of loss, model and natures [read: ibid., eq. (8)]. Not needed
+  while the chain is scored by log-loss; it matters once the readout becomes a decision, which
+  the causal-discovery note's §3 also depends on.
