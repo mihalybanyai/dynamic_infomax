@@ -94,6 +94,9 @@ prediction ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)). A third, `p_lat
 minimax prior for predicting observation `N+1` after `N` (Komaki 2011); it comes with a
 second score, the one-step `r_N`, next to the cumulative `R_N`
 ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss), [§2.2](#22-the-cast)).
+Mis-budgeted copies of `p*`, built for a tenth and for ten times the true budget, measure
+what knowing the budget is worth to an agent that commits to one prior
+([§2.2](#22-the-cast)).
 
 [^0-detective]: **The example in detail.** It is A&M's square hypercone
     ([§1.2](#12-generative-model), [§9.2](#92-hypercone-posterior-deviation-eq-922)) dressed as a detective case. A *scenario* is one point
@@ -229,10 +232,11 @@ second score, the one-step `r_N`, next to the cumulative `R_N`
 | `m_q(X_{1:N})` | Nature's `N`-fold data marginal `∫ p(X_{1:N}\|θ) q(dθ)`. |
 | `t` | Tilt of nature's family `q_t ∝ (√det g)^t` ([§2.3](#23-the-natures)): `t=1` is Jeffreys' own world, `t=0` uniform on `Θ`, `t<0` the thin end. |
 | `ν` | The nature of a cell: a tilt `t`, a stress nature, or a self-sampling control ([§2.3](#23-the-natures)); it selects `q`. |
-| `π` | Agent's prior, one of `{p*, p_lat, p_proj, p_J, p_U, p_LN, p_ref}`, with `q̄` as reference ceiling ([§2.2](#22-the-cast)). |
+| `π` | Agent's prior, one of `{p*, p_lat, p_proj, p*_{N/10}, p*_{10N}, p_J, p_U, p_LN, p_ref}`, with `q̄` as reference ceiling ([§2.2](#22-the-cast)). |
 | `p*` | Infomax ([capacity](../GLOSSARY.md#channel-capacity)-achieving) prior of the budget-`N` channel `θ→X_{1:N}`: `argmax_π I_π(Θ;X_{1:N})`, equivalently the single-observation achiever at noise `σ/√N` ([§4.2](#42-prior-construction)). Discrete[^1-discrete]. |
 | `p_proj` | Projected-ML / NML prior: the [pushforward](../GLOSSARY.md#pushforward) of the [NML distribution](../GLOSSARY.md#normalized-maximum-likelihood-nml) through the MLE map `θ̂(x)` ([§3.4](#34-the-second-protagonist-infomax-vs-mdl), [§4.2](#42-prior-construction)). |
 | `p_lat` | Latent information prior at `(N, 1)`: `argmax_π I_π(Θ;X_{N+1}\|X_{1:N})`, the minimax prior for the one-step score ([§2.2](#22-the-cast)). `p*` is the same construction at `(0, N)`. |
+| `p*_M` | Mis-budgeted `p*`: the `p*` of budget `M`, used at the true budget `N`. The cast carries `M = N/10` and `M = 10N`; Jeffreys is the `M → ∞` limit ([§2.2](#22-the-cast)). |
 | `p_J` | [Jeffreys prior](../GLOSSARY.md#jeffreys-prior) `∝ √{det g(θ)}`, normalised on `Θ`. |
 | `p_U` | Uniform on the parameter box `Θ`. |
 | `p_LN` | Normal in `θ`, i.e. log-normal in the rate `k_μ = e^{-θ_μ}` (A&M Eq. 10): `∝ Π_μ e^{-(θ_μ-θ̄)²/2τ²}` (A&M's `σ̄` is `τ`). |
@@ -283,8 +287,9 @@ Each *cell*, one setting of model, `D`, `σ`, `N`, the geometry knobs and the na
 only `X_{1:N}` and is scored on predicting `x'` and, cumulatively, each `x_{i+1}` from
 `x_{1:i}` ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss)).
 
-**Agent ≠ nature.** The agent's prior `π ∈ {p*, p_lat, p_proj, p_J, p_U, p_LN, p_ref}` (with `q̄` as
-reference ceiling) is chosen from the likelihood geometry and the budget `N`/`σ` alone,
+**Agent ≠ nature.** The agent's prior `π ∈ {p*, p_lat, p_proj, p*_{N/10}, p*_{10N}, p_J, p_U, p_LN, p_ref}` (with `q̄` as
+reference ceiling) is chosen from the likelihood geometry and a budget alone (the true
+`N`/`σ`, or a wrong one for the mis-budgeted `p*`),
 **decoupled from `q`**, as in spec 001. The decoupling is what makes the held-out score
 test transfer rather than self-consistency, and why `π` is absent from the diagram.
 
@@ -450,8 +455,8 @@ asymmetry is a gradient that steepens with `D` against an atom spacing that does
 Every prior is scored on two scores, each a held-out log-loss in excess of an oracle that
 knows `θ`: the cumulative `R_N` (the mainline) and the one-step `r_N`
 ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss)). The cast has three
-budget-dependent protagonists, `p*`, `p_lat` and `p_proj`, against deployable priors
-([§2.2](#22-the-cast)). Nature is swept over a family that passes through several priors'
+budget-dependent protagonists, `p*`, `p_lat` and `p_proj`, against deployable priors and
+mis-budgeted copies of `p*` ([§2.2](#22-the-cast)). Nature is swept over a family that passes through several priors'
 own worlds ([§2.3](#23-the-natures)). No overall winner is declared
 ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)).
 
@@ -588,6 +593,7 @@ the one it is minimax for, and away on the other.
 | `p*` | capacity prior of the budget-`N` channel, `argmax_π I_π(Θ;X_{1:N})`; Komaki's latent information prior at `(0, N)` | `R_N` | minimax for `R_N`, value `C_N` ([§3.1](#31-the-one-guarantee-worst-case-over-q)) | yes[^1-discrete] |
 | `p_lat` | latent information prior at `(N, 1)`, `argmax_π I_π(Θ;X_{N+1}\|X_{1:N})` [read: Komaki 2011 §3] | `r_N` | minimax for `r_N` for finite outcome spaces [read: Komaki 2011 Thm 2; Fogel & Feder 2024 Thm 1]; for Gaussian data expected but unproven [read: Komaki 2011 §4] | open; for some budgets near-full support [read: Fogel & Feder 2024 §VII] |
 | `p_proj` | [pushforward](../GLOSSARY.md#pushforward) of the [NML](../GLOSSARY.md#normalized-maximum-likelihood-nml) distribution through the MLE map ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)) | neither | NML is minimax for the pointwise regret of the `N`-sequence; `p_proj` for neither score | no |
+| `p*_{N/10}`, `p*_{10N}` | `p*` built for a tenth or ten times the true budget: an agent that knows the construction but not its budget, and commits to one resolution | `R_M`, at the wrong budget | none at `N` | yes |
 | `p_J`, `p_U`, `p_LN`, `p_ref` | the [deployable priors](../GLOSSARY.md#deployable-prior): Jeffreys, uniform, log-normal, ranked reference (`p_ref` in the hypercone families only, OQ-8) | — | none | no |
 | `q̄` | matched to the average of the swept natures | — | the ceiling on both scores ([§2.5](#25-controls-the-ceiling-and-self-sampling)) | — |
 
@@ -596,6 +602,27 @@ different windows of the learning curve: observations `1…N`, and observation `
 `N` ([`literature/komaki-school.md`](../literature/komaki-school.md)). `p_lat` is built by a
 Blahut–Arimoto variant whose update uses the difference of the per-`θ` divergences at
 budgets `N+1` and `N` ([§4.2](#42-prior-construction), to add).
+
+**Mis-budgeted `p*`.** They measure what knowing the budget is worth, for agents that
+commit to one prior. An agent that may instead mix the priors built for many budgets
+`N_k`, with weights `w_k`, does at most `log(1/w_k)` worse than `p*_{N_k}` at budget `N_k`
+on every [nature](../GLOSSARY.md#nature), because its data marginal is at least
+`w_k·m_{p*_{N_k}}` everywhere. Against such an agent knowing `N` is worth a few nats
+([`notes/budget-value-of-information.md`](../notes/budget-value-of-information.md) §2).
+For one committed prior, a wrong resolution costs on both sides (note §3):
+
+- *Too coarse* (`M < N`): the [atoms](../GLOSSARY.md#atom) lie farther apart than the data
+  resolve, each observation is charged the divergence to the nearest atom, and the loss
+  grows linearly in `N/M`.
+- *Too fine* (`M > N`): the prior tilts toward the states where more detail is resolvable
+  at `M` than at `N`, the [co-volume](../GLOSSARY.md#co-volume) gradient of the directions
+  that cross resolution between the two budgets. The tilt helps natures concentrated where
+  that detail is and hurts the others. In a reduced hypercone, `p*_1` beats `p*_{16}` at
+  budget 16 on a nature uniform in the relevant coordinate (note §3).
+
+So the sign of the budget's value is a result, like every summary of
+[§2.4](#24-what-is-reported-and-what-cannot-be-asserted). Jeffreys is the `M → ∞` end of
+the fine side.
 
 ### 2.3 The natures
 
@@ -617,7 +644,7 @@ natures therefore make every lean visible instead of hiding one.
   - *a smooth interior nature, varying on scales below one [Fisher length](../GLOSSARY.md#fisher-length) at budget `N`*:
     against `p*`'s discreteness, and likely in favour of a `p_lat` with fuller support
     [guess].
-- **Self-sampling controls**: nature equal to each of the seven priors in turn
+- **Self-sampling controls**: nature equal to each prior of the cast in turn
   ([§2.5](#25-controls-the-ceiling-and-self-sampling)).
 
 The parametrisation of the stress natures is pinned in [§4.3](#43-foreign-q-family). Each
@@ -637,6 +664,11 @@ score `S ∈ {R_N, r_N}`:
 - **the pairwise gaps** between protagonists, `δS(p*, p_lat)`, `δS(p*, p_proj)` and
   `δS(p_lat, p_proj)`;
 - **the gap to the ceiling**, `S(π) − S(q̄)`.
+
+For `p*` alone, a fourth summary measures what knowing the budget is worth
+([§2.2](#22-the-cast)): **the gap to the best mis-budgeted `p*`**,
+`Δ^{bud}_S = S(p*) − min_{M ∈ {N/10, 10N}} S(p*_M)`, negative when knowing the budget to
+within a factor of ten helps.
 
 All are reported against the tilt `t`, across the stress panel, and at the self-sampling
 controls, for each model, `D`, `σ` and `N`.
@@ -902,6 +934,14 @@ and vary across `Θ`, so no ranking is given: choosing one is OQ-8
 ([§7](#7-open-questions)), and until then `p_ref` competes in the hypercone families
 only.
 
+[TODO] Recast the cone's role. Where the relevant/irrelevant split is the same across
+`Θ`, as in the axis-aligned and rotated cones, the ranking follows from the likelihood,
+`p_ref` is as automatic as `p*`, and the budget is expected to buy only insurance. A
+reduced-cone computation agrees (`notes/budget-value-of-information.md` §4). The cone
+would then be the control where ranking is free, and the decisive comparison would be
+exp-decay, with `p_ref` built from at least two of the OQ-8 candidate rankings. To decide
+with MB; not yet propagated to §3.7, §4 or §6.
+
 [^3-lineage]: A reference prior maximises the same mutual information as `p*`, but in
     the limit of infinitely many repetitions of the experiment [read: Bernardo 2005,
     preprint pp. 15–16]. The finite-data maximiser was known to be discrete (Berger, Bernardo &
@@ -953,6 +993,12 @@ Several things can make it lose:
 5. **Ordering may do the job.** If `p_ref` matches `p*` where it is defined
    ([§3.5](#35-a-third-route-ordering-instead-of-budget)), the bias is removable without a budget, and `p*`'s remaining
    advantage is only that it needs no ranking.
+6. **The setting may leave the budget nothing to do.** Settings in which knowing the
+   budget is worth little or nothing are collected in
+   [`notes/budget-value-of-information.md`](../notes/budget-value-of-information.md) §5:
+   among them an available ranking (point 5), unconstrained mixing, and no co-volume
+   gradient among the directions that cross resolution. A cell in one of them cannot
+   show a budget advantage, whatever its result.
 
 ### 3.7 Falsification
 
@@ -1095,6 +1141,9 @@ def build_model(family, D, m, sigma, N, *, taper=1.0, rotation=0.0, curvature=0.
   `{θ ∈ Θ : (Qθ)_1 = s}`; with `Q = 𝟙` this is `p_U`. With curvature on, evaluate the
   Berger–Bernardo formula of `[^3-schur]` by quadrature from the FIM, in the coordinates
   `Qθ`. Budget-independent, like `p_J`.
+- **`p*_{N/10}`, `p*_{10N}` — mis-budgeted `p*` ([§2.2](#22-the-cast)).** The `p*`
+  construction above at `σ/√M` for `M = N/10` and `M = 10N`, scored at the true `N`. `M`
+  need not be an integer: `N/10 < 1` is the effective noise `σ√(10/N)`.
 - **`q̄` — reference ceiling**: the average of the swept natures ([§4.3](#43-foreign-q-family)).
 
 **Prior construction (new src code — pseudocode).** Grid-BA reuses 000's loop; the atomic
@@ -1181,7 +1230,7 @@ For each cell `(model, D, σ, N, taper, rotation, curvature, nature)`:
 
 ```
 1.  model = build_model(family, D, m, σ, N)          # builds at σ_eff = σ/√N (§4.1)
-2.  priors = {p*, p_lat, p_proj, p_J, p_U, p_LN, p_ref, q̄}   # §4.2; p_ref: hypercone only
+2.  priors = {p*, p_lat, p_proj, p*_{N/10}, p*_{10N}, p_J, p_U, p_LN, p_ref, q̄}   # §4.2; p_ref: hypercone only
 3.  For s = 1 .. S_q:
         θ_s, label ← sample_nature(model, nature, rng)        # §4.3
         x̄_s ~ 𝒩(y(θ_s), σ_eff² 𝟙)                            # sufficient statistic of X_{1:N}
@@ -1271,6 +1320,7 @@ Test functions live in `tests/test_002_foreign_q_prediction.py`. The suite pins 
 | P16 | [TODO] `p_lat` construction: conditional equalizer (per-`θ` one-step divergence `≤` the conditional capacity, equality on the support); the two-sided bound closes; reduces to `p*` at `N = 0` ([§4.2](#42-prior-construction)) | [TODO] |
 | P17 | [TODO] One-step score: `r_N = R_{N+1} − R_N` (2.1.5) and the one-step decomposition (2.1.6) hold numerically ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss), [§4.4](#44-score-estimation)) | [TODO] |
 | P18 | [TODO] `p_lat` against external references (candidates: Komaki 2011 Fig. 1; Tanaka 2014's analytic prior; Fogel & Feder 2024's binary results) ([§5.5](#55-atomicpriorsjl-reference-fixtures)) | [TODO] |
+| P19 | Mis-budgeted `p*`: `p*_M` is the `p*` build at `σ/√M`; scored at its own budget it reproduces `p*`; at budget `N ≠ M` its worst-case per-`θ` redundancy is at least `C_N` ([§2.2](#22-the-cast), [§4.2](#42-prior-construction)) | `test_t19_misbudgeted_pstar` |
 | — | **Results**: the sign of every summary of [§2.4](#24-what-is-reported-and-what-cannot-be-asserted), on both scores | *not tested — the open questions ([§3.7](#37-falsification), [§3.4](#34-the-second-protagonist-infomax-vs-mdl)); asserting any would make the experiment unfalsifiable* |
 
 ### 5.2 Test descriptions
@@ -1404,6 +1454,13 @@ Constant cross-section: `p_ref = p_U = p_J`.
 **T17 — One-step score.** [TODO] (P17).
 
 **T18 — `p_lat` references.** [TODO] (P18).
+
+**T19 — Mis-budgeted `p*`.** (a) `p*_M` built at `σ/√M` equals `p*` built for budget `M`
+(same code path and grid). (b) Scored at budget `M`, its `R` matches `p*`'s to MC
+tolerance. (c) In the 1-D bounded channel with `N, M ∈ {1, 4, 16, 64}`, the worst-case
+per-`θ` redundancy of `p*_M` at budget `N` is at least `C_N`, with equality only at
+`M = N`: `p*_N` is the minimax prior at its own budget (§3.1). Catches a build at the
+wrong noise, the commonest way to mis-budget by accident.
 
 We do **not** test: the sign of any reported summary ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)); exact `p*` atom positions at
 intermediate `D` (no closed form); behaviour at `D` beyond the solver's feasible
@@ -1543,6 +1600,10 @@ Under `experiments/002-foreign-q-prediction/`:
   budget-dependent priors diverge ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)).
 - `figures/R_vs_D.png` — `R_N^q(π)` and `r_N^q(π)` vs `D` per prior, at fixed `(σ, N, t)`,
   with the `q̄` ceiling line.
+- `figures/budget_value.png` — `p*`'s gap to `p*_{N/10}`, to `p*_{10N}` and to Jeffreys
+  (`M = ∞`) on both scores, against `D`, per model and nature, with the
+  constant-cross-section model alongside ([§2.2](#22-the-cast),
+  [§2.4](#24-what-is-reported-and-what-cannot-be-asserted)).
 - `figures/negative_control.png` — `R(π)` vs `D` in the constant-cross-section
   model; `p_J` and `p_U` coincide (the T2 screen), while the `p*` gap — the
   bounded-channel edge / worst-case-hedge diagnostic (test T2, [§5.2](#52-test-descriptions)) — is shown and is
@@ -1561,6 +1622,8 @@ Under `experiments/002-foreign-q-prediction/`:
 `gaps_vs_t.png` and `R_vs_D.png` use the full `(D, σ, N, ν)` cross-product in the
 exp-decay (primary) and rotated-hypercone (controlled) models.
 `negative_control.png` uses the constant-cross-section model only.
+`budget_value.png` uses the `D`-sweeps of the hypercone, with the taper on and off
+(constant cross-section), and of exp-decay.
 `results_table.json` carries the full cross-product.
 
 ### 6.3 Table schema
@@ -1572,12 +1635,14 @@ exp-decay (primary) and rotated-hypercone (controlled) models.
   `sigma_eff = sigma/√N` is the operative noise for `R_N` and `p*`; `r_N` and `p_lat` use
   `sigma` and `N`.
 - `R_mean[π]`, `R_mcse[π]` and `r_mean[π]`, `r_mcse[π]` for
-  `π ∈ {p*, p_lat, p_proj, p_J, p_U, p_LN, p_ref, q̄}` (nats; `p_ref` empty outside the
-  hypercone families).
+  `π ∈ {p*, p_lat, p_proj, p*_{N/10}, p*_{10N}, p_J, p_U, p_LN, p_ref, q̄}` (nats; `p_ref`
+  empty outside the hypercone families).
 - The [§2.4](#24-what-is-reported-and-what-cannot-be-asserted) summaries, each with its MCSE, for `π ∈ {p*, p_lat, p_proj}` and
   `S ∈ {R, r}`: `gap_best[π][S] = max_{π'∈{p_J,p_U,p_LN,p_ref}} (S[π] − S[π'])`;
   `gap_pair[π, π'][S]` for the three protagonist pairs; `gap_ceiling[π][S] = S[π] − S[q̄]`;
-  and `delta_R_pref = R[p*] − R[p_ref]` (budget versus ordering, [§3.5](#35-a-third-route-ordering-instead-of-budget)).
+  `delta_R_pref = R[p*] − R[p_ref]` (budget versus ordering, [§3.5](#35-a-third-route-ordering-instead-of-budget)); and
+  `gap_budget[S] = S[p*] − min_{M ∈ {N/10, 10N}} S[p*_M]`, the value of knowing the budget
+  ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)).
 - `I_pstar`, `I_pJ`, `I_pproj`, `B_pstar`, `B_pJ` (bits) — the A&M/Quinn prior-side scores;
   `I_plat` (bits), the conditional information `p_lat` maximises.
 - `pstar_n_atoms`, `pstar_method` (`grid-BA` / `atomic`); `plat_support_size`.
@@ -1593,11 +1658,13 @@ the table stays small but an analysis by nature can re-key off it).
 2. The gaps against `t` per protagonist and score, per `D`, with the negative-control
    panel and the pairwise panel (§3.4) alongside.
 3. Both scores vs `D` with the `q̄` ceiling.
-4. Calibration diagnostic.
-5. A table of the §2.4 summaries by `D`, `N` and nature.
-6. Test results: T0–T15 pass/fail with achieved tolerances (T0 the spec-000 regression
-   gate, T12 the AtomicPriors cross-checks); [TODO] T16–T18.
-7. Notes: the §3.7 reading per protagonist (supported, refuted, or self-served near its
+4. The value of knowing the budget: `Δ^{bud}` by `D`, model and nature, with the
+   constant-cross-section control (§2.2).
+5. Calibration diagnostic.
+6. A table of the §2.4 summaries by `D`, `N` and nature.
+7. Test results: T0–T15 and T19 pass/fail with achieved tolerances (T0 the spec-000
+   regression gate, T12 the AtomicPriors cross-checks); [TODO] T16–T18.
+8. Notes: the §3.7 reading per protagonist (supported, refuted, or self-served near its
    own world), solver-method caveats (OQ-1), and anything surprising.
 
 ## 7. Open questions
@@ -2709,3 +2776,26 @@ with tests T16–T18 (`p_lat` construction, the one-step score, `p_lat` referenc
 test for `p_lat` (§5.3), the `t` grid (§5.4), fixtures for `p_lat` (§5.5) and the report's
 new tests (§6.4). §4.2 now warns that the `p_proj` sampler does not sample NML (red-team
 F2, still open).
+
+### 2026-10-24 — Refinement (§0, §1.1, §1.2, §2, §4.2, §4.4, §5, §6; mis-budgeted `p*`)
+
+At MB's request, from a chat thread on what knowing the budget is worth
+(`notes/budget-value-of-information.md`). The cast gains `p*_{N/10}` and `p*_{10N}`: `p*`
+built for the wrong budget, an agent that knows the construction but not its budget.
+Jeffreys is their `M → ∞` limit. §0 names them; §1.1 adds `p*_M`; §1.2 and the §2 intro
+list them; §2.2 adds a table row and a paragraph restricting the budget's value to agents
+that commit to one prior (an agent mixing the priors of many budgets loses at most
+`log(1/w_k)`) and stating the two-sided cost of a wrong resolution; §2.3's self-sampling
+controls now cover every prior of the cast; §2.4 adds the fourth summary `Δ^{bud}_S`;
+§4.2 gives the construction and §4.4's prior list includes them; P19 and T19 test them;
+§6 adds `budget_value.png`, its sweep coverage, `gap_budget` in the table and a report
+item. Not changed: §3, whose case for transfer does not rest on the budget's value, and
+§5.4, since each cell only needs `p*` at two more budgets.
+
+### 2026-10-25 — Refinement (§3.5, §3.6; settings without a budget advantage)
+
+At MB's request. §3.6 gains point 6, pointing to the list in
+`notes/budget-value-of-information.md` §5 of settings in which knowing the budget is
+worth little or nothing. §3.5 gains a `[TODO]` to recast the cone as the control where
+ranking is free and to make exp-decay, against several OQ-8 rankings, the decisive
+comparison. Left for a later session: that recast itself, in §3.7, §4 and §6.
