@@ -355,8 +355,9 @@ base. This one factor is what punishes Jeffreys. Its mass piles at the base, and
 ([§9.2](#92-hypercone-posterior-deviation-eq-922)), *largest at the thin end*, where a
 foreign `q` can place data. `p*` instead places [atoms](../GLOSSARY.md#atom) an `O(1)` Fisher length apart along
 the relevant axis[^1-spacing] and on the corners of each irrelevant
-cross-section[^1-corners], so its posterior deviation `Δ` is bounded by the atom spacing,
-independent of `D` [guess][^1-pstar-bias].
+cross-section[^1-corners], so its posterior deviation `Δ` stays far below Jeffreys'. In
+this equal-width cone it still grows with `D` near the thick end, at about `r²/4` of
+Jeffreys' pull[^1-pstar-bias].
 
 **Three families: caricature and realisation.** The hypercone strips a hyperribbon to one
 relevant direction and one tunable co-volume gradient, buying closed forms at the cost of
@@ -441,10 +442,18 @@ asymmetry is a gradient that steepens with `D` against an atom spacing that does
     puts all its weight on 0- and 1-dimensional edges [read: A&M §2.1, Fig. 2].
 
 [^1-pstar-bias]: A&M find `p*`'s posterior deviations mostly shorter than its atom
-    spacing, but only for data drawn from `p*` [read: A&M Fig. 4]. For data in atom gaps
-    the bound is the heuristic of
-    [§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d). Settled by: `p*`'s
-    posterior deviation versus `D` in the hypercone, for data placed between atoms.
+    spacing, but only for data drawn from `p*` [read: A&M Fig. 4]. A reduced computation
+    of the square hypercone (`σ = 1`, `N = 1`, `L = 50`; the irrelevant directions exact
+    as parallel channels, ignoring what their data say about `θ_1`) finds that `p*` has its
+    own tilt toward the thick end, by a factor `exp((D−1)·c(θ_1/L))`. Here `c(a)` is the
+    capacity of a bounded channel of Fisher length `a`, with `c(1) = 0.11` nats: each
+    sub-resolution direction still carries about `L²/8` nats, and in this cone all `D − 1`
+    have the same width. The posterior deviation at `x = 40` is 0.10 at `D = 26` and 0.32
+    at `D = 100`, against Jeffreys' 0.62 and 2.34, and it is negligible at the thin end
+    (`notes/budget-value-of-information/cone_pstar.py`). In exp-decay, where the widths
+    fall off geometrically, the sum of `L²` converges and the tilt should stay bounded
+    [guess]. Settled by: the same quantities in the full, unreduced hypercone and in
+    exp-decay.
 
 [^1-uniform]: A&M test Jeffreys, `p*` and log-normal, not uniform-`θ` [read: A&M §2.2,
     Figs. 3–5]; the claim is carried over from `notes/prediction_objective_for_priors.md`
@@ -637,6 +646,13 @@ natures therefore make every lean visible instead of hiding one.
   because it vanishes at the tip. Each `t` is one coherent nature, not a mixture of two
   populations. The range of `t` and the floor are pinned in [§4.3](#43-foreign-q-family)
   (OQ-2).
+
+  *Caution.* In the hypercone `√det g ∝ θ_1^{D−1}`, so `q_t`'s `θ_1`-marginal is
+  `∝ θ_1^{t(D−1)}`. At fixed `t ≠ 0`, nature therefore moves with the agent's choice of
+  `D`: toward the thick end for `t > 0`, toward the thin end for `t < 0`. A trend in `D`
+  at fixed `t` mixes the prior's degradation with nature's drift; only `t = 0` holds
+  nature fixed across `D`. [TODO] Decide whether the `D`-sweep should also carry natures
+  held fixed in the relevant coordinate.
 - **The stress panel**, for comparing the protagonists with each other, after
   [§3.4](#34-the-second-protagonist-infomax-vs-mdl):
   - *a sharpened convex vertex, with nature on the interior or faces*: against `p_proj`,
@@ -728,7 +744,12 @@ A&M §3; App. A.1]. This is empirical for these models, not a proven rate. Log-n
 rises too [read: A&M Fig. 5]; `p_U` is assumed to behave alike [guess][^1-uniform].
 
 `C_N`, by contrast, tracks only the **resolvable** complexity. At `N=1` it is `I_{p*}(Θ;X_1)`,
-which is flat in nominal `D` once `D>3` [read: A&M §2.2, Fig. 5]. Since budget `N` acts as
+which in exp-decay is flat in nominal `D` once `D>3` [read: A&M §2.2, Fig. 5]. In the
+equal-width hypercone it is not: each sub-resolution direction still carries some
+information, and a reduced computation gives `C_1 = 4.02` nats at `D = 26` and `11.25`
+at `D = 100`, about 0.1 nats per added direction
+(`notes/budget-value-of-information/jeffreys_capacity_region.py`). That is slow next to
+Jeffreys' bias, but not flat. Since budget `N` acts as
 noise `σ/√N`, `C_N` grows like `(D_eff/2) log N`, with `D_eff` the [effective dimensionality](../GLOSSARY.md#effective-dimensionality) [read: A&M Eq. 8, §2.1]; that it stays
 flat in `D` at `N>1` is the same saturation at smaller noise [guess]. The bound cannot
 *fail*, so it is a unit test (T3,
@@ -761,14 +782,16 @@ the gap:
    `I_q(Θ;X_1)` and `I_{p_J}(Θ;X_1)` both lie in `[0, C_1]` with `C_1 = O(D_eff) = O(1)`, so the
    subtracted term is bounded and cannot cancel a numerator that grows with `D`. The
    numerator's worst case `B(p_J)` grows rapidly with `D` (§3.1), empirically and not at
-   a proven rate.
+   a proven rate. This holds where the widths fall off geometrically, as in exp-decay. In
+   the equal-width hypercone `C_1` grows linearly in `D` (§3.1), so there the argument
+   compares two slopes rather than a bounded term with a growing one.
 2. **`q` is spread**, the one genuinely `q`-dependent assumption: `𝔼_q b_{p_J}` tracks
    the growth of its maximum, because `q` puts enough mass, spread widely enough, in the
    high-bias region. This is the precise content of "spread over distinguishable
    outcomes".
 
 Under both, `D_KL(m_q‖m_{p_J})` grows with `D`. `D_KL(m_q‖m_{p*})`, by contrast, is bounded by
-`C_N` for *every* `q`[^3-finite] (§3.1), flat in nominal `D`, and expected to sit well
+`C_N` for *every* `q`[^3-finite] (§3.1), flat in nominal `D` for geometric widths, and expected to sit well
 below that ceiling [guess][^3-typical]. The worst case is guaranteed; the average is left
 to the experiment ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)). A&M put the
 same point as a new invariance, *predictions should be independent of unobservable model
@@ -780,6 +803,13 @@ leans on A&M's self-sampling, the part of their result that does not transfer.
 nor `q`, so it transfers to any foreign `q`. `p*` pays `≈0` on self-sampled data, which
 lands on its atoms, but `O(1)` plus `D_KL(m_q‖m_{p*})` on data in the gaps
 [guess][^1-pstar-bias]. Whether that net favours `p*` is the open empirical question.
+
+A reduced computation of the cone previews the answer against Jeffreys, in betting terms.
+On a nature uniform in `θ_1` at `D = 26`, Jeffreys' excess log-loss is 18.65 nats against
+`p*`'s 0.51. Jeffreys wins only in its own corner, `θ_1 > 48`, by under a nat
+(`notes/budget-value-of-information.md` §4). How strongly `p*` itself depends on the
+budget is predicted by the criterion of that note's §3.2, which
+[`budget_value.png`](#61-outputs) checks in the full models.
 
 [^3-finite]: The bound follows from (2.1.2) and (3.1.1):
     `D_KL(m_q‖m_{p*}) = R_N^q(p*) − I_q ≤ C_N`. It is finite because `m_{p*}` is a
@@ -1006,7 +1036,13 @@ The expectation is *supported* where `p*` beats every deployable prior on its ho
 `Δ_{R_N}(p*) < 0` ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)), across the tilt family and the stress panel, with pairwise
 gaps showing the lead is not shared by `p_proj` or `p_lat`. It is *refuted* where `p*` ties
 or loses to the best deployable prior, or leads only near its self-sampling control
-([§2.5](#25-controls-the-ceiling-and-self-sampling)). Bound (3.1.1) forecloses neither. The same reading applies to `p_lat` on `r_N`.
+([§2.5](#25-controls-the-ceiling-and-self-sampling)). Bound (3.1.1) forecloses neither in general, but it settles some cells. Since
+`R_N^q(p*) ≤ C_N` for every `q`, `p*` beats any prior `π` with `R_N^q(π) > C_N`, by
+theorem. A cell in which every deployable prior's redundancy exceeds `C_N` is therefore
+not a test; the live cells are those where the best deployable prior stays below `C_N`.
+In the reduced cone at `D = 26`, Jeffreys' per-state redundancy already exceeds `C_N` for
+`θ_1 < 41` of 50 (`notes/budget-value-of-information.md` §4). The same reading applies to
+`p_lat` on `r_N`.
 
 ## 4. Algorithm
 
@@ -1669,7 +1705,7 @@ the table stays small but an analysis by nature can re-key off it).
 
 ## 7. Open questions
 
-- **OQ-1 (RESOLVED — grid-BA below `D_switch`, AtomicPriors above).** <span style="color: red">Resolved: rather than port A&M's atomic L-BFGS optimiser to Python, the experiment **delegates `p*` to `mcabbott/AtomicPriors.jl`** (`optim!`/`nlopt!`) via `juliacall` for `D > D_switch`, keeping Python grid-BA (`O(G^D)`) as the primary, self-contained path for `D ≤ D_switch`. `D_switch` is a **parameter, not a fixed `D`** — the cross-over where grid-BA stops being feasible/accurate is an empirical, machine-dependent choice fixed once both implementations exist and are profiled (the small-`D` overlap where both run is the T7b/T12 cross-check). Consequences: Julia becomes a **runtime** dependency of the experiment's high-`D` path (the *test suite* stays Julia-free on frozen fixtures, [§5.5](#55-atomicpriorsjl-reference-fixtures)/OQ-7); `provenance.json` records the Julia + AtomicPriors versions; Julia's RNG is seeded across the boundary for determinism (T10). The minimal-setting headline runs entirely on Python grid-BA.</span>
+- **OQ-1 (RESOLVED — grid-BA below `D_switch`, AtomicPriors above).** <span style="color: red">Resolved: rather than port A&M's atomic L-BFGS optimiser to Python, the experiment **delegates `p*` to `mcabbott/AtomicPriors.jl`** (`optim!`/`nlopt!`) via `juliacall` for `D > D_switch`, keeping Python grid-BA (`O(G^D)`) as the primary, self-contained path for `D ≤ D_switch`. `D_switch` is a **parameter, not a fixed `D`** — the cross-over where grid-BA stops being feasible/accurate is an empirical, machine-dependent choice fixed once both implementations exist and are profiled (the small-`D` overlap where both run is the T7b/T12 cross-check). Consequences: Julia becomes a **runtime** dependency of the experiment's high-`D` path (the *test suite* stays Julia-free on frozen fixtures, [§5.5](#55-atomicpriorsjl-reference-fixtures)/OQ-7); `provenance.json` records the Julia + AtomicPriors versions; Julia's RNG is seeded across the boundary for determinism (T10). The minimal-setting headline runs entirely on Python grid-BA.</span> Cheaper stand-ins for `p*` (NML, the tilt formula, warm starts across budgets) are collected, unworked, in `notes/budget-value-of-information.md` §9.
 - **OQ-2 (partly resolved 2026-10-05; definition).** The exact `q_{coop}`/`q_{non}` parameterisation ([§4.3](#43-foreign-q-family)). It
   must be defined in prediction space and span cooperative→non-cooperative; the
   concrete family (e.g. mixtures of pulled-back uniforms on manifold edges vs
@@ -2799,3 +2835,15 @@ At MB's request. §3.6 gains point 6, pointing to the list in
 worth little or nothing. §3.5 gains a `[TODO]` to recast the cone as the control where
 ranking is free and to make exp-decay, against several OQ-8 rankings, the decisive
 comparison. Left for a later session: that recast itself, in §3.7, §4 and §6.
+
+### 2026-10-26 — Correction + Refinement (§1.2, §2.3, §3.1, §3.2, §3.7, OQ-1; from the budget note)
+
+At MB's request, integrating `notes/budget-value-of-information.md`. Corrections from a
+reduced computation of the square hypercone: `p*`'s posterior deviation is not
+independent of `D` there (§1.2 and footnote `[^1-pstar-bias]`), and `C_1` is flat in
+`D` only where widths fall off geometrically, as in exp-decay (§3.1, §3.2 assumption 1).
+Refinements: §3.2 previews the reduced-cone betting result against Jeffreys and points to
+the note's criterion for `p*`'s budget dependence; §2.3 cautions that the tilt family
+moves nature with `D` at fixed `t ≠ 0`, with a `[TODO]` on adding natures fixed in the
+relevant coordinate; §3.7 states the sufficient condition `R_N^q(π) > C_N` under which a
+cell is settled by theorem; OQ-1 points to the note's list of cheap stand-ins for `p*`.
