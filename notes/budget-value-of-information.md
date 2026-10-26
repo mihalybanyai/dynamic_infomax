@@ -130,6 +130,12 @@ score assumes `θ_1` known. The tilt part reproduces the 2026-10-08 computation
 
 - **Worst case over natures.** `p*_N` is minimax at budget `N`, so knowing `N` helps, by
   about the spread of `ΔC⊥` [guess][^criterion].
+- **A sufficient condition.** `R_N^q(p*) ≤ C_N` for every nature (spec 002 §3.1), so
+  `p*` beats any prior `π` on any nature with `R_N^q(π) > C_N`, by theorem. In the reduced
+  cone (`N = 1`), Jeffreys' per-state redundancy exceeds `C_N` wherever `θ_1 < 41.1` of 50
+  at `D = 26` (`C_N = 4.02` nats), and `θ_1 < 42.7` at `D = 100` (`C_N = 11.25`). This is a
+  conservative region, since only the `x_1` part of Jeffreys' redundancy is counted
+  (`jeffreys_capacity_region.py`). Every nature living there makes `p*` beat Jeffreys.
 - **Against Jeffreys, the automatic prior without the budget** (`jeffreys_vs_pstar.py`,
   `D = 26`, excess cumulative log-loss in nats). `p*_N` wins on the uniform nature
   (0.51 against 18.65 at `N = 1`; 5.84 against 20.98 at `N = 16`), on the thin end (2.90
@@ -158,42 +164,63 @@ uniform one is this prior's own world (its 0.01 nats is a self-sampling floor). 
 | constant cross-section | wide | `D − 1` | none | ≈ 0 (§3.3) |
 | square hypercone | wide | `D − 1` at once | ∝ `D − 1` | tens of nats; sign set by nature (§3.3) |
 | exp-decay | wide | a few per decade | from curvature | moderate [guess] |
-| budget known within ~2× | narrow | few | — | small |
 
 ## 5. Grimoire: settings fatal to the budget's usefulness
 
-Started 2026-10-25 from MB's list (entries 1, 2, 5, 6, 10) and completed from this note.
+**Organising principle** [guess][^scale]. A decision depends on the budget only if it
+compares a quantity that grows with the data against a fixed reference scale that does
+not: a payoff gap, a fixed cost, the size of the parameter range, the number of
+representational units. If every term of a trade-off grows with `N` in the same way, `N`
+factors out and the best choice is the same at every budget. Read this way, the entries
+below are settings where no such comparison is live:
+- another resource or circumstance makes the comparison unnecessary (1–4);
+- the reference scale is dwarfed by `N` (5), the same in every state (6), or nearly
+  absent (7);
+- no budget-aware prior exists to act on it (8);
+- the natures happen to favour the budget-blind prior (9).
+
+Where the budget counts (after the table), a fixed scale is in play: the payoff gap in
+explore–exploit, the fixed cost in ski rental, and the parameter range against which
+`p*` sets its resolution. The same question, "what fixed scale is this information
+compared against?", screens the parked off-stimulus candidates (`notes/parked_ideas.md`).
+
+Started 2026-10-25 from MB's list (entries 1, 2, 5, 6, 8) and completed from this note.
 Each entry is a setting in which knowing the budget is worth little or nothing; the last
 column says how we know.
 
 [TODO] Come back to these, not now:
 - entry 2's exception for humans (sources in §8, unread);
 - entry 5, which rests on A&M's abstract only;
-- entry 8 for budgets that change the geometry's shape, such as an observation window;
-- entry 9's generality, so far shown in two models.
+- entry 7 for budgets that change the geometry's shape, such as an observation window;
+- entry 3's active half, so far shown in two models.
 
 | # | Setting | Why it is fatal | Evidence |
 |---|---|---|---|
 | | **Another resource does the budget's job** | | |
 | 1 | Unconstrained computation and memory, with a mixable loss (log-loss) | Mixing the priors of many budgets costs at most `log(1/w_k)` on every nature | shown, §2 |
 | 2 | An ordering is available: the goal is clear and the relevant/irrelevant split is global (non-curved geometry) | An ordered reference prior removes the co-volume bias without a budget; the budget buys only insurance | computed, §4 (`budget_relative.py`); for humans, cheap rankings may exist only along privileged perceptual axes [recalled; sources in §8, unread] |
-| 3 | The budget is revealed before it matters: episodic storage, or a compact sufficient statistic (`N` and `x̄` in Gaussian models) | The agent chooses its prior after counting its data | shown, §1 |
+| 3 | Nothing is at stake before the budget is known except knowledge, which in a stable world persists | A passive agent keeps the data, or a fixed-size sufficient statistic (`N` and `x̄` in Gaussian models), and makes every budget-dependent choice after counting, including the representation. An active agent whose measurements do not change its payoffs loses only learning speed, which shrinks as it learns. Fails with payoffs that the informative choice costs, with bounded memory and no compact statistic, or with costs paid in something other than knowledge | shown, §1 (passive); computed in two active models, §7 (`active_calibration.py`, `active_investment.py`); generality [guess] |
 | 4 | Nature, or a hyperprior over natures, is known | The matched prior is optimal at every budget | shown, §1 |
 | | **Nothing for the budget to act on** | | |
 | 5 | Very large budgets: every direction is resolved at every plausible budget | `p*_N` approaches Jeffreys, and one prior serves all budgets | [read: A&M abstract] |
 | 6 | No co-volume gradient among the directions that cross resolution within the plausible budget range | The right prior barely changes with the budget | computed, §3.1 (1-D) and §3.3 (constant cross-section) |
-| 7 | The budget is known to within a small factor | Few directions cross resolution in the range | computed, §3.1 (neighbouring budgets differ by about a nat) |
-| 8 | The decision depends only on relative resolvability, as in allocating a fixed capacity, and the budget is a count of repetitions | Repetitions scale the Fisher metric uniformly (`g_N = N·g`), so the best allocation is the same at every budget | computed, §7 (`capacity_allocation.py`) |
-| 9 | Knowledge is never sunk: active learning with persistent knowledge and diminishing returns | The best policy for a short horizon is nearly the start of the best for a long one; a myopic or fixed schedule matches the informed agent | computed in two models, §7 (`active_calibration.py`, `active_investment.py`); generality [guess] |
+| 7 | A fixed capacity is split among directions, with neutral mass, and the budget is a count of repetitions | Repetitions sharpen every direction by the same factor, so the part of the split's cost that grows with the budget favours the same split at every budget; in the tested cells the best split did not move | computed, §7 (`capacity_allocation.py`), `D = 2, 26`, `K = 20–400`; generality [guess]: costs that do not grow with the budget, such as spreading mass over more atoms, can still move the split |
 | | **The budget cannot be used** | | |
-| 10 | `p*`, or another useful budget-aware prior, cannot be computed or approximated | No budget-aware prior to deploy | spec 002 OQ-1 (feasibility) |
+| 8 | `p*`, or another useful budget-aware prior, cannot be computed or approximated | No budget-aware prior to deploy | spec 002 OQ-1 (feasibility) |
 | | **The evaluation favours the budget-blind prior** | | |
-| 11 | Average-case scoring on natures concentrated where the measurement sees most detail | Jeffreys' own corner: it wins there | computed, §4 (`jeffreys_vs_pstar.py`, `θ_1 > 48`) |
+| 9 | Average-case scoring on natures concentrated where the measurement sees most detail | Jeffreys' own corner: it wins there | computed, §4 (`jeffreys_vs_pstar.py`, `θ_1 > 48`) |
 
-The complement is short: the budget is decidedly useful when entries 1–4 fail together,
-the agent must build its prior from the likelihood alone, and the comparison is with
-Jeffreys (§4). It is also useful wherever a commitment consumes a resource that learning
-cannot recover, as in ski rental (§7).
+**Where the budget counts.** The complement of the list [guess, except where marked]:
+
+- **Explore–exploit:** the informative choice costs payoff now, so the horizon (or the
+  discount `γ` in reinforcement learning) changes the optimal policy without any other
+  commitment [recalled]. Policies that ignore the horizon reach the same regret rate up to
+  a constant factor [recalled], so the value is definite but bounded. Committing a
+  representation under capacity is the internal case.
+- **Costs paid in something other than knowledge**, as in ski rental (§7).
+- **Knowledge that expires**, in a changing world.
+- **A prior built from the likelihood alone with no ranking available**, compared with
+  Jeffreys (§4; computed).
 
 ## 6. Everyday candidates
 
@@ -209,6 +236,15 @@ a candidate [guess, each]:
 
 ## 7. Open threads
 
+- **Tolerance to a rough budget or an approximate `p*`.** A `p*` built for a budget off by
+  a factor of 4 shifts the score by 2–7 nats in the 26-dimensional cone (§3.3). That is
+  small next to Jeffreys' disadvantage of 15–47 nats on the uniform and thin-end natures
+  (§4). So rough knowledge of `N`, or an approximate `p*`, may keep most of the advantage
+  where the budget matters. In 1-D the same error costs under 2 nats (§3.1), but there
+  the budget hardly matters anyway. Test: how coarse the budget, or how approximate the
+  prior (fewer atoms, a smooth surrogate), can be before the advantage over Jeffreys
+  erodes. This is a route to cheaper constructions, and to the parked construction-cost
+  idea.
 - **The full models.** Spec 002 now carries `p*_{N/10}` and `p*_{10N}` (its §2.2, §2.4),
   which measures this in the full hypercone and in exp-decay.
 - **Spending the budget: tested, no advantage for learning stakes.** In
@@ -246,32 +282,89 @@ a candidate [guess, each]:
 ## 8. To read
 
 [TODO] Read these before any claim rests on them. All are recalled, not opened; the
-bibliographic details need checking.
+bibliographic details need checking. None is in `resources/` yet.
 
-On whether people get rankings cheaply (entry 2's exception; candidates for `empirics/`):
+Entry 2's human exception needs three questions answered, so the list is tiered by them:
+- **Q1:** is a ranking along a non-privileged (rotated) direction costly for people?
+- **Q2:** do standard models of human attention assume privileged axes?
+- **Q3:** do time pressure and inexperience remove dimensional attention? This would link
+  a small budget to having no ranking.
 
+**Tier 1, read first.**
+- Ashby, F. G. & Maddox, W. T. (2005). Human category learning. *Annual Review of
+  Psychology* 56. Q1: rule-based (axis-aligned) against information-integration (diagonal)
+  category learning, and the conditions under which the diagonal case is hard. As a
+  review, it also gives current pointers for Q3.
+
+**Tier 2, if Tier 1 supports Q1.**
+- Kruschke, J. K. (1992). ALCOVE: an exemplar-based connectionist model of category
+  learning. *Psychological Review* 99. Q2: attention weights only along the given axes;
+  the model section suffices.
+- Ward, T. B. (1983) [CITATION NEEDED: title and journal]. Q3: under time pressure, adults
+  fall back to overall similarity. Replace by a recent source if Tier 1 points to one.
+
+**Tier 3, background, only if needed.**
+- Ashby, F. G., Alfonso-Reese, L. A., Turken, A. U. & Waldron, E. M. (1998). A
+  neuropsychological theory of multiple systems in category learning. *Psychological
+  Review* 105. The primary theory behind Q1, if the review leaves its conditions unclear.
 - Garner, W. R. (1974). *The Processing of Information and Structure.* Integral versus
-  separable dimensions: some dimensions cannot be attended to separately.
+  separable dimensions.
 - Shepard, R. N. (1964). Attention and the metric structure of the stimulus space.
   *Journal of Mathematical Psychology* 1. Similarity spaces with and without privileged
   axes.
-- Ashby, F. G., Alfonso-Reese, L. A., Turken, A. U. & Waldron, E. M. (1998). A
-  neuropsychological theory of multiple systems in category learning. *Psychological
-  Review* 105. Axis-aligned boundaries are learned quickly as rules, diagonal ones slowly.
-- Ashby, F. G. & Maddox, W. T. (2005). Human category learning. *Annual Review of
-  Psychology* 56. Review of the same line.
-- Kruschke, J. K. (1992). ALCOVE: an exemplar-based connectionist model of category
-  learning. *Psychological Review* 99. Attention weights only along the given axes.
-- Smith, L. B. & Kemler, D. G. (1977) [CITATION NEEDED: title and journal]. Young
-  children classify by overall similarity before attending to dimensions.
-- Ward, T. B. (1983) [CITATION NEEDED: title and journal]. Under time pressure, adults
-  fall back to overall similarity.
+- Smith, L. B. & Kemler, D. G. (1977) [CITATION NEEDED: title and journal]. Q3 in
+  development: young children classify by overall similarity.
 
-Also recalled in this note and unread: Krause & Guestrin (2005) on greedy design, and
-Karlin, Manasse, McGeoch & Owicki (1994) on ski rental (both §7).
+Also recalled in this note and unread, not on the human side: Krause & Guestrin (2005) on
+greedy design, and Karlin, Manasse, McGeoch & Owicki (1994) on ski rental (both §7).
+
+## 9. Cheap approximations to `p*`, and cheap updates (to ponder)
+
+[TODO] Not worked out; a list to ponder. `p*` is expensive: grid Blahut–Arimoto scales as
+`G^D` (spec 002 OQ-1). Its use as an automatic prior, and §7's tolerance thread, make
+cheap stand-ins worth having: ones that are easy to build, or easy to update when the
+budget changes.
+
+Cheap to build:
+- **`p_proj`, the NML pushforward.** Project noisy data onto the model manifold and keep
+  the maximum-likelihood points. A&M present it as an easy approximation of `p*`, and
+  Quinn et al. find it tracks `p*` in mutual information [read: via spec 002 §3.4]. The
+  sampler in spec 002 §4.2 does not yet sample NML (red-team F2).
+- **Adaptive slab-and-spike, or a variational family with a few meta-parameters**,
+  both suggested by A&M as practical stand-ins [read: A&M p. 11].
+- **Counting states at the data's resolution.** Cover the parameter space with cells of
+  Fisher size about one at budget `N`, and give each cell equal weight. This is the
+  detective footnote's "counting at the evidence's own resolution" (spec 002 §0)
+  [guess: how close it gets to `p*`].
+- **The tilt formula of §3.2.** Weight a resolvable state by `exp(C⊥_N(θ))`, the summed
+  1-D capacities of the hidden directions there. It needs only a tabulated 1-D capacity
+  function and the hidden widths at each state [guess; checked only in the reduced cone].
+- **A thresholded effective model.** Collapse directions unresolvable at `N` onto
+  boundaries (MBAM-style) and use a smooth prior on the rest [guess].
+
+Cheap to update when the budget changes:
+- **Warm starts.** Start Blahut–Arimoto for budget `N'` from `p*_N`. Atoms split or move
+  as `N` grows [recalled: A&M; Mattingly et al.], so a nearby budget should converge
+  fast [guess].
+- **1-D lookup tables.** In a 1-D bounded channel `p*` depends only on the Fisher length
+  `L·√N`, so one table serves all budgets. Product-like geometries could combine tables
+  per direction [guess].
+- **The interior limit.** Far from boundaries, `p*` approaches Jeffreys as `N` grows
+  [read: A&M abstract]. A closed-form interior plus boundary atoms may suffice at large
+  budgets [guess].
+
+How good a stand-in needs to be is §7's tolerance question. How costly it is to build
+connects to the parked construction-cost idea (`notes/parked_ideas.md`).
 
 [^criterion]: From the reduced-cone heuristic: given the resolvable state, the hidden
     directions are parallel channels, so `p*`'s weight on a state is `e` to the power of their
     conditional capacity. Checked on `p*`'s own tilt (§3.3) and on the mis-budgeted
     differences (§3.3 table). Settled for general geometries by computing `p*_M` against
     `p*_N` in the full hypercone and in exp-decay (spec 002, `budget_value.png`).
+
+[^scale]: Elementary in form: the minimiser of `N^a·f(x) + N^b·g(x)` does not depend on
+    `N` when `a = b`. The content is in finding, for each setting, which fixed scales
+    enter. Settled for this list by checking each entry's computation for such a scale;
+    so far the only one found inside a fatal entry is entry 7's `log(#atoms)` term. A
+    counterexample would be a setting where every term grows alike with `N` and the best
+    choice still moves with the budget.

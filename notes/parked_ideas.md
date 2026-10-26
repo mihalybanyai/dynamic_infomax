@@ -15,3 +15,18 @@ that a prior that wins only by being much more laborious (mixing over all budget
 exact discrete `p*`) is compared fairly with cheap ones. *What would settle it:* a
 coherent definition of construction cost (computation, storage, or description length of
 the procedure), which is itself open.
+
+### Other off-stimulus information, treated like the budget (2026-10-25)
+
+*From:* MB, after the budget thread (`notes/budget-value-of-information.md`). *Idea:*
+apply the same analysis to other information that is part of a task but not of the
+stimulus. Screened against that note's grimoire (§5), the candidates are:
+- **the task** (what will be asked, the decision threshold, the stakes): the strongest,
+  because it supplies the parameter of interest and changes relative relevance;
+- **how the data were generated** (random, pedagogical, adversarial, stopping rule);
+- **the world's volatility**, where knowledge expires;
+- **self-knowledge** (own memory decay), which probably shares the budget's traps [guess].
+
+*What would settle it:* for the task, a minimal model with a 1-D variable, `K` atoms and
+a threshold decision at the end, with the threshold known in advance or not. Predicted
+[guess]: a definite advantage when capacity binds, none without capacity limits.
