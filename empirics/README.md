@@ -27,6 +27,12 @@ Each lead below gets its own file once someone works on it.
   it? We know of no study.
 - **The slow-speed prior in motion perception** as a possible co-volume gradient:
   [`slow_speed_prior.md`](slow_speed_prior.md).
+- **Anticipated exposure and the coarseness of impressions.** If priors are built for
+  the data one expects, impressions of a person one expects to meet once should be
+  coarser and more extreme than of one expected to stay, on the same evidence. Laid out
+  on three levels (everyday situation, experiment, spec 002's model), with existing
+  results from cognitive tuning, construal level and the horizon task as targets:
+  [`anticipated_exposure.md`](anticipated_exposure.md).
 - **Older material**, written for spec 001's betting framing:
   [`real_world_analogues.md`](real_world_analogues.md) covers clinical
   trials, foraging, probability weighting and categorical perception.

@@ -191,6 +191,12 @@ Two facts:
 2. $\Delta(\sigma^*)=0$ when reality is in the family ($q=m_{\sigma^*}$): both terms vanish.
    The loop's fixed point is correct calibration.
 
+**An everyday face of the signal** (added 2026-10-29) [guess]. An impression of a person
+formed for an expected brief acquaintance is coarse and extreme. When the acquaintance
+lasts, the realised information exceeds the expected, and the impression has to be
+re-coarse-grained: "I thought I knew all there was to know about her". The static half,
+how expected exposure shapes the first impression, is `empirics/anticipated_exposure.md`.
+
 ### 7.2 What EC actually is
 
 The clean EC update is *not* "zero $\Delta$" (the scale term $H(q)-H(m_\sigma)$ is
