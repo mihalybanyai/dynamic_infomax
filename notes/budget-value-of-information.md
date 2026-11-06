@@ -334,7 +334,7 @@ Cheap to build:
   both suggested by A&M as practical stand-ins [read: A&M p. 11].
 - **Counting states at the data's resolution.** Cover the parameter space with cells of
   Fisher size about one at budget `N`, and give each cell equal weight. This is the
-  detective footnote's "counting at the evidence's own resolution" (spec 002 §0)
+  counting "at the evidence's own resolution" of spec 002's §0 example footnote
   [guess: how close it gets to `p*`].
 - **The tilt formula of §3.2.** Weight a resolvable state by `exp(C⊥_N(θ))`, the summed
   1-D capacities of the hidden directions there. It needs only a tabulated 1-D capacity

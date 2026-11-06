@@ -32,23 +32,32 @@ the opposite-seeming claim. In [**ribbon-geometry**](../GLOSSARY.md#hyperribbon)
 unresolvable [**co-volume**](../GLOSSARY.md#co-volume), and `p*` does not [read: A&M §2.2, Figs. 3–5].
 Log-normal also degrades as parameters are added, less severely [read: A&M §2.2].
 
-**An example.** A detective wants to know whether an intruder was in and out, which
-suggests they knew where the valuables were, or stayed to search. The door's alarm log
-times the visit to within about a minute. He also profiles the intruder from traces of their habits: specks of ash, a stray coat
-fibre, a smudge on the window. Each trace grows with the time spent, so reading a habit
-needs the duration (a big pile of ash means a heavy smoker or a long stay), but every
-trace is too faint to tell apart from the room's ordinary clutter.
-A seemingly neutral detective counts two *scenarios* (a scenario being a duration plus
-a strength for every habit) as different whenever their traces would differ, however
-slightly. He then favours long stays: the longer the stay, the
-wider the range each trace could span, and across the habits these ranges multiply. If
-the log says 3 minutes, modelling 25 habits makes him conclude nearly 7, and modelling
-100 almost 12: a search, not an in-and-out. The shift comes from his prior, not from the
-evidence, and it grows with the number of invisible habits he chose to model. A detective who weighs only the scenarios the evidence can tell apart is not swayed by the
-habits [guess]; whether he also predicts real intruders better is what this spec tests.
-In the terms of [§1.2](#12-generative-model), the duration is a
-[relevant direction](../GLOSSARY.md#relevant-and-irrelevant-directions), the habits are irrelevant ones, and the growth of
-their traces with time is the co-volume gradient behind Jeffreys' bias[^0-detective].
+**An example.** You hire a plumber, or move in with a new flatmate, and wonder whether they
+will overcharge you: pad the bill, or fiddle the split of the household costs. Several
+motives hold them back: conscience, habit, liking you, avoiding a row, fear of
+consequences, someone checking their accounts, the effort that fiddling takes, and not
+needing the money. Each motive holds back its own share of what they could take, and each
+has a price, a stake beyond which it gives way. You have seen how much they held back at
+stakes from the change for a coffee up to a full bill, and you want to predict how much
+they will hold back next time. Only the motives priced among the stakes you have seen
+leave a mark on what you saw, and which motives those are depends on the person, so none
+comes first.
+A seemingly neutral observer counts two *characters* (a character being a price for every
+motive) as different whenever their dealings would differ, however slightly. This
+observer then favours characters whose motives give way one by one from small stakes up,
+since that is where characters differ in the most ways. Modelling 12 motives, the observer
+takes someone seen holding back 87% of what they could take at small stakes and 77% at
+larger ones for 74% and 63%: a cynic. Modelling 4, the same evidence gives 88% and 72%.
+The shift comes from the prior, not from the evidence, and it grows with the number of
+motives the observer chose to model. An observer who weighs only the characters the
+evidence can tell apart is barely moved by that number, at least on data drawn from its
+own prior [read: A&M §2.2, Figs. 4–5]; whether it also predicts real people better is what
+this spec tests. How finely to tell characters apart depends on how much one will see of
+them, which circumstances set: the plumber once, the flatmate for a year. In the terms of
+[§1.2](#12-generative-model) this is the exponential-decay model, with the stakes as its
+observation times and each motive's price as one component's decay time; the variety of
+characters the evidence cannot tell apart, larger in some regions than in others, is the
+[co-volume](../GLOSSARY.md#co-volume) gradient behind Jeffreys' bias[^0-motives].
 
 **Why A&M do not settle it.** Their [bias pressure](../GLOSSARY.md#bias-pressure) `b(θ)`, which scores how
 strongly a prior disfavours parameter value `θ`, is measured against the data
@@ -96,110 +105,151 @@ second score, the one-step `r_N`, next to the cumulative `R_N`
 ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss), [§2.2](#22-the-cast)).
 Mis-budgeted copies of `p*`, built for a tenth and for ten times the true budget, measure
 what knowing the budget is worth to an agent that commits to one prior
-([§2.2](#22-the-cast)).
+([§2.2](#22-the-cast)), such as the observers of the plumber and of the flatmate in the
+example.
 
-[^0-detective]: **The example in detail.** It is A&M's square hypercone
-    ([§1.2](#12-generative-model), [§9.2](#92-hypercone-posterior-deviation-eq-922)) dressed as a detective case. A *scenario* is one point
-    `θ = (θ_1, …, θ_26)`: a duration and an intensity for every habit.
+[^0-motives]: **The example in detail.** It is A&M's exponential-decay model
+    ([§1.2](#12-generative-model), [§4.1](#41-model-families)) read as a model of motives. A
+    *character* is one point `θ = (θ_1, …, θ_D)`: a price for every motive.
 
-    - *Duration* `θ_1 ∈ [0, L]`, `L = 50` minutes, timed by the alarm log with one
-      minute of noise (`σ = 1`): about 50 distinguishable durations, a relevant
-      direction. The log is a noisy measurement, not ground truth. "In and out or a
-      search?" needs the duration only to within a few minutes.
-    - *Habits* `θ_μ ∈ [0, 1]`, `μ = 2, …, 26`: how strongly the intruder smokes, sheds
-      fibres, touches the glass, and so on. The detective models them to profile the
-      intruder, which is exactly what the faint traces cannot deliver.
-    - *Traces.* Habit `μ` adds an expected amount `(θ_1/L)·θ_μ` to its trace (ash,
-      fibres, smudges). It is measured against the room's ordinary clutter, whose natural
-      variation is the one-unit noise. Even the strongest habit over the longest stay
-      adds only one unit, so each habit is an irrelevant direction. The factor `θ_1/L`
-      is the taper `r(θ_1)`.
-    - *Co-volume.* At duration `θ_1` the possible trace patterns fill a 25-dimensional
-      cube of side `θ_1/L`, with volume `∝ θ_1^{25}`: the cone's cross-section.
+    - *Motives* `μ = 1, …, D`, each holding back an equal share `a_μ = 1/D` of what could
+      be taken. The eight of §0 are examples: conscience (guilt at padding the bill), habit
+      (always the standard rate, always splitting down the middle), liking you, avoiding a
+      row (at the door, in the kitchen), fear of consequences (a second quote, the receipts
+      on the fridge), oversight (the firm's price list, the landlord), effort (inventing
+      extra parts takes work), and not needing the money (a comfortable month raises this
+      motive's price, a tight one lowers it). The shares add up: each motive still holding
+      keeps its share off the bill, and none is enough on its own.
+    - *Stakes* `t_1, …, t_m`: `m = 26` stakes from 1 to 5, in units of the smallest. These
+      are A&M's observation times.
+    - *Prices.* With `k_μ = e^{−θ_μ}`, a component decays as
+      `e^{−k_μ t} = G(θ_μ − log t)`, where `G(z) = exp(−e^{−z})` is the Gumbel
+      distribution function. So motive `μ` holds at stake `t` with weight
+      `G(θ_μ − log t)`. It gives way around the stake `e^{θ_μ} = 1/k_μ`, its price, and
+      softly: from 90% to 10% over about a twentyfold range of stakes.
+    - *Fairness* `y_t = Σ_μ a_μ G(θ_μ − log t)`: the share of what could be taken that is
+      held back at stake `t`. You judge it with noise `σ = 0.1`, ten percentage points, at
+      each stake, in each of `N` encounters. The held-out `x′` is the next encounter, at the
+      same stakes.
+    - *Which motives show.* A motive's effect on fairness,
+      `∂y_t/∂θ_μ = a_μ t k_μ e^{−k_μ t}` ([§9.3](#93-exponential-decay-fim)), peaks at the
+      stake equal to its price. Motives priced among the stakes seen are relevant. Those
+      priced far above them (holding at every stake seen) or far below (giving way at
+      every one) are irrelevant, except as a block. Which motives are which depends on the
+      character, so the relevant directions vary across `Θ` and no ranking is given
+      ([§3.5](#35-a-third-route-ordering-instead-of-budget)).
 
-    *The seemingly neutral detective* uses Jeffreys. Counting scenarios by how different their evidence would look is the only weighting that does not depend on how the
-    habits are measured (per hour, per minute, on a log scale); that is Jeffreys'
-    appeal. With a prior flat in duration the estimate would be the log reading `x` itself, so
-    any departure comes from the prior. His estimate is the posterior mode
-    `(x + √(x² + 4(D−1)))/2`, from eq. (9.2.1), for `D − 1` modelled habits: 6.7
-    minutes for `x = 3` with 25 habits, 11.6 with 100, and 12.1 for `x = 10` with 25
-    (A&M's own example). The pull is largest for short visits and grows with every habit
-    he models, so the same evidence gives different conclusions depending on an
-    invisible modelling choice. A&M name the principle this violates: predictions should be independent of
-    unobservable model details [read: A&M §2.2].
+    *The seemingly neutral observer* uses Jeffreys. Counting characters by how
+    differently they would deal is the only weighting that does not depend on how prices
+    are measured (in euros, in log-euros, as rates); that is Jeffreys' appeal. The table
+    gives the posterior mean fairness at small stakes (1–2) and at larger ones (4–5), for
+    one noiseless encounter with a character of 12 motives, judged by observers who model
+    `D` of them; `Δ` is A&M's posterior deviation from the best fit, in noise units
+    (`notes/spec-002-motives-example/jeffreys_pull.py`, two seeds agreeing to 0.1):
 
-    *Why model them jointly.* The traces tie the two questions: a trace's size is habit
-    × time, so no profile can be read without the duration. This coupling is the taper.
+    | Character seen | Seen | `D = 4` | `D = 8` | `D = 12` |
+    |---|---|---|---|---|
+    | Mostly honest: 9 motives never give way, 3 do at stakes 1.2–3.3 | 0.87 / 0.77 | 0.88 / 0.72 (`Δ` 1.6) | 0.80 / 0.67 (4.4) | 0.74 / 0.63 (6.7) |
+    | Honest up to one price, 2.5 | 0.56 / 0.17 | 0.50 / 0.21 (2.2) | 0.43 / 0.24 (4.1) | 0.39 / 0.23 (5.2) |
+    | Steady: half the motives never give way, half always | 0.50 / 0.49 | 0.54 / 0.45 (2.0) | 0.52 / 0.41 (3.1) | 0.48 / 0.37 (4.7) |
+    | Eroding: prices spread from 0.4 to 20 | 0.53 / 0.29 | 0.51 / 0.30 (0.5) | 0.47 / 0.30 (1.8) | 0.42 / 0.28 (3.3) |
 
-    *No continuum needed.* The bias needs a distinguishability metric and a prior that
-    counts scenarios more finely than the evidence can tell them apart. Count scenarios on
-    a grid of spacing `h` in trace units: at duration `θ_1` there are
-    `(θ_1/(Lh))^{D−1}` of them whenever `h < θ_1/L`, so the tilt between two durations,
-    `(θ_1/θ_1')^{D−1}`, is Jeffreys' at every such `h`; Jeffreys is the `h → 0` limit.
-    At the evidence's own resolution (`h` about one noise unit, wider than every
-    cross-section) each duration holds a single scenario and the tilt vanishes. Counting
-    at that resolution is roughly what `p*` does [guess: `p*` is the optimal version,
-    not a uniform grid]. With discrete scenarios, counting is legitimate when they are
-    real, equally likely individuals: that is a base rate, part of nature. The bias
-    concerns counts of modelling distinctions, such as how many habits the detective
-    chose to model.
+    Every row is pulled toward gradual erosion: a single sharp price is smeared over a
+    wider range of stakes, a steady character acquires a decline, and from `D = 8` the
+    mostly honest one loses fairness at every stake. The pull grows with `D`. The Jeffreys prior on its
+    own has this shape and is cynical: at `D = 12` it expects 29% held back at small stakes
+    and 16% at larger ones, with prices spread from about 0.13 to 14 (10th to 90th
+    percentile). It expects less the more motives are modelled: 43%, 34% and 29% at small
+    stakes for `D = 4`, 8 and 12. So the more reasons for honesty the neutral observer
+    models, the less honest it expects anyone to be; equal shares contribute, since each
+    added motive guards a smaller share. With A&M's 26 motives the posterior lies over 20
+    noise units from the data [read: A&M §2.2]. A&M
+    name the principle this violates: predictions should be independent of unobservable
+    model details [read: A&M §2.2].
 
-    *A textile-only detective* drops the habits from his model. His prior is flat in
-    duration, so he is unbiased. But he must choose what to drop, he misses a habit once
-    better instruments make its trace readable, and in effect he fixes each dropped
-    habit at one value. A&M argue that avoiding this measure-induced bias, not
-    overfitting, is the real job of model selection [read: A&M §3].
+    *No continuum needed.* The bias needs a distinguishability metric and a count of
+    characters finer than the evidence can resolve. Count characters on a grid of
+    spacing `h` in fairness units: wherever `h` is finer than every width of the model,
+    the count in a region is proportional to its Fisher volume, so the tilt is Jeffreys' at
+    every such `h`, and Jeffreys is the `h → 0` limit. At the evidence's own resolution
+    (`h` about one noise unit) each sub-resolution direction holds a single cell and its
+    contribution to the tilt vanishes. Counting at that resolution is roughly what `p*`
+    does [guess: `p*` is the optimal version, not a grid]. With discrete characters,
+    counting is legitimate when they are real, equally common individuals: that is a base
+    rate, part of nature. The bias concerns counts of modelling distinctions, such as how
+    many motives the observer chose to model.
 
-    *The infomax detective* (`p*`) weighs only distinguishable scenarios, and his weights
-    form a shortlist although every quantity is continuous:
+    *A few-motives observer* models two or three, as traditional model selection would:
+    it keeps the dimension small enough that every direction is resolvable, and on these
+    data A&M's scores prefer at most three [read: A&M §3]. This observer's bias is small
+    (the `D = 4` column), but it must choose which motives to keep, misses one once more
+    exposure makes it readable, and must choose again for the next person, whose readable
+    motives differ.
+    A&M argue that avoiding this measure-induced bias, not overfitting, is the real job of
+    model selection [read: A&M §3].
 
-    - durations about 2.5 minutes apart, so about 20 candidates [read: two-hats note
-      §7.4, for a one-dimensional bounded channel; the 26-dimensional spacing has not
-      been computed];
-    - habits only at "never" or "always": a trace spanning at most one noise unit is
-      below the width (about 3.3 units) at which a middle value would pay off [read:
-      two-hats note §7.4; Quinn §5.1]. For brief visits the two extremes leave identical
-      traces and merge (panel b of the geometry figure); for long stays a few habit
-      profiles survive [guess];
-    - his estimate should stay within about one candidate spacing of the log reading,
-      however many habits he models [guess; settled by the computation named in the
-      §1.2 footnote on `p*`'s bias].
+    *The infomax observer* (`p*`) weighs only distinguishable characters, and its weights
+    form a shortlist of types. With little evidence all its weight sits on the model's 0-
+    and 1-dimensional edges [read: A&M §2.1, Fig. 2, at `D = 4`]. Read as characters (our
+    reading): on a 0-dimensional edge every motive either never gives way or always does
+    at the stakes seen, so how much is held back does not depend on the stake ("honest",
+    "a crook", "honest about half the time"); on a 1-dimensional edge, motives share one
+    price ("honest up to a price") [read: Mattingly et al. 2018 p. 1763, on edges where
+    decay constants coincide]. With two motives and very little evidence, only "honest"
+    and "a crook" remain [read: Mattingly Fig. 4]. More evidence adds characters with two
+    prices, then more, toward the continuum the neutral observer counts [read: A&M §2.1].
+    The infomax observer's estimate should stay near what was seen whatever `D`, as it does
+    on data drawn from `p*` itself [read: A&M Fig. 4]; for these characters this is what the
+    spec computes.
 
-    More evidence (better instruments, or `N` repeated measurements) stretches every
-    Fisher length by `√N`. The duration grid refines, habits join the shortlist as their
-    traces become readable, and in the infinite-data limit the shortlist becomes the
-    continuum the neutral detective counts. Only there is Jeffreys right [read: A&M
-    §2.1]. In a real investigation the list of suspects plays the shortlist's role; here
-    the shortlist is computed from how much the evidence can resolve.
+    *More evidence, and circumstances.* Each encounter stretches every Fisher length by
+    `√N`, so unreadable prices become readable and the shortlist grows. For two motives,
+    Mattingly et al. place the change from one readable direction to two at about fifty
+    times more data, "perhaps the difference between a week's data and a year's" [read:
+    Mattingly p. 1763]. An observer who builds the prior for the exposure it expects uses
+    `p*_N` for a plumber seen once, and a prior built for more, such as `p*_{10N}`, for a
+    flatmate expected to stay a year, on the same evidence so far: the mis-budgeted copies
+    of [§2.2](#22-the-cast). The difference in expected exposure must be the observer's
+    alone, such as a move the flatmate has not been told about. Otherwise keeping the
+    arrangement becomes a motive whose price changes with the circumstance, and nature
+    changes too. Whether the flatmate-observer's finer shortlist predicts better now is
+    `Δ^{bud}` ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)). In the square
+    hypercone `p*`'s own tilt grows with its budget
+    (`notes/budget-value-of-information.md` §3.3); in exp-decay this is not computed.
 
-    *Controls and coordinates.* Traces left only on entry, such as mud on the doormat,
-    do not grow with the stay: no taper, and the neutral detective is unbiased. This is
-    the constant-cross-section control [read: A&M App. A.1]. A detective with uniform
-    priors on duration and on habit *rates* is unbiased too. One with uniform priors on
-    duration and on total *trace amounts* ("how much ash") reproduces Jeffreys' bias
-    exactly, because those coordinates fill the cone uniformly. So which coordinate prior
-    fails depends on an arbitrary choice of variables.
+    *Handing over the ranking.* Had the story said which motive matters ("only conscience
+    counts; the others leave faint marks"), it would hand over the ranking, and the
+    reference prior with that motive first would remove the bias with no budget at all.
+    That is the axis-aligned cone's position in
+    [§3.5](#35-a-third-route-ordering-instead-of-budget): the control where ranking is
+    free. Here the data reveal different motives in different people, and nothing is
+    handed over.
 
-    *The projected-ML detective* (`p_proj`) imagines every evidence pattern the room
-    could show, credits each to its best-fitting scenario, and weights scenarios by the patterns they
-    collect. Extreme scenarios (habits at "never" or "always", durations at 0
-    or 50 minutes) also collect the patterns that fall just outside the possible range,
-    so they get extra weight [read: A&M App. A.3].
+    *Controls and coordinates.* A&M's log-normal prior, normal in the log-prices, is pulled
+    too, toward its own centre at a price of 1. At `D = 12` it is pulled less than Jeffreys
+    for every character above; it reads the mostly honest one as 0.87 / 0.67 (`Δ` 3.3).
+    Exp-decay has no constant-cross-section counterpart: no setting removes the gradient.
 
-    *Nature.* Staying near the log reading is A&M's notion of unbiasedness (a small
-    posterior deviation `Δ` from the maximum-likelihood estimate), not proof of better
-    predictions. The city's actual intruders, with their real durations and habits, are
-    the foreign `q`. If most linger, the neutral detective's pull happens to point the
-    right way. If most are in and out, his bias is at its worst, while a true duration
-    can also fall between the infomax detective's candidates. Which detective predicts
-    real intruders better on average is this spec's question.
+    *The projected-ML observer* (`p_proj`) imagines every pattern of dealings it could
+    see, credits each to its best-fitting character, and weights characters by the
+    patterns they collect. Characters on the edges, the stakes-independent types and
+    those with a single price, also collect the patterns that fall outside the possible
+    range, so they get extra weight [read: A&M App. A.3].
 
-    *Limits.* A&M's one-dimensional treatment ignores the little that the 25 faint traces
-    jointly reveal about the duration, an `O(D/L²)` correction of about 1% here [read:
-    A&M App. A.1]. The example has none of exp-decay's curvature or misalignment, and the
-    habit range `[0, 1]` is stipulated. Holmes's least realistic trait may be that he
-    stays unbiased while reasoning from scant evidence over countless barely visible
-    details.
+    *Nature.* Staying near what was seen is A&M's notion of unbiasedness (a small
+    posterior deviation `Δ`), not proof of better predictions. Real plumbers' and
+    flatmates' characters are the foreign `q`. If most people's motives do give way one by
+    one from small stakes up, the neutral observer's cynicism happens to point the right
+    way. If most are mostly honest, it is at its worst (the table's largest `Δ`), while a
+    true character can also fall between the infomax observer's types. Which observer predicts real people better
+    on average is this spec's question.
+
+    *Limits.* Equal shares, additive motives and the Gumbel shape of each motive's give
+    are stipulated, and so are A&M's 26 stakes over a fivefold range and the noise. The
+    numbers are for one noiseless encounter and `D ≤ 12`; beyond that the determinants
+    need more than double precision (`notes/spec-002-motives-example/jeffreys_pull.out`,
+    check 4), so `D = 26` rests on A&M. On this model, the cynic is not someone who has met
+    many cheats but someone who has imagined many motives.
 
 [^0-am-data]: A&M compare bias pressure with the posterior deviation `Δ` (defined in
     [§1.1](#11-notation)) at 100 observations drawn from `p*`'s data distribution, in
@@ -240,7 +290,7 @@ what knowing the budget is worth to an agent that commits to one prior
 | `p_J` | [Jeffreys prior](../GLOSSARY.md#jeffreys-prior) `∝ √{det g(θ)}`, normalised on `Θ`. |
 | `p_U` | Uniform on the parameter box `Θ`. |
 | `p_LN` | Normal in `θ`, i.e. log-normal in the rate `k_μ = e^{-θ_μ}` (A&M Eq. 10): `∝ Π_μ e^{-(θ_μ-θ̄)²/2τ²}` (A&M's `σ̄` is `τ`). |
-| `p_ref` | [Reference prior](../GLOSSARY.md#reference-prior) with the relevant direction ranked first: the irrelevant directions are integrated out under their conditional prior before the relevant one gets its prior ([§3.5](#35-a-third-route-ordering-instead-of-budget), [§4.2](#42-prior-construction)). Hypercone families only until OQ-8. |
+| `p_ref` | [Reference prior](../GLOSSARY.md#reference-prior) with the relevant direction ranked first: the irrelevant directions are integrated out under their conditional prior before the relevant one gets its prior ([§3.5](#35-a-third-route-ordering-instead-of-budget), [§4.2](#42-prior-construction)). Closed form in the cones; in exp-decay, one per candidate ranking of OQ-8. |
 | `q̄` | Average of the swept natures; reference ceiling only ([§2.5](#25-controls-the-ceiling-and-self-sampling)). |
 | `m_π(X_{1:N})` | Agent's Bayes mixture `∫ p(X_{1:N}\|θ) π(dθ)`. |
 | `π(θ\|X_{1:N})` | Posterior under prior `π`. |
@@ -399,7 +449,8 @@ asymmetry is a gradient that steepens with `D` against an atom spacing that does
 
 [^1-everyday]: **Everyday co-volume gradients.** In each, one quantity the evidence
     pins down scales how strongly many others show, and those others stay below
-    resolution. The detective of [§0](#0-context) is one: duration × habits.
+    resolution. The example of [§0](#0-context) is of another kind: in exp-decay the
+    gradient comes from the curvature, not from one quantity that scales the rest.
 
     - *Neural gain.* A neuron's firing rate to each stimulus is a gain `γ` times a
       tuning curve with `D − 1` shape parameters, normalised to sum to one. The spike
@@ -603,7 +654,7 @@ the one it is minimax for, and away on the other.
 | `p_lat` | latent information prior at `(N, 1)`, `argmax_π I_π(Θ;X_{N+1}\|X_{1:N})` [read: Komaki 2011 §3] | `r_N` | minimax for `r_N` for finite outcome spaces [read: Komaki 2011 Thm 2; Fogel & Feder 2024 Thm 1]; for Gaussian data expected but unproven [read: Komaki 2011 §4] | open; for some budgets near-full support [read: Fogel & Feder 2024 §VII] |
 | `p_proj` | [pushforward](../GLOSSARY.md#pushforward) of the [NML](../GLOSSARY.md#normalized-maximum-likelihood-nml) distribution through the MLE map ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)) | neither | NML is minimax for the pointwise regret of the `N`-sequence; `p_proj` for neither score | no |
 | `p*_{N/10}`, `p*_{10N}` | `p*` built for a tenth or ten times the true budget: an agent that knows the construction but not its budget, and commits to one resolution | `R_M`, at the wrong budget | none at `N` | yes |
-| `p_J`, `p_U`, `p_LN`, `p_ref` | the [deployable priors](../GLOSSARY.md#deployable-prior): Jeffreys, uniform, log-normal, ranked reference (`p_ref` in the hypercone families only, OQ-8) | — | none | no |
+| `p_J`, `p_U`, `p_LN`, `p_ref` | the [deployable priors](../GLOSSARY.md#deployable-prior): Jeffreys, uniform, log-normal, ranked reference (`p_ref`: closed form in the cones, one per OQ-8 ranking in exp-decay) | — | none | no |
 | `q̄` | matched to the average of the swept natures | — | the ceiling on both scores ([§2.5](#25-controls-the-ceiling-and-self-sampling)) | — |
 
 `p*` and `p_lat` are two members of one family, maximising the information gained over two
@@ -951,26 +1002,40 @@ In the hypercone the Fisher information left for the relevant coordinate, once t
 irrelevant ones are accounted for, is `1/σ²` everywhere[^3-schur]. So `p_ref` is uniform
 in the relevant coordinate and, at each value of it, uniform across the cross-section of
 `Θ` ([§4.2](#42-prior-construction)). In the axis-aligned cone that is `p_U`; under
-rotation the two differ, because `p_U` inherits a tilt from the rotated box. `p_ref` is
-the principled form of the textile-only detective (footnote to [§0](#0-context)), who
-drops the habits where `p_ref` integrates them out.
+rotation the two differ, because `p_U` inherits a tilt from the rotated box.
 
 Ranking needs a mechanism that picks the direction of interest, something like attention;
 `p*` needs none by construction. Whether `p*` removes the bias as well as `p_ref` does is
-part of this spec's question, read off `δR(p*, p_ref)` ([§6.3](#63-table-schema)). Which
-route organisms take is an empirical question outside this spec
-([`empirics/`](../empirics/README.md)). In exp-decay the relevant directions are curved
-and vary across `Θ`, so no ranking is given: choosing one is OQ-8
-([§7](#7-open-questions)), and until then `p_ref` competes in the hypercone families
-only.
+part of this spec's question, read off `δR(p*, p_ref)` ([§6.3](#63-table-schema)).
 
-[TODO] Recast the cone's role. Where the relevant/irrelevant split is the same across
-`Θ`, as in the axis-aligned and rotated cones, the ranking follows from the likelihood,
-`p_ref` is as automatic as `p*`, and the budget is expected to buy only insurance. A
-reduced-cone computation agrees (`notes/budget-value-of-information.md` §4). The cone
-would then be the control where ranking is free, and the decisive comparison would be
-exp-decay, with `p_ref` built from at least two of the OQ-8 candidate rankings. To decide
-with MB; not yet propagated to §3.7, §4 or §6.
+**Where the ranking comes from.** It can be handed over, computable, or unavailable, and
+the geometries of [§1.2](#12-generative-model) give one of each:
+
+1. *Handed over.* In the axis-aligned cone the relevant direction is a named coordinate,
+   and `p_ref = p_U`. A story that names the quantity that matters is in this position,
+   and so is an experiment whose instructions name the relevant stimulus dimension.
+2. *Computable.* In the rotated cone the split is the same everywhere but lies off the
+   axes. `p_ref` follows from the likelihood in the coordinates `Qθ`
+   ([§4.2](#42-prior-construction)), while coordinate priors such as `p_U` inherit a
+   tilt. For a learner, being told the combination may not help: describing the optimal
+   strategy before training raised final category-learning accuracy when the strategy
+   was a rule on named dimensions (0.82 against 0.65), and left it unchanged when the
+   strategy integrated them (0.80 against 0.80) [read: Rosedahl, Serota & Ashby 2021,
+   abstract and results].
+3. *Unavailable.* In exp-decay the relevant directions curve and vary across `Θ`, so no
+   global ranking is given; choosing one is OQ-8 ([§7](#7-open-questions)). The example of
+   [§0](#0-context) is of this kind: which motives the data reveal depends on the person.
+
+In the cones the ranking follows from the likelihood, so `p_ref` is as automatic as `p*`
+and the budget is expected to buy only insurance. A reduced-cone computation agrees: a
+prior flat in the relevant coordinate beats `p*_N` on natures uniform in it or confined to
+the thin end, and loses only at the thick end and in the worst case
+(`notes/budget-value-of-information.md` §4, where the uniform nature is that prior's own
+world). The cones are therefore the **control where ranking is free**, and the decisive
+comparison is exp-decay, against `p_ref` built from at least two of the OQ-8 candidate
+rankings ([§3.7](#37-falsification)). Which route
+organisms take, and when being told the ranking helps them, is an empirical question
+outside this spec ([`empirics/`](../empirics/README.md)).
 
 [^3-lineage]: A reference prior maximises the same mutual information as `p*`, but in
     the limit of infinitely many repetitions of the experiment [read: Bernardo 2005,
@@ -1020,9 +1085,10 @@ Several things can make it lose:
    *good* in absolute terms, since `C_N` itself can be sizeable at the small `N` this spec
    targets. `p*`'s case is **robustness / insurance**, not average-case optimality: a
    premium wasted on benign `q` (`notes/infomax_two_hats_and_directions.md` §3).
-5. **Ordering may do the job.** If `p_ref` matches `p*` where it is defined
-   ([§3.5](#35-a-third-route-ordering-instead-of-budget)), the bias is removable without a budget, and `p*`'s remaining
-   advantage is only that it needs no ranking.
+5. **Ordering may do the job.** If `p_ref` matches `p*`, the bias is removable without a
+   budget, and `p*`'s remaining advantage is only that it needs no ranking. In the cones
+   this is expected ([§3.5](#35-a-third-route-ordering-instead-of-budget)); in exp-decay it
+   would mean that some cheap ranking does the budget's job.
 6. **The setting may leave the budget nothing to do.** Settings in which knowing the
    budget is worth little or nothing are collected in
    [`notes/budget-value-of-information.md`](../notes/budget-value-of-information.md) §5:
@@ -1036,7 +1102,12 @@ The expectation is *supported* where `p*` beats every deployable prior on its ho
 `Δ_{R_N}(p*) < 0` ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)), across the tilt family and the stress panel, with pairwise
 gaps showing the lead is not shared by `p_proj` or `p_lat`. It is *refuted* where `p*` ties
 or loses to the best deployable prior, or leads only near its self-sampling control
-([§2.5](#25-controls-the-ceiling-and-self-sampling)). Bound (3.1.1) forecloses neither in general, but it settles some cells. Since
+([§2.5](#25-controls-the-ceiling-and-self-sampling)). The cones are the control where
+ranking is free ([§3.5](#35-a-third-route-ordering-instead-of-budget)), so a tie with or a
+loss to `p_ref` there is the expected control result, not a refutation; there `p*` is read
+against the other deployable priors. The verdict against `p_ref` is taken in exp-decay,
+under each OQ-8 ranking, and a lead that holds under only some rankings is reported as
+such. Bound (3.1.1) forecloses neither in general, but it settles some cells. Since
 `R_N^q(p*) ≤ C_N` for every `q`, `p*` beats any prior `π` with `R_N^q(π) > C_N`, by
 theorem. A cell in which every deployable prior's redundancy exceeds `C_N` is therefore
 not a test; the live cells are those where the best deployable prior stays below `C_N`.
@@ -1171,12 +1242,14 @@ def build_model(family, D, m, sigma, N, *, taper=1.0, rotation=0.0, curvature=0.
   (quadrature, or from the sampled cloud). Its gap to `p*` is a reported pairwise gap
   ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted), [§3.4](#34-the-second-protagonist-infomax-vs-mdl)); the sampler is
   pinned in the pseudocode below (resolving OQ-6).
-- **`p_ref` — reference prior, relevant direction first ([§3.5](#35-a-third-route-ordering-instead-of-budget)).** Hypercone
-  families only (OQ-8). With the vertex-curvature knob off it has a closed form: density
+- **`p_ref` — reference prior, relevant direction first ([§3.5](#35-a-third-route-ordering-instead-of-budget)).** In the
+  cones, with the vertex-curvature knob off, it has a closed form: density
   `∝ 1/A((Qθ)_1)` on `Θ`, where `A(s)` is the volume of the cross-section
   `{θ ∈ Θ : (Qθ)_1 = s}`; with `Q = 𝟙` this is `p_U`. With curvature on, evaluate the
   Berger–Bernardo formula of `[^3-schur]` by quadrature from the FIM, in the coordinates
-  `Qθ`. Budget-independent, like `p_J`.
+  `Qθ`. In exp-decay, one `p_ref` per candidate ranking, at least two, from the same
+  formula in coordinates that put the ranked direction first. [TODO] The construction
+  waits on OQ-8's choice of rankings. Budget-independent, like `p_J`.
 - **`p*_{N/10}`, `p*_{10N}` — mis-budgeted `p*` ([§2.2](#22-the-cast)).** The `p*`
   construction above at `σ/√M` for `M = N/10` and `M = 10N`, scored at the true `N`. `M`
   need not be an integer: `N/10 < 1` is the effective noise `σ√(10/N)`.
@@ -1266,7 +1339,7 @@ For each cell `(model, D, σ, N, taper, rotation, curvature, nature)`:
 
 ```
 1.  model = build_model(family, D, m, σ, N)          # builds at σ_eff = σ/√N (§4.1)
-2.  priors = {p*, p_lat, p_proj, p*_{N/10}, p*_{10N}, p_J, p_U, p_LN, p_ref, q̄}   # §4.2; p_ref: hypercone only
+2.  priors = {p*, p_lat, p_proj, p*_{N/10}, p*_{10N}, p_J, p_U, p_LN, p_ref, q̄}   # §4.2; p_ref: one per OQ-8 ranking in exp-decay
 3.  For s = 1 .. S_q:
         θ_s, label ← sample_nature(model, nature, rng)        # §4.3
         x̄_s ~ 𝒩(y(θ_s), σ_eff² 𝟙)                            # sufficient statistic of X_{1:N}
@@ -1483,7 +1556,8 @@ mis-weighted tilt, a dropped label (the §6.3 split by nature needs it) or a wro
 `g_{11} − g_{1λ} g_{λλ}^{-1} g_{λ1}` of the numerical FIM equals `σ^{-2}` (`[^3-schur]`).
 (b) Axis-aligned cone: `p_ref = p_U` pointwise. (c) Rotated cone: `p_ref` normalises, and
 its marginal on `(Qθ)_1` is flat to quadrature tolerance, while `p_U`'s is not. (d)
-Constant cross-section: `p_ref = p_U = p_J`.
+Constant cross-section: `p_ref = p_U = p_J`. [TODO] (e) Exp-decay, once OQ-8 picks the
+rankings.
 
 **T16 — `p_lat` construction.** [TODO] (P16).
 
@@ -1676,7 +1750,8 @@ exp-decay (primary) and rotated-hypercone (controlled) models.
 - The [§2.4](#24-what-is-reported-and-what-cannot-be-asserted) summaries, each with its MCSE, for `π ∈ {p*, p_lat, p_proj}` and
   `S ∈ {R, r}`: `gap_best[π][S] = max_{π'∈{p_J,p_U,p_LN,p_ref}} (S[π] − S[π'])`;
   `gap_pair[π, π'][S]` for the three protagonist pairs; `gap_ceiling[π][S] = S[π] − S[q̄]`;
-  `delta_R_pref = R[p*] − R[p_ref]` (budget versus ordering, [§3.5](#35-a-third-route-ordering-instead-of-budget)); and
+  `delta_R_pref = R[p*] − R[p_ref]` (budget versus ordering, [§3.5](#35-a-third-route-ordering-instead-of-budget)), one per ranking in
+  exp-decay; and
   `gap_budget[S] = S[p*] − min_{M ∈ {N/10, 10N}} S[p*_M]`, the value of knowing the budget
   ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)).
 - `I_pstar`, `I_pJ`, `I_pproj`, `B_pstar`, `B_pJ` (bits) — the A&M/Quinn prior-side scores;
@@ -1696,11 +1771,13 @@ the table stays small but an analysis by nature can re-key off it).
 3. Both scores vs `D` with the `q̄` ceiling.
 4. The value of knowing the budget: `Δ^{bud}` by `D`, model and nature, with the
    constant-cross-section control (§2.2).
-5. Calibration diagnostic.
-6. A table of the §2.4 summaries by `D`, `N` and nature.
-7. Test results: T0–T15 and T19 pass/fail with achieved tolerances (T0 the spec-000
+5. Budget versus ordering: `delta_R_pref` in the cones, the control where ranking is
+   free, and in exp-decay per ranking (§3.5, §3.7).
+6. Calibration diagnostic.
+7. A table of the §2.4 summaries by `D`, `N` and nature.
+8. Test results: T0–T15 and T19 pass/fail with achieved tolerances (T0 the spec-000
    regression gate, T12 the AtomicPriors cross-checks); [TODO] T16–T18.
-8. Notes: the §3.7 reading per protagonist (supported, refuted, or self-served near its
+9. Notes: the §3.7 reading per protagonist (supported, refuted, or self-served near its
    own world), solver-method caveats (OQ-1), and anything surprising.
 
 ## 7. Open questions
@@ -1747,8 +1824,10 @@ the table stays small but an analysis by nature can re-key off it).
   relevant directions are curved and vary across `Θ` ([§3.5](#35-a-third-route-ordering-instead-of-budget))? Candidates:
   the stiffest FIM eigen-direction at each `θ`, or a fixed coordinate such as the slowest
   rate. Any choice is a stand-in for an attention mechanism, and the choice may decide
-  the comparison. Related: the Neyman–Scott problem (`[^3-lineage]`) would be a clean
-  extra test of whether `p*` removes a co-volume bias without any ranking.
+  the comparison. Since exp-decay is the decisive comparison
+  ([§3.5](#35-a-third-route-ordering-instead-of-budget)), at least two candidates are
+  needed and this blocks it. Related: the Neyman–Scott problem (`[^3-lineage]`) would be a
+  clean extra test of whether `p*` removes a co-volume bias without any ranking.
 - **OQ-9 (definition, deferred to the §4 pass).** The exp-decay parameter box `Θ` is not
   specified (`parameter_box` in [§4.1](#41-model-families)). Panel (d) of the geometry
   figure uses `θ_μ ∈ [−1, 3]` for illustration, taken from `notes/q-family-viz/`.
@@ -1847,7 +1926,14 @@ the table stays small but an analysis by nature can re-key off it).
   methods. *IEEE Trans. IT* 36(3), 453–471.
   [doi:10.1109/18.54897](https://doi.org/10.1109/18.54897). The stochastic-complexity
   expansion shared by the capacity and NML codes ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)).
-- In-repo: `notes/prediction_objective_for_priors.md` (the maths this spec
+- Rosedahl, L. A., Serota, R. & Ashby, F. G. (2021). When instructions don't help:
+  knowing the optimal strategy facilitates rule-based but not information-integration
+  category learning. *Journal of Experimental Psychology: Human Perception and
+  Performance*. [doi:10.1037/xhp0000940](https://doi.org/10.1037/xhp0000940). Instructions
+  that help only along named dimensions ([§3.5](#35-a-third-route-ordering-instead-of-budget)); read
+  in the authors' preprint.
+- In-repo: `notes/spec-002-motives-example/jeffreys_pull.py` (the numbers of the §0
+  example), `notes/prediction_objective_for_priors.md` (the maths this spec
   formalises), `notes/infomax_two_hats_and_directions.md` (the two-hat diagnosis),
   `tutorials/math/redundancy-capacity.md` (compensation identity, equalizer),
   `tutorials/math/nml-mdl.md` (NML / stochastic complexity — the `p_proj` sibling of
@@ -2847,3 +2933,35 @@ the note's criterion for `p*`'s budget dependence; §2.3 cautions that the tilt 
 moves nature with `D` at fixed `t ≠ 0`, with a `[TODO]` on adding natures fixed in the
 relevant coordinate; §3.7 states the sufficient condition `R_N^q(π) > C_N` under which a
 cell is settled by theorem; OQ-1 points to the note's list of cheap stand-ins for `p*`.
+
+### 2026-11-06 — Restructure (§0, §1.2 footnote, §8; everyday example)
+
+At MB's request. The detective example of §0 is replaced by a plumber or a flatmate and
+the motives that keep them from overcharging. MB's reason: the detective is the square
+hypercone, which hands over the ranking twice, since the likelihood makes the duration
+stiff everywhere and the question names it. The new example is exp-decay read as motives
+with breaking points, through `e^{−kt} = G(θ − log t)` with `G` the Gumbel distribution
+function: no motive is privileged, and which ones the data reveal depends on the person.
+MB chose the eight motives. Footnote `[^0-motives]` maps every element to §1.2 and §4.1
+and covers the same observers as before (Jeffreys, few-motives, `p*`, `p_proj`), the
+budget set by circumstances, the ranking, coordinates, the foreign `q` and the limits.
+Jeffreys' numbers come from a new script, `notes/spec-002-motives-example/jeffreys_pull.py`
+(ensemble sampler, two seeds, a broad-start check, `D ≤ 12`), not from closed forms as
+the detective's did. Its finding: Jeffreys pulls every character toward gradual erosion,
+and its prior is cynical, more so the more motives it models. The reading of `p*`'s edges
+as character types is Claude's; the edges are read from A&M and Mattingly et al.
+Footnote `[^1-everyday]` no longer names the detective; §8 lists the script.
+
+### 2026-11-06 — Refinement (§1.1, §2.2, §3.5–§3.7, §4.2, §4.4, §5, §6, OQ-8, §8; where the ranking comes from)
+
+At MB's request, resolving the `[TODO]` added to §3.5 on 2026-10-25. §3.5 distinguishes
+a ranking handed over (axis-aligned cone), computable from the likelihood (rotated cone)
+and unavailable (exp-decay). The cones become the control where ranking is free, and
+exp-decay, against `p_ref` under at least two OQ-8 rankings, the decisive comparison.
+§3.5 cites Rosedahl, Serota & Ashby 2021 (added to §8) on instructions that help only
+along named dimensions, and `empirics/README.md` gains a lead on instructions as a
+handed-over ranking. Propagated: §3.6 point 5; §3.7, where a tie with `p_ref` in the
+cones is not a refutation; the `p_ref` rows of §1.1 and §2.2; §4.2's construction, with a
+`[TODO]` for exp-decay; the §4.4 pseudocode comment; T15 (e) as a `[TODO]`;
+`delta_R_pref` per ranking in §6.3; a new item in §6.4; and OQ-8, which now blocks the
+decisive comparison.

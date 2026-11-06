@@ -66,6 +66,9 @@ added to, never finished. *Dormant*: untouched since it was written, with no suc
 Removed: `intro_collation.md` (23 Sep – 1 Oct), intro prose collated for the publication
 format, deleted once used.
 
+Scripts with no note of their own: `spec-002-motives-example/` (6 Nov), behind the
+numbers of spec 002's §0 example.
+
 ## Upkeep
 
 A commit that adds a note, or changes a note's status or links, updates its row here and

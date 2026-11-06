@@ -35,7 +35,7 @@ which adapts to what the data can resolve, against Jeffreys, which weights unres
   002 exists to test (§0).
 - **Principle.** Predictions should not depend on unobservable model details [read: A&M
   §2.2]; avoiding measure-induced bias, not overfitting, is the job of model selection
-  [read: A&M §3]. Feeds spec 002 §0, footnote on the detective example.
+  [read: A&M §3]. Feeds spec 002 §0, footnote on the motives example.
 - **Resolution adaptation is nearly unique in hyperribbons.** `p_proj` captures about as
   much information as `p⋆` and far more than Jeffreys [read: Quinn §5.1, Fig. 12]; Quinn
   et al. call it the "adaptive slab-and-spike" prior [read: Quinn §5.2], and A&M note its

@@ -12,7 +12,7 @@ Each lead below gets its own file once someone works on it.
 
 - **Perception vs deliberate judgement** (MB's hypothesis) [guess]. Evolved perception
   may weigh only what its senses resolve, as `p*` does. Deliberate, formal reasoning may
-  count the distinctions it models, as the Jeffreys detective of spec 002 §0 does.
+  count the distinctions it models, as the neutral observer of spec 002 §0 does.
   Related work: infomax as a principle of perceptual coding (Linsker 1988; Laughlin
   1981) [recalled]. Also support theory: splitting a hypothesis into more detailed
   sub-scenarios raises its judged probability (Tversky & Koehler 1994) [recalled].
@@ -21,6 +21,19 @@ Each lead below gets its own file once someone works on it.
   budget-consciousness. Which do organisms use, where, and how well does each work?
   Spec 002 §3.5 compares the two priors on prediction; the behavioural question is open.
   Background: `notes/infomax_two_hats_and_directions.md` §2.6.
+- **Instructions as a handed-over ranking.** Instructions that name the stimulus dimension
+  that matters hand participants the ranking: spec 002's control where ranking is free
+  (§3.5). Being told may help only when the ranking lies along named dimensions.
+  Describing the optimal strategy before training raised final category-learning
+  accuracy when the strategy was a rule on named dimensions (0.82 against 0.65), and left
+  it unchanged when the strategy integrated them (0.80 against 0.80) [read: Rosedahl,
+  Serota & Ashby 2021, abstract and results]. Their point that research asks how to give
+  instructions rather than whether they help is the opening for this lead. Spec 002 §3.5's
+  three cases (ranking handed over, computable, unavailable) suggest three instruction
+  conditions. The third, where which dimension matters depends on the stimulus, may be
+  close to context-dependent attention in category learning [guess]; to read: George &
+  Kruschke 2012, and the signaling principle of instructional design (meta-analysis:
+  Richter, Scheiter & Eitel 2016).
 - **Repertoire dependence as a test.** A volume-counting prior's conclusions move with
   the size of a repertoire the evidence cannot see: spices known, faces known, tuning
   parameters modelled (spec 002, footnote `[^1-everyday]`). Do human estimates move with

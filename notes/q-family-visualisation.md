@@ -166,7 +166,8 @@ Script: `notes/q-family-viz/q_family_bprime.py`, untrusted like the first.
   these counts.
 - **A side finding for spec 002 §3.4.** If `p_proj` follows the noise-tube volume, it tilts
   toward the thick base by about ten orders in the `D = 26` hypercone: a pull of roughly one
-  noise unit at the detective's reading `x = 3`, against Jeffreys' eight [guess: the
+  noise unit at a reading `x = 3` (the detective example, since replaced in spec 002 §0),
+  against Jeffreys' eight [guess: the
   approximation ignores the cone's slanted surface; settled by computing `p_proj` in the
   hypercone]. §3.4's claim that `p*` and `p_proj` nearly coincide rests on exp-decay [read:
   Quinn §5.1]. The square hypercone, whose sub-resolution widths are all equal rather than
