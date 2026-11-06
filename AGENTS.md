@@ -155,7 +155,8 @@ the time spent reading a misformatted draft.
 ## Directory map
 
 - `GLOSSARY.md` — definitions of terms used across the repo; documents link here.
-- `notes/` — ideas and sketches we develop.
+- `notes/` — ideas and sketches we develop; `notes/README.md` maps where each came from
+  and what it fed.
 - `resources/` — pre-existing material: papers, prior drafts, LaTeX sources.
 - `literature/` — map of the field: clusters of prior work, what our claims take from
   each, and what the human should read.
