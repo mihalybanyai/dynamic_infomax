@@ -265,7 +265,7 @@ spawn-configuration gate (§1).
 Mechanical sibling red-teams (tests, implementation) may use a cheaper model
 (the latest Sonnet); the conceptual spec red-team does not.
 
-**Last verified:** 2026-10-01 (human). The spawn-configuration gate prints
+**Last verified:** 2026-11-06 (human). The spawn-configuration gate prints
 this table at every invocation and refreshes this date on "go", so a stale
 roster (a model shipped, a tier changed) is caught by the human noticing it,
 not by an automated check. Update the cells by direct edit.
