@@ -85,6 +85,8 @@ same quantity for each deployable prior.
   at `D = m`), or replace the negative branch with a nature not built from `√det g`'s
   zeros, and declare its lean.
 
+> M: I believe the updates we made with Fable 5.2 resolve this
+
 ---
 
 ### F2: The case for transfer is made against Jeffreys; the verdict is taken against the best deployable prior [severity: medium]
@@ -109,6 +111,8 @@ beyond the ranking being unavailable.
 §2.2]). Say in §0 and §3 that no case is made against `p_U` and `p_ref`, and that against
 `p_ref` in exp-decay the expectation rests only on §3.5's "unavailable" ranking. Or supply
 the missing argument.
+
+> M: there is definitely the argument that p_U is not invariant under reparametrisation, i.e. not unique. Are there other concerns with using a uniform prior? What does A&M say about this?
 
 ---
 
@@ -139,6 +143,8 @@ circumstances"); §2.2 ("Mis-budgeted `p*`").
 - Restate §2.2 as: "in the worst case a wrong resolution costs on both sides; on the
   natures computed in the cone, too coarse wins".
 - Move the `p*_1`/`p*_{16}` example under "too coarse".
+
+> M: (a) the mis-budgeted prior should indeed be mis-budgeted (b) and (c): enforce consistency with the note. btw coarser priors winning is always interesting for us, even when they don't coincide with p*
 
 ---
 
@@ -179,6 +185,8 @@ Mattingly p. 1763, footnote]. §0–§3 never say so, and the following depend o
   distinct priors after symmetrisation.
 - Rewrite "handing over the ranking" with unequal shares, or present it as information
   about `θ` rather than a ranking.
+
+> M?: the suggestions seem reasonable to me, but I'm uncertain about the significance of non-identifiability in the exp-decay model class
 
 ---
 
@@ -234,6 +242,7 @@ Settled by: the same comparison in a cone with geometric widths.
   unchanged [read: A&M App. A.1]. Keep the equal-width cone as a stress case.
 - State the budget range over which the cone has one relevant direction.
 
+>M?: I have no idea what on eart is this about. I get that the cone does not really conform to the ribbon definition, but otherwise I'm lost.
 ---
 
 ### F6: The hypercone's "explicit" asymmetry adds a deviation to a divergence, and uses `Δ = (D−1)/x` outside its range [severity: medium]
@@ -264,6 +273,8 @@ Settled by: the same comparison in a cone with geometric widths.
 redundancy or mismatch; the budget note §4 already gives reduced-cone numbers for both. In
 §1.2 and §3.2, use §9.2's exact root, or state the range of `(D−1)/x` wherever it is used.
 
+> M?: (a) but if it's O(1) it will be in all units, no? (b): the suggestion seems reasonable
+
 ---
 
 ### F7: §3.3's "bias term" is mostly posterior spread [severity: medium]
@@ -292,6 +303,8 @@ approximation it splits into two terms, both zero for the matched prior:
   analogue of `Δ`;
 - a covariance-mismatch term `tr(Σ_π^{−1} Σ_q) − m + log(det Σ_π / det Σ_q)`.
 
+> M?: this suggestion seems reasonable but I'm uncertain
+
 ---
 
 ### F8: The verdict rule sets aside cells `p*` wins by theorem, but not cells it loses by construction [severity: medium]
@@ -318,6 +331,8 @@ happens elsewhere. Three phrases are also undefined:
   prior is matched (`D_KL(m_q‖m_π) ≈ 0`).
 - State the verdict per region of the tilt axis, with the controls marked.
 - Define "near" by F1's foreignness coordinate.
+
+> M: this seems to have been resolved by the latest edits to the natures too? there is no tilt anymore, and home-court wins are thrown out. is there anything left from the concern?
 
 ## Minor
 
@@ -398,6 +413,8 @@ happens elsewhere. Three phrases are also undefined:
   Haussler 1997, Shtarkov 1987, Rissanen 1996 and Grünwald 2007 are untagged; and "would
   remove the bias with no budget at all" (exp-decay) is a `[guess]` stated as fact — tag
   each.
+
+  > M: apply suggestions where clear, and still applicable after intervening edits. m11: the former, m15: footnote
 
 ## What the spec gets right
 
