@@ -5,7 +5,8 @@ Research project on [one-line description here].
 ## TODO
 
 - Theory
-  - complete spec 002
+  - process annotated red team report on spec 002
+  - discuss idea about Battaglia/Tenenbaum shedding light on how true and perceptual parameter geometries might differ
 - Experiment
   - create the folder structure
   - process handwritten notes
