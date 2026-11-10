@@ -22,6 +22,7 @@ Research project on [one-line description here].
 - empirics/real_world_analogues.md: review and decide if implies action
 - notes/daisy_chain_derivation.md: review and resolve
 - notes/daisy_chain_causal_discovery.md: read and reconsider
+- notes/block-towers.md: develop after spec 002 is finished (candidate spec 003)
 - meta/plumbing_spec.md: read and review, the publication setup
 
 ## Quick start

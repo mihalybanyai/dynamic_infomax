@@ -46,6 +46,13 @@ Each lead below gets its own file once someone works on it.
   on three levels (everyday situation, experiment, spec 002's model), with existing
   results from cognitive tuning, construal level and the horizon task as targets:
   [`anticipated_exposure.md`](anticipated_exposure.md).
+- **Block towers as a budgeted judgment.** People's judgments of whether a tower of
+  blocks will fall are fitted by a simulator run on a few noisy copies of the scene, with
+  position noise of 0.2 of a block's side [read: Battaglia, Hamrick & Tenenbaum 2013].
+  That noise is a measured budget, and viewing time is a candidate way to vary it
+  [guess]. Geometry and next steps are in
+  [`notes/block-towers.md`](../notes/block-towers.md); parked until spec 002 is
+  finished.
 - **Older material**, written for spec 001's betting framing:
   [`real_world_analogues.md`](real_world_analogues.md) covers clinical
   trials, foraging, probability weighting and categorical perception.

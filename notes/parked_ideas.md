@@ -56,7 +56,8 @@ sources:
 - **Reduced models of everyday situations.** MB's conjecture [guess]: a few tens of
   parameters describe such situations well, so the millions a learned model has can be
   cut down massively while leaving ample room for prior choice. This needs a look at
-  which geometries arise naturally there.
+  which geometries arise naturally there. One such reduction, judging whether a tower
+  of blocks falls, has a note of its own: [block-towers.md](block-towers.md).
 
 *What would settle it:* for science models, a suite of (model, `θ`) pairs with
 independently measured parameters and few enough of them to compute `p*`

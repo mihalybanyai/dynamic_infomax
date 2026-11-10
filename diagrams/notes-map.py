@@ -96,6 +96,8 @@ GROUPS = [
             # note and from the chat on spec 002's conc04 red-team.
             ("park", "Parked ideas", "parked_ideas.md",
              [d(10, 4), d(10, 25), d(10, 26), d(11, 9)], "running list"),
+            ("towr", "Block towers: a candidate family", "block-towers.md",
+             [d(11, 10)], "parked until 002 is done"),
         ],
     ),
     (
@@ -177,6 +179,7 @@ LINKS = [
     (("budg", d(10, 26)), ("ant", d(10, 29)), LED, -0.12),
     (("dcd", d(10, 29)), ("ant", d(10, 29)), LED, 0.2),
     (("s002", d(11, 6)), ("park", d(11, 9)), LED, -0.3),
+    (("park", d(11, 9)), ("towr", d(11, 10)), LED, -0.5),
 ]
 
 ROW_H = 1.0

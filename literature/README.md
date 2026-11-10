@@ -120,5 +120,6 @@ Short parts (☆), roughly in order of use:
   Roy 2021 and 2022 ([pdf](../resources/arumugam_vanroy.pdf),
   [pdf](../resources/arumugam_vanroy_model.pdf)); Tishby, Pereira & Bialek 1999
   (information bottleneck); Sims 2016 and 2018; Wei & Stocker 2015; Heald et al. 2021;
-  Reizinger et al. 2024; Watanabe's singular learning theory; the works cited in
+  Reizinger et al. 2024; Watanabe's singular learning theory; Battaglia, Hamrick &
+  Tenenbaum 2013 (intuitive physics; `notes/block-towers.md`); the works cited in
   `empirics/`.
