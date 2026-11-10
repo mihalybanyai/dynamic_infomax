@@ -85,8 +85,8 @@ the number of parameters `D`. Jeffreys' worst-case bias pressure exceeds 500 bit
 shown only on its own data. Against a foreign `q`, its loss is capped by the
 [channel capacity](../GLOSSARY.md#channel-capacity), which stays roughly flat as `D` grows
 ([§3.1](#31-the-one-guarantee-worst-case-over-q)). Whether its advantage survives
-without [self-sampling](../GLOSSARY.md#self-sampling) is the open question. Nature is swept over a family that passes
-through several priors' own worlds, with each prior's own world as a control
+without [self-sampling](../GLOSSARY.md#self-sampling) is the open question. Every prior is scored in every other prior's
+own world, the nature equal to that prior, with its own as the control
 ([§2.3](#23-the-natures), [§2.5](#25-controls-the-ceiling-and-self-sampling)), so that
 no unstated choice of `q` fixes the result. That failure sank spec 001 (finding F1 of
 `specs/001-infomax-betting-redteam_third.md`).
@@ -280,8 +280,8 @@ example.
 | `L` | [Fisher length](../GLOSSARY.md#fisher-length) `∫ ds` of a path, with `ds` from eq. (1.2.2) in [§1.2](#12-generative-model); a direction is [relevant](../GLOSSARY.md#relevant-and-irrelevant-directions) if `L>1`, irrelevant if `L<1`. |
 | `q` | Nature's distribution over `θ` (the *foreign* truth). |
 | `m_q(X_{1:N})` | Nature's `N`-fold data marginal `∫ p(X_{1:N}\|θ) q(dθ)`. |
-| `t` | Tilt of nature's family `q_t ∝ (√det g)^t` ([§2.3](#23-the-natures)): `t=1` is Jeffreys' own world, `t=0` uniform on `Θ`, `t<0` the thin end. |
-| `ν` | The nature of a cell: a tilt `t`, a stress nature, or a self-sampling control ([§2.3](#23-the-natures)); it selects `q`. |
+| `ν` | The nature of a cell: a prior's own world, a fixed nature or a stress nature ([§2.3](#23-the-natures)); it selects `q`. `m_ν` is its data marginal. |
+| `D_0` | Number of distinct rates of a few-rates nature, `D_0 < D` ([§2.3](#23-the-natures)). |
 | `π` | Agent's prior, one of `{p*, p_lat, p_proj, p*_{N/10}, p*_{10N}, p_J, p_U, p_LN, p_ref}`, with `q̄` as reference ceiling ([§2.2](#22-the-cast)). |
 | `p*` | Infomax ([capacity](../GLOSSARY.md#channel-capacity)-achieving) prior of the budget-`N` channel `θ→X_{1:N}`: `argmax_π I_π(Θ;X_{1:N})`, equivalently the single-observation achiever at noise `σ/√N` ([§4.2](#42-prior-construction)). Discrete[^1-discrete]. |
 | `p_proj` | Projected-ML / NML prior: the [pushforward](../GLOSSARY.md#pushforward) of the [NML distribution](../GLOSSARY.md#normalized-maximum-likelihood-nml) through the MLE map `θ̂(x)` ([§3.4](#34-the-second-protagonist-infomax-vs-mdl), [§4.2](#42-prior-construction)). |
@@ -291,7 +291,7 @@ example.
 | `p_U` | Uniform on the parameter box `Θ`. |
 | `p_LN` | Normal in `θ`, i.e. log-normal in the rate `k_μ = e^{-θ_μ}` (A&M Eq. 10): `∝ Π_μ e^{-(θ_μ-θ̄)²/2τ²}` (A&M's `σ̄` is `τ`). |
 | `p_ref` | [Reference prior](../GLOSSARY.md#reference-prior) with the relevant direction ranked first: the irrelevant directions are integrated out under their conditional prior before the relevant one gets its prior ([§3.5](#35-a-third-route-ordering-instead-of-budget), [§4.2](#42-prior-construction)). Closed form in the cones; in exp-decay, one per candidate ranking of OQ-8. |
-| `q̄` | Average of the swept natures; reference ceiling only ([§2.5](#25-controls-the-ceiling-and-self-sampling)). |
+| `q̄` | Equal-weight average of all natures of [§2.3](#23-the-natures); reference ceiling only ([§2.5](#25-controls-the-ceiling-and-self-sampling)). |
 | `m_π(X_{1:N})` | Agent's Bayes mixture `∫ p(X_{1:N}\|θ) π(dθ)`. |
 | `π(θ\|X_{1:N})` | Posterior under prior `π`. |
 | `I_π(Θ;X_{1:N})` | Mutual information between `Θ ∼ π` and the training sample `X_{1:N} ∼ p(·\|Θ)`: `𝔼_{θ∼π} D_{KL}(p(X_{1:N}\|θ)‖m_π)`. The subscript names the distribution of `Θ` (a prior `π`, or nature's `q`); `I_π(Θ;X_1)` is the single-observation version; the short form `I_π` means the budget-`N` one. `I_π(Θ;X_{N+1}\|X_{1:N})` is the conditional version: what observation `N+1` adds after `N`. A&M's `I⋆` is `I_{p*}(Θ;X_1)`. |
@@ -302,6 +302,9 @@ example.
 | `R_N^q(π)` | The cumulative score: redundancy = cumulative held-out predictive log-loss ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss)). |
 | `r_N^q(π)` | The one-step score: excess log-loss on `x'` given `X_{1:N}`, `= R_{N+1}^q(π) − R_N^q(π)` ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss)). |
 | `I_q` | Matched floor `I_q(Θ;X_{1:N})`: nature's own mutual information, prior-independent ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss)). |
+| `r_θ(π)` | Per-state redundancy `D_{KL}(p(X_{1:N}\|θ)‖m_π)`: the loss of `π` at state `θ`. `R_N^q(π)` is its average over `θ ∼ q` ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss), [§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)). |
+| `A(θ)` | The states indistinguishable from `θ`: those whose prediction lies within one [Fisher length](../GLOSSARY.md#fisher-length) of `y(θ)` at budget `N` ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)). |
+| `Θ_π` | Covered set of `π`: the states where `r_θ(π) ≤ C_N` ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)). |
 | `G` | Per-axis grid resolution of the discrete `p*` solver ([§4.2](#42-prior-construction)). |
 
 All logs in nats; bits `= nats/log 2` at report time.
@@ -437,7 +440,7 @@ Exact maps, Fisher metrics and knob ranges are in [§4.1](#41-model-families).
 its gradient. The co-volume bias is the pull of `√det g ∝ θ_1^{D-1}`; its absence makes
 the constant-cross-section model a pipeline check, where `p_J` and `p_U` must coincide
 (test T2 in [§5.2](#52-test-descriptions)); and the claimed
-asymmetry is a gradient that steepens with `D` against an atom spacing that does not
+asymmetry is a co-volume gradient that steepens with `D` against a cap `C_N` that does not
 ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)).
 
 [^1-fisher]: (1.2.1) is the Fisher information of the Gaussian likelihood. With
@@ -516,8 +519,8 @@ Every prior is scored on two scores, each a held-out log-loss in excess of an or
 knows `θ`: the cumulative `R_N` (the mainline) and the one-step `r_N`
 ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss)). The cast has three
 budget-dependent protagonists, `p*`, `p_lat` and `p_proj`, against deployable priors and
-mis-budgeted copies of `p*` ([§2.2](#22-the-cast)). Nature is swept over a family that passes through several priors'
-own worlds ([§2.3](#23-the-natures)). No overall winner is declared
+mis-budgeted copies of `p*` ([§2.2](#22-the-cast)). Every prior is scored in every other prior's
+own world, with its own as the control ([§2.3](#23-the-natures)). No overall winner is declared
 ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)).
 
 ### 2.1 The scores: cumulative and one-step held-out log-loss
@@ -686,59 +689,148 @@ the fine side.
 
 ### 2.3 The natures
 
-No single cooperativeness axis is neutral: every candidate anchor is some prior's own world
-(`notes/q-family-visualisation.md`, including the drawings of the candidate anchors). The
-natures therefore make every lean visible instead of hiding one.
+A prior's **own world** is the nature equal to it, `q = π`: there the prior is *at home*,
+under any other nature *away*. The natures are chosen so that every prior is scored away,
+in every other prior's own world, and so that what is read is the size of each loss, not
+who wins.
 
-- **The tilt family** `q_t ∝ (√det g)^t` on `Θ`. At `t = 1` nature is Jeffreys' own prior,
-  concentrated on the thick base in ribbon models; at `t = 0` it is uniform on the
-  parameter box, `p_U`'s own world, which depends on the parametrisation; for `t < 0` it
-  moves to the thin end and the low-Fisher boundary, where `√det g` must be floored
-  because it vanishes at the tip. Each `t` is one coherent nature, not a mixture of two
-  populations. The range of `t` and the floor are pinned in [§4.3](#43-foreign-q-family)
-  (OQ-2).
+**Who wins is not a finding.** By (2.1.3), `π` beats `π'` under nature `q` exactly when
+`m_π` is closer to `m_q` than `m_{π'}` is. That each prior wins where nature resembles it
+most is therefore an identity, true of any set of priors. Nor is any nature neutral. Both
+scores average over `θ ∼ q` a per-state loss that does not depend on `q` (2.1.1), so a
+nature is a weighting of states, and each weighting we have drawn lies close to some
+prior's own world (`notes/q-family-visualisation.md`, *B′ drawn*; partly `[guess]` there).
+A sweep along one axis of natures shows which own worlds the axis passes.
 
-  *Caution.* In the hypercone `√det g ∝ θ_1^{D−1}`, so `q_t`'s `θ_1`-marginal is
-  `∝ θ_1^{t(D−1)}`. At fixed `t ≠ 0`, nature therefore moves with the agent's choice of
-  `D`: toward the thick end for `t > 0`, toward the thin end for `t < 0`. A trend in `D`
-  at fixed `t` mixes the prior's degradation with nature's drift; only `t = 0` holds
-  nature fixed across `D`. [TODO] Decide whether the `D`-sweep should also carry natures
-  held fixed in the relevant coordinate.
-- **The stress panel**, for comparing the protagonists with each other, after
-  [§3.4](#34-the-second-protagonist-infomax-vs-mdl):
-  - *a sharpened convex vertex, with nature on the interior or faces*: against `p_proj`,
-    whose NML weighting over-weights the vertex's noise halo [guess];
-  - *a smooth interior nature, varying on scales below one [Fisher length](../GLOSSARY.md#fisher-length) at budget `N`*:
-    against `p*`'s discreteness, and likely in favour of a `p_lat` with fuller support
-    [guess].
-- **Self-sampling controls**: nature equal to each prior of the cast in turn
-  ([§2.5](#25-controls-the-ceiling-and-self-sampling)).
+**What is a finding.** The identity gives the sign of a comparison once the distances are
+known. The distances are what the experiment measures, and three questions about them are
+open:
 
-The parametrisation of the stress natures is pinned in [§4.3](#43-foreign-q-family). Each
-nature is recorded per sample so results can be split by nature.
+1. *Price.* How much does each prior lose away, in a world built for another?
+2. *Exchange.* Does `π` lose less in the world of `π'` than `π'` loses in the world of
+   `π`? KL divergence is not symmetric: one prior's mixture can cover another's cheaply
+   without the reverse.
+3. *Invariance.* Does a prior's loss move when the modeller changes something nature knows
+   nothing of, the number of parameters `D`, while nature stays fixed? This is the
+   asymmetry of [§0](#0-context), asked of every prior alike.
+
+**The natures** are the rows of one table with a column per prior. Each cell holds the
+prior's **mismatch**, its score minus the row's floor
+([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss)): `D_KL(m_q‖m_π)` for
+`R_N`, the posterior-predictive mismatch of (2.1.6) for `r_N`.
+
+- **Round robin** (questions 1 and 2): nature equal to each prior of the cast in turn. We
+  choose none of these natures: each candidate nominates the world most favourable to
+  itself, and every other candidate is scored there. The diagonal is 0 by construction. It
+  is the [self-sampling](../GLOSSARY.md#self-sampling) control
+  ([§2.5](#25-controls-the-ceiling-and-self-sampling)) and a test of the pipeline, since
+  no cell of a row may fall below it. The off-diagonal cells are the result.
+- **Fixed natures** (question 3): natures defined without reference to `D`, scored as `D`
+  grows. In the hypercones, a law for the relevant coordinate `θ_1` (its thin half; its
+  thick half) with the cross-section uniform; `p_U`'s own world is fixed in this sense
+  too. In exp-decay, two kinds, one for each sense in which a nature can be simpler than
+  the model[^2-fixed]:
+  - *few rates*: `D_0 < D` distinct rates, each shared by `D/D_0` components. Such a
+    nature lies on the manifold's edges, where `p*` and `p_proj` keep weight;
+  - *a fixed spectrum*: the `D` rates fill out one smooth law of rates, the same for
+    every `D`. Such a nature lies in the bulk, with all rates distinct; `p_U`'s and
+    `p_LN`'s own worlds are of this kind.
+
+  What is read is the trend of each column in `D`, and the contrast between the two kinds.
+- **Stress natures**, each declared with the prior it is aimed against and the mechanism
+  ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)):
+  - *a sharpened convex vertex, with nature on the interior and faces*: against `p_proj`,
+    whose NML weighting over-weights the vertex's
+    [noise halo](../GLOSSARY.md#noise-halo) [guess];
+  - *a smooth nature in the interior bulk*: against `p*`'s discreteness, and likely in
+    favour of a `p_lat` with fuller support [guess].
+
+  A nature aimed against one prior may lie near another's home. Its row shows this: the
+  cells are distances, so a win at a mismatch below ½ nat is a home win and is not counted
+  ([§3.7](#37-falsification)).
+
+**Reading the table** ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)). Along a row:
+the gaps between priors. Down a column: the largest and the mean mismatch. Per pair of
+priors: the two crossed cells. Per fixed nature: the trend in `D`. Cells settled in
+advance are marked and not counted: home wins, the diagonal among them, and on `R_N` any
+cell whose redundancy exceeds `C_N`, which `p*` wins by theorem
+([§3.7](#37-falsification)). Neither column summary is neutral[^2-lean], so the table
+itself is the result. It is relative to the cast: another prior adds a row. And it is
+conditional: if nature is like this row, this prior loses this much. Which rows resemble
+real natures is outside this spec (`notes/parked_ideas.md`, *Benchmark natures*).
+
+Parametrisations are pinned in [§4.3](#43-foreign-q-family). Each draw records
+its nature and its `θ`, so results split by nature and map over `Θ`.
+
+[^2-fixed]: [TODO] Pin in [§4.3](#43-foreign-q-family): `D_0` and the law of the few
+    rates; the spectrum's law and how the rates fill it.
+
+    *Few rates.* A `D`-component model produces fewer rates only by neutralising
+    components: two rates coincide, or one leaves the observation window. Each time, a
+    parameter direction stops moving the prediction at first order and the Fisher rank
+    drops, which makes the point an edge [read:
+    `specs/002-foreign-q-prediction-redteam-conc04.md` F1, citing A&M Fig. 2 caption].
+    `p*` keeps weight on edges for a different reason: along a sub-resolution direction
+    the two ends are the most distinguishable points ([§1.2](#12-generative-model),
+    footnote on corners). The two reasons meet in models built from interchangeable parts
+    whose effect saturates [recalled: Transtrum's manifold-boundary reduction; Watanabe's
+    singular models], not in general: the hypercones' fixed natures are not on edges.
+
+    *Fixed spectrum.* Simple in the other sense: a smooth law of rates takes a centre and
+    a width to describe, yet every rate is distinct. With rates drawn independently from
+    the law, `y_t` is a mean of `D` independent terms in `[0, 1]`, so its spread is at
+    most `1/(2√D)` and the nature narrows onto one curve as `D` grows; `p_U`'s and
+    `p_LN`'s own worlds behave so. Rates placed at the quantiles of a law whose centre and
+    width are drawn afresh for each `θ` keep the spread free of `D`; this is the
+    candidate. Shrinking the width to zero gives a single rate, so the width runs from
+    the edge kind to the bulk kind. That a fixed spectrum favours the product priors is a
+    [guess], settled by its row: each product prior is at home on one spectrum only, its
+    own.
+
+    *Hypercone.* In the equal-width cone the cross-section law shows in the data (same
+    report, F5), so "uniform" is a declared choice there; where the widths fall off
+    geometrically it should matter little [guess].
+
+[^2-lean]: The largest mismatch has the form of the minimax criterion that `p*` (on
+    `R_N`) and `p_lat` (on `r_N`) are built for: by (2.1.2) and (3.1.1),
+    `D_KL(m_q‖m_{p*}) ≤ C_N − I_q` for every `q`. The mean is, up to a constant, the
+    score under the average of the rows, which is smallest for the prior nearest that
+    average ([§2.5](#25-controls-the-ceiling-and-self-sampling)).
 
 ### 2.4 What is reported, and what cannot be asserted
 
-No overall winner is declared. The result is, for every nature, both scores of every
-prior; that one score or nature prefers one prior and another prefers another is itself a
-finding. Three summaries are reported per protagonist `π ∈ {p*, p_lat, p_proj}` and per
-score `S ∈ {R_N, r_N}`:
+No overall winner is declared. The result is the table of [§2.3](#23-the-natures): for
+every nature, the mismatch of every prior on both scores. That one score or nature prefers
+one prior and another prefers another is itself a finding. The table is read in four
+directions, for each model, `σ` and `N`.
 
-- **the gap to the best deployable prior**,
-  `Δ_S(π) = max_{π'} δS(π, π') = S(π) − min_{π'} S(π')` over `π' ∈ {p_J, p_U, p_LN, p_ref}`,
-  with `p_ref` where defined. It is negative exactly when `π` beats every deployable
-  prior[^2-max];
-- **the pairwise gaps** between protagonists, `δS(p*, p_lat)`, `δS(p*, p_proj)` and
-  `δS(p_lat, p_proj)`;
-- **the gap to the ceiling**, `S(π) − S(q̄)`.
+**Along a row** (one nature), per protagonist `π ∈ {p*, p_lat, p_proj}` and per score
+`S ∈ {R_N, r_N}`. Within a row, differences of scores are differences of mismatches.
 
-For `p*` alone, a fourth summary measures what knowing the budget is worth
-([§2.2](#22-the-cast)): **the gap to the best mis-budgeted `p*`**,
-`Δ^{bud}_S = S(p*) − min_{M ∈ {N/10, 10N}} S(p*_M)`, negative when knowing the budget to
-within a factor of ten helps.
+- **The gap to the best deployable prior**,
+  `Δ_S(π) = max_{π'} δS(π, π') = S(π) − min_{π'} S(π')` over
+  `π' ∈ {p_J, p_U, p_LN, p_ref}`, with `p_ref` where defined and, in exp-decay, once per
+  OQ-8 ranking ([§7](#7-open-questions)). It is negative exactly when `π` beats every
+  deployable prior[^2-max]. In a deployable prior's own world that prior is left out of
+  the minimum: it is at home, and `π` is compared with the priors that are away like
+  itself.
+- **The pairwise gaps** between protagonists, `δS(p*, p_lat)`, `δS(p*, p_proj)` and
+  `δS(p_lat, p_proj)`.
+- For `p*` alone, **the gap to the best mis-budgeted `p*`**,
+  `Δ^{bud}_S = S(p*) − min_{M ∈ {N/10, 10N}} S(p*_M)`, negative when knowing the budget
+  to within a factor of ten helps ([§2.2](#22-the-cast)).
 
-All are reported against the tilt `t`, across the stress panel, and at the self-sampling
-controls, for each model, `D`, `σ` and `N`.
+**Down a column** (one prior): its largest and its mean mismatch over the rows. Each prior
+of the cast has one row at home, where its mismatch is 0. Neither summary is neutral
+([§2.3](#23-the-natures)); the mean is read against that of the ceiling `q̄`
+([§2.5](#25-controls-the-ceiling-and-self-sampling)).
+
+**Across the diagonal** (a pair of priors): the **exchange**, what `π` loses in the world
+of `π'` minus what `π'` loses in the world of `π`. For `R_N` it is
+`D_KL(m_{π'}‖m_π) − D_KL(m_π‖m_{π'})`; for `r_N`, the same difference of
+posterior-predictive mismatches. It is negative when `π` loses less away than `π'` does.
+
+**Across `D`** (a fixed nature): each prior's mismatch against `D`.
 
 We **cannot** assert the sign of any of these, and must not: that a protagonist wins
 anywhere is the open question, and asserting it would make the experiment unfalsifiable
@@ -754,18 +846,36 @@ anywhere is the open question, and asserting it would make the experiment unfals
 
 **The ceiling `q̄`.** Two floors must be kept apart. *Per nature* `q`, the floor of `R_N^q`
 is `I_q(Θ;X_{1:N})`, and that of `r_N^q` is `I_q(Θ;X_{N+1}|X_{1:N})`, each attained by the
-prior matched to *that* `q`, not by `q̄`. *Across the sweep*, both scores are linear in
-nature's distribution, so for any fixed prior the average over the swept natures equals
-the score under their average `q̄`; by (2.1.2) and (2.1.6) it is minimised by matching `q̄`
-([hierarchical / empirical Bayes](../GLOSSARY.md#empirical-and-hierarchical-bayes); note §5.3). So no fixed prior, protagonists included, beats
-`q̄` on the sweep average. `q̄` is plotted as the **reference ceiling**; each prior's gap to it
-measures what it loses by not being matched. "Does `p*` beat `q̄`" is a non-question.
+prior matched to *that* `q`, not by `q̄`; a cell's mismatch is measured from it. *Across
+the rows*, both scores are linear in nature's distribution, so for any fixed prior the
+average over the rows equals the score under their average `q̄`; by (2.1.2) and (2.1.6) it
+is minimised by matching `q̄`
+([hierarchical / empirical Bayes](../GLOSSARY.md#empirical-and-hierarchical-bayes); note §5.3).
+So no fixed prior, protagonists included, beats `q̄` on the row average, and "does `p*`
+beat `q̄`" is a non-question.
 
-**Self-sampling controls.** Each prior is also scored with nature equal to itself, where it
-is matched and attains the floor. A protagonist whose lead appears only near its own world
-is self-served: the [self-sampling](../GLOSSARY.md#self-sampling) failure that sank spec 001 (finding F1 of
-`specs/001-infomax-betting-redteam_third.md`). On the tilt axis the controls for `p_J`
-(`t = 1`) and `p_U` (`t = 0`) are points of the family itself.
+`q̄` averages all rows of the table with equal weight. A prior's mean mismatch then splits
+exactly[^2-qbar]: `q̄`'s own mean mismatch, which any single prior must lose because the
+rows differ, plus the prior's mismatch to `q̄`. `q̄`'s mean is plotted as the **reference
+ceiling** for the column means of
+[§2.4](#24-what-is-reported-and-what-cannot-be-asserted). The cast's own worlds outnumber
+the other rows and so dominate `q̄`: the weighting is a declared choice, as every
+weighting of natures is.
+
+**Self-sampling controls.** Each prior's own world is a row of the round robin
+([§2.3](#23-the-natures)). There the prior is matched and attains the floor, so no other
+prior's mismatch in that row may be negative; the test suite asserts this (T20,
+[§5.2](#52-test-descriptions)). A protagonist whose lead appears only at or near home is
+self-served: the [self-sampling](../GLOSSARY.md#self-sampling) failure that sank spec 001
+(finding F1 of `specs/001-infomax-betting-redteam_third.md`). "Near home" is a mismatch
+below ½ nat ([§3.7](#37-falsification)).
+
+[^2-qbar]: With `m_ν` the data marginal of row `ν` and `m_{q̄}` their average, the
+    compensation identity
+    ([§9.1](#91-the-compensation-identity-for-the-n-fold-marginal-eq-212)), applied with
+    the rows in the place of `θ`, gives
+    `mean_ν D_KL(m_ν‖m_π) = mean_ν D_KL(m_ν‖m_{q̄}) + D_KL(m_{q̄}‖m_π)`. For `r_N`,
+    subtract the identity at budgets `N+1` and `N`.
 
 ## 3. The case for transfer (and how it could fail)
 
@@ -812,69 +922,117 @@ transfer. For `p_lat` the analogue caps `r_N^q(p_lat)` by the conditional capaci
 
 ### 3.2 The heuristic: the average-case asymmetry in high `D`
 
-(3.1.1) is worst-case; the experiment scores an average. The bridge is geometric. On a [hyperribbon](../GLOSSARY.md#hyperribbon) ([§1.2](#12-generative-model)) [Jeffreys](../GLOSSARY.md#jeffreys-prior)' weight piles into the
-high-co-volume region, which holds few of the distinguishable predictions, and fewer as
-`D` grows [read: A&M §2.2, Figs. 3 and 5]. So for a nature `q` whose predictions are
-spread over distinguishable outcomes, most of `q`'s mass falls where `b_{p_J}(θ)` is
-large. The link from large *pointwise* bias to a large *marginal* mismatch is the `N=1`
-compensation identity applied to `p_J` (the split (2.1.2),
-[§9.1](#91-the-compensation-identity-for-the-n-fold-marginal-eq-212)):
+(3.1.1) is worst-case; the experiment scores an average. The bridge is a reading of what a
+prior's loss at a state measures: the mass it has put on the states indistinguishable
+from that one. `p*` spreads its mass evenly over distinguishable states, Jeffreys over
+Fisher volume, and with many unresolved directions the two counts part. The case is made
+against Jeffreys alone (*Scope*, below).
+
+**Loss as missing mass.** Write `r_θ(π) = D_KL(p(X_{1:N}|θ)‖m_π)` for the loss of `π` at
+state `θ`, so that `R_N^q(π) = 𝔼_{θ∼q} r_θ(π)` (2.1.1). Let `A(θ)` be the states whose
+prediction lies within one [Fisher length](../GLOSSARY.md#fisher-length) of `y(θ)` at
+budget `N`: the states one experiment cannot reliably tell from `θ`. For every prior
+([§9.4](#94-the-mass-bound-eq-321)),
 
 $$
-\mathbb{E}_{\theta\sim q}\, b_{p_J}(\theta) \;=\; I_q(\Theta;X_1) \;+\; D_{\mathrm{KL}}\!\big(m_q \,\|\, m_{p_J}\big) \;-\; I_{p_J}(\Theta;X_1). \tag{3.2.1}
+r_\theta(\pi) \;\le\; -\log \pi\big(A(\theta)\big) \;+\; \tfrac12. \tag{3.2.1}
 $$
 
-So `D_KL(m_q‖m_{p_J}) = 𝔼_q b_{p_J} − (I_q(Θ;X_1) − I_{p_J}(Θ;X_1))`, and the growth of `b` carries
-over to the marginal mismatch unless the subtracted term cancels it. Two assumptions close
-the gap:
+A prior is cheap at a state when it has put mass on that state's indistinguishable
+neighbours. A flat loss profile, the
+[equalizer condition](../GLOSSARY.md#equalizer-condition) that makes `p*` minimax
+([§3.1](#31-the-one-guarantee-worst-case-over-q)), therefore goes with equal mass per
+distinguishable state, and A&M's [bias pressure](../GLOSSARY.md#bias-pressure),
+`r_θ(π) − I_π` at `N = 1`, measures how far a prior is from it. (3.2.1) bounds the loss
+from above only; reading it as an approximate equality is a [guess][^3-tight].
 
-1. **Bounded resolvable dimension.** For sloppy hyperribbon models at fixed `σ`,
-   `D_eff = O(1)` in nominal `D` [read: A&M Fig. 5, `I_{p*}(Θ;X_1)` flat once `D>3`; Quinn §2]. Then
-   `I_q(Θ;X_1)` and `I_{p_J}(Θ;X_1)` both lie in `[0, C_1]` with `C_1 = O(D_eff) = O(1)`, so the
-   subtracted term is bounded and cannot cancel a numerator that grows with `D`. The
-   numerator's worst case `B(p_J)` grows rapidly with `D` (§3.1), empirically and not at
-   a proven rate. This holds where the widths fall off geometrically, as in exp-decay. In
-   the equal-width hypercone `C_1` grows linearly in `D` (§3.1), so there the argument
-   compares two slopes rather than a bounded term with a growing one.
-2. **`q` is spread**, the one genuinely `q`-dependent assumption: `𝔼_q b_{p_J}` tracks
-   the growth of its maximum, because `q` puts enough mass, spread widely enough, in the
-   high-bias region. This is the precise content of "spread over distinguishable
-   outcomes".
+**Two counts.** Jeffreys puts mass in proportion to Fisher volume. In a
+[hyperribbon](../GLOSSARY.md#hyperribbon), `A(θ)` is a slab: about one Fisher length
+along each relevant direction and the whole width of each irrelevant one[^3-slab]. Its
+Jeffreys mass is proportional to the local [co-volume](../GLOSSARY.md#co-volume), so
+Jeffreys' loss profile is, up to a constant, minus the log of the co-volume: a volume the
+data cannot see sets what each state costs. `p*`'s loss is at most `C_N` at every state.
 
-Under both, `D_KL(m_q‖m_{p_J})` grows with `D`. `D_KL(m_q‖m_{p*})`, by contrast, is bounded by
-`C_N` for *every* `q`[^3-finite] (§3.1), flat in nominal `D` for geometric widths, and expected to sit well
-below that ceiling [guess][^3-typical]. The worst case is guaranteed; the average is left
-to the experiment ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)). A&M put the
-same point as a new invariance, *predictions should be independent of unobservable model
-detail*, which `m_{p*}` respects and `m_{p_J}` violates [read: A&M §2.2]. None of this
-leans on A&M's self-sampling, the part of their result that does not transfer.
+**Where `D` enters.** Each irrelevant direction multiplies the variation of the co-volume
+across the manifold. In the square hypercone, where it goes as `θ_1^{D−1}`, the relevant
+coordinate's datum alone gives ([§9.5](#95-jeffreys-loss-in-the-hypercone-eq-322))
 
-**In the hypercone the asymmetry is explicit** ([§1.2](#12-generative-model)). Jeffreys'
-`Δ = (D−1)/x` (eq. (9.2.2)) is a property of the posterior alone, referencing neither `p*`
-nor `q`, so it transfers to any foreign `q`. `p*` pays `≈0` on self-sampled data, which
-lands on its atoms, but `O(1)` plus `D_KL(m_q‖m_{p*})` on data in the gaps
-[guess][^1-pstar-bias]. Whether that net favours `p*` is the open empirical question.
+$$
+r_\theta(p_J) \;\gtrsim\; (D-1)\log\frac{L}{\theta_1} \;+\; \log\frac{L}{D} \;-\; \tfrac12\log\frac{2\pi e\,\sigma^{2}}{N},
+\qquad \theta_1 \gg D\sigma/\sqrt{N}, \tag{3.2.2}
+$$
 
-A reduced computation of the cone previews the answer against Jeffreys, in betting terms.
-On a nature uniform in `θ_1` at `D = 26`, Jeffreys' excess log-loss is 18.65 nats against
-`p*`'s 0.51. Jeffreys wins only in its own corner, `θ_1 > 48`, by under a nat
+linear in `D`, against `C_N` for `p*`. In exp-decay Jeffreys' worst-case bias pressure
+exceeds 500 bits at `D = 26` while `p*`'s information stays flat (§3.1). With every
+direction resolved there is no co-volume, Jeffreys' profile is flat, and Jeffreys is
+asymptotically minimax [recalled: Clarke & Barron 1994][^3-cb]. So the asymmetry needs
+unresolved directions with a co-volume gradient, and their number sets its size. In the
+equal-width hypercone `C_1` grows too, by about 0.1 nats per direction (§3.1), so two
+slopes are compared there.
+
+**From the worst case to an average.** Call `Θ_J = {θ : r_θ(p_J) ≤ C_N}` Jeffreys'
+**covered set**: the states where it costs no more than `p*`'s cap. Since
+`r_θ(p*) ≤ C_N` everywhere and `r_θ(p_J) ≥ 0`,
+
+$$
+R_N^q(p_J) - R_N^q(p^\star) \;\ge\; \int_{\Theta\setminus\Theta_J}\!\big(r_\theta(p_J) - C_N\big)\,q(d\theta) \;-\; C_N\,q(\Theta_J). \tag{3.2.3}
+$$
+
+The first term is the loss insured against, the second the premium. `p*` beats Jeffreys on
+every nature for which the first exceeds the second. The premium is at most `C_N`, and the
+insured loss per state grows with `D` (3.2.2), so what remains is one property of nature:
+**its mass on Jeffreys' covered set**.
+
+In the reduced cone at `D = 26` the covered set is `θ_1 > 41.1` of 50
+(`notes/budget-value-of-information.md` §4; (3.2.2) gives 41.3). That is 18% of the
+relevant coordinate, and it holds 99.4% of Jeffreys' own mass[^3-shell]. So how much of
+nature is covered depends on how nature is counted: by distinguishable states, a share of
+order `C_N/(D−1)` of the relevant coordinate; by Fisher volume, nearly all. Neither count
+is forced on nature, which is why [§2.3](#23-the-natures) scores every prior in every
+other's world and [§2.4](#24-what-is-reported-and-what-cannot-be-asserted) declares no
+winner. In the hypercones the covered set is an interval of `θ_1`, and a nature's mass on
+it is read off directly; [TODO] its estimate in exp-decay.
+
+The reduced cone also previews the average. On a nature uniform in `θ_1` at `D = 26`,
+Jeffreys' mismatch on the relevant datum is 18.65 nats against `p*`'s 0.51, and Jeffreys
+wins only on natures inside `θ_1 > 48`, by under a nat
 (`notes/budget-value-of-information.md` §4). How strongly `p*` itself depends on the
 budget is predicted by the criterion of that note's §3.2, which
 [`budget_value.png`](#61-outputs) checks in the full models.
 
-[^3-finite]: The bound follows from (2.1.2) and (3.1.1):
-    `D_KL(m_q‖m_{p*}) = R_N^q(p*) − I_q ≤ C_N`. It is finite because `m_{p*}` is a
-    Gaussian mixture with full support on data space: the likelihood smears out the zeros
-    between atoms, so the score never diverges the way a prior-space KL would.
+**Scope.**
 
-[^3-typical]: The geometric reason: the atoms tile the manifold at the resolution scale,
-    so any `q`-generated datum lands within `O(1)` Fisher length of an atom's prediction.
-    Quinn et al. describe this tiling: atoms only at the boundaries of short directions,
-    approaching a continuum along long ones, "precisely the behavior we want on a
-    hyperribbon" [read: Quinn §5.1]. Along a relevant direction the error is then no worse
-    than rounding `θ` to its resolved precision; along an irrelevant one, weight at the
-    boundary is what an effective theory does. This is intuition about the posterior
-    bias, not a bound on `D_KL(m_q‖m_{p*})` for an arbitrary `q`.
+- *Which priors.* The case is against `p_J`, whose mass per distinguishable state follows
+  the co-volume. Log-normal degrades with `D` too [read: A&M §2.2], by a route this
+  section does not derive. No case is made against `p_U` or `p_ref`: in the axis-aligned
+  cone neither weights the co-volume ([§1.2](#12-generative-model), table), and against
+  `p_ref` in exp-decay the expectation rests only on the ranking being unavailable
+  ([§3.5](#35-a-third-route-ordering-instead-of-budget)).
+- *Which bias.* A flat loss profile is exactly zero bias pressure. For A&M's other
+  measure, the posterior deviation `Δ`, it is only suggestive: in the equal-width cone
+  `p*`'s own `Δ` grows with `D` ([§1.2](#12-generative-model), footnote on `p*`'s tilt).
+- *Which evidence.* A&M put the point as an invariance, *predictions should be independent
+  of unobservable model detail*, which `m_{p_J}` violates [read: A&M §2.2] and `m_{p*}`
+  respects where the widths fall off geometrically. Nothing here uses data drawn from
+  `p*`, the part of A&M's evidence that does not transfer.
+
+[^3-tight]: The missing half is a lower bound: that a prior with little mass near `θ`
+    must lose much there. It holds for the relevant datum in the hypercone, where (3.2.2)
+    reproduces the reduced computation ([§9.5](#95-jeffreys-loss-in-the-hypercone-eq-322)).
+    Settled in general by comparing each prior's computed loss profile with
+    `−log π(A(θ))` in exp-decay; test T21 ([§5.2](#52-test-descriptions)) computes both.
+
+[^3-slab]: This holds where the cross-section as a whole stays within about one Fisher
+    length, as it does when the widths fall off geometrically (the sum of their squares
+    converges). In the equal-width hypercone the `D − 1` irrelevant directions jointly
+    exceed it (`specs/002-foreign-q-prediction-redteam-conc04.md`, F5), which is why
+    (3.2.2) uses the relevant datum alone.
+
+[^3-cb]: Settled by reading Clarke & Barron (1994), listed in [§8](#8-references) and not
+    yet fetched.
+
+[^3-shell]: `1 − (41.1/50)^{26}`. Jeffreys' `θ_1`-marginal is `∝ θ_1^{D−1}`, the radial
+    law of a `D`-ball, whose volume sits in a thin outer shell.
 
 ### 3.3 Score decomposition: bias vs calibration (a diagnostic)
 
@@ -1069,8 +1227,8 @@ Several things can make it lose:
 1. **Worst case ≠ average.** (3.1.1) bounds the worst `q`. For a **benign** `q`
    concentrated in the data-rich interior (low *effective* dimension) the deployable
    priors pay little, and `I_{p_J} < C` can let a smooth prior *beat* `p*` there. That is
-   the 1-D / low-`D` regime where `p*` already loses (note §1); the tilt family
-   ([§2.3](#23-the-natures)) maps where the sign flips.
+   the 1-D / low-`D` regime where `p*` already loses (note §1); the table of
+   [§2.3](#23-the-natures) shows where the sign flips.
 2. **The real competitor is resolution-adapted, not Jeffreys.** `p_proj`
    ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)) is smooth, easy to sample, tracks
    `p*` closely on mutual information and "avoids Jeffreys' vices" [read: Quinn §5.2]. If
@@ -1098,22 +1256,45 @@ Several things can make it lose:
 
 ### 3.7 Falsification
 
-The expectation is *supported* where `p*` beats every deployable prior on its home score,
-`Δ_{R_N}(p*) < 0` ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)), across the tilt family and the stress panel, with pairwise
-gaps showing the lead is not shared by `p_proj` or `p_lat`. It is *refuted* where `p*` ties
-or loses to the best deployable prior, or leads only near its self-sampling control
-([§2.5](#25-controls-the-ceiling-and-self-sampling)). The cones are the control where
-ranking is free ([§3.5](#35-a-third-route-ordering-instead-of-budget)), so a tie with or a
-loss to `p_ref` there is the expected control result, not a refutation; there `p*` is read
-against the other deployable priors. The verdict against `p_ref` is taken in exp-decay,
-under each OQ-8 ranking, and a lead that holds under only some rankings is reported as
-such. Bound (3.1.1) forecloses neither in general, but it settles some cells. Since
-`R_N^q(p*) ≤ C_N` for every `q`, `p*` beats any prior `π` with `R_N^q(π) > C_N`, by
-theorem. A cell in which every deployable prior's redundancy exceeds `C_N` is therefore
-not a test; the live cells are those where the best deployable prior stays below `C_N`.
-In the reduced cone at `D = 26`, Jeffreys' per-state redundancy already exceeds `C_N` for
-`θ_1 < 41` of 50 (`notes/budget-value-of-information.md` §4). The same reading applies to
-`p_lat` on `r_N`.
+The expectation is that `p*` beats the deployable priors away from home, on its home score
+`R_N`. It is read off the table of [§2.3](#23-the-natures) cell by cell; no average over
+rows decides it.
+
+**Cells that are not tests** are marked and set aside, whichever prior they favour.
+
+- *Home wins.* A prior is at home in every row where its mismatch is below ½ nat, its own
+  world included, and its lead over another prior there is not counted for it. ½ nat is
+  the KL divergence between two predictions one
+  [Fisher length](../GLOSSARY.md#fisher-length) apart at budget `N`: below it, one
+  experiment cannot tell nature from the prior's own world.
+- *Cells settled by theorem.* Since `R_N^q(p*) ≤ C_N` for every `q` (3.1.1), `p*` beats
+  any prior whose redundancy in that row exceeds `C_N`. In the reduced cone at `D = 26`,
+  Jeffreys' per-state redundancy already exceeds `C_N` for `θ_1 < 41` of 50
+  (`notes/budget-value-of-information.md` §4).
+
+**In the remaining, live cells** the expectation is *supported* where `p*` beats every
+deployable prior that is away, `Δ_{R_N}(p*) < 0`
+([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)), with the pairwise gaps showing
+that the lead is not shared by `p_proj` or `p_lat`. It is *refuted* where `p*` ties with
+or loses to the best deployable prior. The verdict is stated per group of rows:
+
+- *Round robin.* In the own world of each other prior, `p*` against the deployable priors
+  that are away there; and the exchange with each deployable prior, which supports the
+  expectation where it is negative.
+- *Fixed natures.* Whether `p*`'s mismatch grows more slowly with `D` than every
+  deployable prior's. On the few-rates kind only this trend counts, since a level lead is
+  expected there from the geometry ([§2.3](#23-the-natures)); on the fixed spectrum and in
+  the hypercones the level counts too.
+- *Stress natures.* Read as any other row; their purpose is the pairwise gaps between the
+  protagonists ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)).
+
+The cones are the control where ranking is free
+([§3.5](#35-a-third-route-ordering-instead-of-budget)), so a tie with or a loss to `p_ref`
+there is the expected control result, not a refutation; there `p*` is read against the
+other deployable priors. The verdict against `p_ref` is taken in exp-decay, under each
+OQ-8 ranking, and a lead that holds under only some rankings is reported as such. The same
+reading applies to `p_lat` on `r_N`, with the cap holding wherever its minimaxity does
+([§2.2](#22-the-cast)).
 
 ## 4. Algorithm
 
@@ -1301,35 +1482,48 @@ def build_pproj(model, n_samples, rng):
 
 The natures of [§2.3](#23-the-natures), each sampled as `θ ∼ q`:
 
-- **Tilt family** `q_t(θ) ∝ max(√det g(θ), ε_g)^t` on the box `Θ`. The floor `ε_g` keeps
-  `t < 0` normalisable where `√det g → 0` (the hypercone tip). At small `D`, uniform
-  proposals on `Θ` are resampled with weights `max(√det g, ε_g)^t`. At large `D` these
-  weights degenerate, so the hypercone draws `θ_1` from its closed-form marginal
-  `∝ max(θ_1^{D−1}, ·)^t` with the cross-section uniform, and exp-decay uses Markov-chain
-  Monte Carlo on `log q_t` [guess: feasibility untested]. `t_min`, `ε_g` and the `t` grid
-  are OQ-2's remaining choices; the grid is pinned in [§5.4](#54-sweep-design).
-- **Stress panel.** *Sharpened vertex*: the hypercone with the vertex-curvature knob on
-  ([§4.1](#41-model-families)) and nature on the interior and faces, away from the vertex.
-  *Sub-resolution interior*: nature in the interior bulk, smooth on scales below one
-  Fisher length at budget `N`. Their exact parametrisation is OQ-2.
-- **Self-sampling controls**: `θ ∼ π` for each prior `π` of the cast, from its own sampler
+- **Round robin**: `θ ∼ π` for each prior `π` of the cast, from its own sampler
   ([§4.2](#42-prior-construction)).
+- **Fixed natures**, with laws that do not involve `D`:
+  - *Hypercones*: `θ_1` uniform on the thin half `[0, L/2]`, or on the thick half
+    `[L/2, L]`; the cross-section coordinates uniform on `[0, 1]`; all in the cone's own
+    coordinates, before any rotation.
+  - *Exp-decay, few rates*: `D_0` values drawn from one law on the box's side, each given
+    to `D/D_0` components, so `D` is a multiple of `D_0`.
+  - *Exp-decay, fixed spectrum*: a centre and a width are drawn, and `θ_μ` is the
+    quantile `(μ − ½)/D` of the normal law with that centre and width, clipped to `Θ`.
 
-Each draw records its nature's label, so results split by nature ([§6.3](#63-table-schema)).
-`q̄` pools the tilt grid and the stress panel, with equal weight per nature, and excludes
-the self-sampling controls.
+  [TODO] `D_0`, the law of the few rates, and the laws of the centre and the width (OQ-2).
+- **Stress natures.** *Sharpened vertex*: the hypercone with the vertex-curvature knob on
+  ([§4.1](#41-model-families)) and nature on the interior and faces, away from the vertex.
+  *Smooth interior*: nature in the interior bulk, smooth on the scale of `p*`'s atom
+  spacing. Their exact parametrisation is OQ-2.
+
+Each draw records its nature's label and its `θ`, so results split by nature
+([§6.3](#63-table-schema)). `q̄` averages all natures with equal weight
+([§2.5](#25-controls-the-ceiling-and-self-sampling)), so its data marginal is the average
+of theirs.
+
+**Floors.** A cell's mismatch is its score minus the row's floor
+([§2.3](#23-the-natures)). In the round robin the floor is the score of the row's own
+prior, so the mismatch of `π` in the world of `ν` is the mean over draws of
+`log m_ν(x̄) − log m_π(x̄)`, at no extra cost. A fixed nature's floor needs its own
+marginal `m_q`, a low-dimensional integral: over `θ_1` in the hypercones, where each
+cross-section coordinate integrates to a difference of two normal distribution functions;
+over the `D_0` rates; or over the centre and the width. [TODO] `m_q` for the stress
+natures.
 
 **Nature sampler (new src code — pseudocode; open choices are OQ-2).**
 
 ```python
 def sample_nature(model, nature, n, rng):
-    kind, arg = nature                    # ("tilt", t) | ("stress", "vertex" | "interior") | ("self", prior)
-    if kind == "tilt":
-        theta = draw_tilt(model, t=arg, eps_g=EPS_G, n=n, rng=rng)   # resampling, closed form or MCMC (above)
-    elif kind == "stress":
-        theta = draw_stress(model, which=arg, n=n, rng=rng)          # OQ-2
+    kind, arg = nature                    # ("own", prior) | ("fixed", name) | ("stress", "vertex" | "interior")
+    if kind == "own":
+        theta = arg.sample(n, rng)                                   # round robin: nature = the prior itself
+    elif kind == "fixed":
+        theta = draw_fixed(model, which=arg, n=n, rng=rng)           # thin | thick | few_rates | spectrum (above)
     else:
-        theta = arg.sample(n, rng)                                   # nature = the prior itself
+        theta = draw_stress(model, which=arg, n=n, rng=rng)          # OQ-2
     return theta, np.full(n, label(nature))                          # label recorded per sample (§6.3)
 ```
 
@@ -1349,6 +1543,7 @@ For each cell `(model, D, σ, N, taper, rotation, curvature, nature)`:
             r_s(π) = log p(x'_s|θ_s) − log m_π(x'_s | x̄_s)         # one-step, eq. (2.1.5)
         record R_s(π), r_s(π) for all π, plus `label`.
 4.  R_N^q(π) = mean_s R_s(π);  r_N^q(π) = mean_s r_s(π);  report MCSE.
+    mismatch(π) = score(π) − the row's floor, on both scores           # floors: §4.3
 5.  Decomposition cross-checks: R_N^q(π) = I_q + D_KL(m_q‖m_π)  (T1), and the
         one-step identity (2.1.6) (test to add).
 ```
@@ -1414,7 +1609,7 @@ Test functions live in `tests/test_002_foreign_q_prediction.py`. The suite pins 
 | P3 | `p*` machinery (demoted tautology): equalizer `b(θ)=0` on `supp(p*)`, `≤0` off; `I_{p*}=C` ([§3.1](#31-the-one-guarantee-worst-case-over-q), [§4.2](#42-prior-construction)) | `test_t3_pstar_equalizer` |
 | P4 | Jeffreys construction: `p_J ∝ √det g` normalises; matches analytic `θ_1^{D-1}` in hypercone ([§4.2](#42-prior-construction)) | `test_t4_jeffreys_construction` |
 | P5 | Gaussian KL closed form (3.3.1) matches numeric KL of two Gaussians ([§3.3](#33-score-decomposition-bias-vs-calibration-a-diagnostic)) | `test_t5_gaussian_kl_split` |
-| P6 | Hypercone deviation: numeric `p_J`-posterior **mean**-deviation matches leading `(D−1)/x` within next-order tol, sign positive, `1≪x≪L` ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d), [§9.2](#92-hypercone-posterior-deviation-eq-922)) | `test_t6_hypercone_delta` |
+| P6 | Hypercone deviation: numeric `p_J`-posterior **mean**-deviation matches leading `(D−1)/x` within next-order tol, sign positive, `1≪x≪L` ([§1.2](#12-generative-model), [§9.2](#92-hypercone-posterior-deviation-eq-922)) | `test_t6_hypercone_delta` |
 | P7a | `m_π(X_{1:N})`: discrete sum (p*) vs quadrature agree ([§4.4](#44-score-estimation)) | `test_t7a_mixture_marginal_consistency` |
 | P7b | `p*` solver: grid-BA vs atomic agree on `R` where both feasible ([§4.2](#42-prior-construction)) | `test_t7b_pstar_method_agreement` |
 | P7c | **Budget-`N` equivalence**: `p*` and `R` built at `σ_eff=σ/√N` agree with the explicit `N`-fold channel `θ→X_{1:N}` (small `D, N`) ([§4](#4-algorithm), [§4.4](#44-score-estimation)) | `test_t7c_budget_n_equivalence` |
@@ -1424,12 +1619,14 @@ Test functions live in `tests/test_002_foreign_q_prediction.py`. The suite pins 
 | P11 | `p_proj` construction & sampler: MLE projection recovers `θ̂`; `p_NML` normalises; `I_{p_proj} ≈ I_{p*} ≫ I_{p_J}` at every `D` (Quinn Fig. 12) ([§3.4](#34-the-second-protagonist-infomax-vs-mdl), [§4.2](#42-prior-construction)) | `test_t11_pproj_construction` |
 | P12 | **AtomicPriors.jl references** ([§5.5](#55-atomicpriorsjl-reference-fixtures)): exp-decay `y`/FIM, `p*` atoms + `I_{p*}` + `B(p*)`, `C_N` via `repeat`, and `mutual` of a fixed prior match the frozen Julia golden values | `test_t12_atomicpriors_reference` |
 | P13 | Model construction: `y`-maps + FIM correct (autodiff vs §9.3 closed form; rotation `Q` and curvature knob act as specified) ([§4.1](#41-model-families)) | `test_t13_model_and_fim` |
-| P14 | Nature sampler: each tilt draws from `q_t ∝ max(√det g, ε_g)^t`, every sample carries its nature label, and `q̄` pools the swept natures as specified; [TODO] the stress natures once OQ-2 pins them ([§4.3](#43-foreign-q-family)) | `test_t14_nature_sampler` |
+| P14 | Nature sampler: round-robin draws come from each prior's own sampler; the fixed natures have the laws of [§4.3](#43-foreign-q-family) (hypercone: `θ_1` uniform on its half, cross-section uniform; few rates: `D_0` distinct values, each held by `D/D_0` components; spectrum: the stated quantiles); every sample carries its nature label; `q̄` averages all natures with equal weight; [TODO] the stress natures once OQ-2 pins them | `test_t14_nature_sampler` |
 | P15 | `p_ref` construction: equals `p_U` in the axis-aligned cone; flat marginal on the relevant coordinate under rotation; Schur complement `σ^{-2}` ([§3.5](#35-a-third-route-ordering-instead-of-budget), [§4.2](#42-prior-construction)) | `test_t15_pref_construction` |
 | P16 | [TODO] `p_lat` construction: conditional equalizer (per-`θ` one-step divergence `≤` the conditional capacity, equality on the support); the two-sided bound closes; reduces to `p*` at `N = 0` ([§4.2](#42-prior-construction)) | [TODO] |
 | P17 | [TODO] One-step score: `r_N = R_{N+1} − R_N` (2.1.5) and the one-step decomposition (2.1.6) hold numerically ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss), [§4.4](#44-score-estimation)) | [TODO] |
 | P18 | [TODO] `p_lat` against external references (candidates: Komaki 2011 Fig. 1; Tanaka 2014's analytic prior; Fogel & Feder 2024's binary results) ([§5.5](#55-atomicpriorsjl-reference-fixtures)) | [TODO] |
 | P19 | Mis-budgeted `p*`: `p*_M` is the `p*` build at `σ/√M`; scored at its own budget it reproduces `p*`; at budget `N ≠ M` its worst-case per-`θ` redundancy is at least `C_N` ([§2.2](#22-the-cast), [§4.2](#42-prior-construction)) | `test_t19_misbudgeted_pstar` |
+| P20 | Round robin: in each prior's own world no other prior's mismatch is negative, on either score ([§2.3](#23-the-natures), [§2.5](#25-controls-the-ceiling-and-self-sampling), [§4.3](#43-foreign-q-family)) | `test_t20_round_robin` |
+| P21 | Mass bound: `r_θ(π) ≤ −log π(A(θ)) + ½` for every prior at sampled `θ` (3.2.1); the insurance inequality (3.2.3); in the hypercone, Jeffreys' loss on the relevant datum matches (3.2.2) where `θ_1 ≫ Dσ/√N` ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d), [§9.4](#94-the-mass-bound-eq-321), [§9.5](#95-jeffreys-loss-in-the-hypercone-eq-322)) | `test_t21_mass_bound` |
 | — | **Results**: the sign of every summary of [§2.4](#24-what-is-reported-and-what-cannot-be-asserted), on both scores | *not tested — the open questions ([§3.7](#37-falsification), [§3.4](#34-the-second-protagonist-infomax-vs-mdl)); asserting any would make the experiment unfalsifiable* |
 
 ### 5.2 Test descriptions
@@ -1545,11 +1742,13 @@ uniform-`θ` stops being trivially unbiased — note §6.3); the curvature knob 
 named convex vertex. Catches a wrong `y`-map, a Jacobian/`σ_eff` slip, or a knob wired to
 the wrong axis.
 
-**T14 — Nature sampler.** For each tilt `t` on the grid, the empirical distribution of the
-drawn `θ` matches `q_t ∝ max(√det g, ε_g)^t` (in the hypercone, its closed-form
-`θ_1`-marginal); every sample carries its nature label; `q̄` from pooling the swept natures
-matches its construction (equal weight per nature, controls excluded). Catches a
-mis-weighted tilt, a dropped label (the §6.3 split by nature needs it) or a wrong pooling.
+**T14 — Nature sampler.** Round-robin draws are the output of each prior's own sampler,
+under the cell's seed. For the fixed natures the drawn `θ` match their laws: in the
+hypercone, `θ_1` uniform on its half and the cross-section uniform; for few rates, exactly
+`D_0` distinct values, each held by `D/D_0` components; for the spectrum, the sorted `θ_μ`
+equal the stated quantiles. Every sample carries its nature label, and `q̄` is the
+equal-weight average of all natures. Catches a wrong law, a dropped label (the §6.3 split
+by nature needs it) or a wrong pooling.
 [TODO] Tests for the stress natures once OQ-2 pins them.
 
 **T15 — `p_ref` construction.** (a) At random `θ` in the hypercone, the Schur complement
@@ -1571,6 +1770,22 @@ tolerance. (c) In the 1-D bounded channel with `N, M ∈ {1, 4, 16, 64}`, the wo
 per-`θ` redundancy of `p*_M` at budget `N` is at least `C_N`, with equality only at
 `M = N`: `p*_N` is the minimax prior at its own budget (§3.1). Catches a build at the
 wrong noise, the commonest way to mis-budget by accident.
+
+**T20 — Round robin.** For every prior `ν` of the cast taken as nature and every other
+prior `π`, the estimated mismatch, the mean over draws of `log m_ν(x̄) − log m_π(x̄)` and
+its one-step analogue, is non-negative within MCSE. It estimates a KL divergence, so a
+negative value is a pipeline bug, not a result. Catches a sampler that does not draw from
+the prior whose mixture is evaluated, and a mixture that does not normalise.
+
+**T21 — Mass bound.** (a) At sampled `θ` and for every prior, the Monte-Carlo `r_θ(π)`
+does not exceed `−log π(A(θ)) + ½` beyond MCSE, with `π(A(θ))` from the atoms' weights or
+from prior samples; the two sides are recorded, since their gap is what the `[guess]` of
+§3.2 turns on. (b) In the hypercone, where `Θ_J` is an interval of `θ_1`, the two sides of
+(3.2.3) are ordered as stated on every nature. (c) In the axis-aligned hypercone at
+`D ∈ {6, 11, 26}`, the divergence between the laws of the relevant datum under `θ` and
+under `p_J` matches (3.2.2) with the correction of §9.5, within tolerance, for
+`θ_1 ≫ Dσ/√N`. (a) and (b) cannot fail; all three catch a mis-normalised mixture, a wrong
+`σ/√N`, or a Jeffreys density that is not `∝ θ_1^{D−1}`.
 
 We do **not** test: the sign of any reported summary ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)); exact `p*` atom positions at
 intermediate `D` (no closed form); behaviour at `D` beyond the solver's feasible
@@ -1635,9 +1850,11 @@ flagged for ratification.
   *Why:* the axis on which `p*` and `p_proj` provably differ ([§3.4](#34-the-second-protagonist-infomax-vs-mdl));
   `moderate` ≈ A&M's cone, `sharp` stresses `p_proj`'s halo over-weighting. (Auto-chosen;
   please confirm.)
-- **Natures.** [TODO] The `t` grid, `t_min` and the floor `ε_g` (OQ-2). The stress panel
-  (the vertex nature in the hypercone only) and the self-sampling controls run at every
-  `(model, D, σ, N)` cell where defined ([§2.3](#23-the-natures), [§4.3](#43-foreign-q-family)).
+- **Natures.** Every row of the table of [§2.3](#23-the-natures) runs at every
+  `(model, D, σ, N)` cell where it is defined: the round robin (one row per prior of the
+  cast), the fixed natures of the cell's model (the few-rates kind only where `D` is a
+  multiple of `D_0`), and the stress natures (the vertex nature in the hypercone only).
+  [TODO] The laws left open in [§4.3](#43-foreign-q-family) (OQ-2).
 - **Grid resolution `G`.** Per-axis `G=50` for `D≤2`, `G=30` for `D=3`, `G=20` for
   `D=4` (so the grid stays `≤ 10^6` cells). *Why:* `G ≫ √(budget)` resolves the
   `~√n` atom spacing (spec 000 §1.3) while keeping `D`-dim BA tractable. Grid-
@@ -1648,9 +1865,10 @@ flagged for ratification.
   absolute mean. (Auto-chosen; please confirm.)
 - **Seed.** Single experiment seed `20260601`; one child stream per cell via
   `rng.spawn`, cells enumerated in fixed lexicographic order.
-- **Test-suite subset.** **T0 runs first (precondition).** T1, T3, T5, T7a, T10, T13, T14
-  at a single cheap cell (`exp-decay, D=2, σ=0.1, N=1, t=0`); T2 over the `D`-sweep in the
-  control model; T6 at `D∈{6,11,26}` (hypercone, analytic — no solver); T7b/T7c at small
+- **Test-suite subset.** **T0 runs first (precondition).** T1, T3, T5, T7a, T10, T13, T14, T20
+  at a single cheap cell (`exp-decay, D=2, σ=0.1, N=1`, in `p_U`'s own world; T14 and
+  T20 over all rows of that cell); T2 over the `D`-sweep in the
+  control model; T6 and T21 at `D∈{6,11,26}` (hypercone; T6 is analytic and needs no solver); T7b/T7c at small
   `(D,N)` where both methods / the `N`-fold are feasible; T9, T11 over the full `D`-sweep;
   T12 at the frozen AtomicPriors reference cells ([§5.5](#55-atomicpriorsjl-reference-fixtures)).
   [TODO] Cells for T16–T18. The experiment script ([§6](#6-report)) runs the full
@@ -1702,14 +1920,22 @@ Under `experiments/002-foreign-q-prediction/`:
 - `figures/am_fig5_reproduction.png` — `I/log2` and `max_θ b/log2` vs `D` (the
   eye-test figure, exp-decay), priors `p*`, `p_J`, `p_LN`, `p_proj` (the last
   reproducing Quinn Fig. 12: `p_proj` tracks `p*`, not Jeffreys).
-- `figures/gaps_vs_t.png` — for each protagonist and both scores, the gap to the best
-  deployable prior and the gap to `q̄`, against the tilt `t`, one panel per `D`, with the
-  self-sampling controls marked ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted), [§2.5](#25-controls-the-ceiling-and-self-sampling)).
+- `figures/mismatch_table.png` — the table of [§2.3](#23-the-natures) as a heat map, one
+  panel per model, `D` and score: natures in rows, priors in columns, the mismatch in each
+  cell. The cells that are not tests are marked ([§3.7](#37-falsification)); the margins
+  carry each column's largest and mean mismatch, with `q̄`'s mean as the reference
+  ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted),
+  [§2.5](#25-controls-the-ceiling-and-self-sampling)).
+- `figures/gaps_by_nature.png` — for each protagonist and both scores, the gap to the
+  best deployable prior in every row, one panel per `D`, with the cells that are not
+  tests marked.
+- `figures/exchange.png` — for each pair of priors and both scores, the two crossed cells
+  of the round robin, against `D`.
 - `figures/protagonist_gaps.png` — the pairwise gaps between `p*`, `p_lat` and `p_proj` on
-  both scores, across the stress panel and the curvature knob, localising where the
+  both scores, across the stress natures and the curvature knob, localising where the
   budget-dependent priors diverge ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)).
-- `figures/R_vs_D.png` — `R_N^q(π)` and `r_N^q(π)` vs `D` per prior, at fixed `(σ, N, t)`,
-  with the `q̄` ceiling line.
+- `figures/mismatch_vs_D.png` — each prior's mismatch against `D` on every fixed nature,
+  on both scores, at fixed `(σ, N)`.
 - `figures/budget_value.png` — `p*`'s gap to `p*_{N/10}`, to `p*_{10N}` and to Jeffreys
   (`M = ∞`) on both scores, against `D`, per model and nature, with the
   constant-cross-section model alongside ([§2.2](#22-the-cast),
@@ -1729,8 +1955,10 @@ Under `experiments/002-foreign-q-prediction/`:
 ### 6.2 Sweep coverage per output
 
 `am_fig5_reproduction.png` uses the exp-decay `D`-sweep at `σ=0.1`.
-`gaps_vs_t.png` and `R_vs_D.png` use the full `(D, σ, N, ν)` cross-product in the
-exp-decay (primary) and rotated-hypercone (controlled) models.
+`mismatch_table.png`, `gaps_by_nature.png` and `exchange.png` use the full
+`(D, σ, N, ν)` cross-product in the exp-decay (primary) and rotated-hypercone
+(controlled) models. `mismatch_vs_D.png` uses the fixed natures over the `D`-sweeps of
+the same models.
 `negative_control.png` uses the constant-cross-section model only.
 `budget_value.png` uses the `D`-sweeps of the hypercone, with the taper on and off
 (constant cross-section), and of exp-decay.
@@ -1741,19 +1969,27 @@ exp-decay (primary) and rotated-hypercone (controlled) models.
 `results_table.json` — one row per `(model, D, σ, N, taper, rotation, curvature, ν)` cell:
 
 - `model`, `D`, `sigma`, `N`, `taper`, `rotation`, `curvature`, `nature` — the cell key
-  (`nature`: the tilt `t`, the stress-nature name, or the control's prior).
+  (`nature`: the own-world prior's name, the fixed-nature name or the stress-nature name).
   `sigma_eff = sigma/√N` is the operative noise for `R_N` and `p*`; `r_N` and `p_lat` use
   `sigma` and `N`.
 - `R_mean[π]`, `R_mcse[π]` and `r_mean[π]`, `r_mcse[π]` for
   `π ∈ {p*, p_lat, p_proj, p*_{N/10}, p*_{10N}, p_J, p_U, p_LN, p_ref, q̄}` (nats; `p_ref`
   empty outside the hypercone families).
-- The [§2.4](#24-what-is-reported-and-what-cannot-be-asserted) summaries, each with its MCSE, for `π ∈ {p*, p_lat, p_proj}` and
-  `S ∈ {R, r}`: `gap_best[π][S] = max_{π'∈{p_J,p_U,p_LN,p_ref}} (S[π] − S[π'])`;
-  `gap_pair[π, π'][S]` for the three protagonist pairs; `gap_ceiling[π][S] = S[π] − S[q̄]`;
+- `floor_R`, `floor_r` — the row's floors ([§4.3](#43-foreign-q-family)); `mismatch_R[π]` and
+  `mismatch_r[π]`, each score minus its floor, with MCSE; `C_N`; and the two marks of
+  [§3.7](#37-falsification): `at_home[π][S]` (mismatch below ½ nat) and `settled[π]`
+  (`R_mean[π] > C_N`).
+- `covered_J` — the nature's mass on Jeffreys' covered set `Θ_J` ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)); hypercones
+  only, [TODO] exp-decay.
+- The row summaries of [§2.4](#24-what-is-reported-and-what-cannot-be-asserted), each with its MCSE, for `π ∈ {p*, p_lat, p_proj}` and
+  `S ∈ {R, r}`: `gap_best[π][S] = max_{π'} (S[π] − S[π'])` over the deployable priors
+  `π' ∈ {p_J, p_U, p_LN, p_ref}` other than the row's own;
+  `gap_pair[π, π'][S]` for the three protagonist pairs;
   `delta_R_pref = R[p*] − R[p_ref]` (budget versus ordering, [§3.5](#35-a-third-route-ordering-instead-of-budget)), one per ranking in
   exp-decay; and
   `gap_budget[S] = S[p*] − min_{M ∈ {N/10, 10N}} S[p*_M]`, the value of knowing the budget
-  ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)).
+  ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)). The column summaries, the exchange and the trends in `D` run across rows and
+  are computed from the table at report time.
 - `I_pstar`, `I_pJ`, `I_pproj`, `B_pstar`, `B_pJ` (bits) — the A&M/Quinn prior-side scores;
   `I_plat` (bits), the conditional information `p_lat` maximises.
 - `pstar_n_atoms`, `pstar_method` (`grid-BA` / `atomic`); `plat_support_size`.
@@ -1766,24 +2002,26 @@ the table stays small but an analysis by nature can re-key off it).
 ### 6.4 Report body
 
 1. A&M Fig. 5 reproduction (with the eye-test approval note).
-2. The gaps against `t` per protagonist and score, per `D`, with the negative-control
-   panel and the pairwise panel (§3.4) alongside.
-3. Both scores vs `D` with the `q̄` ceiling.
+2. The table of mismatches per model, `D` and score, with the cells that are not tests
+   marked and the column summaries against `q̄` (§2.4, §2.5, §3.7).
+3. The row gaps per protagonist and score, with the negative-control panel and the
+   pairwise panel (§3.4) alongside; the exchange per pair of priors; and each prior's
+   mismatch against `D` on the fixed natures.
 4. The value of knowing the budget: `Δ^{bud}` by `D`, model and nature, with the
    constant-cross-section control (§2.2).
 5. Budget versus ordering: `delta_R_pref` in the cones, the control where ranking is
    free, and in exp-decay per ranking (§3.5, §3.7).
 6. Calibration diagnostic.
 7. A table of the §2.4 summaries by `D`, `N` and nature.
-8. Test results: T0–T15 and T19 pass/fail with achieved tolerances (T0 the spec-000
+8. Test results: T0–T15 and T19–T21 pass/fail with achieved tolerances (T0 the spec-000
    regression gate, T12 the AtomicPriors cross-checks); [TODO] T16–T18.
-9. Notes: the §3.7 reading per protagonist (supported, refuted, or self-served near its
-   own world), solver-method caveats (OQ-1), and anything surprising.
+9. Notes: the §3.7 reading per protagonist and group of rows (supported, refuted, or not a
+   test), solver-method caveats (OQ-1), and anything surprising.
 
 ## 7. Open questions
 
 - **OQ-1 (RESOLVED — grid-BA below `D_switch`, AtomicPriors above).** <span style="color: red">Resolved: rather than port A&M's atomic L-BFGS optimiser to Python, the experiment **delegates `p*` to `mcabbott/AtomicPriors.jl`** (`optim!`/`nlopt!`) via `juliacall` for `D > D_switch`, keeping Python grid-BA (`O(G^D)`) as the primary, self-contained path for `D ≤ D_switch`. `D_switch` is a **parameter, not a fixed `D`** — the cross-over where grid-BA stops being feasible/accurate is an empirical, machine-dependent choice fixed once both implementations exist and are profiled (the small-`D` overlap where both run is the T7b/T12 cross-check). Consequences: Julia becomes a **runtime** dependency of the experiment's high-`D` path (the *test suite* stays Julia-free on frozen fixtures, [§5.5](#55-atomicpriorsjl-reference-fixtures)/OQ-7); `provenance.json` records the Julia + AtomicPriors versions; Julia's RNG is seeded across the boundary for determinism (T10). The minimal-setting headline runs entirely on Python grid-BA.</span> Cheaper stand-ins for `p*` (NML, the tilt formula, warm starts across budgets) are collected, unworked, in `notes/budget-value-of-information.md` §9.
-- **OQ-2 (partly resolved 2026-10-05; definition).** The exact `q_{coop}`/`q_{non}` parameterisation ([§4.3](#43-foreign-q-family)). It
+- **OQ-2 (design resolved 2026-11-10; parametrisations open).** The exact `q_{coop}`/`q_{non}` parameterisation ([§4.3](#43-foreign-q-family)). It
   must be defined in prediction space and span cooperative→non-cooperative; the
   concrete family (e.g. mixtures of pulled-back uniforms on manifold edges vs
   interior) needs a human choice so the cooperativeness axis is principled, not
@@ -1797,6 +2035,8 @@ the table stays small but an analysis by nature can re-key off it).
 > C: Three candidates drawn/sketched and visualised in `notes/q-family-visualisation.md` (parameter- and prediction-space 2D projections, exp-decay `D=2`): (A) atom-anchored/`p*`-relative, (B) geometry-relative/Fisher, (C) prediction-space targeted. Recommendation there: a **two-knob** design — cooperativeness `c` done geometry-relative (B, `p*`-independent), plus a separate interior↔boundary selector (C-style) for the `p*`-vs-`p_proj` corner, with (A) kept as a diagnostic. OQ-2 stays **open** pending your pick; the chosen family then gets written into §4.3.
 
 > C: (2026-10-05) The note was revised for the three-protagonist cast: family B was misdescribed (its `c=0` end is Jeffreys' own world), and drawing B′ showed that no anchor is neutral. MB chose in chat the tilt family `q_t ∝ (√det g)^t`, a stress panel (sharpened vertex; sub-resolution interior) and self-sampling controls for every prior; written into [§2.3](#23-the-natures) and [§2.5](#25-controls-the-ceiling-and-self-sampling). Still open: the range of `t`, the floor on `√det g` for `t < 0`, and the stress natures' parametrisation, to be pinned in §4.3.
+
+> C: (2026-11-10) The tilt family is replaced. Natures are rows of one table of mismatches: a round robin over the cast's own worlds, natures held fixed as `D` grows, and the two stress natures ([§2.3](#23-the-natures)). MB accepted the design in chat, with ½ nat as the line for a home win ([§3.7](#37-falsification)) and `q̄` averaging all rows ([§2.5](#25-controls-the-ceiling-and-self-sampling)). Still open, to be pinned in [§4.3](#43-foreign-q-family): `D_0` and the law of the few rates, the laws of the spectrum's centre and width, and the stress natures' parametrisation.
 
 - **OQ-3 (convention).** `p_LN` meta-parameters `(θ̄, τ)` — A&M use `(0,1)`; do we
   follow, or tune to make `p_LN` the *strongest* deployable competitor (A&M note a
@@ -2006,6 +2246,54 @@ With `y_t(θ)=Σ_μ a_μ e^{-k_μ t}`, `k_μ=e^{-θ_μ}`,
 `g_{μν}(θ) = σ^{-2} Σ_{t} (a_μ t k_μ e^{-k_μ t})(a_ν t k_ν e^{-k_ν t})`, a
 closed-form `D×D` matrix per `θ`, from which `p_J ∝ √det g` and the eye-test scores
 follow.
+
+### 9.4 The mass bound (eq. (3.2.1))
+
+Fix a prior `π` and a state `θ`, and write `A = A(θ)` for the states whose prediction lies
+within one Fisher length of `y(θ)` at budget `N`: `√N ‖y(θ') − y(θ)‖/σ ≤ 1`. If `π(A) = 0`
+the bound is vacuous. Otherwise let `π_A` be `π` restricted to `A` and normalised. The
+mixture satisfies `m_π ≥ π(A)·m_{π_A}` pointwise, so
+
+$$
+r_\theta(\pi) \;=\; \mathbb{E}_{X_{1:N}\mid\theta}\Big[\log\frac{p(X_{1:N}\mid\theta)}{m_\pi(X_{1:N})}\Big]
+\;\le\; -\log\pi(A) \;+\; D_{\mathrm{KL}}\!\big(p(X_{1:N}\mid\theta)\,\|\,m_{\pi_A}\big). \tag{9.4.1}
+$$
+
+KL divergence is convex in its second argument, and `m_{π_A}` is the `π_A`-average of the
+likelihoods `p(X_{1:N}|θ')`, so
+
+$$
+D_{\mathrm{KL}}\!\big(p(X_{1:N}\mid\theta)\,\|\,m_{\pi_A}\big)
+\;\le\; \int_A \frac{N}{2\sigma^{2}}\,\big\|y(\theta)-y(\theta')\big\|^{2}\,\pi_A(d\theta') \;\le\; \tfrac12. \tag{9.4.2}
+$$
+
+The integrand is the KL divergence between two Gaussians of equal covariance: half the
+squared distance between their predictions in units of `σ/√N`, which is at most one on
+`A`. With a neighbourhood of radius `ε` Fisher lengths the last term is `ε²/2`.
+
+### 9.5 Jeffreys' loss in the hypercone (eq. (3.2.2))
+
+Dropping part of the data cannot increase a KL divergence. So `r_θ(p_J)` is at least the
+divergence between the two laws of the relevant datum alone, the mean `x̄_1` of the first
+coordinate: `𝒩(θ_1, σ²/N)` under `θ`, and under Jeffreys the same Gaussian mixed over the
+`θ_1`-marginal of `p_J`. Since `√det g ∝ θ_1^{D−1}` on `[0, L]` ([§1.2](#12-generative-model)),
+that marginal has density `D θ_1^{D−1}/L^D`. Where it varies slowly over `σ/√N` the mixture
+is close to the density itself, and the divergence is minus the Gaussian's entropy minus
+the log density at `θ_1`:
+
+$$
+D_{\mathrm{KL}} \;\approx\; (D-1)\log\frac{L}{\theta_1} \;+\; \log\frac{L}{D} \;-\; \tfrac12\log\frac{2\pi e\,\sigma^{2}}{N}. \tag{9.5.1}
+$$
+
+To second order in `σ/√N` the divergence is lower by `(D−1)(D−3)σ²/(2Nθ_1²)`, negligible
+for `θ_1 ≫ Dσ/√N`.
+
+Check against the reduced computation (`notes/budget-value-of-information.md` §4;
+`L = 50`, `σ = 1`, `N = 1`), which finds the `θ_1` below which Jeffreys' loss on this datum
+exceeds `C_N`. At `D = 26` (`C_N = 4.02` nats) it finds 41.1; (9.5.1) gives 41.3, and 41.0
+with the correction. At `D = 100` (`C_N = 11.25`) it finds 42.7; (9.5.1) gives 43.7, and
+42.5 with the correction.
+
 
 ## 10. Revision log
 
@@ -2965,3 +3253,73 @@ cones is not a refutation; the `p_ref` rows of §1.1 and §2.2; §4.2's construc
 `[TODO]` for exp-decay; the §4.4 pseudocode comment; T15 (e) as a `[TODO]`;
 `delta_R_pref` per ranking in §6.3; a new item in §6.4; and OQ-8, which now blocks the
 decisive comparison.
+
+### 2026-11-10 — Correction + Restructure (§2.3, §2 opening; natures as a round robin)
+
+At MB's request: §2.3 was confusing, and should evaluate every prior against every other
+without the triviality that each wins where nature resembles it. Proposed by Claude and
+accepted in outline by MB the same day; nothing is propagated. §2.3 now opens with the
+triviality as an identity, from (2.1.3), names what the identity leaves open (the price
+away from home, the exchange between two priors, invariance to `D`), and builds the
+natures as rows of one table of mismatches: a round robin over the cast's own worlds
+(the former self-sampling controls, whose off-diagonal cells become the result), natures
+held fixed as `D` grows (resolving the `[TODO]` of 2026-10-26), and the two stress
+natures. In exp-decay the fixed natures are of two kinds, few rates (on the edges, where
+`p*` keeps weight) and a fixed spectrum (in the bulk), added when MB asked whether the
+edge lean of the first is intrinsic: it belongs to models of interchangeable, saturating
+parts, and the second kind is the simple nature that does not share it. The tilt family `q_t ∝ (√det g)^t` is dropped: its `t = 1` and `t = 0` points
+are rows of the round robin, and its `t < 0` branch is not normalisable below
+`−1/(D−1)` and approaches `p*`'s own world (finding F1 of
+`specs/002-foreign-q-prediction-redteam-conc04.md`). Cells settled in advance are marked
+in both directions (F8, in part), and the stress nature "varying on scales below one
+Fisher length" is reworded (minor m9). Stale until propagated: §0 ("Nature is swept over
+a family"), §1.1 (`t`, `ν`), §2.4 (summaries; "against the tilt `t`"), §2.5 (`q̄`'s
+pool; the tilt axis), §3.6 point 1, §3.7, §4.3, §5 (P14, T14, §5.4), §6.1, §6.3 and OQ-2.
+Downstream: the nature sampler loses its tilt branch and gains the fixed natures; no
+implementation exists yet.
+
+### 2026-11-10 — Restructure + Refinement (§0, §1.1, §2.3–§2.5, §3.6, §3.7, §4.3, §4.4, §5, §6, OQ-2; round robin propagated)
+
+At MB's request, propagating the new §2.3. MB decided in chat: §2.4 keeps the per-row gaps
+and adds the table readings; a home win is a lead at a mismatch below ½ nat; `q̄` averages
+all rows with equal weight. §2.4 reads the table along a row (the gaps, with a deployable
+prior left out in its own world), down a column (largest and mean mismatch), across the
+diagonal (the exchange) and across `D`; the per-nature gap to `q̄` is dropped (minor m10 of
+`specs/002-foreign-q-prediction-redteam-conc04.md`). §2.5 splits a prior's mean mismatch
+into `q̄`'s own plus its mismatch to `q̄` (new footnote), and the self-sampling controls
+become the round robin's diagonal. §3.7 sets aside home wins and cells settled by theorem,
+whichever prior they favour, and states the verdict per group of rows (the same report's
+F8, and the undefined "near" of F1). §4.3 replaces the tilt sampler with the round robin,
+the fixed natures and their floors; §4.4 reports mismatches. §5: P14 and T14 are
+rewritten, P20/T20 (no negative mismatch in the round robin) is new, and the sweep's
+natures are the rows of the table. §6: `gaps_vs_t.png` and `R_vs_D.png` give way to
+`mismatch_table.png`, `gaps_by_nature.png`, `exchange.png` and `mismatch_vs_D.png`, and the
+schema gains floors, mismatches and the two marks. §1.1 drops the tilt `t` and adds `D_0`.
+OQ-2's design is resolved; the laws of the fixed and stress natures stay open. Not
+changed: the PGM figure (`ν` still selects `q`), and the notes that still describe the
+tilt family (`notes/q-family-visualisation.md`; `notes/budget-value-of-information.md`
+§4). Downstream: no implementation or test of the nature sampler exists yet.
+
+### 2026-11-10 — Restructure + Correction (§3.2, §1.1, §1.2, §5, §6, §9.4, §9.5; loss as missing mass)
+
+At MB's request, after he asked what connects `p*`'s minimaxity to its high-`D`
+advantage. §3.2 is rebuilt on one bound, (3.2.1): a prior's loss at a state is at most
+minus the log of the mass it puts within one Fisher length of that state, plus ½ nat
+(derived in the new §9.4). A flat loss profile, the equalizer condition, then goes with
+equal mass per distinguishable state; Jeffreys' profile follows the co-volume; and the
+number of unresolved directions sets the size of the asymmetry, explicit in the hypercone
+as (3.2.2) (new §9.5, which reproduces the budget note's thresholds). The old identity
+(3.2.1) in bias pressure and its two assumptions are gone. Assumption 2, "`q` is spread",
+is replaced by the insurance inequality (3.2.3) and one property of nature, its mass on
+Jeffreys' covered set (minor m13 of `specs/002-foreign-q-prediction-redteam-conc04.md`).
+Corrections from the same report: the hypercone paragraph that added a posterior deviation
+to a divergence is removed (F6); the reduced-cone numbers are labelled as mismatches on
+the relevant datum (m12); the case is stated as against `p_J` only, with none made against
+`p_U` or `p_ref` (F2, for §3 only; §0 is unchanged); `m_{p*}`'s invariance is restricted
+to geometric widths (F5, in part). Footnotes `[^3-finite]` and `[^3-typical]` are deleted
+with the text they supported. Reading (3.2.1) as an approximate equality is tagged
+`[guess]`. Propagated: §1.1 gains `r_θ(π)`, `A(θ)` and `Θ_π`; §1.2's summary sentence;
+P6 now points to §1.2; P21/T21 (the bound, the inequality and the cone formula) are new;
+§6.3 gains `covered_J`. Not propagated: §3.3's closing reference to a "bias gap" that
+grows for "the deployable priors" (F2, F7). Downstream: no test or implementation of this
+section existed.
