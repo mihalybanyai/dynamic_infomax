@@ -39,7 +39,7 @@ def d(month: int, day: int) -> date:
 # Time axis: May and June at 1.5 units per day, the summer squeezed to GAP units,
 # autumn at 1.1 units per day.
 A0, A1 = d(5, 14), d(6, 13)
-B0, B1 = d(9, 20), d(11, 6)
+B0, B1 = d(9, 20), d(11, 10)
 GAP = 5.0
 SA, SB = 1.5, 1.1
 
@@ -73,7 +73,7 @@ GROUPS = [
              [d(5, 25), d(5, 29), d(5, 30)], "reviewed"),
             ("s002", "002  Does p* predict a foreign q?", "specs/002-foreign-q-prediction.md",
              [d(6, 1), d(6, 3), d(6, 4), d(6, 5), d(6, 6), d(10, 1), d(10, 4), d(10, 5),
-              d(10, 6), d(10, 25), d(10, 26)], "draft, in review"),
+              d(10, 6), d(10, 25), d(10, 26), d(11, 6)], "draft, in review"),
         ],
     ),
     (
@@ -92,9 +92,10 @@ GROUPS = [
              [d(6, 6), d(10, 5)], "open: 002 OQ-2"),
             ("budg", "What knowing the budget is worth", "budget-value-of-information.md",
              [d(10, 25), d(10, 26)], "in 002; threads open"),
-            # parked_ideas.md was created empty on 4 Oct; its entries come from the budget note.
+            # parked_ideas.md was created empty on 4 Oct; its entries come from the budget
+            # note and from the chat on spec 002's conc04 red-team.
             ("park", "Parked ideas", "parked_ideas.md",
-             [d(10, 4), d(10, 25), d(10, 26)], "running list"),
+             [d(10, 4), d(10, 25), d(10, 26), d(11, 9)], "running list"),
         ],
     ),
     (
@@ -142,7 +143,7 @@ MOVES = [("rwa", d(10, 4), "moved from notes/")]
 REDTEAMS = {
     "s000": [d(5, 17)],
     "s001": [d(5, 30)],
-    "s002": [d(6, 2), d(6, 4), d(6, 11)],
+    "s002": [d(6, 2), d(6, 4), d(6, 11), d(11, 6)],
 }
 
 # The budget note's chat thread ran before the note was committed.
@@ -175,6 +176,7 @@ LINKS = [
     (("budg", d(10, 26)), ("s002", d(10, 26)), INTO, 0.15),
     (("budg", d(10, 26)), ("ant", d(10, 29)), LED, -0.12),
     (("dcd", d(10, 29)), ("ant", d(10, 29)), LED, 0.2),
+    (("s002", d(11, 6)), ("park", d(11, 9)), LED, -0.3),
 ]
 
 ROW_H = 1.0
