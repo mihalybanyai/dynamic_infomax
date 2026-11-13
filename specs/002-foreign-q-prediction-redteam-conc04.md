@@ -87,6 +87,13 @@ same quantity for each deployable prior.
 
 > M: I believe the updates we made with Fable 5.2 resolve this
 
+> C: Agreed, resolved; nothing further to change. Done in commit 4052fc6 (revision-log
+> entries of 2026-11-10). The tilt family is dropped, so its `t < 0` branch is gone
+> (§2.3, §4.3). Every cell of the table of natures is a mismatch, which is the
+> foreignness coordinate asked for (§2.3, §2.4). "Near" is a mismatch below ½ nat
+> (§2.5, §3.7). The natures that replace the thin end declare their lean (§2.3,
+> footnote on fixed natures).
+
 ---
 
 ### F2: The case for transfer is made against Jeffreys; the verdict is taken against the best deployable prior [severity: medium]
@@ -113,6 +120,17 @@ beyond the ranking being unavailable.
 the missing argument.
 
 > M: there is definitely the argument that p_U is not invariant under reparametrisation, i.e. not unique. Are there other concerns with using a uniform prior? What does A&M say about this?
+
+> C: Chat, 2026-11-13. On MB's questions: A&M do not test a uniform prior (their figures
+> compare Jeffreys, `p*` and log-normal), but their abstract says that any measure
+> treating all parameters equally is far from uniform once projected onto the relevant
+> ones. Further concerns: a uniform prior on a long vector overstates its length (spec
+> `[^1-everyday]`), and in exp-decay it is a product prior, so its predicted curve
+> narrows with `D` (a bound from the 2026-11-10 chat, size unchecked). Against these, in
+> the axis-aligned cone uniform equals `p_ref` and has no co-volume bias. MB accepted
+> Claude's opinion: apply the first resolution. §3.2's *Scope* already states it (commit
+> 4052fc6). To apply in the spec (Stage 3b): §0, §2.1 and §3.3 name Jeffreys, and
+> log-normal on A&M's evidence, where they now say "the deployable priors".
 
 ---
 
@@ -145,6 +163,17 @@ circumstances"); §2.2 ("Mis-budgeted `p*`").
 - Move the `p*_1`/`p*_{16}` example under "too coarse".
 
 > M: (a) the mis-budgeted prior should indeed be mis-budgeted (b) and (c): enforce consistency with the note. btw coarser priors winning is always interesting for us, even when they don't coincide with p*
+
+> C: Agreed; to apply in the spec (Stage 3b). (a) §0, `[^0-motives]` ("More evidence,
+> and circumstances") and §2.2: the flatmate-observer expects a year but the flatmate
+> leaves after `N` encounters, so `p*_{10N}` is mis-budgeted and is scored at the true
+> `N`. (b) §2.2: "a wrong resolution costs on both sides" is restricted to the worst
+> case in 1-D (`notes/budget-value-of-information.md` §3.1), and the high-`D` result is
+> stated as the note has it: on both natures computed in the reduced cone the coarser
+> prior wins at every budget tested (its §3.3). (c) §2.2: the `p*_1`/`p*_{16}` example
+> moves under "too coarse". Also, from MB's remark that a coarser prior winning is of
+> interest in itself (Claude's reading of it): §2.4 and §6.3 report the gaps to
+> `p*_{N/10}` and to `p*_{10N}` separately, not only their minimum.
 
 ---
 
@@ -187,6 +216,17 @@ Mattingly p. 1763, footnote]. §0–§3 never say so, and the following depend o
   about `θ` rather than a ranking.
 
 > M?: the suggestions seem reasonable to me, but I'm uncertain about the significance of non-identifiability in the exp-decay model class
+
+> C: Chat, 2026-11-13. Explained: the symmetry changes no score, since every prior and
+> nature of the cast is symmetric under swaps, but it leaves "rank component `μ` first"
+> without meaning, which the decisive comparison with `p_ref` needs. MB decided: restrict
+> `Θ` to ordered rates, as A&M and Mattingly et al. do. To apply in the spec (Stage 3b):
+> §1.1, §1.2 and §4.1 define exp-decay's `Θ` as the ordered rates and state the symmetry
+> the ordering removes; §4.2 restricts `p_J`, `p_U` and `p_LN` to it; §3.5, §3.7 and
+> OQ-8 have `p_ref` rank order statistics (the slowest rate, and so on) and require that
+> the candidate rankings give distinct priors; `[^0-matched]` gives the corrected reason;
+> `[^0-motives]` ("Handing over the ranking") names a motive by its price, not by its
+> identity.
 
 ---
 
@@ -243,6 +283,23 @@ Settled by: the same comparison in a cone with geometric widths.
 - State the budget range over which the cone has one relevant direction.
 
 >M?: I have no idea what on eart is this about. I get that the cone does not really conform to the ribbon definition, but otherwise I'm lost.
+
+> C: Chat, 2026-11-13. Explained: `p*`'s "flat in `D`" claims hold in a ribbon because
+> each extra direction is narrower than the last; in the square cone the `D − 1` equal
+> directions are jointly observable, so several of the claims fail there and a loss to
+> `p_ref` could be that artefact. MB asked for a general treatment and accepted Claude's:
+> irrelevance is a property of the whole cross-section, measured by the sum of squared
+> sub-resolution widths `Σ L_μ²`. To apply in the spec (Stage 3b): (1) §1.2 defines joint
+> irrelevance through `Σ L_μ²` and the information the cross-section carries, about
+> `Σ L_μ²/8` nats, against Jeffreys' `Σ log L_μ`; §0, §3.3 and §3.4 restate `p*`'s
+> `D`-independence as a bound by the variation of that information across states, tagged
+> `[guess]` outside the reduced cone. (2) §4.1 and §5.4 give the hypercone a fall-off
+> knob (widths shrinking by a fixed factor per direction: factor 1 is the square cone,
+> below 1 A&M's; symbol to choose), and §6 reports against `Σ L_μ²`. (3) §3.5 and §3.7
+> read a loss to `p_ref` in the cone against the gradient of that information, not as
+> the expected control result. Also from this finding: §1.1 and §1.2 say that the cone's
+> `Δ` is its `θ_1` component, and §1.2 states the budget range over which the cone has
+> one relevant direction.
 ---
 
 ### F6: The hypercone's "explicit" asymmetry adds a deviation to a divergence, and uses `Δ = (D−1)/x` outside its range [severity: medium]
@@ -275,6 +332,12 @@ redundancy or mismatch; the budget note §4 already gives reduced-cone numbers f
 
 > M?: (a) but if it's O(1) it will be in all units, no? (b): the suggestion seems reasonable
 
+> C: Chat, 2026-11-13. (a) Moot: the paragraph is deleted in §3.2 (commit 4052fc6).
+> Explained that the sentence added a distance to a divergence and held under no reading
+> of "pays". (b) MB: add the range note. To apply in the spec (Stage 3b): §1.2 states
+> where `Δ = (D−1)/x` holds (`x² ≫ 4(D−1)`, from §9.2) and that the deviation saturates
+> below it at the thin end, with this finding's numbers.
+
 ---
 
 ### F7: §3.3's "bias term" is mostly posterior spread [severity: medium]
@@ -305,6 +368,16 @@ approximation it splits into two terms, both zero for the matched prior:
 
 > M?: this suggestion seems reasonable but I'm uncertain
 
+> C: Chat, 2026-11-13. Explained: the present bias term is measured from the true curve,
+> so it is positive for the matched prior too and reports posterior spread as bias. MB
+> decided the diagnostic should say how far a prior is from the best achievable. To apply
+> in the spec (Stage 3b): §3.3 decomposes the prior-dependent part of (2.1.6),
+> `D_KL(m_q(·|X)‖m_π(·|X))`, into a mean-shift term and a covariance-mismatch term, both
+> zero for the matched prior, and drops "the bias term decides the contest" as written;
+> §4.4 computes the row's own posterior predictive (in the round robin, that of the row's
+> own prior); P5 and T5 test the new closed form; the §6 diagnostic reports the two new
+> terms.
+
 ---
 
 ### F8: The verdict rule sets aside cells `p*` wins by theorem, but not cells it loses by construction [severity: medium]
@@ -333,6 +406,13 @@ happens elsewhere. Three phrases are also undefined:
 - Define "near" by F1's foreignness coordinate.
 
 > M: this seems to have been resolved by the latest edits to the natures too? there is no tilt anymore, and home-court wins are thrown out. is there anything left from the concern?
+
+> C: Chat, 2026-11-13. MB accepted Claude's opinion: resolved by commit 4052fc6. §2.4
+> leaves a deployable prior out of the comparison in its own world; §3.7 sets aside home
+> wins and cells settled by theorem, whichever prior they favour, states the verdict per
+> group of rows, and defines "near" as a mismatch below ½ nat. No rule pools the cells
+> into one verdict, by design (§2.4). One residue to apply in the spec (Stage 3b): §3.7
+> says "ties within Monte-Carlo error".
 
 ## Minor
 
@@ -415,6 +495,21 @@ happens elsewhere. Three phrases are also undefined:
   each.
 
   > M: apply suggestions where clear, and still applicable after intervening edits. m11: the former, m15: footnote
+
+  > C: To apply in the spec (Stage 3b), where still applicable after commit 4052fc6.
+  > *Already resolved by that commit:* m9, m10, m12, m13; m11 (§2.4 takes the minimum
+  > once per ranking, as MB chooses here); of m1, the §3.7 site; of m3, "cooperativeness
+  > axis"; of m4, the tilt `t`. *To apply:* m1 (§0, §1.1, §2.1), m2, m3 (the remaining
+  > links and pointers), m5, m6 (the labels only), m7, m8, m11 (say "per ranking" in
+  > §6.3's `gap_best` too), m14, m15 (to a footnote), m16, m17, m18 (as `[recalled]`
+  > unless the source is opened). *m4* (renames proposed by Claude and accepted by MB in
+  > chat, 2026-11-13): `r_θ(π)` becomes `R_N^θ(π)`, the score under a point nature at
+  > `θ` (a clash made worse by §3.2's rewrite); the metric's indices become `μ, μ'`,
+  > leaving `ν` to the nature; the cone's range becomes `W`, leaving `L` to the Fisher
+  > length; the Gumbel function becomes `F(z)`, leaving `G` to the grid; the code of
+  > §3.4 becomes `η`, leaving `q` to nature; `n` becomes `N` in §0; the scalar `x` of
+  > §1.2 and §9.2 becomes `x_1`; Berger–Bernardo's `S` and `ω` are renamed at their
+  > site in §3.5 after a look.
 
 ## What the spec gets right
 

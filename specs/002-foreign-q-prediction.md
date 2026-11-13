@@ -24,7 +24,7 @@ that `q` is chosen independently of the agent's prior. The sign of the answer is
 the spec fixes how it is measured.
 
 **Where this comes from.** Spec 000 reproduced the static `p*`: discrete, with about
-`√n` [atoms](../GLOSSARY.md#atom) for `n` observations, and approaching Jeffreys as `n` grows. Spec 001
+`√N` [atoms](../GLOSSARY.md#atom) for `N` observations, and approaching Jeffreys as `N` grows. Spec 001
 scored it as a *betting belief* and found it loses to smooth priors: a *design* object
 scored as an *inference* belief, the [two-hat error](../GLOSSARY.md#two-hat-error). Abbott & Machta (2023, "A&M") make
 the opposite-seeming claim. In [**ribbon-geometry**](../GLOSSARY.md#hyperribbon) models with many parameters
@@ -77,13 +77,12 @@ whose [Bayes mixture](../GLOSSARY.md#bayes-mixture) matches nature's data distri
 the compensation identity ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss)), and `p*` is a design object by
 construction.
 
-**Why transfer could hold: an asymmetry.** The deployable priors' bias is a fixed
-property of their posteriors: it appears whatever generated the data, and it grows with
+**Why transfer could hold: an asymmetry.** <span style="color: red">Jeffreys' bias is a fixed property of its posterior:</span> it appears whatever generated the data, and it grows with
 the number of parameters `D`. Jeffreys' worst-case bias pressure exceeds 500 bits at
 `D=26` in A&M's exponential-decay model, and is about 55 bits in their hypercone model
-(both in [§1.2](#12-generative-model)) [read: A&M §3; App. A.1]. `p*`'s lack of bias is
+(both in [§1.2](#12-generative-model)) [read: A&M §3; App. A.1]. <span style="color: red">Log-normal degrades too [read: A&M §2.2]; no such case is made against `p_U` or `p_ref` ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d), *Scope*).</span> `p*`'s lack of bias is
 shown only on its own data. Against a foreign `q`, its loss is capped by the
-[channel capacity](../GLOSSARY.md#channel-capacity), which stays roughly flat as `D` grows
+[channel capacity](../GLOSSARY.md#channel-capacity), which stays roughly flat as `D` grows <span style="color: red">where the added directions are jointly irrelevant ([§1.2](#12-generative-model))</span>
 ([§3.1](#31-the-one-guarantee-worst-case-over-q)). Whether its advantage survives
 without [self-sampling](../GLOSSARY.md#self-sampling) is the open question. Every prior is scored in every other prior's
 own world, the nature equal to that prior, with its own as the control
@@ -100,13 +99,12 @@ The two solve the same [universal-coding](../GLOSSARY.md#universal-coding) probl
 [regret](../GLOSSARY.md#redundancy-and-regret) notions and nearly coincide on hyperribbons, so the sharpest question
 is whether the harder capacity object buys anything over the cheap MDL one on held-out
 prediction ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)). A third, `p_lat`, is the
-minimax prior for predicting observation `N+1` after `N` (Komaki 2011); it comes with a
+minimax prior for predicting observation `N+1` after `N` (Komaki 2011<span style="color: red">; proven for finite outcome spaces, [§2.2](#22-the-cast)</span>); it comes with a
 second score, the one-step `r_N`, next to the cumulative `R_N`
 ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss), [§2.2](#22-the-cast)).
 Mis-budgeted copies of `p*`, built for a tenth and for ten times the true budget, measure
 what knowing the budget is worth to an agent that commits to one prior
-([§2.2](#22-the-cast)), such as the observers of the plumber and of the flatmate in the
-example.
+([§2.2](#22-the-cast)), such as <span style="color: red">an observer in the example who expects a flatmate to stay a year, when the flatmate leaves after a tenth of it</span>.
 
 [^0-motives]: **The example in detail.** It is A&M's exponential-decay model
     ([§1.2](#12-generative-model), [§4.1](#41-model-families)) read as a model of motives. A
@@ -123,11 +121,11 @@ example.
     - *Stakes* `t_1, …, t_m`: `m = 26` stakes from 1 to 5, in units of the smallest. These
       are A&M's observation times.
     - *Prices.* With `k_μ = e^{−θ_μ}`, a component decays as
-      `e^{−k_μ t} = G(θ_μ − log t)`, where `G(z) = exp(−e^{−z})` is the Gumbel
+      `e^{−k_μ t} = F(θ_μ − log t)`, where `F(z) = exp(−e^{−z})` is the Gumbel
       distribution function. So motive `μ` holds at stake `t` with weight
-      `G(θ_μ − log t)`. It gives way around the stake `e^{θ_μ} = 1/k_μ`, its price, and
+      `F(θ_μ − log t)`. It gives way around the stake `e^{θ_μ} = 1/k_μ`, its price, and
       softly: from 90% to 10% over about a twentyfold range of stakes.
-    - *Fairness* `y_t = Σ_μ a_μ G(θ_μ − log t)`: the share of what could be taken that is
+    - *Fairness* `y_t = Σ_μ a_μ F(θ_μ − log t)`: the share of what could be taken that is
       held back at stake `t`. You judge it with noise `σ = 0.1`, ten percentage points, at
       each stake, in each of `N` encounters. The held-out `x′` is the next encounter, at the
       same stakes.
@@ -140,7 +138,7 @@ example.
       ([§3.5](#35-a-third-route-ordering-instead-of-budget)).
 
     *The seemingly neutral observer* uses Jeffreys. Counting characters by how
-    differently they would deal is the only weighting that does not depend on how prices
+    differently they would deal is the only <span style="color: red">local, budget-free</span> weighting that does not depend on how prices
     are measured (in euros, in log-euros, as rates); that is Jeffreys' appeal. The table
     gives the posterior mean fairness at small stakes (1–2) and at larger ones (4–5), for
     one noiseless encounter with a character of 12 motives, judged by observers who model
@@ -169,7 +167,7 @@ example.
 
     *No continuum needed.* The bias needs a distinguishability metric and a count of
     characters finer than the evidence can resolve. Count characters on a grid of
-    spacing `h` in fairness units: wherever `h` is finer than every width of the model,
+    spacing `h` in fairness units: wherever `h` is finer than every width of the model <span style="color: red">([§1.2](#12-generative-model))</span>,
     the count in a region is proportional to its Fisher volume, so the tilt is Jeffreys' at
     every such `h`, and Jeffreys is the `h → 0` limit. At the evidence's own resolution
     (`h` about one noise unit) each sub-resolution direction holds a single cell and its
@@ -202,24 +200,28 @@ example.
     on data drawn from `p*` itself [read: A&M Fig. 4]; for these characters this is what the
     spec computes.
 
-    *More evidence, and circumstances.* Each encounter stretches every Fisher length by
+    *More evidence, and circumstances.* Each encounter stretches every <span style="color: red">[Fisher length](../GLOSSARY.md#fisher-length)</span> by
     `√N`, so unreadable prices become readable and the shortlist grows. For two motives,
     Mattingly et al. place the change from one readable direction to two at about fifty
     times more data, "perhaps the difference between a week's data and a year's" [read:
     Mattingly p. 1763]. An observer who builds the prior for the exposure it expects uses
     `p*_N` for a plumber seen once, and a prior built for more, such as `p*_{10N}`, for a
-    flatmate expected to stay a year, on the same evidence so far: the mis-budgeted copies
-    of [§2.2](#22-the-cast). The difference in expected exposure must be the observer's
-    alone, such as a move the flatmate has not been told about. Otherwise keeping the
+    flatmate expected to stay a year. <span style="color: red">The mis-budgeted copies of [§2.2](#22-the-cast) are observers whose
+    expectation is wrong: one builds `p*_{10N}` for a year with the flatmate, who leaves
+    after a tenth of it, and is scored on the `N` encounters that happen. The mistake must
+    be the observer's alone, such as a move the flatmate has not announced.</span> Otherwise keeping the
     arrangement becomes a motive whose price changes with the circumstance, and nature
-    changes too. Whether the flatmate-observer's finer shortlist predicts better now is
+    changes too. Whether the <span style="color: red">mistaken observer's</span> finer shortlist predicts better <span style="color: red">over those `N` encounters</span> is
     `Δ^{bud}` ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)). In the square
     hypercone `p*`'s own tilt grows with its budget
     (`notes/budget-value-of-information.md` §3.3); in exp-decay this is not computed.
 
-    *Handing over the ranking.* Had the story said which motive matters ("only conscience
-    counts; the others leave faint marks"), it would hand over the ranking, and the
-    reference prior with that motive first would remove the bias with no budget at all.
+    *Handing over the ranking.* <span style="color: red">Had the story said which price matters ("only the lowest
+    price counts: once one motive gives way, the rest follow"), it would hand over the
+    ranking, and the reference prior with that price first would remove the bias with no
+    budget at all [guess]. Naming a motive would not do: conscience and habit have the
+    same share and the same form, so the likelihood cannot tell them apart, and only a
+    price can be ranked ([§1.2](#12-generative-model)).</span>
     That is the axis-aligned cone's position in
     [§3.5](#35-a-third-route-ordering-instead-of-budget): the control where ranking is
     free. Here the data reveal different motives in different people, and nothing is
@@ -257,9 +259,12 @@ example.
     from the data, uses one fixed observation whose origin A&M do not state [read: A&M
     §2.2].
 
-[^0-matched]: E.g. `q` itself in [identifiable](../GLOSSARY.md#identifiable-model) models. In sloppy models the
-    matching priors form an equivalence class: the condition is on the marginal, not on
-    a unique prior ([§2.5](#25-controls-the-ceiling-and-self-sampling)).
+[^0-matched]: E.g. `q` itself. <span style="color: red">The matching prior is unique wherever the model is
+    [identifiable](../GLOSSARY.md#identifiable-model): Gaussian noise blurs no two laws of
+    the prediction `y(θ)` into one data marginal, so `m_π = m_q` forces the same law of
+    `y(θ)` [read: `specs/002-foreign-q-prediction-redteam-conc04.md` F4]. Ordering
+    exp-decay's rates removes its swaps ([§1.2](#12-generative-model)); whether it is
+    then identifiable at `D = m` is not checked.</span>
 
 ## 1. Setup
 
@@ -268,7 +273,7 @@ example.
 | Symbol | Meaning |
 |---|---|
 | `D` | Number of model parameters (the dimension being stressed); A&M's `d`. |
-| `θ ∈ Θ ⊂ ℝ^D` | Parameter vector; `Θ` a compact box per model ([§4.1](#41-model-families)). |
+| `θ ∈ Θ ⊂ ℝ^D` | Parameter vector; `Θ` a compact box per model ([§4.1](#41-model-families)).<span style="color: red"> In exp-decay `Θ` is the ordered part of the box, `θ_1 ≤ … ≤ θ_D` ([§1.2](#12-generative-model)).</span> |
 | `m` | Number of observation times, i.e. the dimension of each observation `x ∈ ℝ^m` (the number of observations is `N`). |
 | `y(θ) ∈ ℝ^m` | Prediction (mean-data) map; the model manifold is `{y(θ) : θ ∈ Θ}`. |
 | `σ` | Gaussian observation-noise scale. |
@@ -276,21 +281,23 @@ example.
 | `N` | Data budget: number of i.i.d. training observations `x_i ∼ p(·\|θ)`. `N` observations scale the Fisher information by `N`, equivalent to one observation at noise `σ/√N` ([§4](#4-algorithm)); A&M call `N` the repetition count `M` [read: A&M §2.1]. |
 | `X_{1:N}` | The training sample `(x_1, …, x_N)`. |
 | `x'` | A fresh held-out observation `∼ p(·\|θ)`, the target of the one-step score `r_N`. |
-| `g(θ)` | [Fisher information metric](../GLOSSARY.md#fisher-information-metric), `g_{μν}(θ) = σ^{-2} Σ_t ∂_μ y_t ∂_ν y_t` (Gaussian, [§4.1](#41-model-families)). |
-| `L` | [Fisher length](../GLOSSARY.md#fisher-length) `∫ ds` of a path, with `ds` from eq. (1.2.2) in [§1.2](#12-generative-model); a direction is [relevant](../GLOSSARY.md#relevant-and-irrelevant-directions) if `L>1`, irrelevant if `L<1`. |
+| `g(θ)` | [Fisher information metric](../GLOSSARY.md#fisher-information-metric), `g_{μμ'}(θ) = σ^{-2} Σ_t ∂_μ y_t ∂_{μ'} y_t` (Gaussian, [§4.1](#41-model-families)). |
+| `L` | [Fisher length](../GLOSSARY.md#fisher-length) `∫ ds` of a path, with `ds` from eq. (1.2.2) in [§1.2](#12-generative-model); a direction is [relevant](../GLOSSARY.md#relevant-and-irrelevant-directions) if `L>1`, irrelevant if `L<1`. <span style="color: red">Lengths are stated at noise `σ`. At budget `N` they are longer by `√N` ([§4](#4-algorithm)), and relevance is judged at the budget.</span> |
+| `W` | <span style="color: red">Range of the hypercone's relevant coordinate, `θ_1 ∈ [0, W]` ([§1.2](#12-generative-model)); A&M's `L`.</span> |
+| `φ` | <span style="color: red">Fall-off of the hypercone's irrelevant widths, `φ ∈ (0, 1]` ([§1.2](#12-generative-model)).</span> |
 | `q` | Nature's distribution over `θ` (the *foreign* truth). |
 | `m_q(X_{1:N})` | Nature's `N`-fold data marginal `∫ p(X_{1:N}\|θ) q(dθ)`. |
 | `ν` | The nature of a cell: a prior's own world, a fixed nature or a stress nature ([§2.3](#23-the-natures)); it selects `q`. `m_ν` is its data marginal. |
 | `D_0` | Number of distinct rates of a few-rates nature, `D_0 < D` ([§2.3](#23-the-natures)). |
 | `π` | Agent's prior, one of `{p*, p_lat, p_proj, p*_{N/10}, p*_{10N}, p_J, p_U, p_LN, p_ref}`, with `q̄` as reference ceiling ([§2.2](#22-the-cast)). |
-| `p*` | Infomax ([capacity](../GLOSSARY.md#channel-capacity)-achieving) prior of the budget-`N` channel `θ→X_{1:N}`: `argmax_π I_π(Θ;X_{1:N})`, equivalently the single-observation achiever at noise `σ/√N` ([§4.2](#42-prior-construction)). Discrete[^1-discrete]. |
+| `p*` | Infomax ([capacity](../GLOSSARY.md#channel-capacity)-achieving) prior of the budget-`N` channel `θ→X_{1:N}`: `argmax_π I_π(Θ;X_{1:N})`, equivalently the single-observation achiever at noise `σ/√N` ([§4.2](#42-prior-construction)). <span style="color: red">Usually discrete</span>[^1-discrete]. |
 | `p_proj` | Projected-ML / NML prior: the [pushforward](../GLOSSARY.md#pushforward) of the [NML distribution](../GLOSSARY.md#normalized-maximum-likelihood-nml) through the MLE map `θ̂(x)` ([§3.4](#34-the-second-protagonist-infomax-vs-mdl), [§4.2](#42-prior-construction)). |
-| `p_lat` | Latent information prior at `(N, 1)`: `argmax_π I_π(Θ;X_{N+1}\|X_{1:N})`, the minimax prior for the one-step score ([§2.2](#22-the-cast)). `p*` is the same construction at `(0, N)`. |
+| `p_lat` | Latent information prior at `(N, 1)`: `argmax_π I_π(Θ;X_{N+1}\|X_{1:N})`, the minimax prior for the one-step score<span style="color: red">, proven for finite outcome spaces</span> ([§2.2](#22-the-cast)). `p*` is the same construction at `(0, N)`. |
 | `p*_M` | Mis-budgeted `p*`: the `p*` of budget `M`, used at the true budget `N`. The cast carries `M = N/10` and `M = 10N`; Jeffreys is the `M → ∞` limit ([§2.2](#22-the-cast)). |
 | `p_J` | [Jeffreys prior](../GLOSSARY.md#jeffreys-prior) `∝ √{det g(θ)}`, normalised on `Θ`. |
 | `p_U` | Uniform on the parameter box `Θ`. |
 | `p_LN` | Normal in `θ`, i.e. log-normal in the rate `k_μ = e^{-θ_μ}` (A&M Eq. 10): `∝ Π_μ e^{-(θ_μ-θ̄)²/2τ²}` (A&M's `σ̄` is `τ`). |
-| `p_ref` | [Reference prior](../GLOSSARY.md#reference-prior) with the relevant direction ranked first: the irrelevant directions are integrated out under their conditional prior before the relevant one gets its prior ([§3.5](#35-a-third-route-ordering-instead-of-budget), [§4.2](#42-prior-construction)). Closed form in the cones; in exp-decay, one per candidate ranking of OQ-8. |
+| `p_ref` | [Reference prior](../GLOSSARY.md#reference-prior) with the relevant direction ranked first: the irrelevant directions are integrated out under their conditional prior before the relevant one gets its prior ([§3.5](#35-a-third-route-ordering-instead-of-budget), [§4.2](#42-prior-construction)). Closed form in the cones; in exp-decay, one per candidate ranking of OQ-8 <span style="color: red">([§7](#7-open-questions))</span>. |
 | `q̄` | Equal-weight average of all natures of [§2.3](#23-the-natures); reference ceiling only ([§2.5](#25-controls-the-ceiling-and-self-sampling)). |
 | `m_π(X_{1:N})` | Agent's Bayes mixture `∫ p(X_{1:N}\|θ) π(dθ)`. |
 | `π(θ\|X_{1:N})` | Posterior under prior `π`. |
@@ -298,16 +305,24 @@ example.
 | `D_eff` | [Effective dimensionality](../GLOSSARY.md#effective-dimensionality): the number of resolvable parameter directions (A&M Eq. 8). |
 | `C` | Channel capacity `sup_π I_π(Θ;X_{1:N}) ≡ C_N` ([§3.1](#31-the-one-guarantee-worst-case-over-q)). |
 | `b_π(θ)` | [Bias pressure](../GLOSSARY.md#bias-pressure) `D_{KL}(p(x\|θ)‖m_π) − I_π(Θ;X_1)` (A&M Eq. 5); `b(θ)` when `π` is clear from context. Its worst case is `B(π) = max_θ b_π(θ)`. |
-| `Δ(x)` | [Posterior deviation](../GLOSSARY.md#posterior-deviation) `σ^{-1}\|y(θ̂_x) − 𝔼_{π(θ\|x)} y(θ)\|` (A&M Eq. 9), with `θ̂_x` the maximum-likelihood estimate for `x`. |
+| `Δ(x)` | [Posterior deviation](../GLOSSARY.md#posterior-deviation) `σ^{-1}\|y(θ̂_x) − 𝔼_{π(θ\|x)} y(θ)\|` (A&M Eq. 9), with `θ̂_x` the maximum-likelihood estimate for `x`. <span style="color: red">In the hypercones the figures quoted are its `θ_1` component ([§1.2](#12-generative-model)).</span> |
 | `R_N^q(π)` | The cumulative score: redundancy = cumulative held-out predictive log-loss ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss)). |
 | `r_N^q(π)` | The one-step score: excess log-loss on `x'` given `X_{1:N}`, `= R_{N+1}^q(π) − R_N^q(π)` ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss)). |
 | `I_q` | Matched floor `I_q(Θ;X_{1:N})`: nature's own mutual information, prior-independent ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss)). |
-| `r_θ(π)` | Per-state redundancy `D_{KL}(p(X_{1:N}\|θ)‖m_π)`: the loss of `π` at state `θ`. `R_N^q(π)` is its average over `θ ∼ q` ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss), [§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)). |
+| `R_N^θ(π)` | Per-state redundancy `D_{KL}(p(X_{1:N}\|θ)‖m_π)`: the loss of `π` at state `θ`, that is, the score under a point nature at `θ`. `R_N^q(π)` is its average over `θ ∼ q` ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss), [§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)). |
 | `A(θ)` | The states indistinguishable from `θ`: those whose prediction lies within one [Fisher length](../GLOSSARY.md#fisher-length) of `y(θ)` at budget `N` ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)). |
-| `Θ_π` | Covered set of `π`: the states where `r_θ(π) ≤ C_N` ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)). |
+| `Θ_π` | Covered set of `π`: the states where `R_N^θ(π) ≤ C_N` ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)). |
 | `G` | Per-axis grid resolution of the discrete `p*` solver ([§4.2](#42-prior-construction)). |
 
 All logs in nats; bits `= nats/log 2` at report time.
+
+> [!warning]
+> Renamed 2026-11-13 (conc04 m4), without a red mark at each site. The per-state loss
+> `r_θ(π)` is now `R_N^θ(π)`. The metric's indices are `μ, μ'`, leaving `ν` to the nature.
+> The hypercone's range is `W`, leaving `L` to the Fisher length. The relevant datum is
+> `x_1`, leaving `x` to the data vector. The Gumbel function of §0 is `F`, leaving `G` to the
+> grid. The code of §3.4 is `η`, leaving `q` to nature. Berger–Bernardo's formula in §3.5 is
+> written in `θ_1` and `θ_⊥`. §0 writes `N` where it wrote `n`.
 
 [^1-discrete]: Proven for scalar [amplitude-constrained Gaussian channels](../GLOSSARY.md#amplitude-constrained-gaussian-channel) (Smith 1971)
     [recalled: the paper could not be fetched; its title restricts it to scalar
@@ -356,9 +371,9 @@ map `θ ↦ y(θ)`: as `θ` ranges over the box `Θ ⊂ ℝ^D`, `y(θ)` sweeps a
 the [**Fisher metric**](../GLOSSARY.md#fisher-information-metric)[^1-fisher]
 
 $$
-g_{\mu\nu}(\theta) \;=\; \frac{1}{\sigma^{2}}\sum_{t=1}^{m}
-\frac{\partial y_t}{\partial \theta_\mu}\,\frac{\partial y_t}{\partial \theta_\nu},
-\qquad \mu,\nu \in \{1,\dots,D\}, \tag{1.2.1}
+g_{\mu\mu'}(\theta) \;=\; \frac{1}{\sigma^{2}}\sum_{t=1}^{m}
+\frac{\partial y_t}{\partial \theta_\mu}\,\frac{\partial y_t}{\partial \theta_{\mu'}},
+\qquad \mu,\mu' \in \{1,\dots,D\}, \tag{1.2.1}
 $$
 
 the [pullback](../GLOSSARY.md#pullback) of data-space distance onto parameter space: `g` measures a
@@ -368,7 +383,7 @@ is the step's [**Fisher length**](../GLOSSARY.md#fisher-length) `ds`:
 
 $$
 ds^{2} \;=\; \frac{1}{\sigma^{2}}\,\Big\|\sum_{\mu=1}^{D}\frac{\partial y}{\partial\theta_\mu}\,d\theta_\mu\Big\|^{2}
-\;=\; \sum_{\mu,\nu} g_{\mu\nu}(\theta)\,d\theta_\mu\,d\theta_\nu . \tag{1.2.2}
+\;=\; \sum_{\mu,\mu'} g_{\mu\mu'}(\theta)\,d\theta_\mu\,d\theta_{\mu'} . \tag{1.2.2}
 $$
 
 The left side defines `ds`. The right side, obtained by expanding the square and using
@@ -376,24 +391,43 @@ The left side defines `ds`. The right side, obtained by expanding the square and
 `∫ ds` along it.
 
 Two scales follow. *Locally*, the square roots of the eigenvalues of `g(θ)` give how fast
-a step along each principal direction moves the prediction. *Globally*, the Fisher length `L_μ = ∫ ds` of the manifold along principal direction `μ` (an eigenvector of `g`), also called its *width*, counts the resolvably distinct predictions from end to end. Directions with `L_μ > 1` are [**relevant**](../GLOSSARY.md#relevant-and-irrelevant-directions) (stiff), those with `L_μ < 1` **irrelevant** (sloppy). Two volumes carry the argument, the
-**distinguishable-prediction volume** `V_g` and the [**co-volume**](../GLOSSARY.md#co-volume) `V_⊥`:
+a step along each principal direction moves the prediction. *Globally*, the Fisher length `L_μ = ∫ ds` of the manifold along principal direction `μ` (an eigenvector of `g`), also called its *width*, counts the resolvably distinct predictions from end to end. Directions with `L_μ > 1` are [**relevant**](../GLOSSARY.md#relevant-and-irrelevant-directions) (stiff), those with `L_μ < 1` **irrelevant** (sloppy). 
+
+> [!warning]
+> Revised 2026-11-13 (conc04 F5, m7): the co-volume is now local, the estimate
+> `V_g ≈ ∏ L_μ` is dropped, and the paragraph on joint irrelevance is new.
+
+Two volumes carry the argument. The **distinguishable-prediction volume** `V_g` is the
+Fisher volume of the whole manifold. The local [**co-volume**](../GLOSSARY.md#co-volume)
+`V_⊥(θ)` is the Fisher volume of the cross-section through `θ` spanned by the irrelevant
+directions: the product of their widths `L_μ(θ)` there.
 
 $$
-V_g \;:=\; \int_{\Theta}\!\sqrt{\det g(\theta)}\;d\theta \;\approx\; \prod_{\mu=1}^{D} L_\mu,
+V_g \;:=\; \int_{\Theta}\!\sqrt{\det g(\theta)}\;d\theta,
 \qquad
-V_\perp \;:=\!\!\prod_{\mu:\,L_\mu<1}\!\! L_\mu,
+V_\perp(\theta) \;:=\!\!\prod_{\mu:\,L_\mu(\theta)<1}\!\! L_\mu(\theta),
 \qquad
 p_J(\theta) \;=\; \frac{\sqrt{\det g(\theta)}}{V_g}. \tag{1.2.3}
 $$
 
-`V_g`, the Fisher volume (`≈` the product of all `D` widths), normalises the **Jeffreys
-prior**, which therefore places mass in proportion to `√det g`. The co-volume `V_⊥`
-collects only the irrelevant widths: extent the data cannot pin down but a `√det g`
-measure still weights. That mismatch is the mechanism behind everything below.
+`V_g` normalises the **Jeffreys prior**, which places mass per unit of Fisher volume. Its
+mass on a stretch of the relevant directions is therefore proportional to the co-volume
+there: extent the data cannot pin down, which a `√det g` measure still weights. That
+mismatch is the mechanism behind everything below.
 
-**Hyperribbons (panel a).** In the models of interest the manifold is a [*hyperribbon*](../GLOSSARY.md#hyperribbon): its widths `L_1 ≥ L_2 ≥ ⋯ ≥ L_D` fall off roughly geometrically, leaving a few stiff directions and many exponentially narrower sloppy ones. Jeffreys weights parameter-space
-volume, which is largest in the **region of `Θ`** where the irrelevant widths are widest
+**Irrelevant one by one, or jointly.** `L_μ(θ) < 1` says that direction `μ` is below
+resolution on its own. Many such directions can be visible together. The cross-section
+through `θ` has joint extent about `½√(Σ_μ L_μ(θ)²)` and carries about `Σ_μ L_μ(θ)²/8`
+nats[^1-joint]. It is **jointly irrelevant** only where that sum is well below one. The
+two priors treat it differently. Jeffreys weights a state by `V_⊥(θ)`, whose log is
+`Σ_μ log L_μ(θ)`, so every direction counts, however narrow. `p*` weights it by the
+information the cross-section carries, so only directions near resolution count
+[guess][^1-joint]. Where the widths fall off geometrically the sum converges, and the
+cross-section is jointly irrelevant whatever `D`; with `D − 1` equal widths it grows
+linearly in `D`. So `p*`'s independence of `D` is bounded by how much `Σ_μ L_μ(θ)²/8`
+varies across states, and is exact only where that sum is negligible.
+
+**Hyperribbons (panel a).** In the models of interest the manifold is a [*hyperribbon*](../GLOSSARY.md#hyperribbon): its widths `L_1 ≥ L_2 ≥ ⋯ ≥ L_D` fall off roughly geometrically, leaving a few stiff directions and many exponentially narrower sloppy ones. Jeffreys weights <span style="color: red">Fisher</span> volume, which is largest in the **region of `Θ`** where the irrelevant widths are widest
 (for the cone below, the thick base). That region holds nearly all of Jeffreys' mass
 [read: A&M §2.2, Fig. 3] yet few distinguishable predictions: at `D=26` Jeffreys captures
 under 1 bit [read: A&M Fig. 5]. A prior that tracks resolving power should discount
@@ -401,12 +435,18 @@ under 1 bit [read: A&M Fig. 5]. A prior that tracks resolving power should disco
 
 **The square hypercone (panel b)** is the simplest manifold with a hyperribbon's decisive
 feature in closed form [read: A&M App. A.1]: `y(θ) = (θ_1, r θ_2, …, r θ_D)`, with one
-relevant coordinate `θ_1 ∈ [0, L]` and `D−1` irrelevant ones `θ_μ ∈ [0,1]` scaled by the
-**taper** `r(θ_1) = θ_1/L`. The cross-section shrinks linearly from the base (`θ_1 = L`)
+relevant coordinate `θ_1 ∈ [0, W]` and `D−1` irrelevant ones `θ_μ ∈ [0,1]` scaled by the
+**taper** `r(θ_1) = θ_1/W`. The cross-section shrinks linearly from the base (`θ_1 = W`)
 to a point at the tip, so `√det g ∝ θ_1^{D-1}`: a **co-volume gradient**[^1-everyday] toward the thick
-base. This one factor is what punishes Jeffreys. Its mass piles at the base, and for an observation at relevant-coordinate value `x` its posterior mean is pulled toward the thick end by `Δ = (D−1)/x`
+base. This one factor is what punishes Jeffreys. Its mass piles at the base, and for an observation at relevant-coordinate value `x_1` its posterior mean is pulled toward the thick end by `Δ = (D−1)/x_1`
 ([§9.2](#92-hypercone-posterior-deviation-eq-922)), *largest at the thin end*, where a
-foreign `q` can place data. `p*` instead places [atoms](../GLOSSARY.md#atom) an `O(1)` Fisher length apart along
+foreign `q` can place data. <span style="color: red">The formula holds for `x_1² ≫ 4(D−1)`. Nearer the tip the pull saturates: it is 3.75
+at `x_1 = 3` and `D = 26`, where the formula gives 8.33
+[read: `specs/002-foreign-q-prediction-redteam-conc04.md` F6, from `cone_pstar.out`]. This `Δ`,
+like every cone figure in this spec, is the `θ_1` component of the deviation of
+[§1.1](#11-notation). And the cone has one relevant direction only while `σ/√N ≥ 1`:
+each cross-section width is `(θ_1/W)·√N/σ`, so at `N = 16` and `σ = 1` the cross-section
+is resolved beyond `θ_1 = W/4`.</span> `p*` instead places [atoms](../GLOSSARY.md#atom) an `O(1)` Fisher length apart along
 the relevant axis[^1-spacing] and on the corners of each irrelevant
 cross-section[^1-corners], so its posterior deviation `Δ` stays far below Jeffreys'. In
 this equal-width cone it still grows with `D` near the thick end, at about `r²/4` of
@@ -418,13 +458,15 @@ realism. Exp-decay is the realistic instance.
 
 | | Square hypercone (panel b) | Constant cross-section (panel c) | Exponential decay (panel d) |
 |---|---|---|---|
-| Map | `y = (θ_1, rθ_2, …, rθ_D)`, `r = θ_1/L` | same, with `r = r_0` constant | `y_t = Σ_μ a_μ e^{-k_μ t}`, `k_μ = e^{-θ_μ}` (A&M Eq. 6) |
+| Map | `y = (θ_1, rθ_2, …, rθ_D)`, `r = θ_1/W` | same, with `r = r_0` constant | `y_t = Σ_μ a_μ e^{-k_μ t}`, `k_μ = e^{-θ_μ}` (A&M Eq. 6) |
 | Role | analytic caricature: closed forms | pipeline check (test T2, [§5.2](#52-test-descriptions)) | realism |
 | Co-volume gradient | `√det g ∝ θ_1^{D-1}` | none: `√det g` constant | yes, with Fisher eigenvalues spanning many orders [read: A&M §2.1, citing Transtrum et al. 2010] |
 | Relevant direction | `θ_1`, on a coordinate axis | `θ_1` | curved, off the axes |
 | Biased priors | Jeffreys only: uniform-`θ` projects to flat on `θ_1` | none: `p_J = p_U` [read: A&M App. A.1] | Jeffreys and log-normal [read: A&M §2.2]; uniform-`θ` [guess][^1-uniform] |
 
-Two knobs reshape the hypercone:
+<span style="color: red">**Ordered rates.** Exp-decay's components have equal shares, so swapping two of them leaves `y(θ)` unchanged. `Θ` is therefore restricted to ordered rates, `θ_1 ≤ θ_2 ≤ … ≤ θ_D`, as A&M and Mattingly et al. do [read: `specs/002-foreign-q-prediction-redteam-conc04.md` F4, which reads A&M Fig. 1 caption and Mattingly p. 1763]. Each coordinate is then an order statistic, from the fastest rate `θ_1` to the slowest `θ_D`, and coinciding rates are faces of `Θ`: the manifold's edges. No score changes, since every prior and nature of the cast is symmetric under swaps. What changes is that a ranking can name a coordinate ([§3.5](#35-a-third-route-ordering-instead-of-budget)).</span>
+
+<span style="color: red">Three</span> knobs reshape the hypercone:
 
 - **Rotation** `θ ↦ Qθ` moves the relevant direction off the axes, so coordinate priors
   can fail there too. Without it, a `p*` win in the cone is a win over Jeffreys alone
@@ -434,10 +476,12 @@ Two knobs reshape the hypercone:
   is expected to be unmoved [guess]. This is the axis on which the two are expected to
   differ ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)).
 
+- <span style="color: red">**Fall-off** `φ ∈ (0, 1]` shrinks each further irrelevant direction by a factor `φ`: `y_μ = r φ^{μ−2} θ_μ` for `μ ≥ 2`. At `φ = 1` this is the square cone, whose `D − 1` equal widths are jointly observable. For `φ < 1` the widths fall off geometrically and the cross-section stays jointly irrelevant, as in A&M's own variant [read: `specs/002-foreign-q-prediction-redteam-conc04.md` F5, which reads A&M App. A.1]. `√det g ∝ θ_1^{D−1}` for every `φ`, so Jeffreys is the same prior throughout; what changes is what `p*` can see.</span>
+
 Exact maps, Fisher metrics and knob ranges are in [§4.1](#41-model-families).
 
-**Why the claims ride on this geometry.** Each load-bearing claim reduces to `g(θ)` and
-its gradient. The co-volume bias is the pull of `√det g ∝ θ_1^{D-1}`; its absence makes
+**Why the claims ride on this geometry.** Each load-bearing claim <span style="color: red">about Jeffreys and `p*`</span> reduces to `g(θ)` and
+its gradient<span style="color: red">; the contrast between `p*` and `p_proj` ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)) turns instead on the [noise halo](../GLOSSARY.md#noise-halo), a property of the boundary that `g` does not encode</span>. The co-volume bias is the pull of `√det g ∝ θ_1^{D-1}`; its absence makes
 the constant-cross-section model a pipeline check, where `p_J` and `p_U` must coincide
 (test T2 in [§5.2](#52-test-descriptions)); and the claimed
 asymmetry is a co-volume gradient that steepens with `D` against a cap `C_N` that does not
@@ -446,8 +490,8 @@ asymmetry is a co-volume gradient that steepens with `D` against a cap `C_N` tha
 [^1-fisher]: (1.2.1) is the Fisher information of the Gaussian likelihood. With
     `log p(x|θ) = −‖x−y(θ)‖²/(2σ²) + const`, the score is
     `∂_μ log p = σ^{-2}(x−y(θ))·∂_μ y(θ)`, so
-    `g_{μν} = 𝔼_{x|θ}[∂_μ log p · ∂_ν log p] = σ^{-4}(∂_μ y)^⊤ 𝔼[(x−y)(x−y)^⊤](∂_ν y)`,
-    which collapses to (1.2.1) because `𝔼[(x−y)(x−y)^⊤] = σ²𝟙_m`. Indices `μ, ν` run
+    `g_{μμ'} = 𝔼_{x|θ}[∂_μ log p · ∂_{μ'} log p] = σ^{-4}(∂_μ y)^⊤ 𝔼[(x−y)(x−y)^⊤](∂_{μ'} y)`,
+    which collapses to (1.2.1) because `𝔼[(x−y)(x−y)^⊤] = σ²𝟙_m`. Indices `μ, μ'` run
     over the `D` parameters, `t` over the `m` observation times.
 
 [^1-everyday]: **Everyday co-volume gradients.** In each, one quantity the evidence
@@ -497,21 +541,29 @@ asymmetry is a co-volume gradient that steepens with `D` against a cap `C_N` tha
 
 [^1-pstar-bias]: A&M find `p*`'s posterior deviations mostly shorter than its atom
     spacing, but only for data drawn from `p*` [read: A&M Fig. 4]. A reduced computation
-    of the square hypercone (`σ = 1`, `N = 1`, `L = 50`; the irrelevant directions exact
+    of the square hypercone (`σ = 1`, `N = 1`, `W = 50`; the irrelevant directions exact
     as parallel channels, ignoring what their data say about `θ_1`) finds that `p*` has its
-    own tilt toward the thick end, by a factor `exp((D−1)·c(θ_1/L))`. Here `c(a)` is the
+    own tilt toward the thick end, by a factor `exp((D−1)·c(θ_1/W))`. Here `c(a)` is the
     capacity of a bounded channel of Fisher length `a`, with `c(1) = 0.11` nats: each
     sub-resolution direction still carries about `L²/8` nats, and in this cone all `D − 1`
-    have the same width. The posterior deviation at `x = 40` is 0.10 at `D = 26` and 0.32
+    have the same width. The posterior deviation at `x_1 = 40` is 0.10 at `D = 26` and 0.32
     at `D = 100`, against Jeffreys' 0.62 and 2.34, and it is negligible at the thin end
     (`notes/budget-value-of-information/cone_pstar.py`). In exp-decay, where the widths
     fall off geometrically, the sum of `L²` converges and the tilt should stay bounded
     [guess]. Settled by: the same quantities in the full, unreduced hypercone and in
     exp-decay.
 
+[^1-joint]: A bounded channel much shorter than one Fisher length puts its mass at the two
+    ends and carries about `L²/8` nats, and independent directions add: the reduced cone
+    gives `c(1) = 0.11` nats per direction (footnote on `p*`'s tilt, above). The joint
+    extent is the half-diagonal of a box with sides `L_μ`. That `p*` weights a state by
+    this information is computed in the reduced cone only
+    (`notes/budget-value-of-information.md` §3.2). Settled beyond it by computing `p*`'s
+    tilt for several width profiles, with the fall-off knob below.
+
 [^1-uniform]: A&M test Jeffreys, `p*` and log-normal, not uniform-`θ` [read: A&M §2.2,
     Figs. 3–5]; the claim is carried over from `notes/prediction_objective_for_priors.md`
-    §6.3. Settled by: adding `p_U` to the A&M Fig. 5 reproduction (T9).
+    §6.3. Settled by: adding `p_U` to the A&M Fig. 5 reproduction (<span style="color: red">test T9, [§5.2](#52-test-descriptions)</span>).
 
 ## 2. Objective
 
@@ -541,7 +593,7 @@ $$
 `θ`[^2-oracle], with `R_N^q(π) ≥ I_q(Θ;X_{1:N}) ≥ 0`. The floor `I_q`, not `0`, is reached only by a
 predictor that matches nature's marginal, `m_π = m_q`.
 
-By the **compensation identity** (Topsøe 1979; derived in
+By the **compensation identity** (Topsøe 1979 <span style="color: red">[recalled]</span>; derived in
 [§9.1](#91-the-compensation-identity-for-the-n-fold-marginal-eq-212)), applied to the
 `N`-fold data marginals `m_q` and `m_π`,
 
@@ -559,8 +611,8 @@ $$
 $$
 
 **Cumulative means held out at every step.** By the chain rule, `R_N^q` is the sum of
-one-step-ahead losses, each on an observation not yet seen (`redundancy-capacity.md`; note
-§1.2, §4):
+one-step-ahead losses, each on an observation not yet seen (<span style="color: red">[`tutorials/math/redundancy-capacity.md`](../tutorials/math/redundancy-capacity.md);
+`notes/prediction_objective_for_priors.md`</span> §1.2, §4):
 
 $$
 R_N^q(\pi) \;=\; \sum_{i=0}^{N-1}\, \mathbb{E}_{\theta\sim q}\,\mathbb{E}_{X_{1:i}\sim p(\cdot\mid\theta)}\, D_{\mathrm{KL}}\!\big(p(\cdot\mid\theta)\,\big\|\,m_\pi(\cdot\mid X_{1:i})\big). \tag{2.1.4}
@@ -602,7 +654,7 @@ the experiment. Two consequences for the algorithm:
 
 **Why expect a *maximiser* of mutual information to help minimise a loss?** Three
 different "redundancies" hide behind one word, each with a cumulative and a one-step
-version. All are built from the per-`θ` loss `r_θ(π) = D_KL(p(X_{1:N}|θ) ‖ m_π)` or its
+version. All are built from the per-`θ` loss `R_N^θ(π) = D_KL(p(X_{1:N}|θ) ‖ m_π)` or its
 one-step analogue, and the design objects' "max" and our "min" act on different ones:
 
 | "redundancy" | `θ` ranges over | cumulative (`R_N`) | one-step (`r_N`) | the operation |
@@ -611,16 +663,16 @@ one-step analogue, and the design objects' "max" and our "min" act on different 
 | **worst-case** | an adversarial `θ` | minimised by `p*`, the same object as above | minimised by `p_lat`, proven for finite outcome spaces | **`min` over `π`**: the minimax-robust predictor |
 | **foreign-`q` average** (this spec's scores) | a foreign nature `q` | `R_N^q(π)`, eq. (2.1.2) | `r_N^q(π)`, eq. (2.1.6) | **`min` over `π`**: the loss we report, minimised by the prior matched to `q` |
 
-In each column the first two rows are one object, the two faces of the
+In each column the first two rows are one object<span style="color: red"> (in the one-step column, proven for finite outcome spaces)</span>, the two faces of the
 [redundancy–capacity saddle](../GLOSSARY.md#redundancy-capacity-theorem) [read: A&M Eqs. 3–4; Haussler 1996 preprint §1; Komaki 2011 Thm 2;
 Fogel & Feder 2024 Thm 1]. Our scores are the third row, minimised by the prior matched to
 `q` and, across the sweep, by `q̄` ([§2.5](#25-controls-the-ceiling-and-self-sampling)), **not**
 by a design object. So no protagonist has a guarantee on the third row. A protagonist can
-beat the deployable priors only where their mismatch, the co-volume bias, exceeds its own:
+beat the deployable priors only where their mismatch <span style="color: red">(for Jeffreys, the co-volume bias)</span> exceeds its own:
 the open bet ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)).
 
 **Computability.** Both scores are Monte-Carlo estimates ([§4.4](#44-score-estimation)). The
-closed-form pieces (FIM, Jeffreys density, the hypercone `Δ = (D−1)/x` of
+closed-form pieces (FIM, Jeffreys density, the hypercone `Δ = (D−1)/x_1` of
 [§9.2](#92-hypercone-posterior-deviation-eq-922), the Gaussian KL split of
 [§3.3](#33-score-decomposition-bias-vs-calibration-a-diagnostic)) feed the controls and
 unit tests (T4–T6, [§5.2](#52-test-descriptions)), not the reported numbers.
@@ -653,10 +705,10 @@ the one it is minimax for, and away on the other.
 
 | Prior | What it is | Home score | Guarantee | Discrete? |
 |---|---|---|---|---|
-| `p*` | capacity prior of the budget-`N` channel, `argmax_π I_π(Θ;X_{1:N})`; Komaki's latent information prior at `(0, N)` | `R_N` | minimax for `R_N`, value `C_N` ([§3.1](#31-the-one-guarantee-worst-case-over-q)) | yes[^1-discrete] |
+| `p*` | capacity prior of the budget-`N` channel, `argmax_π I_π(Θ;X_{1:N})`; Komaki's latent information prior at `(0, N)` | `R_N` | minimax for `R_N`, value `C_N` ([§3.1](#31-the-one-guarantee-worst-case-over-q)) | <span style="color: red">usually</span>[^1-discrete] |
 | `p_lat` | latent information prior at `(N, 1)`, `argmax_π I_π(Θ;X_{N+1}\|X_{1:N})` [read: Komaki 2011 §3] | `r_N` | minimax for `r_N` for finite outcome spaces [read: Komaki 2011 Thm 2; Fogel & Feder 2024 Thm 1]; for Gaussian data expected but unproven [read: Komaki 2011 §4] | open; for some budgets near-full support [read: Fogel & Feder 2024 §VII] |
-| `p_proj` | [pushforward](../GLOSSARY.md#pushforward) of the [NML](../GLOSSARY.md#normalized-maximum-likelihood-nml) distribution through the MLE map ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)) | neither | NML is minimax for the pointwise regret of the `N`-sequence; `p_proj` for neither score | no |
-| `p*_{N/10}`, `p*_{10N}` | `p*` built for a tenth or ten times the true budget: an agent that knows the construction but not its budget, and commits to one resolution | `R_M`, at the wrong budget | none at `N` | yes |
+| `p_proj` | [pushforward](../GLOSSARY.md#pushforward) of the [NML](../GLOSSARY.md#normalized-maximum-likelihood-nml) distribution through the MLE map ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)) | neither | NML is minimax for the pointwise regret of the `N`-sequence; `p_proj` for neither score | <span style="color: red">no, but with point masses on the lowest-dimensional edges [read: `specs/002-foreign-q-prediction-redteam-conc04.md` m6, which reads Quinn §5.2]</span> |
+| `p*_{N/10}`, `p*_{10N}` | `p*` built for a tenth or ten times the true budget: an agent that knows the construction but not its budget, and commits to one resolution | `R_M`, at the wrong budget | none at `N` | <span style="color: red">usually</span> |
 | `p_J`, `p_U`, `p_LN`, `p_ref` | the [deployable priors](../GLOSSARY.md#deployable-prior): Jeffreys, uniform, log-normal, ranked reference (`p_ref`: closed form in the cones, one per OQ-8 ranking in exp-decay) | — | none | no |
 | `q̄` | matched to the average of the swept natures | — | the ceiling on both scores ([§2.5](#25-controls-the-ceiling-and-self-sampling)) | — |
 
@@ -672,16 +724,18 @@ commit to one prior. An agent that may instead mix the priors built for many bud
 on every [nature](../GLOSSARY.md#nature), because its data marginal is at least
 `w_k·m_{p*_{N_k}}` everywhere. Against such an agent knowing `N` is worth a few nats
 ([`notes/budget-value-of-information.md`](../notes/budget-value-of-information.md) §2).
-For one committed prior, a wrong resolution costs on both sides (note §3):
+<span style="color: red">The agent is mis-budgeted: it built `p*_M` for a budget `M` that is not the one it gets, and is scored at the true `N`. What a wrong resolution costs depends on the side and on the geometry (`notes/budget-value-of-information.md` §3):</span>
 
 - *Too coarse* (`M < N`): the [atoms](../GLOSSARY.md#atom) lie farther apart than the data
-  resolve, each observation is charged the divergence to the nearest atom, and the loss
-  grows linearly in `N/M`.
+  resolve, each observation is charged the divergence to the nearest atom, and <span style="color: red">in the worst
+  case in 1-D</span> the loss grows linearly in `N/M` <span style="color: red">(that note's §3.1). In the reduced hypercone
+  the coarser prior nonetheless wins on both natures computed, at every budget tested: at
+  budget 16, `p*_1` beats `p*_{16}` by 4.4 nats on a nature uniform in the relevant
+  coordinate (its §3.3). A coarser prior winning is reported as a finding in its own right.</span>
 - *Too fine* (`M > N`): the prior tilts toward the states where more detail is resolvable
   at `M` than at `N`, the [co-volume](../GLOSSARY.md#co-volume) gradient of the directions
   that cross resolution between the two budgets. The tilt helps natures concentrated where
-  that detail is and hurts the others. In a reduced hypercone, `p*_1` beats `p*_{16}` at
-  budget 16 on a nature uniform in the relevant coordinate (note §3).
+  that detail is and hurts the others. <span style="color: red">In 1-D the worst case stays under a nat (its §3.1).</span>
 
 So the sign of the budget's value is a result, like every summary of
 [§2.4](#24-what-is-reported-and-what-cannot-be-asserted). Jeffreys is the `M → ∞` end of
@@ -818,7 +872,9 @@ directions, for each model, `σ` and `N`.
   `δS(p_lat, p_proj)`.
 - For `p*` alone, **the gap to the best mis-budgeted `p*`**,
   `Δ^{bud}_S = S(p*) − min_{M ∈ {N/10, 10N}} S(p*_M)`, negative when knowing the budget
-  to within a factor of ten helps ([§2.2](#22-the-cast)).
+  to within a factor of ten helps ([§2.2](#22-the-cast)). <span style="color: red">The two gaps are also
+  reported one by one, `S(p*) − S(p*_{N/10})` and `S(p*) − S(p*_{10N})`, so that a coarser
+  prior winning shows.</span>
 
 **Down a column** (one prior): its largest and its mean mismatch over the rows. Each prior
 of the cast has one row at home, where its mismatch is 0. Neither summary is neutral
@@ -850,7 +906,8 @@ prior matched to *that* `q`, not by `q̄`; a cell's mismatch is measured from it
 the rows*, both scores are linear in nature's distribution, so for any fixed prior the
 average over the rows equals the score under their average `q̄`; by (2.1.2) and (2.1.6) it
 is minimised by matching `q̄`
-([hierarchical / empirical Bayes](../GLOSSARY.md#empirical-and-hierarchical-bayes); note §5.3).
+([hierarchical / empirical Bayes](../GLOSSARY.md#empirical-and-hierarchical-bayes);
+<span style="color: red">`notes/infomax_two_hats_and_directions.md`</span> §5.3).
 So no fixed prior, protagonists included, beats `q̄` on the row average, and "does `p*`
 beat `q̄`" is a non-question.
 
@@ -889,7 +946,7 @@ outcome spaces ([§2.2](#22-the-cast)). It argues for *plausibility*, not for an
 ### 3.1 The one guarantee: worst-case over `q`
 
 `p*`'s mixture `m_{p*}` is the [information radius](../GLOSSARY.md#information-radius) (KL-centre) of the model family. The [equalizer condition](../GLOSSARY.md#equalizer-condition) gives `D_KL(p(·|θ)‖m_{p*}) ≤ C` for **every** `θ`, with equality on
-`supp(p*)` (`redundancy-capacity.md`; Kemperman 1974, Haussler 1997) [read: A&M Eqs. 4–5:
+`supp(p*)` (<span style="color: red">[`tutorials/math/redundancy-capacity.md`](../tutorials/math/redundancy-capacity.md); Kemperman 1974 and Haussler 1997 [recalled]</span>) [read: A&M Eqs. 4–5:
 `p*` has `b = 0` on its support and minimises `B = max_θ b`]. Averaging over *any* nature
 `q`,
 
@@ -928,14 +985,14 @@ from that one. `p*` spreads its mass evenly over distinguishable states, Jeffrey
 Fisher volume, and with many unresolved directions the two counts part. The case is made
 against Jeffreys alone (*Scope*, below).
 
-**Loss as missing mass.** Write `r_θ(π) = D_KL(p(X_{1:N}|θ)‖m_π)` for the loss of `π` at
-state `θ`, so that `R_N^q(π) = 𝔼_{θ∼q} r_θ(π)` (2.1.1). Let `A(θ)` be the states whose
+**Loss as missing mass.** Write `R_N^θ(π) = D_KL(p(X_{1:N}|θ)‖m_π)` for the loss of `π` at
+state `θ`, so that `R_N^q(π) = 𝔼_{θ∼q} R_N^θ(π)` (2.1.1). Let `A(θ)` be the states whose
 prediction lies within one [Fisher length](../GLOSSARY.md#fisher-length) of `y(θ)` at
 budget `N`: the states one experiment cannot reliably tell from `θ`. For every prior
 ([§9.4](#94-the-mass-bound-eq-321)),
 
 $$
-r_\theta(\pi) \;\le\; -\log \pi\big(A(\theta)\big) \;+\; \tfrac12. \tag{3.2.1}
+R_N^\theta(\pi) \;\le\; -\log \pi\big(A(\theta)\big) \;+\; \tfrac12. \tag{3.2.1}
 $$
 
 A prior is cheap at a state when it has put mass on that state's indistinguishable
@@ -943,7 +1000,7 @@ neighbours. A flat loss profile, the
 [equalizer condition](../GLOSSARY.md#equalizer-condition) that makes `p*` minimax
 ([§3.1](#31-the-one-guarantee-worst-case-over-q)), therefore goes with equal mass per
 distinguishable state, and A&M's [bias pressure](../GLOSSARY.md#bias-pressure),
-`r_θ(π) − I_π` at `N = 1`, measures how far a prior is from it. (3.2.1) bounds the loss
+`R_N^θ(π) − I_π` at `N = 1`, measures how far a prior is from it. (3.2.1) bounds the loss
 from above only; reading it as an approximate equality is a [guess][^3-tight].
 
 **Two counts.** Jeffreys puts mass in proportion to Fisher volume. In a
@@ -958,7 +1015,7 @@ across the manifold. In the square hypercone, where it goes as `θ_1^{D−1}`, t
 coordinate's datum alone gives ([§9.5](#95-jeffreys-loss-in-the-hypercone-eq-322))
 
 $$
-r_\theta(p_J) \;\gtrsim\; (D-1)\log\frac{L}{\theta_1} \;+\; \log\frac{L}{D} \;-\; \tfrac12\log\frac{2\pi e\,\sigma^{2}}{N},
+R_N^\theta(p_J) \;\gtrsim\; (D-1)\log\frac{W}{\theta_1} \;+\; \log\frac{W}{D} \;-\; \tfrac12\log\frac{2\pi e\,\sigma^{2}}{N},
 \qquad \theta_1 \gg D\sigma/\sqrt{N}, \tag{3.2.2}
 $$
 
@@ -970,12 +1027,12 @@ unresolved directions with a co-volume gradient, and their number sets its size.
 equal-width hypercone `C_1` grows too, by about 0.1 nats per direction (§3.1), so two
 slopes are compared there.
 
-**From the worst case to an average.** Call `Θ_J = {θ : r_θ(p_J) ≤ C_N}` Jeffreys'
+**From the worst case to an average.** Call `Θ_J = {θ : R_N^θ(p_J) ≤ C_N}` Jeffreys'
 **covered set**: the states where it costs no more than `p*`'s cap. Since
-`r_θ(p*) ≤ C_N` everywhere and `r_θ(p_J) ≥ 0`,
+`R_N^θ(p*) ≤ C_N` everywhere and `R_N^θ(p_J) ≥ 0`,
 
 $$
-R_N^q(p_J) - R_N^q(p^\star) \;\ge\; \int_{\Theta\setminus\Theta_J}\!\big(r_\theta(p_J) - C_N\big)\,q(d\theta) \;-\; C_N\,q(\Theta_J). \tag{3.2.3}
+R_N^q(p_J) - R_N^q(p^\star) \;\ge\; \int_{\Theta\setminus\Theta_J}\!\big(R_N^\theta(p_J) - C_N\big)\,q(d\theta) \;-\; C_N\,q(\Theta_J). \tag{3.2.3}
 $$
 
 The first term is the loss insured against, the second the premium. `p*` beats Jeffreys on
@@ -1036,44 +1093,49 @@ budget is predicted by the criterion of that note's §3.2, which
 
 ### 3.3 Score decomposition: bias vs calibration (a diagnostic)
 
-**Interpretive, not a score.** This splits the one-step score `r_N` ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss)) into
-two readable pieces, to see *why* one prior beats another and to connect the score to
-A&M's `Δ`. Approximate each posterior predictive as a Gaussian,
-`m_π(x'|X_{1:N}) ≈ 𝒩(μ_π, Σ_π)`: exact for the smooth priors in the limit where `y(θ)` is linear and the prior flat over the posterior's extent, a heuristic for the discrete `p*`, whose true predictive is a finite mixture. The
-one-step KL is then the standard KL between two Gaussians:
+> [!warning]
+> Rewritten 2026-11-13 (conc04 F7, with F2 and F5): the decomposition is now measured
+> from the matched prior's prediction, not from the truth, and no longer claims which
+> term decides the contest.
+
+**Interpretive, not a score.** This splits the prior-dependent part of the one-step score
+`r_N`, the mismatch of posterior predictives in (2.1.6), into two readable pieces: how far
+a prior moves the prediction from where the matched prior puts it, and how far it
+mis-states the spread. Approximate both posterior predictives as Gaussians,
+`m_π(x'|X_{1:N}) ≈ 𝒩(μ_π, Σ_π)` and `m_q(x'|X_{1:N}) ≈ 𝒩(μ_q, Σ_q)`, each with
+`Σ = σ²𝟙 + Cov[y(θ)|X_{1:N}]` under its own posterior. This is exact for smooth priors in
+the limit where `y(θ)` is linear and the prior flat over the posterior's extent, and a
+heuristic for the discrete `p*`, whose true predictive is a finite mixture. The mismatch
+is then the KL divergence between two Gaussians:
 
 $$
 \begin{aligned}
-D_{\mathrm{KL}}\!\big(\mathcal{N}(y(\theta),\sigma^2 𝟙)\,\|\,\mathcal{N}(\mu_\pi,\Sigma_\pi)\big)
-  &= \tfrac12\Big[\underbrace{(\mu_\pi-y(\theta))^{\!\top}\Sigma_\pi^{-1}(\mu_\pi-y(\theta))}_{\text{bias term}} \\
-  &\qquad + \underbrace{\sigma^2\,\mathrm{tr}\,\Sigma_\pi^{-1}-m+\log\tfrac{\det\Sigma_\pi}{\sigma^{2m}}}_{\text{calibration term}}\Big].
+D_{\mathrm{KL}}\!\big(\mathcal{N}(\mu_q,\Sigma_q)\,\|\,\mathcal{N}(\mu_\pi,\Sigma_\pi)\big)
+  &= \tfrac12\Big[\underbrace{(\mu_\pi-\mu_q)^{\!\top}\Sigma_\pi^{-1}(\mu_\pi-\mu_q)}_{\text{mean shift}} \\
+  &\qquad + \underbrace{\mathrm{tr}\,\Sigma_\pi^{-1}\Sigma_q-m+\log\tfrac{\det\Sigma_\pi}{\det\Sigma_q}}_{\text{spread mismatch}}\Big].
 \end{aligned}
 \tag{3.3.1}
 $$
 
-The **bias term** is a precision-weighted `Δ²`: the held-out analogue of A&M's quantity,
-up to the weighting and the reference point (the truth `y(θ_true)` here, A&M's in-sample
-MLE `y(θ̂_x)`; they differ by `O(σ)` for held-out data, [§4](#4-algorithm)). The
-**calibration term** is what `Δ` cannot see. Since
-`Σ_π = σ²𝟙 + Cov_π[y(θ)|X_{1:N}] ⪰ σ²𝟙`, it is the oracle-relative cost of the
-predictive's residual posterior spread: the oracle knows `θ` and predicts with `σ²𝟙`, the
-agent cannot. It is the unavoidable cost of not knowing `θ`, **not** a defect of a
-well-specified `m_π`. So the redundancy score *contains* the held-out analogue of `Δ`, as
-the bias term, and adds the term `Δ` is blind to.
+Both terms are zero for the matched prior. Each therefore measures what a prior costs
+against the best achievable, not against an oracle that knows `θ`. The **mean shift** is
+the held-out analogue of A&M's `Δ`: theirs is measured from the in-sample MLE, this one
+from the matched prior's prediction, weighted by the predictive's precision. The **spread
+mismatch** is what `Δ` cannot see: a predictive too wide or too narrow next to the
+matched one.
 
-**The bias term decides the contest** [guess][^3-decides]. `p*`'s atoms sit an `O(1)`
-Fisher length apart in prediction space, so its excess predictive spread is
-`Cov_π[y|X] = O(σ²)` even in atom gaps, and its calibration term is `O(1)`, independent
-of nominal `D`; a smooth well-specified prior is of the same order. Calibration therefore
-modulates the boundary but does not decide it. The decider is the transfer of the
-**bias** gap, which grows with `D` for the deployable priors and stays bounded for `p*`
-([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)). The calibration term is
-reported as a [PIT](../GLOSSARY.md#probability-integral-transform-pit) / over-dispersion diagnostic ([§6](#6-report)) and its closed form is
-unit-tested (test T5, [§5.2](#52-test-descriptions)); both scores are computed from the *exact* mixture predictive, not from
-this approximation.
+No claim is made about which term carries a prior's mismatch. For Jeffreys at large `D`
+the mean shift is expected to dominate, as the pull toward high co-volume
+([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)) [guess][^3-decides]. `p*`'s terms depend on `D` through the information the
+cross-section carries ([§1.2](#12-generative-model)), so they are flat only where it is
+jointly irrelevant. Both terms are reported per prior ([§6](#6-report)), and the closed
+form is unit-tested (test T5, [§5.2](#52-test-descriptions)). How well the predictive is
+calibrated against the data is shown separately, as a
+[PIT](../GLOSSARY.md#probability-integral-transform-pit) histogram ([§6](#6-report)). Both
+scores are computed from the *exact* mixture predictive, not from this approximation.
 
-[^3-decides]: Settled by the [§6](#6-report) decomposition diagnostic, which reports both
-    terms per prior.
+[^3-decides]: Settled by the [§6](#6-report) diagnostic, which reports both terms per
+    prior.
 
 ### 3.4 The second protagonist: infomax vs MDL
 
@@ -1087,9 +1149,9 @@ mutual information (the boundary atoms persist; see below) [read: A&M §2.1; Qui
 
 - **Capacity / infomax, `p*`:** `argmax_π I_π(Θ;X_{1:N})`, the [least-favourable](../GLOSSARY.md#least-favourable-prior) / [minimax](../GLOSSARY.md#minimax)-**expected**-redundancy prior, in the [reference-prior](../GLOSSARY.md#reference-prior) lineage ([§3.5](#35-a-third-route-ordering-instead-of-budget)). Its
   `σ`-dependence is the atom count (`~√N` in 1-D, spec 000).
-- **NML / MDL, `p_proj`:** `p_NML(x) = max_θ p(x|θ)/Z` is the [normalized-maximum-likelihood](../GLOSSARY.md#normalized-maximum-likelihood-nml) distribution over the *data* (Shtarkov 1987), with normaliser `Z` and [parametric complexity](../GLOSSARY.md#parametric-complexity) `log Z` (Rissanen 1996; Grünwald 2007). `p_proj` is its [pushforward](../GLOSSARY.md#pushforward) through the MLE map `θ̂(x)` [read: A&M App. A.3; Quinn §5.2, as the "adaptive slab-and-spike"
+- **NML / MDL, `p_proj`:** `p_NML(x) = max_θ p(x|θ)/Z` is the [normalized-maximum-likelihood](../GLOSSARY.md#normalized-maximum-likelihood-nml) distribution over the *data* (Shtarkov 1987 <span style="color: red">[recalled]</span>), with normaliser `Z` and [parametric complexity](../GLOSSARY.md#parametric-complexity) `log Z` (Rissanen 1996; Grünwald 2007 <span style="color: red">[recalled]</span>). `p_proj` is its [pushforward](../GLOSSARY.md#pushforward) through the MLE map `θ̂(x)` [read: A&M App. A.3; Quinn §5.2, as the "adaptive slab-and-spike"
   prior]: a *prior* over `θ`, distinct from the code `p_NML` it is built from (no prior's
-  Bayes mixture equals `p_NML` at finite `N`; `nml-mdl.md` §4). Its `σ`-dependence is the
+  Bayes mixture equals `p_NML` at finite `N`; <span style="color: red">[`tutorials/math/nml-mdl.md`](../tutorials/math/nml-mdl.md)</span> §4). Its `σ`-dependence is the
   halo width `σ`. It solves *neither* minimax exactly, but it is not arbitrary: the MLE is
   the statistic `p_NML` weights by (`p_NML(x) ∝ p(x|θ̂)`), so the pushforward carries
   NML's stochastic-complexity weighting into `θ`-space. A&M present it as an easy
@@ -1097,26 +1159,31 @@ mutual information (the boundary atoms persist; see below) [read: A&M §2.1; Qui
   is also used in MDL [read: A&M App. A.3; Quinn §5.2, footnote ‡‡].
 
 **Why they nearly coincide here.** `p*` minimises the worst-case **expected** redundancy
-`max_θ 𝔼_{x|θ} log[p/q]` (a prior); `p_NML` minimises the worst-case **pointwise** [regret](../GLOSSARY.md#redundancy-and-regret)
-`max_x[log max_θ p(x|θ) − log q]` (a code); `p_proj` approximates `p*` by the `p_NML`
-route. They nearly agree on our models for two reasons:
+`max_θ 𝔼_{x|θ} log[p/η]` over predictive distributions `η` (a prior); `p_NML` minimises the worst-case **pointwise** [regret](../GLOSSARY.md#redundancy-and-regret)
+`max_x[log max_θ p(x|θ) − log η]` (a code); `p_proj` approximates `p*` by the `p_NML`
+route. They <span style="color: red">are expected to nearly agree in exp-decay</span> for two reasons:
 
 1. *Asymptotically*, both grow like `(D/2) log N + log∫√det g`, with the same `σ→0`
-   limit: Jeffreys, in the interior and in mutual information[^3-asymptotics]. The
-   worst-case bias keeps both discrete at the boundary, so the convergence is *not
+   limit: Jeffreys, in the interior and in mutual information[^3-asymptotics]. <span style="color: red">That is the regime where every
+   direction is resolved, far from this spec's.</span> The
+   worst-case bias <span style="color: red">keeps weight on the boundary for both (atoms for `p*`; point masses on the
+   lowest-dimensional edges for `p_proj` [read: `specs/002-foreign-q-prediction-redteam-conc04.md` m6, which reads Quinn §5.2])</span>, so the convergence is *not
    uniform*: Jeffreys' worst-case bias pressure does not vanish as `σ→0` [read: A&M §2.1], the non-uniformity that the first corner below
    exploits.
-2. *In hyperribbon geometry at finite `σ`*, resolution adaptation is essentially
-   **unique** (weight the few stiff directions, collapse the sloppy ones onto edges), so
-   both land on nearly the same prior and nearly the same mutual information [read: Quinn
-   §5.1, Fig. 12].
+2. *In hyperribbon geometry at finite `σ`*, <span style="color: red">both weight the few stiff directions and collapse
+   the sloppy ones onto edges, and their mutual information nearly coincides in a
+   sum-of-exponentials model [read: Quinn Fig. 12]. That they are nearly the same prior is
+   not shown: Quinn's projected prior has full support where `p*` is discrete, and the
+   evidence is from exp-decay only. In the square cone `p_proj` may tilt toward the base
+   by many orders of magnitude (`notes/q-family-visualisation.md`, *B′ drawn*; a
+   `[guess]` there).</span>
 
 So they are two budget-dependent [universal-coding](../GLOSSARY.md#universal-coding) objects converging to the same limit,
 not an approximation with a provable optimality gap. The live question is therefore not
 how well `p_proj` approximates `p*`, but **does the harder capacity object buy anything
 over the cheap MDL one on held-out prediction** ([§3.7](#37-falsification)).
 
-**Where they part, and whether it is reachable here.** Their one structural difference is
+**Where they part, and whether it is reachable here.** <span style="color: red">Besides the pushforward through the MLE, their</span> structural difference is
 expected versus pointwise regret. NML weights by where the worst *individual* data land
 (the [noise halo](../GLOSSARY.md#noise-halo) just outside convex boundaries), `p*` by *expected* distinguishability
 (Fisher length). This yields two contrastive corners, **both reachable by tuning the
@@ -1175,30 +1242,35 @@ the geometries of [§1.2](#12-generative-model) give one of each:
 2. *Computable.* In the rotated cone the split is the same everywhere but lies off the
    axes. `p_ref` follows from the likelihood in the coordinates `Qθ`
    ([§4.2](#42-prior-construction)), while coordinate priors such as `p_U` inherit a
-   tilt. For a learner, being told the combination may not help: describing the optimal
-   strategy before training raised final category-learning accuracy when the strategy
-   was a rule on named dimensions (0.82 against 0.65), and left it unchanged when the
-   strategy integrated them (0.80 against 0.80) [read: Rosedahl, Serota & Ashby 2021,
-   abstract and results].
+   tilt. For a learner, being told the combination may not help<span style="color: red">[^3-told]</span>.
 3. *Unavailable.* In exp-decay the relevant directions curve and vary across `Θ`, so no
    global ranking is given; choosing one is OQ-8 ([§7](#7-open-questions)). The example of
    [§0](#0-context) is of this kind: which motives the data reveal depends on the person.
+   <span style="color: red">With the rates ordered ([§1.2](#12-generative-model)), a candidate ranking names an order statistic, such as the slowest rate, or a function of several. It cannot name a component, since components are interchangeable. Two candidates count as two only if they give different priors.</span>
 
 In the cones the ranking follows from the likelihood, so `p_ref` is as automatic as `p*`
 and the budget is expected to buy only insurance. A reduced-cone computation agrees: a
 prior flat in the relevant coordinate beats `p*_N` on natures uniform in it or confined to
 the thin end, and loses only at the thick end and in the worst case
 (`notes/budget-value-of-information.md` §4, where the uniform nature is that prior's own
-world). The cones are therefore the **control where ranking is free**, and the decisive
+world). <span style="color: red">In the square cone part of such a loss is `p*`'s own tilt: the cross-section is
+jointly observable there, and `p*` weights states by the information it carries ([§1.2](#12-generative-model)).
+The loss is therefore read against the fall-off knob: what remains of it once the
+cross-section is jointly irrelevant is what the free ranking buys.</span> The cones are therefore the **control where ranking is free**, and the decisive
 comparison is exp-decay, against `p_ref` built from at least two of the OQ-8 candidate
 rankings ([§3.7](#37-falsification)). Which route
 organisms take, and when being told the ranking helps them, is an empirical question
 outside this spec ([`empirics/`](../empirics/README.md)).
 
+[^3-told]: <span style="color: red">(Moved from the text, conc04 m15.)</span> Describing the optimal strategy before
+    training raised final category-learning accuracy when the strategy was a rule on named
+    dimensions (0.82 against 0.65), and left it unchanged when the strategy integrated
+    them (0.80 against 0.80) [read: Rosedahl, Serota & Ashby 2021, abstract and results].
+
 [^3-lineage]: A reference prior maximises the same mutual information as `p*`, but in
     the limit of infinitely many repetitions of the experiment [read: Bernardo 2005,
     preprint pp. 15–16]. The finite-data maximiser was known to be discrete (Berger, Bernardo &
-    Mendoza 1989, not read), and Kass & Wasserman give that as the reason Berger and
+    Mendoza 1989 <span style="color: red">[recalled]</span>), and Kass & Wasserman give that as the reason Berger and
     Bernardo took the limit [read: Kass & Wasserman 1996 p. 1355]. Bernardo's stated
     reason is conceptual: a reference prior maximises the information still missing
     relative to perfect knowledge, which only unlimited data approach [read: Bernardo
@@ -1208,14 +1280,14 @@ outside this spec ([`empirics/`](../empirics/README.md)).
     common variance) Jeffreys' estimate of the variance converges to half the truth;
     ranking the variance first makes it consistent [read: Kass & Wasserman 1996 §3.5.2].
 
-[^3-schur]: From (1.2.1) for the hypercone map, with `r = θ_1/L`:
-    `g_{11} = σ^{-2}(1 + Σ_μ θ_μ²/L²)`, `g_{1μ} = σ^{-2} r θ_μ/L` and `g_{μμ} = σ^{-2} r²`
+[^3-schur]: From (1.2.1) for the hypercone map, with `r = θ_1/W`:
+    `g_{11} = σ^{-2}(1 + Σ_μ θ_μ²/W²)`, `g_{1μ} = σ^{-2} r θ_μ/W` and `g_{μμ} = σ^{-2} r²`
     for `μ ≥ 2`, zero between different irrelevant coordinates. The information left
     for `θ_1` is the Schur complement `g_{11} − Σ_μ g_{1μ}²/g_{μμ} = σ^{-2}`, and the
     irrelevant block has `√det ∝ r^{D−1}`, constant across each cross-section. In the
-    Berger–Bernardo formula `π(ω, λ) ∝ j_ω(λ) exp{∫ j_ω(λ') log S(ω, λ') dλ'}`, with
-    `S = √(det g / det g_{λλ})` and `j_ω` the conditional Jeffreys density normalised
-    over the cross-section [read: Kass & Wasserman 1996 §3.5.2], both factors are then
+    Berger–Bernardo formula, written for the relevant coordinate `θ_1` and the rest `θ_⊥`,
+    `π(θ_1, θ_⊥) ∝ j(θ_⊥|θ_1) exp{∫ j(θ_⊥'|θ_1) log √(det g / det g_{⊥⊥}) dθ_⊥'}`, with
+    `j(·|θ_1)` the conditional Jeffreys density normalised over the cross-section [read: Kass & Wasserman 1996 §3.5.2], both factors are then
     constant, which gives the uniform form. Under rotation the same holds in the
     coordinates `Qθ`.
 
@@ -1226,7 +1298,8 @@ Several things can make it lose:
 
 1. **Worst case ≠ average.** (3.1.1) bounds the worst `q`. For a **benign** `q`
    concentrated in the data-rich interior (low *effective* dimension) the deployable
-   priors pay little, and `I_{p_J} < C` can let a smooth prior *beat* `p*` there. That is
+   priors pay little<span style="color: red">: a prior near the matched one pays about `I_q`, while `p*` pays `C_N`
+   at every state of its support, so a smooth prior can *beat* `p*` there</span>. That is
    the 1-D / low-`D` regime where `p*` already loses (note §1); the table of
    [§2.3](#23-the-natures) shows where the sign flips.
 2. **The real competitor is resolution-adapted, not Jeffreys.** `p_proj`
@@ -1235,8 +1308,9 @@ Several things can make it lose:
    it also keeps `D_KL(m_q‖m_π)` small, `p*` wins nothing a smooth prior could not, and its
    **discreteness does no work** (OQ-5, [§7](#7-open-questions)). Whether a lead is
    `p*`'s own, rather than any budget-dependent prior's, is read off the pairwise gaps
-   `δR(p*, p_proj)` and `δR(p*, p_lat)` ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)); beating only Jeffreys, uniform and
-   log-normal merely re-derives A&M.
+   `δR(p*, p_proj)` and `δR(p*, p_lat)` ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)); <span style="color: red">beating only Jeffreys and
+   log-normal extends A&M's comparison to a foreign `q` without separating `p*` from the
+   other budget-dependent priors (A&M neither tested uniform nor scored a foreign `q`)</span>.
 3. **`q̄` dominates** ([§2.5](#25-controls-the-ceiling-and-self-sampling)): `p*` cannot beat
    the matched ceiling; only the gap to the *best deployable* prior is live.
 4. **A ceiling is not optimality.** (3.1.1) prevents catastrophe; it does not make `p*`
@@ -1275,7 +1349,7 @@ rows decides it.
 **In the remaining, live cells** the expectation is *supported* where `p*` beats every
 deployable prior that is away, `Δ_{R_N}(p*) < 0`
 ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)), with the pairwise gaps showing
-that the lead is not shared by `p_proj` or `p_lat`. It is *refuted* where `p*` ties with
+that the lead is not shared by `p_proj` or `p_lat`. It is *refuted* where `p*` ties with <span style="color: red">(within Monte-Carlo error)</span>
 or loses to the best deployable prior. The verdict is stated per group of rows:
 
 - *Round robin.* In the own world of each other prior, `p*` against the deployable priors
@@ -1290,9 +1364,9 @@ or loses to the best deployable prior. The verdict is stated per group of rows:
 
 The cones are the control where ranking is free
 ([§3.5](#35-a-third-route-ordering-instead-of-budget)), so a tie with or a loss to `p_ref`
-there is the expected control result, not a refutation; there `p*` is read against the
+there is the expected control result, not a refutation<span style="color: red">, read against the fall-off knob since in the square cone part of it is `p*`'s own tilt ([§3.5](#35-a-third-route-ordering-instead-of-budget))</span>; there `p*` is read against the
 other deployable priors. The verdict against `p_ref` is taken in exp-decay, under each
-OQ-8 ranking, and a lead that holds under only some rankings is reported as such. The same
+OQ-8 ranking, and a lead that holds under only some rankings is reported as such. <span style="color: red">The rankings are of order statistics, and must give distinct priors ([§3.5](#35-a-third-route-ordering-instead-of-budget)).</span> The same
 reading applies to `p_lat` on `r_N`, with the cap holding wherever its minimaxity does
 ([§2.2](#22-the-cast)).
 
@@ -1332,17 +1406,17 @@ the implementation:
 ### 4.1 Model families
 
 All three share the Gaussian likelihood `p(x|θ)=𝒩(y(θ),σ²𝟙_m)` and FIM
-`g_{μν}(θ)=σ^{-2}Σ_t ∂_μ y_t ∂_ν y_t`.
+`g_{μμ'}(θ)=σ^{-2}Σ_t ∂_μ y_t ∂_{μ'} y_t`.
 
 1. **Exponential-decay (<span style="color: red">realism model</span>; A&M Eq. 6).**
    `y_t(θ) = Σ_{μ=1}^D a_μ e^{-k_μ t}`, `k_μ = e^{-θ_μ}`, `a_μ = 1/D`, observed at
-   `m` times `t`. `∂_μ y_t = a_μ t k_μ e^{-k_μ t}` (closed-form FIM, [§9.3](#93-exponential-decay-fim)). This is
+   `m` times `t`. <span style="color: red">`Θ` is the ordered part of the box, `θ_1 ≤ … ≤ θ_D` ([§1.2](#12-generative-model)).</span> `∂_μ y_t = a_μ t k_μ e^{-k_μ t}` (closed-form FIM, [§9.3](#93-exponential-decay-fim)). This is
    the model where uniform-`θ` and log-normal demonstrably fail (curved manifold,
    relevant directions not coordinate-aligned), and the eye-test anchor (A&M
    Fig. 5).
 2. **Square hypercone (<span style="color: red">analytic/controlled model</span>; A&M Appendix A.1).**
-   `y(θ) = (θ_1, r θ_2, …, r θ_D)`, `r(θ_1)=θ_1/L`, `0≤θ_1≤L`, `0≤θ_μ≤1`. Gives the
-   closed-form `Δ=(D−1)/x` (9.2.2) for the calibration cross-check (T6). A **tunable
+   `y(θ) = (θ_1, r θ_2, …, r θ_D)`, `r(θ_1)=θ_1/W`, `0≤θ_1≤W`, `0≤θ_μ≤1`. <span style="color: red">With the fall-off knob `φ` ([§1.2](#12-generative-model)), `y_μ = r φ^{μ−2} θ_μ` for `μ ≥ 2`; `φ = 1` is the square cone.</span> Gives the
+   closed-form `Δ=(D−1)/x_1` (9.2.2) for the calibration cross-check (T6). A **tunable
    rotation** `θ ↦ Q θ` of the embedding (orthogonal `Q`, angle swept, [§5](#5-properties-to-verify) sweep)
    moves the relevant direction off the coordinate axes so that uniform-`θ` is no
    longer trivially unbiased (note §6.3) — making it a fair competitor in the
@@ -1363,7 +1437,7 @@ the base map. (For exp-decay the output dimension is `m` observation times; for 
 hypercone families it is `D`.)
 
 ```python
-def build_model(family, D, m, sigma, N, *, taper=1.0, rotation=0.0, curvature=0.0):
+def build_model(family, D, m, sigma, N, *, taper=1.0, rotation=0.0, curvature=0.0, falloff=1.0):
     sigma_eff = sigma / sqrt(N)                 # budget-N sufficiency (§4.0)
     times = linspace(1.0, 5.0, m)              # A&M observation window
 
@@ -1373,11 +1447,12 @@ def build_model(family, D, m, sigma, N, *, taper=1.0, rotation=0.0, curvature=0.
             return (1/D) * sum(exp(-k[..., :, None] * times), axis=-2)   # (..., m)
         # hypercone / constant-cross-section: embedding in R^D
         th = rotate(theta, rotation)            # Q theta -> relevant dir off-axis
-        r  = (th[..., 0] / L) if taper > 0 else r0          # cross-section scale
-        base = concat([th[..., :1], r[..., None] * th[..., 1:]], axis=-1)
+        r  = (th[..., 0] / W) if taper > 0 else r0          # cross-section scale
+                widths = falloff ** arange(D - 1)       # fall-off knob (§1.2); 1.0 = square cone
+        base = concat([th[..., :1], r[..., None] * widths * th[..., 1:]], axis=-1)
         return sharpen_vertex(base, curvature)  # convex-vertex curvature (p* vs p_proj)
 
-    def fim(theta):                             # g_{mu nu} = sigma_eff^-2 Σ_t ∂_mu y_t ∂_nu y_t
+    def fim(theta):                             # g_{mu mu'} = sigma_eff^-2 Σ_t ∂_mu y_t ∂_mu' y_t
         J = jacobian(y)(theta)                  # (..., m_out, D); closed form for exp-decay (§9.3)
         return (swapaxes(J, -1, -2) @ J) / sigma_eff**2     # (..., D, D)
 
@@ -1409,9 +1484,10 @@ def build_model(family, D, m, sigma, N, *, taper=1.0, rotation=0.0, curvature=0.
 - **`p_J` — Jeffreys.** `∝ √det g(θ)`, normalised over `Θ` by grid quadrature.
   Closed-form FIM from [§4.1](#41-model-families); in the hypercone, cross-checked against the analytic
   `p_J(θ_1) ∝ θ_1^{D-1}` (T4).
-- **`p_U` — uniform** on the box `Θ`.
+- **`p_U` — uniform** on <span style="color: red">`Θ` (in exp-decay, the ordered part of the box)</span>.
 - **`p_LN` — log-normal** in `θ` (A&M Eq. 10), `θ̄=0`, `τ=1` per coordinate
   (auto-chosen; please confirm — see [§7](#7-open-questions) OQ-3).
+  <span style="color: red">In exp-decay it is restricted to the ordered `Θ` and renormalised: the law of `D` independent draws, sorted.</span>
 - **`p_proj` — projected-ML / NML prior (co-protagonist, [§3.4](#34-the-second-protagonist-infomax-vs-mdl)).**
   The **MLE-pushforward** of the Shtarkov NML code `p_NML(x) ∝ max_θ p(x|θ)`: the law of
   `θ̂(x)` for `x ∼ p_NML` (A&M App. A.3; Quinn §5.2). It is a *prior*, distinct from the
@@ -1485,11 +1561,11 @@ The natures of [§2.3](#23-the-natures), each sampled as `θ ∼ q`:
 - **Round robin**: `θ ∼ π` for each prior `π` of the cast, from its own sampler
   ([§4.2](#42-prior-construction)).
 - **Fixed natures**, with laws that do not involve `D`:
-  - *Hypercones*: `θ_1` uniform on the thin half `[0, L/2]`, or on the thick half
-    `[L/2, L]`; the cross-section coordinates uniform on `[0, 1]`; all in the cone's own
+  - *Hypercones*: `θ_1` uniform on the thin half `[0, W/2]`, or on the thick half
+    `[W/2, W]`; the cross-section coordinates uniform on `[0, 1]`; all in the cone's own
     coordinates, before any rotation.
   - *Exp-decay, few rates*: `D_0` values drawn from one law on the box's side, each given
-    to `D/D_0` components, so `D` is a multiple of `D_0`.
+    to `D/D_0` components <span style="color: red">and sorted</span>, so `D` is a multiple of `D_0`.
   - *Exp-decay, fixed spectrum*: a centre and a width are drawn, and `θ_μ` is the
     quantile `(μ − ½)/D` of the normal law with that centre and width, clipped to `Θ`.
 
@@ -1529,7 +1605,7 @@ def sample_nature(model, nature, n, rng):
 
 ### 4.4 Score estimation
 
-For each cell `(model, D, σ, N, taper, rotation, curvature, nature)`:
+For each cell `(model, D, σ, N, taper, fall-off, rotation, curvature, nature)`:
 
 ```
 1.  model = build_model(family, D, m, σ, N)          # builds at σ_eff = σ/√N (§4.1)
@@ -1567,7 +1643,9 @@ Continuous priors: grid quadrature over `Θ` for small `D`; for the badly-behave
 **The one-step target `x'`** is a single observation at noise `σ`, not a budget-`N` summary,
 scored under the posterior predictive `m_π(x'|x̄)`. Its PIT under that predictive feeds the
 calibration diagnostic ([§3.3](#33-score-decomposition-bias-vs-calibration-a-diagnostic),
-[§6](#6-report)).
+[§6](#6-report)). <span style="color: red">The [§3.3](#33-score-decomposition-bias-vs-calibration-a-diagnostic) terms also need the matched posterior predictive `m_q(x'|x̄)`: in the round
+robin it is that of the row's own prior, already computed; for a fixed nature it is the
+low-dimensional integral of [§4.3](#43-foreign-q-family).</span>
 
 **Randomness.** One child RNG per cell, spawned from a single experiment seed
 (`manage-randomness.md`); BA itself is deterministic. Seed pinned in [§5](#5-properties-to-verify) Sweep
@@ -1608,8 +1686,8 @@ Test functions live in `tests/test_002_foreign_q_prediction.py`. The suite pins 
 | P2 | **Pipeline check** (demoted negative control): flat co-volume ⇒ `p_J = p_U` pointwise (FIM→quadrature), and `R(p_J)=R(p_U)` *exactly* under common random numbers, all `D`; `p*` gap recorded as a diagnostic, not gated ([§4.1](#41-model-families)) | `test_t2_pipeline_pJ_equals_pU` |
 | P3 | `p*` machinery (demoted tautology): equalizer `b(θ)=0` on `supp(p*)`, `≤0` off; `I_{p*}=C` ([§3.1](#31-the-one-guarantee-worst-case-over-q), [§4.2](#42-prior-construction)) | `test_t3_pstar_equalizer` |
 | P4 | Jeffreys construction: `p_J ∝ √det g` normalises; matches analytic `θ_1^{D-1}` in hypercone ([§4.2](#42-prior-construction)) | `test_t4_jeffreys_construction` |
-| P5 | Gaussian KL closed form (3.3.1) matches numeric KL of two Gaussians ([§3.3](#33-score-decomposition-bias-vs-calibration-a-diagnostic)) | `test_t5_gaussian_kl_split` |
-| P6 | Hypercone deviation: numeric `p_J`-posterior **mean**-deviation matches leading `(D−1)/x` within next-order tol, sign positive, `1≪x≪L` ([§1.2](#12-generative-model), [§9.2](#92-hypercone-posterior-deviation-eq-922)) | `test_t6_hypercone_delta` |
+| P5 | Gaussian KL closed form (3.3.1) matches numeric KL of two Gaussians<span style="color: red">, and both of its terms vanish for the matched prior</span> ([§3.3](#33-score-decomposition-bias-vs-calibration-a-diagnostic)) | `test_t5_gaussian_kl_split` |
+| P6 | Hypercone deviation: numeric `p_J`-posterior **mean**-deviation matches leading `(D−1)/x_1` within next-order tol, sign positive, `1≪x_1≪W` ([§1.2](#12-generative-model), [§9.2](#92-hypercone-posterior-deviation-eq-922)) | `test_t6_hypercone_delta` |
 | P7a | `m_π(X_{1:N})`: discrete sum (p*) vs quadrature agree ([§4.4](#44-score-estimation)) | `test_t7a_mixture_marginal_consistency` |
 | P7b | `p*` solver: grid-BA vs atomic agree on `R` where both feasible ([§4.2](#42-prior-construction)) | `test_t7b_pstar_method_agreement` |
 | P7c | **Budget-`N` equivalence**: `p*` and `R` built at `σ_eff=σ/√N` agree with the explicit `N`-fold channel `θ→X_{1:N}` (small `D, N`) ([§4](#4-algorithm), [§4.4](#44-score-estimation)) | `test_t7c_budget_n_equivalence` |
@@ -1626,7 +1704,7 @@ Test functions live in `tests/test_002_foreign_q_prediction.py`. The suite pins 
 | P18 | [TODO] `p_lat` against external references (candidates: Komaki 2011 Fig. 1; Tanaka 2014's analytic prior; Fogel & Feder 2024's binary results) ([§5.5](#55-atomicpriorsjl-reference-fixtures)) | [TODO] |
 | P19 | Mis-budgeted `p*`: `p*_M` is the `p*` build at `σ/√M`; scored at its own budget it reproduces `p*`; at budget `N ≠ M` its worst-case per-`θ` redundancy is at least `C_N` ([§2.2](#22-the-cast), [§4.2](#42-prior-construction)) | `test_t19_misbudgeted_pstar` |
 | P20 | Round robin: in each prior's own world no other prior's mismatch is negative, on either score ([§2.3](#23-the-natures), [§2.5](#25-controls-the-ceiling-and-self-sampling), [§4.3](#43-foreign-q-family)) | `test_t20_round_robin` |
-| P21 | Mass bound: `r_θ(π) ≤ −log π(A(θ)) + ½` for every prior at sampled `θ` (3.2.1); the insurance inequality (3.2.3); in the hypercone, Jeffreys' loss on the relevant datum matches (3.2.2) where `θ_1 ≫ Dσ/√N` ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d), [§9.4](#94-the-mass-bound-eq-321), [§9.5](#95-jeffreys-loss-in-the-hypercone-eq-322)) | `test_t21_mass_bound` |
+| P21 | Mass bound: `R_N^θ(π) ≤ −log π(A(θ)) + ½` for every prior at sampled `θ` (3.2.1); the insurance inequality (3.2.3); in the hypercone, Jeffreys' loss on the relevant datum matches (3.2.2) where `θ_1 ≫ Dσ/√N` ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d), [§9.4](#94-the-mass-bound-eq-321), [§9.5](#95-jeffreys-loss-in-the-hypercone-eq-322)) | `test_t21_mass_bound` |
 | — | **Results**: the sign of every summary of [§2.4](#24-what-is-reported-and-what-cannot-be-asserted), on both scores | *not tested — the open questions ([§3.7](#37-falsification), [§3.4](#34-the-second-protagonist-infomax-vs-mdl)); asserting any would make the experiment unfalsifiable* |
 
 ### 5.2 Test descriptions
@@ -1671,18 +1749,18 @@ hypercone the marginal on `θ_1` matches the analytic `∝ θ_1^{D-1}` ([§9.2](
 quadrature tolerance. Catches a wrong `det g`, a missing normaliser, or an
 axis-ordering bug.
 
-**T5 — Gaussian KL split.** For random `(y, σ, μ_π, Σ_π)`, the closed form (3.3.1)
-matches a direct numeric `D_{KL}(𝒩‖𝒩)`. Decoupled from the model; catches a sign or
-trace error in the bias/calibration decomposition used by the [§6](#6-report) diagnostic.
+**T5 — Gaussian KL split.** For random <span style="color: red">`(μ_q, Σ_q, μ_π, Σ_π)`</span>, the closed form (3.3.1)
+matches a direct numeric `D_{KL}(𝒩‖𝒩)`<span style="color: red">, and both terms are zero at `(μ_π, Σ_π) = (μ_q, Σ_q)`</span>. Decoupled from the model; catches a sign or
+trace error in the <span style="color: red">mean-shift and spread-mismatch</span> decomposition used by the [§6](#6-report) diagnostic.
 
 **T6 — Hypercone `Δ`.** Construct the hypercone `p_J` posterior at observations with
-`1 ≪ x ≪ L` (e.g. `L=50`, `x≈10`, `D∈{6,11,26}` per A&M). The stationary-point result
+`1 ≪ x_1 ≪ W` (e.g. `W=50`, `x_1≈10`, `D∈{6,11,26}` per A&M). The stationary-point result
 (9.2.1) is the posterior **mode**; (9.2.2) reports the **mean**, which agrees only to
-leading order (they differ at `O((D−1)²x^{-3})`). Assert (i) the numeric posterior-mean
-deviation matches the leading term `(D−1)/x` within `~3·(D−1)²/x³` (≈0.6 at `D=26, x≈10`,
-where the expansion parameter `4(D−1)/x² ≈ 1` makes `(D−1)/x` only marginal); (ii) the
-deviation is **positive** (mean above `x`, toward the thick end); and (iii) the
-closed-form mode equals the exact root of `θ² − xθ − (D−1) = 0`. Cross-check against A&M
+leading order (they differ at `O((D−1)²x_1^{-3})`). Assert (i) the numeric posterior-mean
+deviation matches the leading term `(D−1)/x_1` within `~3·(D−1)²/x_1³` (≈0.6 at `D=26, x_1≈10`,
+where the expansion parameter `4(D−1)/x_1² ≈ 1` makes `(D−1)/x_1` only marginal); (ii) the
+deviation is **positive** (mean above `x_1`, toward the thick end); and (iii) the
+closed-form mode equals the exact root of `θ² − x_1θ − (D−1) = 0`. Cross-check against A&M
 Appendix A.1 (see the §9.2 sign-convention note) — validates the bias mechanism the
 whole spec rests on.
 
@@ -1752,7 +1830,7 @@ by nature needs it) or a wrong pooling.
 [TODO] Tests for the stress natures once OQ-2 pins them.
 
 **T15 — `p_ref` construction.** (a) At random `θ` in the hypercone, the Schur complement
-`g_{11} − g_{1λ} g_{λλ}^{-1} g_{λ1}` of the numerical FIM equals `σ^{-2}` (`[^3-schur]`).
+`g_{11} − g_{1⊥} g_{⊥⊥}^{-1} g_{⊥1}` of the numerical FIM equals `σ^{-2}` (`[^3-schur]`).
 (b) Axis-aligned cone: `p_ref = p_U` pointwise. (c) Rotated cone: `p_ref` normalises, and
 its marginal on `(Qθ)_1` is flat to quadrature tolerance, while `p_U`'s is not. (d)
 Constant cross-section: `p_ref = p_U = p_J`. [TODO] (e) Exp-decay, once OQ-8 picks the
@@ -1777,7 +1855,7 @@ its one-step analogue, is non-negative within MCSE. It estimates a KL divergence
 negative value is a pipeline bug, not a result. Catches a sampler that does not draw from
 the prior whose mixture is evaluated, and a mixture that does not normalise.
 
-**T21 — Mass bound.** (a) At sampled `θ` and for every prior, the Monte-Carlo `r_θ(π)`
+**T21 — Mass bound.** (a) At sampled `θ` and for every prior, the Monte-Carlo `R_N^θ(π)`
 does not exceed `−log π(A(θ)) + ½` beyond MCSE, with `π(A(θ))` from the atoms' weights or
 from prior samples; the two sides are recorded, since their gap is what the `[guess]` of
 §3.2 turns on. (b) In the hypercone, where `Θ_J` is an interval of `θ_1`, the two sides of
@@ -1843,6 +1921,7 @@ flagged for ratification.
   confirm.)
 - **Taper.** `{0 (negative control), 1 (full hypercone), 0.5}` in the hypercone
   family. *Why:* `0` is the T2 control; `1` is A&M's case; `0.5` locates the onset.
+- <span style="color: red">**Fall-off (hypercone).** `φ ∈ {1, 0.5, 0.1}`. *Why:* `1` is the square cone, where the cross-section is jointly observable; smaller values make it jointly irrelevant ([§1.2](#12-generative-model)). (Auto-chosen; please confirm.)</span>
 - **Rotation angle (hypercone).** `{0, π/8, π/4}`. *Why:* `0` is axis-aligned
   (uniform-`θ` unbiased strawman, note §6.3); nonzero makes uniform-`θ` a fair
   competitor. (Auto-chosen; please confirm.)
@@ -1935,7 +2014,7 @@ Under `experiments/002-foreign-q-prediction/`:
   both scores, across the stress natures and the curvature knob, localising where the
   budget-dependent priors diverge ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)).
 - `figures/mismatch_vs_D.png` — each prior's mismatch against `D` on every fixed nature,
-  on both scores, at fixed `(σ, N)`.
+  on both scores, at fixed `(σ, N)`. <span style="color: red">Each cell's `Σ_μ L_μ²` is marked.</span>
 - `figures/budget_value.png` — `p*`'s gap to `p*_{N/10}`, to `p*_{10N}` and to Jeffreys
   (`M = ∞`) on both scores, against `D`, per model and nature, with the
   constant-cross-section model alongside ([§2.2](#22-the-cast),
@@ -1966,9 +2045,9 @@ the same models.
 
 ### 6.3 Table schema
 
-`results_table.json` — one row per `(model, D, σ, N, taper, rotation, curvature, ν)` cell:
+`results_table.json` — one row per `(model, D, σ, N, taper, fall-off, rotation, curvature, ν)` cell:
 
-- `model`, `D`, `sigma`, `N`, `taper`, `rotation`, `curvature`, `nature` — the cell key
+- `model`, `D`, `sigma`, `N`, `taper`, `falloff`, `rotation`, `curvature`, `nature` — the cell key
   (`nature`: the own-world prior's name, the fixed-nature name or the stress-nature name).
   `sigma_eff = sigma/√N` is the operative noise for `R_N` and `p*`; `r_N` and `p_lat` use
   `sigma` and `N`.
@@ -1981,15 +2060,18 @@ the same models.
   (`R_mean[π] > C_N`).
 - `covered_J` — the nature's mass on Jeffreys' covered set `Θ_J` ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)); hypercones
   only, [TODO] exp-decay.
+- <span style="color: red">`joint_width2` — the largest `Σ_μ L_μ(θ)²` over `Θ` at the cell's budget ([§1.2](#12-generative-model)), against which the summaries are reported; closed form in the hypercones, [TODO] exp-decay.</span>
 - The row summaries of [§2.4](#24-what-is-reported-and-what-cannot-be-asserted), each with its MCSE, for `π ∈ {p*, p_lat, p_proj}` and
   `S ∈ {R, r}`: `gap_best[π][S] = max_{π'} (S[π] − S[π'])` over the deployable priors
-  `π' ∈ {p_J, p_U, p_LN, p_ref}` other than the row's own;
+  `π' ∈ {p_J, p_U, p_LN, p_ref}` other than the row's own<span style="color: red">, in exp-decay once per ranking of `p_ref`</span>;
   `gap_pair[π, π'][S]` for the three protagonist pairs;
   `delta_R_pref = R[p*] − R[p_ref]` (budget versus ordering, [§3.5](#35-a-third-route-ordering-instead-of-budget)), one per ranking in
   exp-decay; and
   `gap_budget[S] = S[p*] − min_{M ∈ {N/10, 10N}} S[p*_M]`, the value of knowing the budget
-  ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)). The column summaries, the exchange and the trends in `D` run across rows and
+  ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)). <span style="color: red">Its two parts are stored too:
+  `gap_coarse[S] = S[p*] − S[p*_{N/10}]` and `gap_fine[S] = S[p*] − S[p*_{10N}]`.</span> The column summaries, the exchange and the trends in `D` run across rows and
   are computed from the table at report time.
+- <span style="color: red">`mean_shift[π]`, `spread_mismatch[π]` — the two terms of (3.3.1), averaged over draws ([§3.3](#33-score-decomposition-bias-vs-calibration-a-diagnostic)).</span>
 - `I_pstar`, `I_pJ`, `I_pproj`, `B_pstar`, `B_pJ` (bits) — the A&M/Quinn prior-side scores;
   `I_plat` (bits), the conditional information `p_lat` maximises.
 - `pstar_n_atoms`, `pstar_method` (`grid-BA` / `atomic`); `plat_support_size`.
@@ -2011,7 +2093,7 @@ the table stays small but an analysis by nature can re-key off it).
    constant-cross-section control (§2.2).
 5. Budget versus ordering: `delta_R_pref` in the cones, the control where ranking is
    free, and in exp-decay per ranking (§3.5, §3.7).
-6. Calibration diagnostic.
+6. Calibration diagnostic<span style="color: red">, and the mean shift and spread mismatch of §3.3 per prior</span>.
 7. A table of the §2.4 summaries by `D`, `N` and nature.
 8. Test results: T0–T15 and T19–T21 pass/fail with achieved tolerances (T0 the spec-000
    regression gate, T12 the AtomicPriors cross-checks); [TODO] T16–T18.
@@ -2045,7 +2127,7 @@ the table stays small but an analysis by nature can re-key off it).
 
 > M: how would the tuning happen? With what exact algorithm?
 
-- **OQ-4 (RESOLVED — two co-equal models, distinct roles).** <span style="color: red">No model is "primary"; the two are the *caricature ↔ realisation* pair of [§1.2](#12-generative-model), carried together. The **rotated hypercone** is the *analytic/controlled* model (closed-form `Δ=(D−1)/x` (T6), the negative control, and the tunable convex-vertex curvature — the only axis on which `p*` and `p_proj` provably differ, [§3.4](#34-the-second-protagonist-infomax-vs-mdl)); **exp-decay** is the *realism* model (curved, non-aligned, all competitors fail, A&M Fig. 5). The results run on **both**, and agreement across the controlled and realistic models is itself evidence. The only build requirement — the controlled model's curvature knob — is already in [§4.1](#41-model-families).</span>
+- **OQ-4 (RESOLVED — two co-equal models, distinct roles).** <span style="color: red">No model is "primary"; the two are the *caricature ↔ realisation* pair of [§1.2](#12-generative-model), carried together. The **rotated hypercone** is the *analytic/controlled* model (closed-form `Δ=(D−1)/x_1` (T6), the negative control, and the tunable convex-vertex curvature — the only axis on which `p*` and `p_proj` provably differ, [§3.4](#34-the-second-protagonist-infomax-vs-mdl)); **exp-decay** is the *realism* model (curved, non-aligned, all competitors fail, A&M Fig. 5). The results run on **both**, and agreement across the controlled and realistic models is itself evidence. The only build requirement — the controlled model's curvature knob — is already in [§4.1](#41-model-families).</span>
 - **OQ-5 (RESOLVED — `p_proj` is a protagonist).** Resolved in favour of including
   `p_proj` now, not deferring. [§3.4](#34-the-second-protagonist-infomax-vs-mdl) establishes
   it as a budget-dependent *co-protagonist* (not a control); since 2026-10-05 it is one of
@@ -2068,6 +2150,9 @@ the table stays small but an analysis by nature can re-key off it).
   ([§3.5](#35-a-third-route-ordering-instead-of-budget)), at least two candidates are
   needed and this blocks it. Related: the Neyman–Scott problem (`[^3-lineage]`) would be a
   clean extra test of whether `p*` removes a co-volume bias without any ranking.
+
+> C: (2026-11-13) `Θ` is now the ordered rates ([§1.2](#12-generative-model); conc04 F4). A candidate must therefore rank an order statistic, or a function of several, and two candidates must give distinct priors. "A fixed coordinate such as the slowest rate" is now well defined. Still open: which candidates.
+
 - **OQ-9 (definition, deferred to the §4 pass).** The exp-decay parameter box `Θ` is not
   specified (`parameter_box` in [§4.1](#41-model-families)). Panel (d) of the geometry
   figure uses `θ_μ ∈ [−1, 3]` for illustration, taken from `notes/q-family-viz/`.
@@ -2206,36 +2291,36 @@ priors of the sweep average gives `m_π = m_{q̄}`, attained by `π = q̄` ([§2
 
 ### 9.2 Hypercone posterior deviation (eq. (9.2.2))
 
-For the hypercone (§4.1.2), `√det g(θ) = r(θ_1)^{D-1} = (θ_1/L)^{D-1}` (A&M
-Appendix A.1; the relevant `√det g_rel = 1 + O(L^{-2})`). Integrating the irrelevant
+For the hypercone (§4.1.2), `√det g(θ) = r(θ_1)^{D-1} = (θ_1/W)^{D-1}` (A&M
+Appendix A.1; the relevant `√det g_rel = 1 + O(W^{-2})`). Integrating the irrelevant
 coordinates gives the effective Jeffreys marginal `p_J(θ_1) ∝ θ_1^{D-1}`. For one
-observation `x` along the relevant axis (noise `σ=1`),
+observation `x_1` along the relevant axis (noise `σ=1`),
 
 $$
-p(\theta_1\mid x) \propto e^{-(x-\theta_1)^2/2}\,\theta_1^{\,D-1},\qquad
-\frac{d}{d\theta_1}\Big[-\tfrac12(x-\theta_1)^2 + (D-1)\log\theta_1\Big] = 0 \;\Rightarrow\; \theta_1 = x + \frac{D-1}{\theta_1}, \tag{9.2.1}
+p(\theta_1\mid x_1) \propto e^{-(x_1-\theta_1)^2/2}\,\theta_1^{\,D-1},\qquad
+\frac{d}{d\theta_1}\Big[-\tfrac12(x_1-\theta_1)^2 + (D-1)\log\theta_1\Big] = 0 \;\Rightarrow\; \theta_1 = x_1 + \frac{D-1}{\theta_1}, \tag{9.2.1}
 $$
 
 the stationary point — the posterior **mode** — is the positive root of
-`θ_1² − xθ_1 − (D−1) = 0`, i.e. `θ_1 = ½(x + √(x² + 4(D−1)))`, which reduces to
-`θ_1 ≈ x + (D-1)/x` only when `x² ≫ 4(D−1)`. The posterior **mean** `⟨θ_1⟩` agrees
-with the mode to leading order (they differ at `O((D−1)²x^{-3})`), giving
+`θ_1² − x_1θ_1 − (D−1) = 0`, i.e. `θ_1 = ½(x_1 + √(x_1² + 4(D−1)))`, which reduces to
+`θ_1 ≈ x_1 + (D-1)/x_1` only when `x_1² ≫ 4(D−1)`. The posterior **mean** `⟨θ_1⟩` agrees
+with the mode to leading order (they differ at `O((D−1)²x_1^{-3})`), giving
 
 $$
-\Delta \;=\; \big|\langle\theta_1\rangle_{p_J(\theta_1\mid x)} - x\big| \;=\; \frac{D-1}{x} + O\!\big((D-1)^2 x^{-3}\big). \tag{9.2.2}
+\Delta \;=\; \big|\langle\theta_1\rangle_{p_J(\theta_1\mid x_1)} - x_1\big| \;=\; \frac{D-1}{x_1} + O\!\big((D-1)^2 x_1^{-3}\big). \tag{9.2.2}
 $$
 
-The prior factor `θ_1^{D-1}` pulls the centre toward the thick end, so `⟨θ_1⟩ > x`;
-the pull grows with `D` and is largest at small `x` (the thin end).
+The prior factor `θ_1^{D-1}` pulls the centre toward the thick end, so `⟨θ_1⟩ > x_1`;
+the pull grows with `D` and is largest at small `x_1` (the thin end).
 
-**Sign convention and validity.** We report the *magnitude* `Δ = |⟨θ_1⟩ − x|`. A&M
-Appendix A.1 write the signed form `Δ = x − ⟨θ_1⟩ = (D−1)/x`, but their own statement
-that `p_J` "has much more weight at large `θ_1`" forces `⟨θ_1⟩ > x`, i.e.
-`x − ⟨θ_1⟩ < 0` — so their signed expression carries a **sign slip** (it should read
-`⟨θ_1⟩ − x`). The magnitude and the direction (toward the thick base) are unaffected,
+**Sign convention and validity.** We report the *magnitude* `Δ = |⟨θ_1⟩ − x_1|`. A&M
+Appendix A.1 write the signed form `Δ = x_1 − ⟨θ_1⟩ = (D−1)/x_1`, but their own statement
+that `p_J` "has much more weight at large `θ_1`" forces `⟨θ_1⟩ > x_1`, i.e.
+`x_1 − ⟨θ_1⟩ < 0` — so their signed expression carries a **sign slip** (it should read
+`⟨θ_1⟩ − x_1`). The magnitude and the direction (toward the thick base) are unaffected,
 and taking the absolute value keeps the slip from propagating. Note the leading term is
-only marginal at A&M's own test point: at `D=26, x≈10` the expansion parameter
-`4(D−1)/x² ≈ 1` is not small, so `(D−1)/x = 2.5` overshoots the true mean deviation
+only marginal at A&M's own test point: at `D=26, x_1≈10` the expansion parameter
+`4(D−1)/x_1² ≈ 1` is not small, so `(D−1)/x_1 = 2.5` overshoots the true mean deviation
 (`≈2.08`, verified numerically) by ~17% — the tolerance in T6 ([§5.2](#52-test-descriptions)) is set accordingly.
 
 ### 9.3 Exponential-decay FIM
@@ -2243,7 +2328,7 @@ only marginal at A&M's own test point: at `D=26, x≈10` the expansion parameter
 With `y_t(θ)=Σ_μ a_μ e^{-k_μ t}`, `k_μ=e^{-θ_μ}`,
 `∂y_t/∂θ_μ = a_μ e^{-k_μ t}(-t)(\partial k_μ/\partial θ_μ) = a_μ t\,k_μ\,e^{-k_μ t}`
 (using `∂k_μ/∂θ_μ = -k_μ`). Hence
-`g_{μν}(θ) = σ^{-2} Σ_{t} (a_μ t k_μ e^{-k_μ t})(a_ν t k_ν e^{-k_ν t})`, a
+`g_{μμ'}(θ) = σ^{-2} Σ_{t} (a_μ t k_μ e^{-k_μ t})(a_{μ'} t k_{μ'} e^{-k_{μ'} t})`, a
 closed-form `D×D` matrix per `θ`, from which `p_J ∝ √det g` and the eye-test scores
 follow.
 
@@ -2255,7 +2340,7 @@ the bound is vacuous. Otherwise let `π_A` be `π` restricted to `A` and normali
 mixture satisfies `m_π ≥ π(A)·m_{π_A}` pointwise, so
 
 $$
-r_\theta(\pi) \;=\; \mathbb{E}_{X_{1:N}\mid\theta}\Big[\log\frac{p(X_{1:N}\mid\theta)}{m_\pi(X_{1:N})}\Big]
+R_N^\theta(\pi) \;=\; \mathbb{E}_{X_{1:N}\mid\theta}\Big[\log\frac{p(X_{1:N}\mid\theta)}{m_\pi(X_{1:N})}\Big]
 \;\le\; -\log\pi(A) \;+\; D_{\mathrm{KL}}\!\big(p(X_{1:N}\mid\theta)\,\|\,m_{\pi_A}\big). \tag{9.4.1}
 $$
 
@@ -2273,23 +2358,23 @@ squared distance between their predictions in units of `σ/√N`, which is at mo
 
 ### 9.5 Jeffreys' loss in the hypercone (eq. (3.2.2))
 
-Dropping part of the data cannot increase a KL divergence. So `r_θ(p_J)` is at least the
+Dropping part of the data cannot increase a KL divergence. So `R_N^θ(p_J)` is at least the
 divergence between the two laws of the relevant datum alone, the mean `x̄_1` of the first
 coordinate: `𝒩(θ_1, σ²/N)` under `θ`, and under Jeffreys the same Gaussian mixed over the
-`θ_1`-marginal of `p_J`. Since `√det g ∝ θ_1^{D−1}` on `[0, L]` ([§1.2](#12-generative-model)),
-that marginal has density `D θ_1^{D−1}/L^D`. Where it varies slowly over `σ/√N` the mixture
+`θ_1`-marginal of `p_J`. Since `√det g ∝ θ_1^{D−1}` on `[0, W]` ([§1.2](#12-generative-model)),
+that marginal has density `D θ_1^{D−1}/W^D`. Where it varies slowly over `σ/√N` the mixture
 is close to the density itself, and the divergence is minus the Gaussian's entropy minus
 the log density at `θ_1`:
 
 $$
-D_{\mathrm{KL}} \;\approx\; (D-1)\log\frac{L}{\theta_1} \;+\; \log\frac{L}{D} \;-\; \tfrac12\log\frac{2\pi e\,\sigma^{2}}{N}. \tag{9.5.1}
+D_{\mathrm{KL}} \;\approx\; (D-1)\log\frac{W}{\theta_1} \;+\; \log\frac{W}{D} \;-\; \tfrac12\log\frac{2\pi e\,\sigma^{2}}{N}. \tag{9.5.1}
 $$
 
 To second order in `σ/√N` the divergence is lower by `(D−1)(D−3)σ²/(2Nθ_1²)`, negligible
 for `θ_1 ≫ Dσ/√N`.
 
 Check against the reduced computation (`notes/budget-value-of-information.md` §4;
-`L = 50`, `σ = 1`, `N = 1`), which finds the `θ_1` below which Jeffreys' loss on this datum
+`W = 50`, `σ = 1`, `N = 1`), which finds the `θ_1` below which Jeffreys' loss on this datum
 exceeds `C_N`. At `D = 26` (`C_N = 4.02` nats) it finds 41.1; (9.5.1) gives 41.3, and 41.0
 with the correction. At `D = 100` (`C_N = 11.25`) it finds 42.7; (9.5.1) gives 43.7, and
 42.5 with the correction.
@@ -3323,3 +3408,40 @@ P6 now points to §1.2; P21/T21 (the bound, the inequality and the cone formula)
 §6.3 gains `covered_J`. Not propagated: §3.3's closing reference to a "bias gap" that
 grows for "the deployable priors" (F2, F7). Downstream: no test or implementation of this
 section existed.
+
+### 2026-11-13 — Correction + Clarification + Refinement (§0–§7, §9; conc04 Stage 3b)
+
+Applies the `> C:` decisions of `specs/002-foreign-q-prediction-redteam-conc04.md`, which
+MB made on 2026-11-10 and 2026-11-13. Every edit is marked red, or sits under a warning
+callout where a passage was rewritten or a symbol renamed. All sections were already
+`draft`. F1 and most of F8 were resolved by the edits of 2026-11-10.
+
+- **F4 (Correction).** Exp-decay's `Θ` is the ordered rates (§1.1, §1.2, §4.1). The
+  symmetric priors are restricted to it (§4.2). `p_ref` ranks order statistics, and
+  candidate rankings must give distinct priors (§3.5, §3.7, OQ-8). `[^0-matched]` gives the
+  corrected reason for uniqueness; the §0 example names a price, not a motive.
+- **F5 (Correction + Refinement).** §1.2 defines the co-volume locally and adds joint
+  irrelevance: a cross-section counts as invisible only where `Σ_μ L_μ(θ)²` is well below
+  one. `p*`'s independence of `D` is restated as a bound by the variation of
+  `Σ_μ L_μ(θ)²/8` across states, a `[guess]` outside the reduced cone (§0, §1.2, §3.3). The
+  hypercone gains a fall-off knob `φ` (§1.2, §4.1, §5.4, §6.3); a loss to `p_ref` in the
+  cone is read against it (§3.5, §3.7). The cone's `Δ` is named as a `θ_1` component, and
+  the budget range with one relevant direction is stated (§1.1, §1.2).
+- **F6 (Clarification).** §1.2 states where `Δ = (D−1)/x_1` holds.
+- **F7 (Correction).** §3.3 decomposes the mismatch of posterior predictives against the
+  matched prior, into a mean shift and a spread mismatch, both zero for the matched prior;
+  the claim that the bias term decides the contest is dropped. §4.4, P5, T5 and §6 follow.
+- **F2 (Clarification).** §0 and §2.1 name Jeffreys where they said "the deployable
+  priors"; §3.3's sentence is gone with the rewrite.
+- **F3 (Correction).** The mis-budgeted observer is one whose expectation is wrong (§0,
+  its footnote, §2.2). §2.2 follows the budget note: too coarse is costly in the worst
+  case in 1-D, yet the coarser prior wins in the reduced cone. §2.4 and §6.3 report the two
+  mis-budget gaps one by one.
+- **F8 (Clarification).** §3.7: a tie is within Monte-Carlo error.
+- **Minor.** m1, m2, m3, m5, m6, m7, m8, m11, m14, m15, m16, m17, m18 applied; m4's renames
+  are listed in the callout under §1.1.
+
+Not done here: the PGM and geometry figures still show the box and the square cone only;
+`GLOSSARY.md`'s co-volume entry still points to a global `V_⊥`. Downstream: P5/T5 and
+P14/T14 changed and the model gained a knob, but no test or implementation of them exists
+yet.
