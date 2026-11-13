@@ -40,9 +40,16 @@ per cluster; this page holds the views across clusters.
 | Learning curves and predictive information | per-step risk; `I_pred` | [learning-curves.md](learning-curves.md) |
 | Scoring and betting | log score; Kelly growth | [scoring-betting.md](scoring-betting.md) |
 
-Adjacent areas that connect to the project but feed no claim (rate–distortion agents,
-behavioural evidence on priors, and more) are left out on purpose; a separate map of
-them is to do, seeded under [Exclusions](#exclusions).
+## Adjacent areas
+
+Areas that connect to the project but feed no spec claim. Their files have the cluster
+shape, with "what mirrors our objects" in place of "findings we use". Started 2026-11-13;
+the other candidates (rate–distortion agents, behavioural evidence on priors, and more)
+are still only seeded under [Exclusions](#exclusions).
+
+| Area | Central object | File |
+|---|---|---|
+| Empowerment | capacity of the action channel | [empowerment.md](empowerment.md) |
 
 ## One object, many names
 
