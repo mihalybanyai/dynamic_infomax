@@ -66,3 +66,34 @@ reduction of one task to a few tens of parameters, with its geometry compared to
 002's families. A suite can go against `p*` [guess]: rates spread over many decades look
 roughly uniform in log-rate inside any observation window, which is the uniform prior's
 world.
+
+### Budget-conditioned prior network (2026-11-13)
+
+*From:* the chat behind [`literature/empowerment.md`](../literature/empowerment.md). The
+wish is MB's: Blahut–Arimoto gives `p*` for normative comparisons, not on the fly. The
+construction is Claude's. *Idea:* amortise `p*` over budgets. One network takes the budget
+`N` and returns [atoms](../GLOSSARY.md#atom) and weights. With a Gaussian likelihood the
+posterior over atoms is exact, so the mutual information can be estimated and climbed
+directly, as Abbott & Machta do for one budget at a time [read: A&M App. A.2]. Where the
+likelihood has no tractable posterior, a recognition network `q(θ|x, N)` supplies the
+Barber–Agakov lower bound, as in Mohamed & Rezende 2015 [read: §4.1–§4.2]: the likelihood
+is fixed, the prior and the recognition network are learned, and training uses only the
+model's own samples. Other context that changes the likelihood could be added to the
+input later.
+
+What it does not address: a solver for large `D` exists already
+(`resources/AtomicPriors.jl`, spec 002 OQ-1). Known hazards:
+- **Slack in the bound** pulls the prior toward posteriors the recognition network can
+  represent. The bound of Nalisnick & Smyth 2017 favoured a prior of two atoms at any
+  noise level in Abbott & Machta's models [read: A&M App. A.3]. The Barber–Agakov bound is
+  a different one, so that failure need not carry over [guess].
+- **Collapse.** A continuous prior family will try to collapse onto atoms [guess]. Mohamed
+  & Rezende constrain the source's entropy for a related instability [read: §4.2].
+
+*What would settle it:* the 1-D bounded Gaussian channel of spec 000. Train one network
+across budgets and compare with
+[Blahut–Arimoto](../GLOSSARY.md#blahut-arimoto-algorithm) at each budget on three counts:
+the gap in mutual information, the worst-case
+[bias pressure](../GLOSSARY.md#bias-pressure), and whether atoms split at the right
+budgets. A failure there ends it cheaply. It would join the cheap updates listed in
+`notes/budget-value-of-information.md` §9.
