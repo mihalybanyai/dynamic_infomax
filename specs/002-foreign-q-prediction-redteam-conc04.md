@@ -129,7 +129,7 @@ the missing argument.
 > narrows with `D` (a bound from the 2026-11-10 chat, size unchecked). Against these, in
 > the axis-aligned cone uniform equals `p_ref` and has no co-volume bias. MB accepted
 > Claude's opinion: apply the first resolution. §3.2's *Scope* already states it (commit
-> 4052fc6). To apply in the spec (Stage 3b): §0, §2.1 and §3.3 name Jeffreys, and
+> 4052fc6). Applied in the spec, commit 1b9d911: §0, §2.1 and §3.3 name Jeffreys, and
 > log-normal on A&M's evidence, where they now say "the deployable priors".
 
 ---
@@ -164,7 +164,7 @@ circumstances"); §2.2 ("Mis-budgeted `p*`").
 
 > M: (a) the mis-budgeted prior should indeed be mis-budgeted (b) and (c): enforce consistency with the note. btw coarser priors winning is always interesting for us, even when they don't coincide with p*
 
-> C: Agreed; to apply in the spec (Stage 3b). (a) §0, `[^0-motives]` ("More evidence,
+> C: Agreed; applied in the spec, commit 1b9d911. (a) §0, `[^0-motives]` ("More evidence,
 > and circumstances") and §2.2: the flatmate-observer expects a year but the flatmate
 > leaves after `N` encounters, so `p*_{10N}` is mis-budgeted and is scored at the true
 > `N`. (b) §2.2: "a wrong resolution costs on both sides" is restricted to the worst
@@ -220,7 +220,7 @@ Mattingly p. 1763, footnote]. §0–§3 never say so, and the following depend o
 > C: Chat, 2026-11-13. Explained: the symmetry changes no score, since every prior and
 > nature of the cast is symmetric under swaps, but it leaves "rank component `μ` first"
 > without meaning, which the decisive comparison with `p_ref` needs. MB decided: restrict
-> `Θ` to ordered rates, as A&M and Mattingly et al. do. To apply in the spec (Stage 3b):
+> `Θ` to ordered rates, as A&M and Mattingly et al. do. Applied in the spec, commit 1b9d911:
 > §1.1, §1.2 and §4.1 define exp-decay's `Θ` as the ordered rates and state the symmetry
 > the ordering removes; §4.2 restricts `p_J`, `p_U` and `p_LN` to it; §3.5, §3.7 and
 > OQ-8 have `p_ref` rank order statistics (the slowest rate, and so on) and require that
@@ -289,7 +289,7 @@ Settled by: the same comparison in a cone with geometric widths.
 > directions are jointly observable, so several of the claims fail there and a loss to
 > `p_ref` could be that artefact. MB asked for a general treatment and accepted Claude's:
 > irrelevance is a property of the whole cross-section, measured by the sum of squared
-> sub-resolution widths `Σ L_μ²`. To apply in the spec (Stage 3b): (1) §1.2 defines joint
+> sub-resolution widths `Σ L_μ²`. Applied in the spec, commit 1b9d911: (1) §1.2 defines joint
 > irrelevance through `Σ L_μ²` and the information the cross-section carries, about
 > `Σ L_μ²/8` nats, against Jeffreys' `Σ log L_μ`; §0, §3.3 and §3.4 restate `p*`'s
 > `D`-independence as a bound by the variation of that information across states, tagged
@@ -334,7 +334,7 @@ redundancy or mismatch; the budget note §4 already gives reduced-cone numbers f
 
 > C: Chat, 2026-11-13. (a) Moot: the paragraph is deleted in §3.2 (commit 4052fc6).
 > Explained that the sentence added a distance to a divergence and held under no reading
-> of "pays". (b) MB: add the range note. To apply in the spec (Stage 3b): §1.2 states
+> of "pays". (b) MB: add the range note. Applied in the spec, commit 1b9d911: §1.2 states
 > where `Δ = (D−1)/x` holds (`x² ≫ 4(D−1)`, from §9.2) and that the deviation saturates
 > below it at the thin end, with this finding's numbers.
 
@@ -370,8 +370,8 @@ approximation it splits into two terms, both zero for the matched prior:
 
 > C: Chat, 2026-11-13. Explained: the present bias term is measured from the true curve,
 > so it is positive for the matched prior too and reports posterior spread as bias. MB
-> decided the diagnostic should say how far a prior is from the best achievable. To apply
-> in the spec (Stage 3b): §3.3 decomposes the prior-dependent part of (2.1.6),
+> decided the diagnostic should say how far a prior is from the best achievable. Applied
+> in the spec, commit 1b9d911: §3.3 decomposes the prior-dependent part of (2.1.6),
 > `D_KL(m_q(·|X)‖m_π(·|X))`, into a mean-shift term and a covariance-mismatch term, both
 > zero for the matched prior, and drops "the bias term decides the contest" as written;
 > §4.4 computes the row's own posterior predictive (in the round robin, that of the row's
@@ -411,7 +411,7 @@ happens elsewhere. Three phrases are also undefined:
 > leaves a deployable prior out of the comparison in its own world; §3.7 sets aside home
 > wins and cells settled by theorem, whichever prior they favour, states the verdict per
 > group of rows, and defines "near" as a mismatch below ½ nat. No rule pools the cells
-> into one verdict, by design (§2.4). One residue to apply in the spec (Stage 3b): §3.7
+> into one verdict, by design (§2.4). One residue applied in the spec, commit 1b9d911: §3.7
 > says "ties within Monte-Carlo error".
 
 ## Minor
@@ -496,10 +496,10 @@ happens elsewhere. Three phrases are also undefined:
 
   > M: apply suggestions where clear, and still applicable after intervening edits. m11: the former, m15: footnote
 
-  > C: To apply in the spec (Stage 3b), where still applicable after commit 4052fc6.
+  > C: Applied in the spec, commit 1b9d911, where still applicable after commit 4052fc6.
   > *Already resolved by that commit:* m9, m10, m12, m13; m11 (§2.4 takes the minimum
   > once per ranking, as MB chooses here); of m1, the §3.7 site; of m3, "cooperativeness
-  > axis"; of m4, the tilt `t`. *To apply:* m1 (§0, §1.1, §2.1), m2, m3 (the remaining
+  > axis"; of m4, the tilt `t`. *Applied:* m1 (§0, §1.1, §2.1), m2, m3 (the remaining
   > links and pointers), m5, m6 (the labels only), m7, m8, m11 (say "per ranking" in
   > §6.3's `gap_best` too), m14, m15 (to a footnote), m16, m17, m18 (as `[recalled]`
   > unless the source is opened). *m4* (renames proposed by Claude and accepted by MB in
