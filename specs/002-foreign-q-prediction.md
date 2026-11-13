@@ -340,7 +340,7 @@ Nature's side of the experiment, and the model geometry that every conceptual cl
 
 The diagram is the *external environment*, **not** what the agent assumes (as in spec
 001). Uncircled nodes are fixed inputs: the noise scale `σ`, the geometry config `ψ`
-(dimension `D`, observation times `t_1,…,t_m`, taper and rotation, defined below; [§4.1](#41-model-families)),
+(dimension `D`, observation times `t_1,…,t_m`, taper, <span style="color: red">fall-off,</span> rotation <span style="color: red">and curvature</span>, defined below; [§4.1](#41-model-families)),
 and the nature `ν` that selects `q` ([§2.3](#23-the-natures)).
 
 **The data-generating process.** One draw:
@@ -364,6 +364,8 @@ test transfer rather than self-consistency, and why `π` is absent from the diag
 **The model geometry.**
 
 ![Model geometry](../diagrams/002-foreign-q-prediction-geometry.svg)
+
+<span style="color: red">Figure regenerated 2026-11-13: panel (a) adds the equal-width alternative and the joint width, panel (b) the fall-off knob, and panel (d) labels the line of equal rates as a face of the ordered `Θ`.</span>
 
 All three families share the Gaussian likelihood, so a model is fixed by its prediction
 map `θ ↦ y(θ)`: as `θ` ranges over the box `Θ ⊂ ℝ^D`, `y(θ)` sweeps a `D`-dimensional
@@ -3445,3 +3447,13 @@ Not done here: the PGM and geometry figures still show the box and the square co
 `GLOSSARY.md`'s co-volume entry still points to a global `V_⊥`. Downstream: P5/T5 and
 P14/T14 changed and the model gained a knob, but no test or implementation of them exists
 yet.
+
+### 2026-11-13 — Clarification (§1.2; figures and glossary brought in line)
+
+At MB's request, closing what the previous entry left undone. The geometry figure is
+regenerated: panel (a) shows the equal-width alternative and the joint width `Σ L_μ²`
+(0.72 for the geometric spectrum drawn, 3.3 for equal widths), panel (b) the fall-off knob
+and the range `W`, panel (d) the ordered rates. The PGM figure is unchanged, since it
+draws neither the box nor the cone; only the comments in its script were stale. §1.2 lists
+the fall-off and the curvature among the fixed inputs `ψ`. `GLOSSARY.md`'s co-volume entry
+now describes the local `V_⊥(θ)` and joint irrelevance.

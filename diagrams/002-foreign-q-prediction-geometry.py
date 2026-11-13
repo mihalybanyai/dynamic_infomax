@@ -13,18 +13,23 @@ Four panels, (a) and (b) on top, (c) and (d) below:
       directions are RELEVANT (W>1: resolvable at this budget, "stiff"); the
       many others are IRRELEVANT (W<1: unresolvable, "sloppy"). The co-volume is
       the product of the irrelevant widths -- extent the data cannot pin down but
-      a parameter-space measure (Jeffreys) still weights.
+      a Fisher-volume measure (Jeffreys) still weights. Hollow dotted bars show the
+      equal-width alternative (the square cone's cross-section): each direction is
+      below resolution on its own, but the sum of squared widths is not small, so
+      the cross-section is jointly visible (spec §1.2).
 
-  (b) Square hypercone (taper r = theta_1/L). The analytic caricature that
+  (b) Square hypercone (taper r = theta_1/W). The analytic caricature that
       isolates the single feature driving the co-volume pathology: a co-volume
-      GRADIENT. One relevant axis theta_1 (Fisher length ~ L) with D-1 irrelevant
-      directions whose extent r(theta_1)=theta_1/L tapers linearly to the tip, so
+      GRADIENT. One relevant axis theta_1 (range W) with D-1 irrelevant
+      directions whose extent r(theta_1)=theta_1/W tapers linearly to the tip, so
       the cross-sectional (co-)volume element sqrt(det g) ∝ theta_1^{D-1} grows
       toward the thick base. Jeffreys piles its mass at the base (a vanishing
       fraction of distinguishable predictions as D grows) and its posterior is
-      pulled there -- the closed-form bias Delta=(D-1)/x, largest at the thin end.
+      pulled there -- the closed-form bias Delta=(D-1)/x_1, largest at the thin end.
       p* instead places atoms ≈1 Fisher length apart along the relevant axis and
-      collapses the irrelevant ones onto the boundary.
+      collapses the irrelevant ones onto the boundary. Dashed lines show further
+      irrelevant directions under the fall-off knob (0.5 per direction); at
+      fall-off 1 they all match the outer envelope.
 
   (c) Constant cross-section cone (taper 0, the flat-co-volume null of §2.4). Same
       family with r(theta_1)=r0 constant: no co-volume gradient, sqrt(det g)
@@ -33,8 +38,8 @@ Four panels, (a) and (b) on top, (c) and (d) below:
       tie (discrete on the bounded coordinate).
 
   (d) Exp-decay with two rates (§4.1.1), observed at t = 1 and 5: the model manifold
-      drawn directly in prediction space. It is curved and folded along the line
-      of equal rates; the lines of fixed theta_1 and fixed theta_2 cross it
+      drawn directly in prediction space. It is curved, and bounded by the line of equal
+      rates, a face of the ordered parameter set (spec §1.2); the lines of fixed theta_1 and fixed theta_2 cross it
       obliquely, so neither coordinate follows its long axis; and it narrows below
       the noise scale at both ends, a co-volume gradient that arises without a
       built-in taper. The box theta in [-1, 3]^2 (from notes/q-family-viz/) and
@@ -88,15 +93,22 @@ axA.set_ylabel(r"Fisher length $L_\mu$ = width  (units of $\sigma$)")
 axA.set_title("(a) hyperribbon: a sloppy width spectrum", fontsize=10.5)
 axA.set_xticks(mu)
 axA.set_xlim(0.4, D + 1.9)
+# The equal-width alternative (the square cone's cross-section, fall-off 1): as many
+# irrelevant directions, each as wide as the widest. One by one they are below
+# resolution; jointly they are not, which the sum of squared widths shows (spec §1.2).
+L_eq = np.full(int((~relevant).sum()), L[~relevant].max())
+axA.bar(mu[~relevant], L_eq, facecolor="none", edgecolor=JEFF, lw=1.0, ls=":",
+        width=0.7, label="equal widths (square cone)")
 axA.legend(loc="upper right", fontsize=8, frameon=False)
-axA.annotate(r"co-volume $V_\perp$" "\n" r"$=\prod_{L_\mu<1} L_\mu$",
-             xy=(6.0, L[5]), xytext=(4.55, 0.016),
-             fontsize=8.5, color="#555555", ha="center",
-             arrowprops=dict(arrowstyle="-", color="#999999", lw=0.8))
+axA.text(0.82, 0.79,
+         r"co-volume $V_\perp(\theta)$: product of grey widths" "\n"
+         r"joint width $\sum L_\mu^2$: "
+         rf"{np.sum(L[~relevant] ** 2):.2f} geometric, {np.sum(L_eq ** 2):.1f} equal",
+         transform=axA.transAxes, fontsize=8, color="#555555", ha="right", va="top")
 
 
 # ---- hypercone drawing helper ---------------------------------------------
-def draw_cone(ax, r_of_theta, title, *, taper):
+def draw_cone(ax, r_of_theta, title, *, taper, falloff=None):
     """Side view of the (square) hypercone manifold along the relevant axis.
 
     The filled envelope shows one representative irrelevant direction's extent
@@ -114,6 +126,12 @@ def draw_cone(ax, r_of_theta, title, *, taper):
     lower = list(zip(th[::-1], -half[::-1]))
     ax.add_patch(Polygon(upper + lower, closed=True,
                          facecolor=IRREL, edgecolor="#7a7a7a", lw=1.2, alpha=0.55))
+    # fall-off knob (spec §1.2): each further irrelevant direction is narrower by a
+    # factor `falloff`; at falloff = 1 they all match the outer envelope
+    if falloff:
+        for k in (1, 2):
+            ax.plot(th, half * falloff**k, color="#7a7a7a", lw=0.8, ls="--")
+            ax.plot(th, -half * falloff**k, color="#7a7a7a", lw=0.8, ls="--")
     # relevant axis (the spine)
     ax.plot([0, L], [0, 0], color="#7a7a7a", lw=0.8, ls=":")
 
@@ -143,7 +161,7 @@ def draw_cone(ax, r_of_theta, title, *, taper):
 
     ax.set_xlim(-0.25, L + 0.25)
     ax.set_ylim(-0.95, 0.95)
-    ax.set_xlabel(r"relevant coordinate $\theta_1$ (tip $0 \to$ base $L$)")
+    ax.set_xlabel(r"relevant coordinate $\theta_1$ (tip $0 \to$ base $W$)")
     ax.set_title(title, fontsize=10.5)
     ax.set_yticks([])
     return ax2
@@ -151,7 +169,11 @@ def draw_cone(ax, r_of_theta, title, *, taper):
 
 # ---- panel (b): tapering hypercone (co-volume gradient) -------------------
 ax2b = draw_cone(axB, lambda t: t / 5.0, "(b) hypercone (taper): co-volume gradient",
-                 taper=True)
+                 taper=True, falloff=0.5)
+axB.text(2.55, -0.63,
+         r"dashed: further directions at fall-off $\varphi=0.5$; "
+         r"at $\varphi=1$ all match the outer one",
+         color="#555555", fontsize=7.8, ha="center")
 ax2b.text(5.15, 1.0, r"$\sqrt{\det g}\propto\theta_1^{\,D-1}$",
           color=JEFF, fontsize=9, va="center", ha="left", rotation=90)
 axB.annotate("Jeffreys mass\n& posterior pull", xy=(4.55, 0.0), xytext=(2.5, 0.62),
@@ -205,13 +227,14 @@ axD.add_patch(plt.Circle((0.45, 0.12), SIGMA_D, fill=False, color=JEFF, lw=1.4))
 axD.text(0.50, 0.12, r"noise $\sigma$", color=JEFF, va="center", fontsize=9)
 axD.text(0.17, 0.06, "width < $\\sigma$", color="#555555", fontsize=8.5, ha="center")
 axD.text(0.84, 0.70, "width < $\\sigma$", color="#555555", fontsize=8.5, ha="right")
-axD.plot([], [], color=RELEVANT, label=r"$\theta_1$ fixed")
-axD.plot([], [], color="#8a8a8a", ls="--", label=r"$\theta_2$ fixed")
-axD.plot([], [], color="k", lw=1.6, label="equal rates (fold)")
+axD.plot([], [], color=RELEVANT, label=r"$\theta_1$ (faster rate) fixed")
+axD.plot([], [], color="#8a8a8a", ls="--", label=r"$\theta_2$ (slower rate) fixed")
+axD.plot([], [], color="k", lw=1.6, label=r"equal rates (a face of $\Theta$)")
 axD.legend(loc="upper left", fontsize=8, frameon=False)
 axD.set_xlabel(r"prediction at $t=1$")
 axD.set_ylabel(r"prediction at $t=5$")
-axD.set_title("(d) exp-decay, two rates: curved, misaligned, tapering", fontsize=10.5)
+axD.set_title("(d) exp-decay, two ordered rates: curved, misaligned, tapering",
+              fontsize=10.5)
 axD.set_aspect("equal", adjustable="box")
 
 

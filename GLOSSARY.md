@@ -60,7 +60,10 @@ In a model with [relevant and irrelevant directions](#relevant-and-irrelevant-di
 irrelevant ones: their combined Fisher extent at a given point of the relevant directions
 [read: A&M §2]. It varies wildly across parameter space and is invisible to the data, yet
 a volume-based prior such as [Jeffreys](#jeffreys-prior) still weights it [read: A&M §1]. Spec 002 §1.2
-gives the global version `V_⊥`.
+writes it `V_⊥(θ)`, the product of the irrelevant widths at `θ`. The same section
+separates directions that are irrelevant one by one from a cross-section that is *jointly*
+irrelevant: many narrow directions can add up to a visible one, which the sum of their
+squared widths measures.
 
 ### Deployable prior
 

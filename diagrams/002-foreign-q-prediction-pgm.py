@@ -13,11 +13,11 @@ from this nature-only diagram and described in prose.
 Structure:
 
   - nu (the nature, spec sec 2.3): fixes which foreign nature q is sampled -- a
-    tilt t of the family q_t ~ (sqrt det g)^t, a stress nature, or a
-    self-sampling control. Fixed input, OUTSIDE the plates.
+    prior's own world (the round robin), a fixed nature, or a stress nature. Fixed input, OUTSIDE the plates.
   - Outer plate (s = 1, ..., S_q): independent draws of the data-generating
     density q_s and the truth theta_s ~ q_s. The likelihood geometry
-    (taper, rotation, dimension D, noise sigma) is fixed across draws and is
+    (taper, fall-off, rotation,
+    curvature, dimension D, noise sigma) is fixed across draws and is
     described in the spec, not drawn here.
   - theta ~ q: nature's true parameter for this draw.
   - Training plate (i = 1, ..., N): the observations x_i ~ p(x|theta) the
@@ -51,7 +51,7 @@ pgm.add_edge("theta", "xp")
 
 # Fixed likelihood inputs collected in one double-circled node: the noise scale
 # sigma and the geometry config psi (dimension D, observation times, taper,
-# rotation). Constant across draws, so OUTSIDE the S_q plate; it feeds every
+# fall-off, rotation, curvature). Constant across draws, so OUTSIDE the S_q plate; it feeds every
 # observation. Answers the review note "can sigma and other parameters be put on
 # the generative model".
 pgm.add_node("phi", r"$\sigma,\psi$", x=2.6, y=-0.5, fixed=True)
