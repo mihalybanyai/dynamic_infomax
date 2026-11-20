@@ -241,6 +241,24 @@ how we worked.
 `needs-revision → draft`: whoever revises flips the status in the same edit;
 Claude does this automatically, without being asked.
 
+### Human summary (§0.1)
+
+Every spec opens with `### 0.1 Human summary`: the human's outline, in the human's own
+words, of every main point the spec tries to get at. The rest of a spec is mostly
+Claude's writing; §0.1 is the fully human part it answers to. It is an outline, so it
+need not carry technical detail.
+
+- **Claude never edits §0.1**, not even a typo, and writes no comment inside it. In a new
+  spec it leaves the heading with a one-line placeholder for the human.
+- **Claude checks the body against §0.1** whenever it reads or edits the spec. It looks
+  for a main point of the body that §0.1 misses, a statement in §0.1 that the body
+  contradicts or does not support, and a body that has drifted from §0.1's aim.
+- **A mismatch comes first.** Claude raises it at the top of its next message, before
+  anything else it reports about that spec, saying where §0.1 and the body each stand.
+  Which side changes is the human's decision; work whose content depends on that
+  decision waits for it. A mismatch still open at the end of a session goes in the
+  handoff.
+
 ### Red-team reviewer roster
 
 Red-team sub-agents are the project's main quality gate, so they run on the

@@ -20,8 +20,9 @@ read `skills/red-team.md` §3 (sub-agent rules) and the "Sub-agent brief" sectio
 
 ### Reading order and scope
 
-Read the spec, and any files it references (notes, prior specs, diagrams). Then attack
-it. Primary sources are PDFs in `resources/`: use them for any check that depends on a
+Read the spec's `### 0.1 Human summary` first, whatever the scope: it is the human's
+own statement of what the spec is for. Then read the spec, and any files it references
+(notes, prior specs, diagrams). Then attack it. Primary sources are PDFs in `resources/`: use them for any check that depends on a
 source paper. Other references are mapped in `literature/`: look one up only when a
 finding needs a derivation from it verified, and do not ingest the bibliography up
 front.
@@ -56,6 +57,11 @@ Failure modes, roughly in order of value:
    "standard". These words usually hide a step the author did not want to write out.
 10. **Test coverage**: a capability the proposed test suite leaves uncertain.
 11. **Document checks** (`skills/red-team.md` §3, rule 6).
+12. **Human-summary mismatch**: the body and `### 0.1 Human summary` disagree. A main
+    point of the body is missing from the summary, or the body contradicts or does not
+    support a statement of the summary. Describe the mismatch and where each side
+    stands; do not propose wording for §0.1, which only the human edits (`AGENTS.md`,
+    *Human summary (§0.1)*).
 
 ### Findings
 

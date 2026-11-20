@@ -34,9 +34,12 @@ to any particular tensor shape convention. It describes the math.
    …); subsections are `### X.Y` and subsubsections `#### X.Y.Z` (see
    "Numbering and links"). A spec needs at least:
 
-   - **Context** — one paragraph, opening with at most three lines on what
-     the spec establishes or tests; then what problem this solves, what
-     came before.
+   - **Context** — opens with `### 0.1 Human summary`, which only the human
+     writes and edits (`AGENTS.md`, *Human summary (§0.1)*): in a new spec,
+     leave the heading with a one-line placeholder, and check the body
+     against it whenever you edit the spec. Then the introduction: at most
+     three lines on what the spec establishes or tests; then what problem
+     this solves, what came before.
    - **Setup** — definitions of all symbols. Use a notation table if there are
      more than 5 symbols.
    - **Generative model** (if applicable) — a plate-notation diagram for any

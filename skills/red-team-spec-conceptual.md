@@ -27,7 +27,7 @@ Follow the "Sub-agent brief" of `skills/red-team-spec.md`, with these changes:
 - **Scope.** Read Sections `<FIRST_SEC>`–`<LAST_SEC>` and the files they reference;
   ignore the other sections of the spec.
 - **Checklist.** Use these failure modes from the red-team-spec checklist, in this
-  order: conceptual confusion (1), math errors (4), unstated assumptions (5), notation
+  order: human-summary mismatch (12), conceptual confusion (1), math errors (4), unstated assumptions (5), notation
   drift (7), vague claims (9), aims not achieved (2), inconsistency with the literature
   (3), document checks (11). Skip spec/algorithm mismatch, edge cases and test coverage:
   the sections they concern do not exist yet.

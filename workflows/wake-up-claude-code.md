@@ -39,6 +39,9 @@ Continuing work on dynamic_infomax. Read in order:
 
 After reading, summarise your understanding in two short paragraphs:
 (a) what state the project is in, and (b) what the immediate task is.
+If the artifact is a spec, check its body against its §0.1 Human summary
+and report any mismatch before the two paragraphs (AGENTS.md, *Human
+summary (§0.1)*).
 Wait for me to confirm before taking any action.
 
 Then today's task is: [[TASK_DESCRIPTION]]
