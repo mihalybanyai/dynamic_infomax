@@ -68,7 +68,9 @@ Removed: `intro_collation.md` (23 Sep – 1 Oct), intro prose collated for the p
 format, deleted once used.
 
 Scripts with no note of their own: `spec-002-motives-example/` (6 Nov), behind the
-numbers of spec 002's §0 example.
+numbers of spec 002's §0 example; `spec-002-stiffest-ranking/` (20 Nov), the check that
+exp-decay's stiffest direction does not integrate to a coordinate at `D = 3` and
+`D = 4` (spec 002 §4.2).
 
 ## Upkeep
 

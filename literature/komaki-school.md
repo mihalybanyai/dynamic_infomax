@@ -37,9 +37,9 @@ spec 002's `p*`; the case `(N, 1)` is the endpoint score `r_N` (row (a) and (e) 
   [read: Komaki 2012, abstract]. The cumulative score's asymptotic least-favourable prior
   is Jeffreys instead (Clarke & Barron 1994) [read: Komaki 2011 §1, citing it].
 - **Discreteness.** At `(N, M) = (1, 1)` in the binomial, the latent information prior is
-  discrete, derived analytically [read: Tanaka 2014, abstract]. Fogel & Feder 2024 find
-  optima with full support for some `(N, L)` (see [feder-group.md](feder-group.md)), so
-  discreteness at `N > 0` is open.
+  discrete, derived analytically: mass 3/10 at `θ = 0` and `θ = 1`, 2/5 at `½` [read:
+  Tanaka 2014, Thm 4]. Fogel & Feder 2024 find optima with full support for some
+  `(N, L)` (see [feder-group.md](feder-group.md)), so discreteness at `N > 0` is open.
 - **MDL counterpart.** Projected onto Bayes predictives, conditional NML (variant CNML3)
   is asymptotically the latent-information-prior predictive, and exactly under stronger
   assumptions [read: Kojima & Komaki 2016, abstract]. This is the one-step analogue of
@@ -56,7 +56,7 @@ spec 002's `p*`; the case `(N, 1)` is the endpoint score `r_N` (row (a) and (e) 
 |---|---|---|---|---|
 | Komaki 2011, "Bayesian predictive densities based on latent information priors", *J. Stat. Plan. Inference* 141(12):3705–3715; arXiv:1009.5072 ([pdf](../resources/komaki.pdf)) | read in full | defines the prior; minimax (Thm 2); concave; `(N, M)` dependence; `(0, k)` is the `k`-reference prior | 002 score choice; 002 §0 | ★ §1, §3 to Thm 2, §4 |
 | Komaki 2012, "Asymptotically minimax Bayesian predictive densities for multinomial models", *EJS* 6:934–957; arXiv:1112.0818 | abstract | one-step asymptotically minimax prior is neither Jeffreys nor uniform | 002 score choice | – |
-| Tanaka 2014, "An analytic example of latent information prior", arXiv:1410.2961 | abstract | discrete at `(1, 1)`, binomial | discreteness, open | ☆ short |
+| Tanaka 2014, "An analytic example of latent information prior", arXiv:1410.2961 | read in full | discrete at `(1, 1)`, Bernoulli: mass 3/10 at 0 and 1, 2/5 at ½ (Thm 4); spec 002's T18 | discreteness, open | ☆ short |
 | Kojima & Komaki 2016, "Relations between the conditional normalized maximum likelihood distributions and the latent information priors", *IEEE TIT* 62(1); arXiv:1412.7794 | abstract | conditional NML ≈ latent-information-prior predictive | 002 §3.4 analogue | – |
 | Komaki 2001, "A shrinkage predictive distribution for multivariate normal observables", *Biometrika* 88:859–864 | search summary | shrinkage prior beats uniform for Gaussian prediction, `d ≥ 3` | 002 §1.2 footnote | – |
 

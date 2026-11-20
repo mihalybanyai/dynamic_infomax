@@ -302,7 +302,7 @@ what knowing the budget is worth to an agent that commits to one prior
 | `m_q(X_{1:N})` | Nature's `N`-fold data marginal `∫ p(X_{1:N}\|θ) q(dθ)`. |
 | `ν` | The nature of a cell: a prior's own world, a fixed nature or a stress nature ([§2.3](#23-the-natures)); it selects `q`. `m_ν` is its data marginal. |
 | `D_0` | Number of distinct rates of a few-rates nature, `D_0 < D` ([§2.3](#23-the-natures)). |
-| `π` | Agent's prior, one of `{p*, p_lat, p_proj, p*_{N/10}, p*_{10N}, p_J, p_U, p_LN, p_ref}` <span style="color: red">or, in exp-decay, `p_LN^*`</span>, with `q̄` as reference ceiling ([§2.2](#22-the-cast)). |
+| `π` | Agent's prior, one of `{p*, p_lat, p_proj, p*_{N/10}, p*_{10N}, p_J, p_U, p_LN, p_ref}` or, in exp-decay, `p_LN^*`, with `q̄` as reference ceiling ([§2.2](#22-the-cast)). |
 | `p*` | Infomax ([capacity](../GLOSSARY.md#channel-capacity)-achieving) prior of the budget-`N` channel `θ→X_{1:N}`: `argmax_π I_π(Θ;X_{1:N})`, equivalently the single-observation achiever at noise `σ/√N` ([§4.2](#42-prior-construction)). Usually discrete[^1-discrete]. |
 | `p_proj` | Projected-ML / NML prior: the [pushforward](../GLOSSARY.md#pushforward) of the [NML distribution](../GLOSSARY.md#normalized-maximum-likelihood-nml) through the MLE map `θ̂(x)` ([§3.4](#34-the-second-protagonist-infomax-vs-mdl), [§4.2](#42-prior-construction)). |
 | `p_lat` | Latent information prior at `(N, 1)`: `argmax_π I_π(Θ;X_{N+1}\|X_{1:N})`, the minimax prior for the one-step score, proven for finite outcome spaces ([§2.2](#22-the-cast)). `p*` is the same construction at `(0, N)`. |
@@ -310,7 +310,7 @@ what knowing the budget is worth to an agent that commits to one prior
 | `p_J` | [Jeffreys prior](../GLOSSARY.md#jeffreys-prior) `∝ √{det g(θ)}`, normalised on `Θ`. |
 | `p_U` | Uniform on the parameter box `Θ`. |
 | `p_LN` | Normal in `θ`, i.e. log-normal in the rate `k_μ = e^{-θ_μ}` (A&M Eq. 10): `∝ Π_μ e^{-(θ_μ-θ̄)²/2τ²}` (A&M's `σ̄` is `τ`). |
-| <span style="color: red">`p_LN^*`</span> | <span style="color: red">Budget-tuned log-normal: the `p_LN` family with `(θ̄, τ)` chosen to maximise `I_π(Θ;X_{1:N})`; exp-decay only ([§2.2](#22-the-cast), [§4.2](#42-prior-construction)).</span> |
+| `p_LN^*` | Budget-tuned log-normal: the `p_LN` family with `(θ̄, τ)` chosen to maximise `I_π(Θ;X_{1:N})`; exp-decay only ([§2.2](#22-the-cast), [§4.2](#42-prior-construction)). |
 | `p_ref` | [Reference prior](../GLOSSARY.md#reference-prior) with the relevant direction ranked first: the irrelevant directions are integrated out under their conditional prior before the relevant one gets its prior ([§3.5](#35-a-third-route-ordering-instead-of-budget), [§4.2](#42-prior-construction)). Closed form in the cones; in exp-decay, one per candidate ranking of OQ-8 ([§7](#7-open-questions)). |
 | `q̄` | Equal-weight average of all natures of [§2.3](#23-the-natures); reference ceiling only ([§2.5](#25-controls-the-ceiling-and-self-sampling)). |
 | `m_π(X_{1:N})` | Agent's Bayes mixture `∫ p(X_{1:N}\|θ) π(dθ)`. |
@@ -361,7 +361,7 @@ Each *cell*, one setting of model, `D`, `σ`, `N`, the geometry knobs and the na
 only `X_{1:N}` and is scored on predicting `x'` and, cumulatively, each `x_{i+1}` from
 `x_{1:i}` ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss)).
 
-**Agent ≠ nature.** The agent's prior `π ∈ {p*, p_lat, p_proj, p*_{N/10}, p*_{10N}, p_J, p_U, p_LN, p_ref}` <span style="color: red">or, in exp-decay, `p_LN^*`</span> (with `q̄` as
+**Agent ≠ nature.** The agent's prior `π ∈ {p*, p_lat, p_proj, p*_{N/10}, p*_{10N}, p_J, p_U, p_LN, p_ref}` or, in exp-decay, `p_LN^*` (with `q̄` as
 reference ceiling) is chosen from the likelihood geometry and a budget alone (the true
 `N`/`σ`, or a wrong one for the mis-budgeted `p*`),
 **decoupled from `q`**, as in spec 001. The decoupling is what makes the held-out score
@@ -571,8 +571,8 @@ asymmetry is a co-volume gradient that steepens with `D` against a cap `C_N` tha
 
 Every prior is scored on two scores, each a held-out log-loss in excess of an oracle that
 knows `θ`: the cumulative `R_N` (the mainline) and the one-step `r_N`
-([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss)). The cast has <span style="color: red">four</span>
-budget-dependent protagonists, `p*`, `p_lat`, `p_proj` <span style="color: red">and, in exp-decay, the budget-tuned log-normal `p_LN^*`</span>, against deployable priors and
+([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss)). The cast has four
+budget-dependent protagonists, `p*`, `p_lat`, `p_proj` and, in exp-decay, the budget-tuned log-normal `p_LN^*`, against deployable priors and
 mis-budgeted copies of `p*` ([§2.2](#22-the-cast)). Every prior is scored in every other prior's
 own world, with its own as the control ([§2.3](#23-the-natures)). No overall winner is declared
 ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)).
@@ -649,9 +649,9 @@ the experiment. Two consequences for the algorithm:
 - **σ and `N` separate.** `R_N` depends on them only through `σ/√N`
   ([§4.4](#44-score-estimation)); `r_N` does not, since for a fixed prior it is
   `R_1` at noise `σ/√(N+1)` minus `R_1` at noise `σ/√N`. The sweep needs an `N` axis at
-  fixed `σ` (<span style="color: red">[§5.4](#54-sweep-design)</span>).
-- **`x'` is the one-step target.** <span style="color: red">§4.4 scores `x'` under the
-  posterior predictive above, with `x'` at noise `σ`.</span>
+  fixed `σ` ([§5.4](#54-sweep-design)).
+- **`x'` is the one-step target.** §4.4 scores `x'` under the
+  posterior predictive above, with `x'` at noise `σ`.
 
 **Why expect a *maximiser* of mutual information to help minimise a loss?** Three
 different "redundancies" hide behind one word, each with a cumulative and a one-step
@@ -709,7 +709,7 @@ the one it is minimax for, and away on the other.
 | `p*` | capacity prior of the budget-`N` channel, `argmax_π I_π(Θ;X_{1:N})`; Komaki's latent information prior at `(0, N)` | `R_N` | minimax for `R_N`, value `C_N` ([§3.1](#31-the-one-guarantee-worst-case-over-q)) | usually[^1-discrete] |
 | `p_lat` | latent information prior at `(N, 1)`, `argmax_π I_π(Θ;X_{N+1}\|X_{1:N})` [read: Komaki 2011 §3] | `r_N` | minimax for `r_N` for finite outcome spaces [read: Komaki 2011 Thm 2; Fogel & Feder 2024 Thm 1]; for Gaussian data expected but unproven [read: Komaki 2011 §4] | open; for some budgets near-full support [read: Fogel & Feder 2024 §VII] |
 | `p_proj` | [pushforward](../GLOSSARY.md#pushforward) of the [NML](../GLOSSARY.md#normalized-maximum-likelihood-nml) distribution through the MLE map ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)) | neither | NML is minimax for the pointwise regret of the `N`-sequence; `p_proj` for neither score | no, but with point masses on the lowest-dimensional edges [read: `specs/002-foreign-q-prediction-redteam-conc04.md` m6, which reads Quinn §5.2] |
-| <span style="color: red">`p_LN^*`</span> | <span style="color: red">the log-normal family of `p_LN` with `(θ̄, τ)` tuned to maximise `I_π(Θ;X_{1:N})`, in exp-decay only: a smooth prior adapted to the budget, with no atoms and no extra weight on the edges</span> | <span style="color: red">neither</span> | <span style="color: red">none</span> | <span style="color: red">no</span> |
+| `p_LN^*` | the log-normal family of `p_LN` with `(θ̄, τ)` tuned to maximise `I_π(Θ;X_{1:N})`, in exp-decay only: a smooth prior adapted to the budget, with no atoms and no extra weight on the edges | neither | none | no |
 | `p*_{N/10}`, `p*_{10N}` | `p*` built for a tenth or ten times the true budget: an agent that knows the construction but not its budget, and commits to one resolution | `R_M`, at the wrong budget | none at `N` | usually |
 | `p_J`, `p_U`, `p_LN`, `p_ref` | the [deployable priors](../GLOSSARY.md#deployable-prior): Jeffreys, uniform, log-normal, ranked reference (`p_ref`: closed form in the cones, one per OQ-8 ranking in exp-decay) | — | none | no |
 | `q̄` | matched to the average of the swept natures | — | the ceiling on both scores ([§2.5](#25-controls-the-ceiling-and-self-sampling)) | — |
@@ -718,7 +718,7 @@ the one it is minimax for, and away on the other.
 different windows of the learning curve: observations `1…N`, and observation `N+1` after
 `N` ([`literature/komaki-school.md`](../literature/komaki-school.md)). `p_lat` is built by a
 Blahut–Arimoto variant whose update uses the difference of the per-`θ` divergences at
-budgets `N+1` and `N` (<span style="color: red">[§4.2](#42-prior-construction)</span>).
+budgets `N+1` and `N` ([§4.2](#42-prior-construction)).
 
 **Mis-budgeted `p*`.** They measure what knowing the budget is worth, for agents that
 commit to one prior. An agent that may instead mix the priors built for many budgets
@@ -795,7 +795,7 @@ prior's **mismatch**, its score minus the row's floor
   What is read is the trend of each column in `D`, and the contrast between the two kinds.
 - **Stress natures**, each declared with the prior it is aimed against and the mechanism
   ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)):
-  - *a sharpened convex vertex, with nature on the <span style="color: red">faces next to it</span>*: against `p_proj`,
+  - *a sharpened convex vertex, with nature on the faces next to it*: against `p_proj`,
     whose NML weighting over-weights the vertex's
     [noise halo](../GLOSSARY.md#noise-halo) [guess];
   - *a smooth nature in the interior bulk*: against `p*`'s discreteness, and likely in
@@ -818,8 +818,8 @@ real natures is outside this spec (`notes/parked_ideas.md`, *Benchmark natures*)
 Parametrisations are pinned in [§4.3](#43-foreign-q-family). Each draw records
 its nature and its `θ`, so results split by nature and map over `Θ`.
 
-[^2-fixed]: <span style="color: red">Pinned in [§4.3](#43-foreign-q-family) (OQ-2): `D_0` and the law of the few
-    rates; the spectrum's law and how the rates fill it.</span>
+[^2-fixed]: Pinned in [§4.3](#43-foreign-q-family) (OQ-2): `D_0` and the law of the few
+    rates; the spectrum's law and how the rates fill it.
 
     *Few rates.* A `D`-component model produces fewer rates only by neutralising
     components: two rates coincide, or one leaves the observation window. Each time, a
@@ -838,7 +838,7 @@ its nature and its `θ`, so results split by nature and map over `Θ`.
     most `1/(2√D)` and the nature narrows onto one curve as `D` grows; `p_U`'s and
     `p_LN`'s own worlds behave so. Rates placed at the quantiles of a law whose centre and
     width are drawn afresh for each `θ` keep the spread free of `D`; this is the
-    <span style="color: red">choice</span>. Shrinking the width to zero gives a single rate, so the width runs from
+    choice. Shrinking the width to zero gives a single rate, so the width runs from
     the edge kind to the bulk kind. That a fixed spectrum favours the product priors is a
     [guess], settled by its row: each product prior is at home on one spectrum only, its
     own.
@@ -860,7 +860,7 @@ every nature, the mismatch of every prior on both scores. That one score or natu
 one prior and another prefers another is itself a finding. The table is read in four
 directions, for each model, `σ` and `N`.
 
-**Along a row** (one nature), per protagonist `π ∈ {p*, p_lat, p_proj}` <span style="color: red">and, in exp-decay, `p_LN^*`,</span> and per score
+**Along a row** (one nature), per protagonist `π ∈ {p*, p_lat, p_proj}` and, in exp-decay, `p_LN^*`, and per score
 `S ∈ {R_N, r_N}`. Within a row, differences of scores are differences of mismatches.
 
 - **The gap to the best deployable prior**,
@@ -871,14 +871,14 @@ directions, for each model, `σ` and `N`.
   the minimum: it is at home, and `π` is compared with the priors that are away like
   itself.
 - **The pairwise gaps** between protagonists, `δS(p*, p_lat)`, `δS(p*, p_proj)` and
-  `δS(p_lat, p_proj)`<span style="color: red">; in exp-decay also `δS(p*, p_LN^*)`</span>.
+  `δS(p_lat, p_proj)`; in exp-decay also `δS(p*, p_LN^*)`.
 - For `p*` alone, **the gap to the best mis-budgeted `p*`**,
   `Δ^{bud}_S = S(p*) − min_{M ∈ {N/10, 10N}} S(p*_M)`, negative when knowing the budget
   to within a factor of ten helps ([§2.2](#22-the-cast)). The two gaps are also
   reported one by one, `S(p*) − S(p*_{N/10})` and `S(p*) − S(p*_{10N})`, so that a coarser
   prior winning shows.
-- <span style="color: red">For `p_LN^*` alone, **the gap to `p_LN`**, `S(p_LN^*) − S(p_LN)`: what tuning one smooth
-  family to the budget is worth.</span>
+- For `p_LN^*` alone, **the gap to `p_LN`**, `S(p_LN^*) − S(p_LN)`: what tuning one smooth
+  family to the budget is worth.
 
 **Down a column** (one prior): its largest and its mean mismatch over the rows. Each prior
 of the cast has one row at home, where its mismatch is 0. Neither summary is neutral
@@ -1052,7 +1052,7 @@ order `C_N/(D−1)` of the relevant coordinate; by Fisher volume, nearly all. Ne
 is forced on nature, which is why [§2.3](#23-the-natures) scores every prior in every
 other's world and [§2.4](#24-what-is-reported-and-what-cannot-be-asserted) declares no
 winner. In the hypercones the covered set is an interval of `θ_1`, and a nature's mass on
-it is read off directly; <span style="color: red">in exp-decay it is estimated by Monte Carlo ([§4.5](#45-diagnostics))</span>.
+it is read off directly; in exp-decay it is estimated by Monte Carlo ([§4.5](#45-diagnostics)).
 
 The reduced cone also previews the average. On a nature uniform in `θ_1` at `D = 26`,
 Jeffreys' mismatch on the relevant datum is 18.65 nats against `p*`'s 0.51, and Jeffreys
@@ -1307,7 +1307,7 @@ Several things can make it lose:
    it also keeps `D_KL(m_q‖m_π)` small, `p*` wins nothing a smooth prior could not, and its
    **discreteness does no work** (OQ-5, [§7](#7-open-questions)). Whether a lead is
    `p*`'s own, rather than any budget-dependent prior's, is read off the pairwise gaps
-   `δR(p*, p_proj)` and `δR(p*, p_lat)` <span style="color: red">(and, in exp-decay, `δR(p*, p_LN^*)`, against a prior that adapts to the budget but can be neither discrete nor weighted to the edges)</span> ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)); beating only Jeffreys and
+   `δR(p*, p_proj)` and `δR(p*, p_lat)` (and, in exp-decay, `δR(p*, p_LN^*)`, against a prior that adapts to the budget but can be neither discrete nor weighted to the edges) ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)); beating only Jeffreys and
    log-normal extends A&M's comparison to a foreign `q` without separating `p*` from the
    other budget-dependent priors (A&M neither tested uniform nor scored a foreign `q`).
 3. **`q̄` dominates** ([§2.5](#25-controls-the-ceiling-and-self-sampling)): `p*` cannot beat
@@ -1348,7 +1348,7 @@ rows decides it.
 **In the remaining, live cells** the expectation is *supported* where `p*` beats every
 deployable prior that is away, `Δ_{R_N}(p*) < 0`
 ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)), with the pairwise gaps showing
-that the lead is not shared by `p_proj` or `p_lat`<span style="color: red">, nor in exp-decay by `p_LN^*`</span>. It is *refuted* where `p*` ties with (within Monte-Carlo error)
+that the lead is not shared by `p_proj` or `p_lat`, nor in exp-decay by `p_LN^*`. It is *refuted* where `p*` ties with (within Monte-Carlo error)
 or loses to the best deployable prior. The verdict is stated per group of rows:
 
 - *Round robin.* In the own world of each other prior, `p*` against the deployable priors
@@ -1365,7 +1365,7 @@ The cones are the control where ranking is free
 ([§3.5](#35-a-third-route-ordering-instead-of-budget)), so a tie with or a loss to `p_ref`
 there is the expected control result, not a refutation, read against the fall-off knob since in the square cone part of it is `p*`'s own tilt ([§3.5](#35-a-third-route-ordering-instead-of-budget)); there `p*` is read against the
 other deployable priors. The verdict against `p_ref` is taken in exp-decay, under each
-OQ-8 ranking, and a lead that holds under only some rankings is reported as such. The rankings <span style="color: red">name order statistics or functions of them</span>, and must give distinct priors ([§3.5](#35-a-third-route-ordering-instead-of-budget)). The same
+OQ-8 ranking, and a lead that holds under only some rankings is reported as such. The rankings name order statistics or functions of them, and must give distinct priors ([§3.5](#35-a-third-route-ordering-instead-of-budget)). The same
 reading applies to `p_lat` on `r_N`, with the cap holding wherever its minimaxity does
 ([§2.2](#22-the-cast)).
 
@@ -1373,9 +1373,7 @@ reading applies to `p_lat` on `r_N`, with the cap holding wherever its minimaxit
 
 §4 builds the models (§4.1), the priors (§4.2), the natures (§4.3), the two scores
 (§4.4) and the diagnostics that §1.2, §3.2, §3.3 and §3.7 read (§4.5), and says how this
-extends spec 000's code (§4.6). Nothing blocks the build. Two pieces wait: T18, on a
-citation (OQ-11), and the stiffest-direction ranking of `p_ref` above `D = 2`, on a
-numerical check (§4.2).
+extends spec 000's code (§4.6). Nothing blocks the build.
 
 Three conventions hold throughout:
 
@@ -1544,8 +1542,11 @@ ordered `Θ`.
     Fisher eigenvectors. It exists only where the field of those hyperplanes
     integrates[^4-stiff]. At `D = 2` it always does: `ψ` labels the integral curves of
     the sloppy eigenvector, traced from a transversal, and `p_ref` is computed in the
-    coordinates (`ψ`, arc length along the curve). At `D ≥ 3` the condition is checked
-    on the grid, and the ranking enters only where it holds [TODO].
+    coordinates (`ψ`, arc length along the curve). At `D = 3` and `D = 4` the condition
+    fails at almost every point: the twist `|ω ∧ dω| / (|ω| |dω|)` has median 0.12 and
+    0.20, against `10^{-9}` for an integrable control
+    (`notes/spec-002-stiffest-ranking/frobenius_check.py`). So stiffest first enters at
+    `D = 2` only; that it fails at larger `D` too is a [guess].
 - **`q̄`, the ceiling.** Not built from the model: it is the equal-weight mixture of the
   natures of §4.3, so a draw picks a row uniformly and samples it, and `m_{q̄}` is the
   average of the rows' marginals ([§2.5](#25-controls-the-ceiling-and-self-sampling)).
@@ -1796,7 +1797,7 @@ machinery; it does **not** assert the results
 | P15 | `p_ref` in the cones: equals `p_U` at `α = 0`; flat marginal on `(Qθ)_1` under rotation; Schur complement `σ^{-2}`; in exp-decay, each ranking's `p_ref` normalises, distinct rankings give distinct priors, and the stiffest-direction ranking does not depend on its transversal ([§3.5](#35-a-third-route-ordering-instead-of-budget), [§4.2](#42-prior-construction)) | `test_t15_pref_construction` |
 | P16 | `p_lat`: conditional equalizer; the two-sided bound closes; equals `p*` at budget 1 when `N = 0` ([§4.2](#42-prior-construction)) | `test_t16_plat_construction` |
 | P17 | One-step score: `r_N = R_{N+1} − R_N`, and the decomposition (2.1.6) ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss), [§4.4](#44-score-estimation)) | `test_t17_one_step_score` |
-| P18 | `p_lat` against Tanaka's closed form at `(N, M) = (1, 1)` in the binomial model [recalled; CITATION NEEDED] (OQ-11) | `test_t18_plat_reference` (waits on the citation) |
+| P18 | `p_lat` against Tanaka's closed form at `(N, M) = (1, 1)` in the Bernoulli model: mass 3/10 at `θ = 0` and at `θ = 1`, 2/5 at `θ = ½` [read: Tanaka 2014, Thm 4] (OQ-11) | `test_t18_plat_reference` |
 | P19 | Mis-budgeted `p*`: `p*_M` is the `p*` build at `σ/√M`; at its own budget it reproduces `p*`; at `N ≠ M` its worst-case per-state redundancy is at least `C_N` ([§2.2](#22-the-cast)) | `test_t19_misbudgeted_pstar` |
 | P20 | Round robin: in each prior's own world no other prior's mismatch is negative, on either score ([§2.3](#23-the-natures)) | `test_t20_round_robin` |
 | P21 | Mass bound (3.2.1) at sampled `θ`; the insurance inequality (3.2.3); Jeffreys' loss (3.2.2) in the hypercone ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d), [§9.4](#94-the-mass-bound-eq-321), [§9.5](#95-jeffreys-loss-in-the-hypercone-eq-322)) | `test_t21_mass_bound` |
@@ -1918,9 +1919,19 @@ wrong difference of divergences.
 estimated separately. Catches `x'` drawn at `σ_eff` instead of `σ`, or a prior predictive
 in place of the posterior predictive.
 
-**T18 — `p_lat` reference.** In the binomial model at `(N, M) = (1, 1)`, `p_lat`
-matches Tanaka's closed form [recalled; CITATION NEEDED] (OQ-11), on the binomial build of
-the second eye test (§5.3). It waits until the reference is pinned.
+**T18 — `p_lat` reference.** One Bernoulli observation, one to predict, `θ ∈ [0, 1]`:
+the latent information prior puts mass 3/10 on `θ = 0` and on `θ = 1`, and 2/5 on
+`θ = ½` [read: Tanaka 2014, Thm 4]. A grid that contains these three points has the same
+optimum, so on Komaki's 11 points and on a 101-point grid `build_plat` returns these
+weights. Its conditional mutual information is then `log(5/4) ≈ 0.223` nats, which equals
+the minimax one-step risk [read: Tanaka 2014 §2.2, `log((2a+1)/(a+1))` at
+`a = 1/3`][^5-tanaka]. The build is the binomial one of the second eye test (§5.3).
+Catches a wrong difference of divergences, or a stopping rule that halts short of the
+optimum.
+
+[^5-tanaka]: Theorem 4 reads "log 5" in the text extracted from the arXiv PDF. The
+    conditional mutual information of the stated prior, computed directly, is
+    `log(5/4)`, as the minimax risk requires; the test uses `log(5/4)`.
 
 **T19 — Mis-budgeted `p*`.** (a) `p*_M` built at `σ/√M` equals `p*` built for budget `M`,
 same code path and grid. (b) Scored at budget `M`, its `R` matches `p*`'s. (c) In the 1-D
@@ -2061,8 +2072,8 @@ ratification.
   constant cross-section. T6 and T21 at `D ∈ {6, 11, 26}` in the hypercone. T7b and T7c at
   small `(D, N)`. T9 and T11 over the `D`-sweep. T12 at the frozen cells of §5.5. T13(e)
   at one curvature cell. T15(e), T15(f) and T23 at the cheap cell. T16 at
-  `N ∈ {0, 1, 4}` in the 1-D bounded channel and at the cheap cell. T18 once its
-  reference is pinned. The experiment script runs every cell of the sweep.
+  `N ∈ {0, 1, 4}` in the 1-D bounded channel and at the cheap cell. T18 on its two
+  Bernoulli grids. The experiment script runs every cell of the sweep.
 
 ### 5.5 AtomicPriors.jl reference fixtures
 
@@ -2213,8 +2224,8 @@ Computed and not kept in the table: the per-draw score arrays, the grids, and th
 7. Budget against ordering: `delta_R_pref` in the cones and, per ranking, in exp-decay
    (§3.5, §3.7).
 8. The two terms of §3.3 and the calibration histogram.
-9. Test results: T0–T17 and T19–T23, pass or fail with the tolerances achieved, and the
-   joint-width ratio of T22(d); T18 once its reference is pinned.
+9. Test results: T0–T23, pass or fail with the tolerances achieved, and the joint-width
+   ratio of T22(d).
 10. Notes: the §3.7 reading per protagonist and group of rows (supported, refuted, or not
     a test), solver caveats (OQ-1), and anything surprising.
 
@@ -2260,12 +2271,12 @@ revision log and the git history.
   frozen as a fixture, which checks the port's mixing near the edges (§5.5, T12(e)).
 - **OQ-7 — Julia as a dependency.** AtomicPriors.jl generates the frozen fixtures of §5.5
   at dev time, so pytest never imports Julia, and supplies `p*` above `D_switch` (OQ-1).
-  Julia ≥ 1.6 stays outside the uv environment. [TODO] `README.md`'s *Local setup* does
-  not yet mention it.
+  Julia ≥ 1.6 stays outside the uv environment; `README.md`'s *Local setup* lists it as
+  optional.
 - **OQ-8 — Rankings for `p_ref` in exp-decay** ([§4.2](#42-prior-construction)). Slowest
   rate first and fastest rate first. The stiffest Fisher direction is a third ranking
-  where it integrates to a coordinate: always at `D = 2`, and at `D ≥ 3` where a
-  numerical check passes.
+  where it integrates to a coordinate: always at `D = 2`, and almost nowhere at `D = 3`
+  and `D = 4`, so only at `D = 2`.
 - **OQ-9 — Exp-decay's parameter range** ([§4.1](#41-model-families)). The box
   `[−1, 3]`, wider than the observation window on both sides, as the main setting; the
   box `[0, log 5]`, which matches the window, as a control in which no rate can leave it.
@@ -2273,8 +2284,8 @@ revision log and the git history.
   each eigenvalue's square root times the chord of `Θ` along its eigenvector, compared
   with geodesic widths at `D = 2` (T22(d)).
 - **OQ-11 — External references for `p_lat`** (P18, T18). Tanaka 2014's closed form
-  for T18 [recalled; CITATION NEEDED], so T18 waits on the citation; Komaki 2011 Fig. 1
-  for a second eye test ([§5.3](#53-eye-test-manual-gate-before-the-full-suite)).
+  at `(N, M) = (1, 1)` for T18 [read: Tanaka 2014, Thm 4]; Komaki 2011 Fig. 1 for a second
+  eye test ([§5.3](#53-eye-test-manual-gate-before-the-full-suite)).
 - **OQ-12 — The curvature knob's map** ([§4.1](#41-model-families)). A local warp that
   narrows the angle of one base vertex inside a ball of radius `ρ` and is the identity
   outside it, so that `√det g`, and with it Jeffreys, is unchanged away from the vertex.
@@ -2310,6 +2321,9 @@ revision log and the git history.
   [doi:10.1016/j.jspi.2011.06.009](https://doi.org/10.1016/j.jspi.2011.06.009); copy in
   `resources/komaki.pdf`. The latent information prior `p_lat` and its minimaxity
   ([§2.2](#22-the-cast)).
+- Tanaka, F. (2014). An analytic example of latent information prior.
+  [arXiv:1410.2961](https://arxiv.org/abs/1410.2961). The closed-form `p_lat` for one
+  Bernoulli observation and one to predict (Thm 4), behind T18 ([§5.2](#52-test-descriptions)).
 - Fogel, Y. & Feder, M. (2024). Combining batch and online prediction. *IEEE ISIT
   Workshops*, 1–6.
   [doi:10.1109/ISIT-W61686.2024.10591756](https://doi.org/10.1109/ISIT-W61686.2024.10591756);
@@ -3664,3 +3678,15 @@ since about 20 atoms lie along `θ_1` at the base cell.
 
 The warning callouts of §4–§7 are removed. Downstream: no test or implementation exists
 yet.
+
+### 2026-11-20 — Refinement (§4.2, §5, §6.4, §7, §8; the last two pieces)
+
+At MB's request. MB has read the red in §1–§3, which is removed; the status of §1, §1.2, §2
+and §3 stays `draft` until MB sets it. T18 now has its reference: Tanaka 2014 (Thm 4) gives
+`p_lat` at `(N, M) = (1, 1)` in the Bernoulli model, mass 3/10 at `θ = 0` and `θ = 1` and
+2/5 at `½`. The conditional information is `log(5/4)`, computed directly, where the
+extracted text of the theorem reads "log 5" (`[^5-tanaka]`). Added to §8; P18 and T18 are
+filled. The stiffest-direction ranking does not integrate at `D = 3` and `D = 4`
+(`notes/spec-002-stiffest-ranking/frobenius_check.py`), so it is run at `D = 2` only (§4.2,
+OQ-8). §4 no longer lists anything that waits. OQ-7's `[TODO]` is resolved: `README.md`'s
+*Local setup* now lists Julia as optional.
