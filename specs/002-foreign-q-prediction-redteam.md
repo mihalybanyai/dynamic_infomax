@@ -549,8 +549,10 @@ per cell). The hypercone grid keeps two cells per cross-section axis only up to 
 > cross-section below resolution at every budget, so no direction crosses resolution
 > between budgets 1 and 16, and the effect the number measures vanishes by construction:
 > the re-run would not recompute it. The number is the reduced model's `4.82` minus the
-> hidden coordinates' own score, `0.39` (`cone_misbudget_full.py`). Raised again with MB;
-> open.
+> hidden coordinates' own score, `0.39` (`cone_misbudget_full.py`). Raised again with MB,
+> who decided to flag it: §2.2's footnote `[^2-reduced]` states that the number comes
+> from the reduced model, which to the order of Fisher information loses nothing
+> (`[^3-schur]`). Applied in the spec, commit 4c53aa5.
 
 - m4 — §2.2, mixing bound — "at most `log(1/w_k)` worse … on every nature" holds for `R_N`, not for `r_N` — add "on `R_N`".
 
