@@ -42,9 +42,9 @@ Four panels, (a) and (b) on top, (c) and (d) below:
       rates, a face of the ordered parameter set (spec §1.2); the lines of fixed theta_1 and fixed theta_2 cross it
       obliquely, so neither coordinate follows its long axis; and it narrows below
       the noise scale at both ends, a co-volume gradient that arises without a
-      built-in taper. The box theta in [-1, 3]^2 (from notes/q-family-viz/) and
-      sigma = 0.04 are illustrative; spec 002 has not fixed the exp-decay box
-      (OQ-9).
+      built-in taper. The parameter set is the whole manifold, held in A&M's compact
+      coordinate xi = e^{-k} in [0, 1]^2 (spec §4.1, OQ-9); sigma = 0.04 is
+      illustrative.
 
 The exp-decay model is the realistic curved instance of the panel-(a) ribbon; the
 hypercone (b) is its exactly-solvable caricature; (c) is (b) with the taper switched
@@ -199,19 +199,18 @@ axC.text(2.5, -0.74, "pipeline check T2 ($p^*$ need not tie)",
 
 # ---- panel (d): exp-decay with two rates, in prediction space --------------
 T_OBS = np.array([1.0, 5.0])        # observation times (spec pseudocode, m = 2)
-TH_LO, TH_HI = -1.0, 3.0            # illustrative box (OQ-9); decay rate k = e^{-theta}
+TH_LO, TH_HI = 0.0, 1.0             # the whole manifold in xi = e^{-k} (spec §4.1, OQ-9)
 SIGMA_D = 0.04                      # illustrative noise scale
 
 
-def y_expdecay(th1, th2):
-    k1, k2 = np.exp(-th1), np.exp(-th2)
-    return np.stack([0.5 * (np.exp(-k1 * t) + np.exp(-k2 * t)) for t in T_OBS], -1)
+def y_expdecay(xi1, xi2):
+    return np.stack([0.5 * (xi1 ** t + xi2 ** t) for t in T_OBS], -1)   # A&M App. A.5
 
 
 s = np.linspace(TH_LO, TH_HI, 300)
 # the map is symmetric under swapping the rates; draw the half theta_1 <= theta_2
-edge1 = y_expdecay(np.full_like(s, TH_LO), s)          # theta_1 at its lower end
-edge2 = y_expdecay(s, np.full_like(s, TH_HI))          # theta_2 at its upper end
+edge1 = y_expdecay(np.full_like(s, TH_LO), s)          # faster rate decays at once (xi_1 = 0)
+edge2 = y_expdecay(s, np.full_like(s, TH_HI))          # slower rate never decays (xi_2 = 1)
 fold = y_expdecay(s[::-1], s[::-1])                    # equal rates
 axD.add_patch(Polygon(np.vstack([edge1, edge2, fold]), closed=True,
                       facecolor=IRREL, edgecolor="none", alpha=0.45))
@@ -223,8 +222,8 @@ for v in np.linspace(TH_LO, TH_HI, 9):
     P = y_expdecay(b, np.full_like(b, v))
     axD.plot(P[:, 0], P[:, 1], color="#8a8a8a", lw=0.9, ls="--")
 axD.plot(fold[:, 0], fold[:, 1], color="k", lw=1.6)
-axD.add_patch(plt.Circle((0.45, 0.12), SIGMA_D, fill=False, color=JEFF, lw=1.4))
-axD.text(0.50, 0.12, r"noise $\sigma$", color=JEFF, va="center", fontsize=9)
+axD.add_patch(plt.Circle((0.80, 0.12), SIGMA_D, fill=False, color=JEFF, lw=1.4))
+axD.text(0.85, 0.12, r"noise $\sigma$", color=JEFF, va="center", fontsize=9)
 axD.text(0.17, 0.06, "width < $\\sigma$", color="#555555", fontsize=8.5, ha="center")
 axD.text(0.84, 0.70, "width < $\\sigma$", color="#555555", fontsize=8.5, ha="right")
 axD.plot([], [], color=RELEVANT, label=r"$\theta_1$ (faster rate) fixed")

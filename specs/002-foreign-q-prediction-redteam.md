@@ -82,6 +82,17 @@ Two smaller points:
 - State whether `p_U` enters the cones' verdict.
 - State the coordinates in which the hypercone natures live.
 
+> M: the rotation knob, or any kind of coordinate transform on the uniform is not actually useful - it can make the uniform fail tautologically, but we don't care about that. Let's keep the uniform and other coordinate-dependent priors as privileged-information competitors, so they will be good when the true coordinates come with the task description, but we note that they can be arbitrarily bad when thy don't. Simplifying the spec wherever possible is good anyways. 
+
+> C: Agreed. The rotation knob is dropped (§1.2, §4.1, §4.2, §4.3, P13, P15, T13(d),
+> T15(c), §5.4, §6.3). The cones then have no computable-ranking case, so §3.5 keeps the
+> handed-over case (the cones) and the unavailable one (exp-decay), and names the
+> computable case in one line as not run. `p_U`, `p_LN` and `p_ref` are recast as
+> privileged-information priors: good when the task supplies the coordinates or the
+> ranking, arbitrarily bad when it does not. No coordinate transform is used to make them
+> fail (§1.2, §2.2, §3.2, §3.5). §3.7 reads the cones against Jeffreys, with
+> `p_U = p_ref` as a reference point (see F3(b)). To apply in the spec (Stage 3b).
+
 ---
 
 ### F2: The ½-nat "at home" rule makes the §3.7 verdict ill-defined, and on one reading wrong [severity: high]
@@ -140,6 +151,18 @@ definition of foreign, yet §3.7's round-robin verdict counts them.
 - Report the round-robin verdict separately for the worlds of deployable priors and for
   the worlds of budget-dependent relatives.
 
+> M: drop any thresholding everywhere. for each prior, report a heatmap where axes are breadth and best rival's mismatch, as per the chat about this. This would be in addition to the full result matrix, as a visual aid to draw conclusions. Again, simplicity is good.
+
+> C: Agreed (chat). Every threshold goes, the ½-nat home rule included (§2.3, §2.5,
+> §3.7, §4.5, T22(a), `at_home` in §6.3); (c) is resolved by dropping it on both scores.
+> One comparison set throughout, §2.4's: only the row's own prior is left out. The worlds
+> of `p*`'s relatives (`p*_{N/10}`, `p*_{10N}`, `p_lat`, `p_proj`, `p_LN^*`) are reported
+> as a group of their own (d). New figure in §6.1, beside the full table: per prior and
+> score, one point per row at breadth `I_q/C_N` against the best rival's mismatch (the
+> smallest mismatch among the other priors away in that row), coloured by the prior's
+> signed gap to that rival; each fixed nature's points joined into a track across `D`;
+> relatives' worlds marked. To apply in the spec (Stage 3b).
+
 ---
 
 ### F3: The body and the §0.1 human summary disagree on five points [severity: medium]
@@ -157,6 +180,16 @@ reasonable "as a belief prior" in a novel scenario. Body:
   would read as evidence for budget-consciousness, weakens the body's case for `p*`.
 - No verdict is defined for the principle.
 
+> M: yeah, this is a bit all over the place, reflecting different stages of the spec's development. However, saying that it's not about p* being a good epistemic prior is flat out wrong, as the fact that with privileged information (knowing how to match nature's mixture in advance) it can be beaten is uninteresting - the question is exactly if it's a good deployable epistemic prior in complex/realistic enough problems or not. And indeed not all of the text agrees about the importance of other budget-conscious priors, I see the goal of the spec being primarily about assessing p*, and secondarily about assessing the budget principle. All text should be easy enough to smooth out this way.
+
+> C: Agreed; the body changes and §0.1 stands. §0.2 drops "not 'is `p*` a good epistemic
+> prior'": the question is whether `p*` is a good deployable belief prior in problems
+> where privileged information is unavailable. The aims are stated once, in §0.2 and the
+> §2 opening: first `p*`, then the budget principle. §3.7 gives a verdict per
+> budget-conscious prior, `p*` first. A lead that several of them share counts for the
+> principle, and the pairwise gaps decide whether it is `p*`'s own (§2.4, §3.6 point 2,
+> §3.7). To apply in the spec (Stage 3b).
+
 (b) *Constructing uniform and reference priors.* §0.1 point 4: in complex scenarios a
 uniform or reference prior "is not in general possible to construct, at least not in a
 parametrisation-independent way". Body:
@@ -169,17 +202,51 @@ parametrisation-independent way". Body:
 - `p_U`'s parametrisation is never varied in exp-decay (log-rates only), and the cones'
   rotation does not vary it in effect (F1).
 
+  > M: again, the text may be a bit all over the place, but p_U is constructible in the sense that you can construct any mathematical object by saying it's the number 4, and not caring if it doesn't end up being that. What 3.2 is trying to say is that p_U and p_ref are privileged-information priors, so they are just points of reference (ha), instead of equal-footing competitors. The wording could be smoother I guess. And the practical side of this is resolved by the resolution of F1.
+
+  > C: Agreed; the body changes. §2.2, §3.2 and §3.5 describe `p_U`, `p_LN` and `p_ref` as
+  > privileged-information priors, which take their coordinates or ranking from the task:
+  > reference points, not equal-footing competitors. F1 removes the coordinate
+  > transforms. MB accepted in chat ("Yes, all"): §2.4's gap splits into the gap to
+  > Jeffreys, the one deployable prior that needs nothing beyond the likelihood, on which
+  > the verdict of §3.7 rests, and the gap to the best privileged-information prior,
+  > reported as what the task's coordinates or ranking would buy (§2.4, §3.7, §6.3).
+  > To apply in the spec (Stage 3b).
+
 (c) *RL and Bayesian inference.* §0.1 point 2: no principle "is offered by either RL or
 Bayesian inference". Body: the ranked reference prior, a Bayesian construction, is
 presented as a budget-free route that may "do the job" (§3.5, §3.6 point 5). RL does not
 appear in the body.
 
+> M: ok that's weird, the reference prior is not a Bayesian construction but an information-theoretic one, innit?
+
+> C: Chat. Explained: both. The reference prior maximises the information the data give
+> about `θ`, in the limit of infinitely many repetitions [read: Bernardo 2005, preprint
+> pp. 15–16]: an information-theoretic criterion, proposed within Bayesian statistics
+> because coherence alone does not fix the prior. It is `p*`'s criterion at infinite
+> budget, plus a ranking, so it does not contradict §0.1 point 2. MB accepted ("Yes,
+> all"): §3.5 states this in its core text, not only in `[^3-lineage]`; RL stays in §0.1.
+> To apply in the spec (Stage 3b).
+
 (d) *Betting.* §0.1 point 1 names Kelly betting games. Outside §0.1, betting appears only
 in references to spec 001; the body never states log-loss's link to betting.
+
+> M: reworded 0.1 slightly, not elaborating on the connection to betting is fine otherwise, but maybe it's worth a footnote
+
+> C: Agreed. A footnote at the first use of `R_N` (§2.1) states the link: under log-loss,
+> `R_N` is the shortfall in log-wealth of a Kelly bettor who bets with `m_π` against one
+> who knows `θ` [recalled: Cover & Thomas, ch. 6; spec 001]. MB's rewording of §0.1
+> point 1 is in the working tree. To apply in the spec (Stage 3b).
 
 (e) *A body point missing from §0.1.* The "decisive comparison" is `p*` against `p_ref`
 under at least two rankings in exp-decay, with the cones as a control in which ranking is
 free (§3.5, §3.7).
+
+> M: yeah in the light of everything above we definitely shouldn't say this is the decisive comparison. 
+
+> C: Agreed. "Decisive comparison" goes wherever it appears (§3.5, §3.7 and elsewhere).
+> `p*` against `p_ref` is one comparison among the others, against a
+> privileged-information reference point (F3(b)). To apply in the spec (Stage 3b).
 
 **What would resolve it**: The human decides which side changes. Work that depends on (a),
 such as a verdict for budget-consciousness as a principle, waits for that decision.
@@ -229,6 +296,20 @@ same geometry predicts the trend:
   is negligible, and record the clipped fraction per draw.
 - State what the few-rates trend can show, given (d).
 
+> M: rewrite it in such a way that there are a lot of unresolvable dims to begin with (also unresolvable together), and all models receive privileged info about which to ignore, and as this privileged info is supplied less, they get worse (or not), and the underlying nature doesn't change. Fixed spectrum can be left out of this.
+
+> C: Agreed (chat). Question 3 is rebuilt on nested models (§2.3, §4.3, §5, §6). Nature
+> lives once in the largest model, `D_max = 26`, with one fixed law. The agent's model
+> frees the first `D` directions and fixes the rest at a reference value, so less
+> privileged information means larger `D`; the data space, the oracle and the floor never
+> change. The ignored directions must be jointly irrelevant, `Σ_{μ>D} L_μ² ≪ 1`, so in
+> the hypercone question 3 runs at fall-off `φ < 1`. Each curve is shown beside the
+> submodel's own floor: an oracle that knows `θ` but fixes the ignored directions. In
+> exp-decay the few-rates nature is already nested: every model with `D ≥ D_0`
+> components represents it exactly, and `D_0` is the privileged information. The fixed
+> spectrum leaves the spec (MB accepted in chat, "Yes, all"), so (b) and (c) lapse; its
+> bulk role is filled by `p_U`'s and `p_LN`'s own worlds. To apply in the spec (Stage 3b).
+
 ---
 
 ### F5: "Settled by theorem" sets aside the empirical fact the theorem needs [severity: medium]
@@ -261,6 +342,16 @@ same geometry predicts the trend:
 - Mark a cell settled only when `R − C_N` exceeds its Monte-Carlo error plus the grid's
   capacity gap (the maximum of `R_N^θ(p*) − C_N` over off-grid states).
 
+> M: yes: do not exclude cells, also as per F2, labeling them as theorem-driven is a good idea, they can show up on the results that way (also as per the chat about this). Inclusion of the MC error is a good idea
+
+> C: Agreed (chat). No cell is set aside (§2.3, §3.7, §4.5, T22(b)). A cell where a
+> prior's redundancy exceeds `C_N` is labelled "beyond the cap": `p*`'s win there is
+> guaranteed by (3.1.1), and the size of the loss is the finding. Such cells sit above
+> the line `C_N(1 − x)` on F2's map. A claim that `p*` leads within the cap is stated over
+> the other cells, and the exchange uses every cell. The label requires `R − C_N` to
+> exceed its Monte-Carlo error plus the capacity gap of the candidate set (the largest
+> `R_N^θ(p*) − C_N` over states off it). To apply in the spec (Stage 3b).
+
 ---
 
 ### F6: The `p_proj`-adversarial corner runs outside hyperribbon geometry [severity: medium]
@@ -281,6 +372,18 @@ no new model"), §4.1 (curvature knob), §5.4 (curvature cells at σ = 0.1, `W =
 **What would resolve it**: Restate §3.4's claim for the cells as run. Alternatively, put
 the warp where the cross-section is sub-resolution: a smaller ρ with a stated halo
 argument, or fall-off `φ < 1` so that only the first cross-section direction is resolved.
+
+> M: well it is a question, if it's the sharpest, I'm not sure. p_proj is a conceptual cousin of p*, so deciding between the two is interesting, but as empiricism is so hard to begin with, not the most pressing maybe. But we should be as consistent as we can nevertheless, but I don't quite understand the proposed solution here. Can't we just choose a parametrisation that works better?
+
+> C: Chat. Explained: a reparametrisation moves neither `p*` nor `p_proj`; the geometry
+> has to change. The vertex must be visible to the data, with the faces that meet there
+> wider than the noise, while the other directions stay sloppy. MB accepted ("Yes,
+> all"): the curvature cells run at fall-off `φ = 0.05` besides `σ = 0.1` and `W = 5`.
+> The first cross-section direction is then resolved (about 10 Fisher lengths at the
+> base) and holds the vertex, while the rest stay jointly irrelevant (`Σ L_μ² ≈ 0.25`,
+> about 0.03 nats). §3.4's claim is restated for these cells (§3.4, §4.1, §5.4), and
+> §0.2's "the sharpest question" becomes a plainer description of `p_proj` as `p*`'s
+> conceptual cousin. To apply in the spec (Stage 3b).
 
 ---
 
@@ -309,6 +412,13 @@ ordered-group construction; settled by reading Berger, Bernardo & Sun 2009 on se
 groups]. Otherwise, state that the two-group version keeps conditional-Jeffreys bias in
 the rest, and read `δR(p*, p_ref)` with that in mind.
 
+> M: again, calling this the decisive comparison is a relic of the past, should be removed. Otherwise, this does not seem to be a problem really? Why is it bad that p_ref shares a lot with p_J here? Stating it is of course good.
+
+> C: Agreed. "Decisive" goes (F3(e)). Otherwise no defect: §3.5 and §4.2 state that in
+> exp-decay the two-group `p_ref` ranks one order statistic and keeps conditional
+> Jeffreys on the other rates, so `δR(p*, p_ref)` compares `p*` with a prior that is
+> partly Jeffreys. No sequential construction. To apply in the spec (Stage 3b).
+
 ---
 
 ### F8: The wide box's slow face is a resolvable artificial edge [severity: medium]
@@ -336,6 +446,21 @@ unit from `k = 0` at the sweep's smallest `σ_eff`. For one component that means
 `θ_max ≈ 6.3` at `σ_eff = 0.1` and `θ_max ≈ 7.3` at 0.035 (reviewer's estimate, from
 `‖k·t‖/σ_eff ≤ 0.3`). Alternatively, use A&M's compact coordinate
 `φ_μ = e^{−k_μ} ∈ [0, 1]` [read: A&M App. A.5].
+
+> M: both solutions seem fine to me. We previously decided against A&M's construction here, and I'm not actually sure why.
+
+> C: Chat. Explained: OQ-9 set aside the unbounded range because uniform in log-rate is
+> improper on `ℝ^D` and a grid needs a cut-off anyway. After F1 neither holds: `p_U` can
+> be uniform in A&M's compact coordinate `φ_μ = e^{−k_μ} ∈ [0, 1]`, where it is proper
+> (an exponential law on each rate, `k ∼ Exp(1)`), and candidate sets on `[0, 1]^D` need
+> no cut-off. MB accepted ("Yes, all"): exp-decay's `Θ` is the ordered part of
+> `[0, 1]^D` in `φ` (written `ξ` in the spec, where `φ` is the fall-off), so the box is the whole manifold and has no artificial faces at any
+> `σ_eff`. `p_U` is uniform in `φ`; `p_LN` stays A&M's normal law in `θ` on `ℝ`; the
+> matched-box control becomes the window's range in `φ`, `[e^{−1}, e^{−1/5}]`; §5.5's
+> bridge to AtomicPriors.jl, whose `yexp` already uses `e^{−k}` on `[0, 1]`, needs no
+> change of variables (§1.1, §1.2, §4.1, §4.2, §4.3, §5.5, OQ-9, and the geometry
+> figure's panel (d)). Jeffreys' normalisability on the whole manifold stays a `[guess]`,
+> checked by T4. To apply in the spec (Stage 3b).
 
 ---
 
@@ -386,22 +511,143 @@ per cell). The hypercone grid keeps two cells per cross-section axis only up to 
 - Evaluate T3 at off-grid states.
 - Route Jeffreys through extended precision, or cap its `D`.
 
+> M: let's do these
+
+> C: Agreed (chat). (1) A coverage table in §4 says which priors are built for which
+> model and `D`. §2.4's gaps, the round robin and `q̄` are formed on the cast common to
+> each `D`, and each trend in `D` is shown twice: with the full cast up to `D = 4`, and
+> with the cast present at every `D`. (2) The priors built by Blahut–Arimoto use a
+> candidate set placed by Fisher distance instead of the uniform grid: spacing at most 0.5
+> Fisher lengths at the cell's `σ_eff`, from AtomicPriors.jl's `mitchell` sampler seeded
+> with the faces of `Θ`. Where that is infeasible, the cell goes to the atomic path. (3)
+> T3 checks the equalizer at states off the candidate set. (4) Jeffreys uses
+> AtomicPriors.jl's extended-precision or near-Vandermonde routines (`src/mod/ymap.jl`).
+> `p_lat` goes beyond the grid only if AtomicPriors.jl gains its conditional objective;
+> otherwise the table says where it stops. To apply in the spec (Stage 3b).
+
 ## Minor
 
 - m1 — §0.2 against the §2 opening — §0 names `p_proj` and `p_lat` beside `p*` but never `p_LN^*`, which §2 counts as the fourth budget-dependent protagonist — §0 is `reviewed`, so this is for the human's next pass.
+
+> M: add it
+
+> C: Agreed. §0.2 names `p_LN^*` with the other budget-conscious priors. To apply in the spec (Stage 3b).
+
 - m2 — `[^0-matched]`, §1.2 (*Ordered rates*, pull saturation, *Fall-off*), the §2.2 table (`p_proj`), `[^2-fixed]`, `[^3-slab]`, §3.4 item 1 — the `[read: …]` tags cite `redteam-conc04`, a review that red-teams may not open. The underlying sources do say what is claimed: A&M Fig. 1 caption; Mattingly p. 1763, fn. ∥; A&M App. A.1; Quinn §5.2 ("zero-dimensional points usually have finite weight"); `cone_pstar.out` (3.75) — cite them directly, and show `[^0-matched]`'s deconvolution argument or tag it `[recalled]`.
+
+> M: cite directly
+
+> C: Agreed. Each tag cites the original source, after checking that it says what is
+> claimed; `[^0-matched]`'s argument is shown or tagged `[recalled]`. To apply in the spec (Stage 3b).
+
 - m3 — §2.2, *Too coarse* — "4.4 nats at budget 16" comes from the reduced cone at σ = 1, `N = 16`, where §1.2 says the cross-section is resolved beyond `W/4` and the reduced model ignores what those data say about `θ_1` (note §3.3, *Limits*) — flag the number as outside the reduced model's range, or recompute it.
+
+> M: can we recompute it?
+
+> C: Chat. MB accepted ("Yes, all") a re-run with `σ = 8` and `W = 400`. Not applied in
+> Stage 3b. On reading the note's script (`cone_misbudget.py`), that scaling keeps the
+> cross-section below resolution at every budget, so no direction crosses resolution
+> between budgets 1 and 16, and the effect the number measures vanishes by construction:
+> the re-run would not recompute it. The number is the reduced model's `4.82` minus the
+> hidden coordinates' own score, `0.39` (`cone_misbudget_full.py`). Raised again with MB;
+> open.
+
 - m4 — §2.2, mixing bound — "at most `log(1/w_k)` worse … on every nature" holds for `R_N`, not for `r_N` — add "on `R_N`".
+
+> M: yes
+
+> C: Agreed. §2.2 adds "on `R_N`". To apply in the spec (Stage 3b).
+
 - m5 — §3.3 — "exact … in the limit where `y(θ)` is linear and the prior flat over the posterior's extent": in that limit both posteriors coincide and the mismatch is zero — call the split a heuristic wherever the mismatch is non-zero.
+
+> M: isn't it already applied by saying it's not exact there?
+
+> C: Chat. Explained: the text implies exactness for smooth priors, but in the limit it
+> names any two such priors give the same predictive, so there is nothing to split. MB
+> accepted ("Yes, all"): §3.3 says the split is exact for a linear model with Gaussian
+> prior and nature, which the cast does not contain, and a heuristic for every prior here.
+> To apply in the spec (Stage 3b).
+
 - m6 — §1.1 and §3.2 against §9.4 — `A(θ)` is described as "within one Fisher length", and §1.1 defines Fisher length as a path length `∫ds`, but §9.4 uses Euclidean distance in prediction space — use §9.4's wording throughout.
+
+> M: why is that wording better?
+
+> C: Chat. Explained: the bound needs predictions close in data space, since two
+> predictions differ in KL by `N‖Δy‖²/(2σ²)`, a straight-line distance; a Fisher length
+> is a path length along the manifold, never shorter, which gives a looser bound and, on
+> a folded manifold, misses states whose predictions are close. MB accepted ("Yes,
+> all"): §1.1, §3.2 and §4.5 use §9.4's wording. To apply in the spec (Stage 3b).
+
 - m7 — `[^4-stiff]` — "stiffest" is an eigenvector of the coordinate matrix `g(θ)`, so it depends on the Euclidean structure of `θ` (log-rates) and is undefined where the top eigenvalues cross — state it as a choice.
+
+> M: yeah ok
+
+> C: Agreed. `[^4-stiff]` states that "stiffest" depends on the Euclidean structure of
+> the log-rate coordinates and is undefined where the top eigenvalues cross: a choice, and
+> a coordinate-dependent ranking. To apply in the spec (Stage 3b).
+
 - m8 — §4.2 (`p_proj`) and T12(e) — the experiment uses the boxed port (MLE within `Θ`), but T12(e) checks only the unboxed one — add a check of the boxed port (see also F8).
+
+> M: add it
+
+> C: Agreed; resolved through F8. With A&M's compact coordinate the box is the whole
+> manifold, so the boxed and unboxed ports coincide and T12(e) covers both. T12 also
+> checks that two independent chains give the same cloud in a two-sample test.
+> To apply in the spec (Stage 3b).
+
 - m9 — T2 — "`R(p_J) − R(p_U) = 0` exactly" cannot hold when `p_J` is normalised by quadrature — state a tolerance.
+
+> M: of course nothing ever is zero numerically - choose a reasonable tolaerance
+
+> C: Agreed. T2 asserts `|R(p_J) − R(p_U)| ≤ 10^{-6}` nats under common random numbers,
+> about ten times the error of the normalising quadrature (auto-chosen; please confirm).
+> To apply in the spec (Stage 3b).
+
 - m10 — T6 — "within `3(D−1)²/x_1³`, about 0.6 at `D = 26`": `3(D−1)²/x_1³ = 1.875`, and 0.6 is `(D−1)²/x_1³`. *Computed*: |mean deviation − `(D−1)/x_1`| = 0.418, 0.077 and 0.019 at `D = 26, 11, 6` — pick one tolerance.
+
+> M: which is the principled pick here?
+
+> C: Chat. Explained: `(D−1)²/x_1³`, the first term the expansion neglects; the mode's
+> exact root has exactly `−(D−1)²/x_1³` as its next term. Claude checked the reviewer's
+> deviations by quadrature: 0.019, 0.077 and 0.418 at `D = 6, 11, 26`, against bounds of
+> 0.025, 0.1 and 0.625. MB accepted ("Yes, all"): T6 uses that tolerance. To apply in the spec (Stage 3b).
+
 - m11 — T11 — asserts that `I_{p_proj}` "tracks" `I_{p*}`, a literature result on `ℝ^D` (Quinn Fig. 12), with no tolerance and on the box — give a tolerance and a box caveat, or move it to the report.
+
+> M: does checking a monotonic relationship only make sense here?
+
+> C: Chat. Explained: what holds by theorem is `I_{p_proj} ≤ I_{p*} = C_N`; "tracks
+> `I_{p*}`, far above Jeffreys" is a published result on `ℝ^D` (Quinn Fig. 12). MB
+> accepted ("Yes, all"): T11 asserts the inequality, and the tracking moves to the
+> report's A&M reproduction figure. To apply in the spec (Stage 3b).
+
 - m12 — T19(c) — "equality only at `M = N`" fails if two budgets both lie in the two-atom regime (`L ≲ 3.3`), where `p*_M = p*_N` — pin the channel length; the note's `L = 3` at `N = 1` is safe.
+
+> M: ok
+
+> C: Agreed. T19(c) pins the channel length at `L = 3` Fisher lengths at `N = 1`, as the
+> note does, so only `N = 1` lies in the two-atom regime. To apply in the spec (Stage 3b).
+
 - m13 — §5.3, acceptance — "`I_{p_J}` falls" is asserted for `D ∈ {1, …, 4}`, but A&M state only that `p*` is flat "once `d > 3`" and that Jeffreys declines with `d` toward 26 [read: A&M §2.2] — state the expected shape for the `D` actually run.
+
+> M: do we actually know this?
+
+> C: Chat. Explained: no. A&M say `p*` captures the same information "once d > 3" and
+> that the scores "prefer models with d ≤ 3" [read: A&M §2.2, text on Fig. 5], so on
+> `D ≤ 4` Jeffreys may still be rising. MB accepted ("Yes, all"): on the grid range the
+> eye test accepts what holds by theorem, `I_{p*} ≥ I_{p_J}` and `B(p*) ≈ 0 ≤ B(p_J)`;
+> the shape (`p*` flat, Jeffreys falling) is accepted only on the range extended toward
+> `D = 26` (§5.3). To apply in the spec (Stage 3b).
+
 - m14 — §9.5 — the validity condition `θ_1 ≫ Dσ/√N` fails at both check points (`θ_1 ≈ 41` at `D = 26`; `θ_1 ≈ 43 < D = 100`, where the correction is 2.6 nats) — call the agreement empirical outside the stated range.
+
+> M: I actually have no idea what the significance of this is
+
+> C: Chat. Explained: low. (3.2.2) holds only for `θ_1 ≫ Dσ/√N`, and the check points at
+> `D = 26` and `100` violate it, so agreement there is luck rather than a check of the
+> derivation, and a mismatch would fail the test for the wrong reason. MB accepted ("Yes,
+> all"): T21(c) is asserted at `D ∈ {6, 11}`, and §9.5 reports `D = 26` and `100` as
+> observed agreement. To apply in the spec (Stage 3b).
 
 ## What the spec gets right
 

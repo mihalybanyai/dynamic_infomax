@@ -68,10 +68,12 @@ squared widths measures.
 ### Deployable prior
 
 A prior an agent can actually adopt before seeing data, using only the model and the
-data budget, without knowing [nature's](#nature) distribution. In spec 002, the "deployable
-non-infomax" priors are the standard defaults ([Jeffreys](#jeffreys-prior), uniform-`θ`, log-normal), with
-`p_proj` and the ranked [reference prior](#reference-prior) `p_ref` added to the headline lineup. The matched prior `q̄` is not deployable: it
-requires knowing nature.
+data budget, without knowing [nature's](#nature) distribution. In spec 002,
+[Jeffreys](#jeffreys-prior) is the deployable prior that needs nothing beyond the
+likelihood. Uniform, log-normal and the ranked [reference prior](#reference-prior) `p_ref`
+are deployable only given coordinates or a ranking that the task supplies: spec 002 calls
+them privileged-information priors and reads them as reference points, not as competitors
+on equal footing. The matched prior `q̄` is not deployable: it requires knowing nature.
 
 ### Effective dimensionality
 
