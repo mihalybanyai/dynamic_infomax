@@ -299,6 +299,11 @@ a conceptual core in one file with the algorithm, the tests and the report in si
 files, or the revision log moved out of the spec. To be considered later, together with
 "Revise write-math-spec skill after first 3 specs", since it changes the spec format.
 
+*2026-11-21.* After re-reviewing the spec post red-team, MB sharpened the point: the
+problem is less the length of the text than the number of concepts and technical details,
+which is too large for a review to be useful. Splitting the text alone would not fix that;
+a spec may need to carry fewer concepts, or be split by concern.
+
 ## Resolved / dismissed
 
 <!-- Entries move here when closed, with a one-line resolution note. -->
