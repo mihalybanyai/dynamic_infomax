@@ -91,7 +91,7 @@ Two smaller points:
 > privileged-information priors: good when the task supplies the coordinates or the
 > ranking, arbitrarily bad when it does not. No coordinate transform is used to make them
 > fail (§1.2, §2.2, §3.2, §3.5). §3.7 reads the cones against Jeffreys, with
-> `p_U = p_ref` as a reference point (see F3(b)). To apply in the spec (Stage 3b).
+> `p_U = p_ref` as a reference point (see F3(b)). Applied in the spec, commit e8ba196.
 
 ---
 
@@ -161,7 +161,7 @@ definition of foreign, yet §3.7's round-robin verdict counts them.
 > score, one point per row at breadth `I_q/C_N` against the best rival's mismatch (the
 > smallest mismatch among the other priors away in that row), coloured by the prior's
 > signed gap to that rival; each fixed nature's points joined into a track across `D`;
-> relatives' worlds marked. To apply in the spec (Stage 3b).
+> relatives' worlds marked. Applied in the spec, commit e8ba196.
 
 ---
 
@@ -188,7 +188,7 @@ reasonable "as a belief prior" in a novel scenario. Body:
 > §2 opening: first `p*`, then the budget principle. §3.7 gives a verdict per
 > budget-conscious prior, `p*` first. A lead that several of them share counts for the
 > principle, and the pairwise gaps decide whether it is `p*`'s own (§2.4, §3.6 point 2,
-> §3.7). To apply in the spec (Stage 3b).
+> §3.7). Applied in the spec, commit e8ba196.
 
 (b) *Constructing uniform and reference priors.* §0.1 point 4: in complex scenarios a
 uniform or reference prior "is not in general possible to construct, at least not in a
@@ -211,7 +211,7 @@ parametrisation-independent way". Body:
   > Jeffreys, the one deployable prior that needs nothing beyond the likelihood, on which
   > the verdict of §3.7 rests, and the gap to the best privileged-information prior,
   > reported as what the task's coordinates or ranking would buy (§2.4, §3.7, §6.3).
-  > To apply in the spec (Stage 3b).
+  > Applied in the spec, commit e8ba196.
 
 (c) *RL and Bayesian inference.* §0.1 point 2: no principle "is offered by either RL or
 Bayesian inference". Body: the ranked reference prior, a Bayesian construction, is
@@ -226,7 +226,7 @@ appear in the body.
 > because coherence alone does not fix the prior. It is `p*`'s criterion at infinite
 > budget, plus a ranking, so it does not contradict §0.1 point 2. MB accepted ("Yes,
 > all"): §3.5 states this in its core text, not only in `[^3-lineage]`; RL stays in §0.1.
-> To apply in the spec (Stage 3b).
+> Applied in the spec, commit e8ba196.
 
 (d) *Betting.* §0.1 point 1 names Kelly betting games. Outside §0.1, betting appears only
 in references to spec 001; the body never states log-loss's link to betting.
@@ -236,7 +236,7 @@ in references to spec 001; the body never states log-loss's link to betting.
 > C: Agreed. A footnote at the first use of `R_N` (§2.1) states the link: under log-loss,
 > `R_N` is the shortfall in log-wealth of a Kelly bettor who bets with `m_π` against one
 > who knows `θ` [recalled: Cover & Thomas, ch. 6; spec 001]. MB's rewording of §0.1
-> point 1 is in the working tree. To apply in the spec (Stage 3b).
+> point 1 is in the working tree. Applied in the spec, commit e8ba196.
 
 (e) *A body point missing from §0.1.* The "decisive comparison" is `p*` against `p_ref`
 under at least two rankings in exp-decay, with the cones as a control in which ranking is
@@ -246,7 +246,7 @@ free (§3.5, §3.7).
 
 > C: Agreed. "Decisive comparison" goes wherever it appears (§3.5, §3.7 and elsewhere).
 > `p*` against `p_ref` is one comparison among the others, against a
-> privileged-information reference point (F3(b)). To apply in the spec (Stage 3b).
+> privileged-information reference point (F3(b)). Applied in the spec, commit e8ba196.
 
 **What would resolve it**: The human decides which side changes. Work that depends on (a),
 such as a verdict for budget-consciousness as a principle, waits for that decision.
@@ -308,7 +308,7 @@ same geometry predicts the trend:
 > exp-decay the few-rates nature is already nested: every model with `D ≥ D_0`
 > components represents it exactly, and `D_0` is the privileged information. The fixed
 > spectrum leaves the spec (MB accepted in chat, "Yes, all"), so (b) and (c) lapse; its
-> bulk role is filled by `p_U`'s and `p_LN`'s own worlds. To apply in the spec (Stage 3b).
+> bulk role is filled by `p_U`'s and `p_LN`'s own worlds. Applied in the spec, commit e8ba196.
 
 ---
 
@@ -350,7 +350,7 @@ same geometry predicts the trend:
 > the line `C_N(1 − x)` on F2's map. A claim that `p*` leads within the cap is stated over
 > the other cells, and the exchange uses every cell. The label requires `R − C_N` to
 > exceed its Monte-Carlo error plus the capacity gap of the candidate set (the largest
-> `R_N^θ(p*) − C_N` over states off it). To apply in the spec (Stage 3b).
+> `R_N^θ(p*) − C_N` over states off it). Applied in the spec, commit e8ba196.
 
 ---
 
@@ -383,7 +383,7 @@ argument, or fall-off `φ < 1` so that only the first cross-section direction is
 > base) and holds the vertex, while the rest stay jointly irrelevant (`Σ L_μ² ≈ 0.25`,
 > about 0.03 nats). §3.4's claim is restated for these cells (§3.4, §4.1, §5.4), and
 > §0.2's "the sharpest question" becomes a plainer description of `p_proj` as `p*`'s
-> conceptual cousin. To apply in the spec (Stage 3b).
+> conceptual cousin. Applied in the spec, commit e8ba196.
 
 ---
 
@@ -417,7 +417,7 @@ the rest, and read `δR(p*, p_ref)` with that in mind.
 > C: Agreed. "Decisive" goes (F3(e)). Otherwise no defect: §3.5 and §4.2 state that in
 > exp-decay the two-group `p_ref` ranks one order statistic and keeps conditional
 > Jeffreys on the other rates, so `δR(p*, p_ref)` compares `p*` with a prior that is
-> partly Jeffreys. No sequential construction. To apply in the spec (Stage 3b).
+> partly Jeffreys. No sequential construction. Applied in the spec, commit e8ba196.
 
 ---
 
@@ -460,7 +460,7 @@ unit from `k = 0` at the sweep's smallest `σ_eff`. For one component that means
 > bridge to AtomicPriors.jl, whose `yexp` already uses `e^{−k}` on `[0, 1]`, needs no
 > change of variables (§1.1, §1.2, §4.1, §4.2, §4.3, §5.5, OQ-9, and the geometry
 > figure's panel (d)). Jeffreys' normalisability on the whole manifold stays a `[guess]`,
-> checked by T4. To apply in the spec (Stage 3b).
+> checked by T4. Applied in the spec, commit e8ba196.
 
 ---
 
@@ -523,7 +523,7 @@ per cell). The hypercone grid keeps two cells per cross-section axis only up to 
 > T3 checks the equalizer at states off the candidate set. (4) Jeffreys uses
 > AtomicPriors.jl's extended-precision or near-Vandermonde routines (`src/mod/ymap.jl`).
 > `p_lat` goes beyond the grid only if AtomicPriors.jl gains its conditional objective;
-> otherwise the table says where it stops. To apply in the spec (Stage 3b).
+> otherwise the table says where it stops. Applied in the spec, commit e8ba196.
 
 ## Minor
 
@@ -531,14 +531,14 @@ per cell). The hypercone grid keeps two cells per cross-section axis only up to 
 
 > M: add it
 
-> C: Agreed. §0.2 names `p_LN^*` with the other budget-conscious priors. To apply in the spec (Stage 3b).
+> C: Agreed. §0.2 names `p_LN^*` with the other budget-conscious priors. Applied in the spec, commit e8ba196.
 
 - m2 — `[^0-matched]`, §1.2 (*Ordered rates*, pull saturation, *Fall-off*), the §2.2 table (`p_proj`), `[^2-fixed]`, `[^3-slab]`, §3.4 item 1 — the `[read: …]` tags cite `redteam-conc04`, a review that red-teams may not open. The underlying sources do say what is claimed: A&M Fig. 1 caption; Mattingly p. 1763, fn. ∥; A&M App. A.1; Quinn §5.2 ("zero-dimensional points usually have finite weight"); `cone_pstar.out` (3.75) — cite them directly, and show `[^0-matched]`'s deconvolution argument or tag it `[recalled]`.
 
 > M: cite directly
 
 > C: Agreed. Each tag cites the original source, after checking that it says what is
-> claimed; `[^0-matched]`'s argument is shown or tagged `[recalled]`. To apply in the spec (Stage 3b).
+> claimed; `[^0-matched]`'s argument is shown or tagged `[recalled]`. Applied in the spec, commit e8ba196.
 
 - m3 — §2.2, *Too coarse* — "4.4 nats at budget 16" comes from the reduced cone at σ = 1, `N = 16`, where §1.2 says the cross-section is resolved beyond `W/4` and the reduced model ignores what those data say about `θ_1` (note §3.3, *Limits*) — flag the number as outside the reduced model's range, or recompute it.
 
@@ -556,7 +556,7 @@ per cell). The hypercone grid keeps two cells per cross-section axis only up to 
 
 > M: yes
 
-> C: Agreed. §2.2 adds "on `R_N`". To apply in the spec (Stage 3b).
+> C: Agreed. §2.2 adds "on `R_N`". Applied in the spec, commit e8ba196.
 
 - m5 — §3.3 — "exact … in the limit where `y(θ)` is linear and the prior flat over the posterior's extent": in that limit both posteriors coincide and the mismatch is zero — call the split a heuristic wherever the mismatch is non-zero.
 
@@ -566,7 +566,7 @@ per cell). The hypercone grid keeps two cells per cross-section axis only up to 
 > names any two such priors give the same predictive, so there is nothing to split. MB
 > accepted ("Yes, all"): §3.3 says the split is exact for a linear model with Gaussian
 > prior and nature, which the cast does not contain, and a heuristic for every prior here.
-> To apply in the spec (Stage 3b).
+> Applied in the spec, commit e8ba196.
 
 - m6 — §1.1 and §3.2 against §9.4 — `A(θ)` is described as "within one Fisher length", and §1.1 defines Fisher length as a path length `∫ds`, but §9.4 uses Euclidean distance in prediction space — use §9.4's wording throughout.
 
@@ -576,7 +576,7 @@ per cell). The hypercone grid keeps two cells per cross-section axis only up to 
 > predictions differ in KL by `N‖Δy‖²/(2σ²)`, a straight-line distance; a Fisher length
 > is a path length along the manifold, never shorter, which gives a looser bound and, on
 > a folded manifold, misses states whose predictions are close. MB accepted ("Yes,
-> all"): §1.1, §3.2 and §4.5 use §9.4's wording. To apply in the spec (Stage 3b).
+> all"): §1.1, §3.2 and §4.5 use §9.4's wording. Applied in the spec, commit e8ba196.
 
 - m7 — `[^4-stiff]` — "stiffest" is an eigenvector of the coordinate matrix `g(θ)`, so it depends on the Euclidean structure of `θ` (log-rates) and is undefined where the top eigenvalues cross — state it as a choice.
 
@@ -584,7 +584,7 @@ per cell). The hypercone grid keeps two cells per cross-section axis only up to 
 
 > C: Agreed. `[^4-stiff]` states that "stiffest" depends on the Euclidean structure of
 > the log-rate coordinates and is undefined where the top eigenvalues cross: a choice, and
-> a coordinate-dependent ranking. To apply in the spec (Stage 3b).
+> a coordinate-dependent ranking. Applied in the spec, commit e8ba196.
 
 - m8 — §4.2 (`p_proj`) and T12(e) — the experiment uses the boxed port (MLE within `Θ`), but T12(e) checks only the unboxed one — add a check of the boxed port (see also F8).
 
@@ -593,7 +593,7 @@ per cell). The hypercone grid keeps two cells per cross-section axis only up to 
 > C: Agreed; resolved through F8. With A&M's compact coordinate the box is the whole
 > manifold, so the boxed and unboxed ports coincide and T12(e) covers both. T12 also
 > checks that two independent chains give the same cloud in a two-sample test.
-> To apply in the spec (Stage 3b).
+> Applied in the spec, commit e8ba196.
 
 - m9 — T2 — "`R(p_J) − R(p_U) = 0` exactly" cannot hold when `p_J` is normalised by quadrature — state a tolerance.
 
@@ -601,7 +601,7 @@ per cell). The hypercone grid keeps two cells per cross-section axis only up to 
 
 > C: Agreed. T2 asserts `|R(p_J) − R(p_U)| ≤ 10^{-6}` nats under common random numbers,
 > about ten times the error of the normalising quadrature (auto-chosen; please confirm).
-> To apply in the spec (Stage 3b).
+> Applied in the spec, commit e8ba196.
 
 - m10 — T6 — "within `3(D−1)²/x_1³`, about 0.6 at `D = 26`": `3(D−1)²/x_1³ = 1.875`, and 0.6 is `(D−1)²/x_1³`. *Computed*: |mean deviation − `(D−1)/x_1`| = 0.418, 0.077 and 0.019 at `D = 26, 11, 6` — pick one tolerance.
 
@@ -610,7 +610,7 @@ per cell). The hypercone grid keeps two cells per cross-section axis only up to 
 > C: Chat. Explained: `(D−1)²/x_1³`, the first term the expansion neglects; the mode's
 > exact root has exactly `−(D−1)²/x_1³` as its next term. Claude checked the reviewer's
 > deviations by quadrature: 0.019, 0.077 and 0.418 at `D = 6, 11, 26`, against bounds of
-> 0.025, 0.1 and 0.625. MB accepted ("Yes, all"): T6 uses that tolerance. To apply in the spec (Stage 3b).
+> 0.025, 0.1 and 0.625. MB accepted ("Yes, all"): T6 uses that tolerance. Applied in the spec, commit e8ba196.
 
 - m11 — T11 — asserts that `I_{p_proj}` "tracks" `I_{p*}`, a literature result on `ℝ^D` (Quinn Fig. 12), with no tolerance and on the box — give a tolerance and a box caveat, or move it to the report.
 
@@ -619,14 +619,14 @@ per cell). The hypercone grid keeps two cells per cross-section axis only up to 
 > C: Chat. Explained: what holds by theorem is `I_{p_proj} ≤ I_{p*} = C_N`; "tracks
 > `I_{p*}`, far above Jeffreys" is a published result on `ℝ^D` (Quinn Fig. 12). MB
 > accepted ("Yes, all"): T11 asserts the inequality, and the tracking moves to the
-> report's A&M reproduction figure. To apply in the spec (Stage 3b).
+> report's A&M reproduction figure. Applied in the spec, commit e8ba196.
 
 - m12 — T19(c) — "equality only at `M = N`" fails if two budgets both lie in the two-atom regime (`L ≲ 3.3`), where `p*_M = p*_N` — pin the channel length; the note's `L = 3` at `N = 1` is safe.
 
 > M: ok
 
 > C: Agreed. T19(c) pins the channel length at `L = 3` Fisher lengths at `N = 1`, as the
-> note does, so only `N = 1` lies in the two-atom regime. To apply in the spec (Stage 3b).
+> note does, so only `N = 1` lies in the two-atom regime. Applied in the spec, commit e8ba196.
 
 - m13 — §5.3, acceptance — "`I_{p_J}` falls" is asserted for `D ∈ {1, …, 4}`, but A&M state only that `p*` is flat "once `d > 3`" and that Jeffreys declines with `d` toward 26 [read: A&M §2.2] — state the expected shape for the `D` actually run.
 
@@ -637,7 +637,7 @@ per cell). The hypercone grid keeps two cells per cross-section axis only up to 
 > `D ≤ 4` Jeffreys may still be rising. MB accepted ("Yes, all"): on the grid range the
 > eye test accepts what holds by theorem, `I_{p*} ≥ I_{p_J}` and `B(p*) ≈ 0 ≤ B(p_J)`;
 > the shape (`p*` flat, Jeffreys falling) is accepted only on the range extended toward
-> `D = 26` (§5.3). To apply in the spec (Stage 3b).
+> `D = 26` (§5.3). Applied in the spec, commit e8ba196.
 
 - m14 — §9.5 — the validity condition `θ_1 ≫ Dσ/√N` fails at both check points (`θ_1 ≈ 41` at `D = 26`; `θ_1 ≈ 43 < D = 100`, where the correction is 2.6 nats) — call the agreement empirical outside the stated range.
 
@@ -647,7 +647,7 @@ per cell). The hypercone grid keeps two cells per cross-section axis only up to 
 > `D = 26` and `100` violate it, so agreement there is luck rather than a check of the
 > derivation, and a mismatch would fail the test for the wrong reason. MB accepted ("Yes,
 > all"): T21(c) is asserted at `D ∈ {6, 11}`, and §9.5 reports `D = 26` and `100` as
-> observed agreement. To apply in the spec (Stage 3b).
+> observed agreement. Applied in the spec, commit e8ba196.
 
 ## What the spec gets right
 
