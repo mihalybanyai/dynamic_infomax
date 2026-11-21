@@ -2,17 +2,17 @@
 
 | Section | Status | Date |
 |---|---|---|
-| [0. Context](#0-context) | draft | — |
-| [1. Setup](#1-setup) | draft | — |
-| [1.2 Generative model](#12-generative-model) | draft | — |
-| [2. Objective](#2-objective) | draft | — |
-| [3. The case for transfer (and how it could fail)](#3-the-case-for-transfer-and-how-it-could-fail) | draft | — |
-| [4. Algorithm](#4-algorithm) | draft | — |
-| [5. Properties to verify](#5-properties-to-verify) | draft | — |
-| [6. Report](#6-report) | draft | — |
-| [7. Open questions](#7-open-questions) | draft | — |
-| [8. References](#8-references) | draft | — |
-| [9. Derivations](#9-derivations) | draft | — |
+| [0. Context](#0-context) | reviewed | 261121 |
+| [1. Setup](#1-setup) | reviewed | 261121 |
+| [1.2 Generative model](#12-generative-model) | reviewed | 261121 |
+| [2. Objective](#2-objective) | reviewed | 261121 |
+| [3. The case for transfer (and how it could fail)](#3-the-case-for-transfer-and-how-it-could-fail) | reviewed | 261121 |
+| [4. Algorithm](#4-algorithm) | reviewed | 261121 |
+| [5. Properties to verify](#5-properties-to-verify) | reviewed | 261121 |
+| [6. Report](#6-report) | reviewed | 261121 |
+| [7. Open questions](#7-open-questions) | reviewed | 261121 |
+| [8. References](#8-references) | reviewed | 261121 |
+| [9. Derivations](#9-derivations) | reviewed | 261121 |
 | [10. Revision log](#10-revision-log) | n/a | — |
 
 ## 0. Context
@@ -30,9 +30,9 @@
 
 ### 0.2 Introduction
 
-**What this spec tests.** <span style="color: red">Whether the infomax prior `p*` is a good deployable belief prior: whether it predicts held-out data from a
+**What this spec tests.** Whether the infomax prior `p*` is a good deployable belief prior: whether it predicts held-out data from a
 *foreign* [nature](../GLOSSARY.md#nature) `q` better than the other priors an agent could adopt ([deployable priors](../GLOSSARY.md#deployable-prior), the [MDL](../GLOSSARY.md#minimum-description-length-mdl) prior `p_proj` and the other budget-conscious priors), in
-high-dimensional [sloppy models](../GLOSSARY.md#sloppy-model), under a [strictly proper score](../GLOSSARY.md#proper-scoring-rule). Secondarily, whether the budget-conscious priors as a family do, which tests the budget principle itself.</span> *Foreign* means
+high-dimensional [sloppy models](../GLOSSARY.md#sloppy-model), under a [strictly proper score](../GLOSSARY.md#proper-scoring-rule). Secondarily, whether the budget-conscious priors as a family do, which tests the budget principle itself. *Foreign* means
 that `q` is chosen independently of the agent's prior. The sign of the answer is open;
 the spec fixes how it is measured.
 
@@ -85,15 +85,15 @@ a co-volume pathology that `p*` is structurally less sensitive to? And does `p*`
 advantage transfer to held-out predictive accuracy under a foreign `q`, scored by a
 proper rule?
 
-<span style="color: red">That some prior beats `p*` is not in question. Under a strictly proper score, any prior
+That some prior beats `p*` is not in question. Under a strictly proper score, any prior
 whose [Bayes mixture](../GLOSSARY.md#bayes-mixture) matches nature's data distribution beats it[^0-matched], by
 the compensation identity ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss)), but building that prior needs knowledge of nature that no agent has in advance.
-The question is whether `p*`, a design object by construction, is a good *deployable* belief prior in problems too complex for privileged information: about nature, about the right coordinates, or about which directions matter.</span>
+The question is whether `p*`, a design object by construction, is a good *deployable* belief prior in problems too complex for privileged information: about nature, about the right coordinates, or about which directions matter.
 
 **Why transfer could hold: an asymmetry.** Jeffreys' bias is a fixed property of its posterior: it appears whatever generated the data, and it grows with
 the number of parameters `D`. Jeffreys' worst-case bias pressure exceeds 500 bits at
 `D=26` in A&M's exponential-decay model, and is about 55 bits in their hypercone model
-(both in [§1.2](#12-generative-model)) [read: A&M §3; App. A.1]. Log-normal degrades too [read: A&M §2.2]. <span style="color: red">`p_U` and `p_ref` are a different case: they take their coordinates or their ranking from the task, so they are as good as what the task supplies, and arbitrarily bad without it ([§2.2](#22-the-cast), [§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d), *Scope*).</span> `p*`'s lack of bias is
+(both in [§1.2](#12-generative-model)) [read: A&M §3; App. A.1]. Log-normal degrades too [read: A&M §2.2]. `p_U` and `p_ref` are a different case: they take their coordinates or their ranking from the task, so they are as good as what the task supplies, and arbitrarily bad without it ([§2.2](#22-the-cast), [§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d), *Scope*). `p*`'s lack of bias is
 shown only on its own data. Against a foreign `q`, its loss is capped by the
 [channel capacity](../GLOSSARY.md#channel-capacity), which stays roughly flat as `D` grows where the added directions are jointly irrelevant ([§1.2](#12-generative-model))
 ([§3.1](#31-the-one-guarantee-worst-case-over-q)). Whether its advantage survives
@@ -109,12 +109,12 @@ Jeffreys ignores it, being the infinite-data limit [read: A&M §2.1], and that i
 choice the high-dimensional setting punishes. `p*` is one budget-dependent prior; the
 projected-ML / [NML](../GLOSSARY.md#normalized-maximum-likelihood-nml) prior `p_proj` is another, carried as **co-protagonist**.
 The two solve the same [universal-coding](../GLOSSARY.md#universal-coding) problem under different
-[regret](../GLOSSARY.md#redundancy-and-regret) notions and nearly coincide on hyperribbons. <span style="color: red">`p_proj` is thus `p*`'s conceptual cousin, and one comparison asks
+[regret](../GLOSSARY.md#redundancy-and-regret) notions and nearly coincide on hyperribbons. `p_proj` is thus `p*`'s conceptual cousin, and one comparison asks
 whether the harder capacity object buys anything over the cheap MDL one on held-out
-prediction</span> ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)). A third, `p_lat`, is the
+prediction ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)). A third, `p_lat`, is the
 minimax prior for predicting observation `N+1` after `N` (Komaki 2011; proven for finite outcome spaces, [§2.2](#22-the-cast)); it comes with a
 second score, the one-step `r_N`, next to the cumulative `R_N`
-([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss), [§2.2](#22-the-cast)). <span style="color: red">A fourth, `p_LN^*`, is the log-normal tuned to the budget: it adapts to the budget but can be neither discrete nor weighted to the edges ([§2.2](#22-the-cast)). Together with `p*` these are the budget-conscious priors whose record tests the budget principle.</span>
+([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss), [§2.2](#22-the-cast)). A fourth, `p_LN^*`, is the log-normal tuned to the budget: it adapts to the budget but can be neither discrete nor weighted to the edges ([§2.2](#22-the-cast)). Together with `p*` these are the budget-conscious priors whose record tests the budget principle.
 Mis-budgeted copies of `p*`, built for a tenth and for ten times the true budget, measure
 what knowing the budget is worth to an agent that commits to one prior
 ([§2.2](#22-the-cast)), such as an observer in the example who expects a flatmate to stay a year, when the flatmate leaves after a tenth of it.
@@ -275,7 +275,7 @@ what knowing the budget is worth to an agent that commits to one prior
 [^0-matched]: E.g. `q` itself. The matching prior is unique wherever the model is
     [identifiable](../GLOSSARY.md#identifiable-model): Gaussian noise blurs no two laws of
     the prediction `y(θ)` into one data marginal, so `m_π = m_q` forces the same law of
-    `y(θ)`<span style="color: red">: the noise's characteristic function has no zeros, so the marginal's characteristic function determines that of the law of `y(θ)`</span>. Ordering
+    `y(θ)`: the noise's characteristic function has no zeros, so the marginal's characteristic function determines that of the law of `y(θ)`. Ordering
     exp-decay's rates removes its swaps ([§1.2](#12-generative-model)); whether it is
     then identifiable at `D = m` is not checked.
 
@@ -286,7 +286,7 @@ what knowing the budget is worth to an agent that commits to one prior
 | Symbol | Meaning |
 |---|---|
 | `D` | Number of model parameters (the dimension being stressed); A&M's `d`. |
-| `θ ∈ Θ ⊂ ℝ^D` | Parameter vector; <span style="color: red">`Θ` the parameter set per model ([§4.1](#41-model-families)): a box in the cones. In exp-decay `θ_μ` is the log decay time and `Θ` the whole manifold, ordered, `θ_1 ≤ … ≤ θ_D` ([§1.2](#12-generative-model)); it is compact in A&M's coordinate `ξ_μ = e^{−k_μ} ∈ [0, 1]` (their `φ_μ`), which runs from instant decay (`ξ = 0`) to none (`ξ = 1`).</span> |
+| `θ ∈ Θ ⊂ ℝ^D` | Parameter vector; `Θ` the parameter set per model ([§4.1](#41-model-families)): a box in the cones. In exp-decay `θ_μ` is the log decay time and `Θ` the whole manifold, ordered, `θ_1 ≤ … ≤ θ_D` ([§1.2](#12-generative-model)); it is compact in A&M's coordinate `ξ_μ = e^{−k_μ} ∈ [0, 1]` (their `φ_μ`), which runs from instant decay (`ξ = 0`) to none (`ξ = 1`). |
 | `m` | Number of observation times, i.e. the dimension of each observation `x ∈ ℝ^m` (the number of observations is `N`). |
 | `y(θ) ∈ ℝ^m` | Prediction (mean-data) map; the model manifold is `{y(θ) : θ ∈ Θ}`. |
 | `σ` | Gaussian observation-noise scale. |
@@ -300,19 +300,19 @@ what knowing the budget is worth to an agent that commits to one prior
 | `φ` | Fall-off of the hypercone's irrelevant widths, `φ ∈ (0, 1]` ([§1.2](#12-generative-model)). |
 | `q` | Nature's distribution over `θ` (the *foreign* truth). |
 | `m_q(X_{1:N})` | Nature's `N`-fold data marginal `∫ p(X_{1:N}\|θ) q(dθ)`. |
-| `ν` | The nature of a cell: a prior's own world, a <span style="color: red">nested</span> nature or a stress nature ([§2.3](#23-the-natures)); it selects `q`. `m_ν` is its data marginal. |
-| `D_0` | Number of distinct rates of a few-rates nature, <span style="color: red">`D_0 ≤ D`</span> ([§2.3](#23-the-natures)). |
-| <span style="color: red">`D_max`</span> | <span style="color: red">Dimension of the model in which a nested nature lives; the agent's model frees `D ≤ D_max` of its directions ([§2.3](#23-the-natures)).</span> |
+| `ν` | The nature of a cell: a prior's own world, a nested nature or a stress nature ([§2.3](#23-the-natures)); it selects `q`. `m_ν` is its data marginal. |
+| `D_0` | Number of distinct rates of a few-rates nature, `D_0 ≤ D` ([§2.3](#23-the-natures)). |
+| `D_max` | Dimension of the model in which a nested nature lives; the agent's model frees `D ≤ D_max` of its directions ([§2.3](#23-the-natures)). |
 | `π` | Agent's prior, one of `{p*, p_lat, p_proj, p*_{N/10}, p*_{10N}, p_J, p_U, p_LN, p_ref}` or, in exp-decay, `p_LN^*`, with `q̄` as reference ceiling ([§2.2](#22-the-cast)). |
 | `p*` | Infomax ([capacity](../GLOSSARY.md#channel-capacity)-achieving) prior of the budget-`N` channel `θ→X_{1:N}`: `argmax_π I_π(Θ;X_{1:N})`, equivalently the single-observation achiever at noise `σ/√N` ([§4.2](#42-prior-construction)). Usually discrete[^1-discrete]. |
 | `p_proj` | Projected-ML / NML prior: the [pushforward](../GLOSSARY.md#pushforward) of the [NML distribution](../GLOSSARY.md#normalized-maximum-likelihood-nml) through the MLE map `θ̂(x)` ([§3.4](#34-the-second-protagonist-infomax-vs-mdl), [§4.2](#42-prior-construction)). |
 | `p_lat` | Latent information prior at `(N, 1)`: `argmax_π I_π(Θ;X_{N+1}\|X_{1:N})`, the minimax prior for the one-step score, proven for finite outcome spaces ([§2.2](#22-the-cast)). `p*` is the same construction at `(0, N)`. |
 | `p*_M` | Mis-budgeted `p*`: the `p*` of budget `M`, used at the true budget `N`. The cast carries `M = N/10` and `M = 10N`; Jeffreys is the `M → ∞` limit ([§2.2](#22-the-cast)). |
 | `p_J` | [Jeffreys prior](../GLOSSARY.md#jeffreys-prior) `∝ √{det g(θ)}`, normalised on `Θ`. |
-| `p_U` | Uniform on <span style="color: red">`Θ` in its own coordinates: in `θ` in the cones, in `ξ` in exp-decay, which gives each rate `k_μ ∼ Exp(1)` before ordering. A privileged-information prior ([§2.2](#22-the-cast)).</span> |
-| `p_LN` | Normal in `θ`, i.e. log-normal in the rate `k_μ = e^{-θ_μ}` (A&M Eq. 10): `∝ Π_μ e^{-(θ_μ-θ̄)²/2τ²}` (A&M's `σ̄` is `τ`). <span style="color: red">A privileged-information prior ([§2.2](#22-the-cast)).</span> |
+| `p_U` | Uniform on `Θ` in its own coordinates: in `θ` in the cones, in `ξ` in exp-decay, which gives each rate `k_μ ∼ Exp(1)` before ordering. A privileged-information prior ([§2.2](#22-the-cast)). |
+| `p_LN` | Normal in `θ`, i.e. log-normal in the rate `k_μ = e^{-θ_μ}` (A&M Eq. 10): `∝ Π_μ e^{-(θ_μ-θ̄)²/2τ²}` (A&M's `σ̄` is `τ`). A privileged-information prior ([§2.2](#22-the-cast)). |
 | `p_LN^*` | Budget-tuned log-normal: the `p_LN` family with `(θ̄, τ)` chosen to maximise `I_π(Θ;X_{1:N})`; exp-decay only ([§2.2](#22-the-cast), [§4.2](#42-prior-construction)). |
-| `p_ref` | [Reference prior](../GLOSSARY.md#reference-prior) with the relevant direction ranked first: the irrelevant directions are integrated out under their conditional prior before the relevant one gets its prior ([§3.5](#35-a-third-route-ordering-instead-of-budget), [§4.2](#42-prior-construction)). Closed form in the cones; in exp-decay, one per candidate ranking of OQ-8 ([§7](#7-open-questions)). <span style="color: red">A privileged-information prior: the ranking comes from the task ([§2.2](#22-the-cast)).</span> |
+| `p_ref` | [Reference prior](../GLOSSARY.md#reference-prior) with the relevant direction ranked first: the irrelevant directions are integrated out under their conditional prior before the relevant one gets its prior ([§3.5](#35-a-third-route-ordering-instead-of-budget), [§4.2](#42-prior-construction)). Closed form in the cones; in exp-decay, one per candidate ranking of OQ-8 ([§7](#7-open-questions)). A privileged-information prior: the ranking comes from the task ([§2.2](#22-the-cast)). |
 | `q̄` | Equal-weight average of all natures of [§2.3](#23-the-natures); reference ceiling only ([§2.5](#25-controls-the-ceiling-and-self-sampling)). |
 | `m_π(X_{1:N})` | Agent's Bayes mixture `∫ p(X_{1:N}\|θ) π(dθ)`. |
 | `π(θ\|X_{1:N})` | Posterior under prior `π`. |
@@ -325,9 +325,9 @@ what knowing the budget is worth to an agent that commits to one prior
 | `r_N^q(π)` | The one-step score: excess log-loss on `x'` given `X_{1:N}`, `= R_{N+1}^q(π) − R_N^q(π)` ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss)). |
 | `I_q` | Matched floor `I_q(Θ;X_{1:N})`: nature's own mutual information, prior-independent ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss)). |
 | `R_N^θ(π)` | Per-state redundancy `D_{KL}(p(X_{1:N}\|θ)‖m_π)`: the loss of `π` at state `θ`, that is, the score under a point nature at `θ`. `R_N^q(π)` is its average over `θ ∼ q` ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss), [§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)). |
-| `A(θ)` | The states indistinguishable from `θ`: those whose prediction lies within <span style="color: red">one noise unit of `y(θ)` in data space at budget `N`, `√N‖y(θ′) − y(θ)‖/σ ≤ 1`</span> ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)). |
+| `A(θ)` | The states indistinguishable from `θ`: those whose prediction lies within one noise unit of `y(θ)` in data space at budget `N`, `√N‖y(θ′) − y(θ)‖/σ ≤ 1` ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)). |
 | `Θ_π` | Covered set of `π`: the states where `R_N^θ(π) ≤ C_N` ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)). |
-| `G` | Per-axis <span style="color: red">resolution of the quadrature grids at small `D`; the priors built by Blahut–Arimoto use candidate sets placed by Fisher distance instead</span> ([§4.2](#42-prior-construction)). |
+| `G` | Per-axis resolution of the quadrature grids at small `D`; the priors built by Blahut–Arimoto use candidate sets placed by Fisher distance instead ([§4.2](#42-prior-construction)). |
 
 All logs in nats; bits `= nats/log 2` at report time.
 
@@ -445,7 +445,7 @@ base. This one factor is what punishes Jeffreys. Its mass piles at the base, and
 ([§9.2](#92-hypercone-posterior-deviation-eq-922)), *largest at the thin end*, where a
 foreign `q` can place data. The formula holds for `x_1² ≫ 4(D−1)`. Nearer the tip the pull saturates: it is 3.75
 at `x_1 = 3` and `D = 26`, where the formula gives 8.33
-(<span style="color: red">`notes/budget-value-of-information/cone_pstar.out`</span>). This `Δ`,
+(`notes/budget-value-of-information/cone_pstar.out`). This `Δ`,
 like every cone figure in this spec, is the `θ_1` component of the deviation of
 [§1.1](#11-notation). And the cone has one relevant direction only while `σ/√N ≥ 1`:
 each cross-section width is `(θ_1/W)·√N/σ`, so at `N = 16` and `σ = 1` the cross-section
@@ -465,18 +465,18 @@ realism. Exp-decay is the realistic instance.
 | Role | analytic caricature: closed forms | pipeline check (test T2, [§5.2](#52-test-descriptions)) | realism |
 | Co-volume gradient | `√det g ∝ θ_1^{D-1}` | none: `√det g` constant | yes, with Fisher eigenvalues spanning many orders [read: A&M §2.1, citing Transtrum et al. 2010] |
 | Relevant direction | `θ_1`, on a coordinate axis | `θ_1` | curved, off the axes |
-| Biased priors | Jeffreys only: uniform-`θ` projects to flat on `θ_1` | none: `p_J = p_U` [read: A&M App. A.1] | Jeffreys and log-normal [read: A&M §2.2]; <span style="color: red">uniform in `ξ`</span> [guess][^1-uniform] |
+| Biased priors | Jeffreys only: uniform-`θ` projects to flat on `θ_1` | none: `p_J = p_U` [read: A&M App. A.1] | Jeffreys and log-normal [read: A&M §2.2]; uniform in `ξ` [guess][^1-uniform] |
 
-**Ordered rates.** Exp-decay's components have equal shares, so swapping two of them leaves `y(θ)` unchanged. `Θ` is therefore restricted to ordered rates, `θ_1 ≤ θ_2 ≤ … ≤ θ_D`, as A&M and Mattingly et al. do [read: <span style="color: red">A&M Fig. 1 caption; Mattingly et al., footnote ∥</span>]. Each coordinate is then an order statistic, from the fastest rate `θ_1` to the slowest `θ_D`, and coinciding rates are faces of `Θ`: the manifold's edges. No score changes, since every prior and nature of the cast is symmetric under swaps. What changes is that a ranking can name a coordinate ([§3.5](#35-a-third-route-ordering-instead-of-budget)).
+**Ordered rates.** Exp-decay's components have equal shares, so swapping two of them leaves `y(θ)` unchanged. `Θ` is therefore restricted to ordered rates, `θ_1 ≤ θ_2 ≤ … ≤ θ_D`, as A&M and Mattingly et al. do [read: A&M Fig. 1 caption; Mattingly et al., footnote ∥]. Each coordinate is then an order statistic, from the fastest rate `θ_1` to the slowest `θ_D`, and coinciding rates are faces of `Θ`: the manifold's edges. No score changes, since every prior and nature of the cast is symmetric under swaps. What changes is that a ranking can name a coordinate ([§3.5](#35-a-third-route-ordering-instead-of-budget)).
 
-<span style="color: red">Two knobs</span> reshape the hypercone:
+Two knobs reshape the hypercone:
 
 - **Boundary curvature** sharpens a convex vertex, whose [noise halo](../GLOSSARY.md#noise-halo) `p_proj`
   over-weights [read: A&M App. A.3: `p_proj` "has extra weight on the edges"] while `p*`
   is expected to be unmoved [guess]. This is the axis on which the two are expected to
   differ ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)).
 
-- **Fall-off** `φ ∈ (0, 1]` shrinks each further irrelevant direction by a factor `φ`: `y_μ = r φ^{μ−2} θ_μ` for `μ ≥ 2`. At `φ = 1` this is the square cone, whose `D − 1` equal widths are jointly observable. For `φ < 1` the widths fall off geometrically and the cross-section stays jointly irrelevant, as in A&M's own variant [read: <span style="color: red">A&M App. A.1</span>]. `√det g ∝ θ_1^{D−1}` for every `φ`, so Jeffreys is the same prior throughout; what changes is what `p*` can see.
+- **Fall-off** `φ ∈ (0, 1]` shrinks each further irrelevant direction by a factor `φ`: `y_μ = r φ^{μ−2} θ_μ` for `μ ≥ 2`. At `φ = 1` this is the square cone, whose `D − 1` equal widths are jointly observable. For `φ < 1` the widths fall off geometrically and the cross-section stays jointly irrelevant, as in A&M's own variant [read: A&M App. A.1]. `√det g ∝ θ_1^{D−1}` for every `φ`, so Jeffreys is the same prior throughout; what changes is what `p*` can see.
 
 Exact maps, Fisher metrics and knob ranges are in [§4.1](#41-model-families).
 
@@ -563,22 +563,22 @@ asymmetry is a co-volume gradient that steepens with `D` against a cap `C_N` tha
 
 [^1-uniform]: A&M test Jeffreys, `p*` and log-normal, not uniform-`θ` [read: A&M §2.2,
     Figs. 3–5]; the claim is carried over from `notes/prediction_objective_for_priors.md`
-    §6.3<span style="color: red">, which concerns uniform in log-rates. For `p_U`, uniform in `ξ`, it is untested</span>. Settled by: adding `p_U` to the A&M Fig. 5 reproduction (test T9, [§5.2](#52-test-descriptions)).
+    §6.3, which concerns uniform in log-rates. For `p_U`, uniform in `ξ`, it is untested. Settled by: adding `p_U` to the A&M Fig. 5 reproduction (test T9, [§5.2](#52-test-descriptions)).
 
 ## 2. Objective
 
 Every prior is scored on two scores, each a held-out log-loss in excess of an oracle that
 knows `θ`: the cumulative `R_N` (the mainline) and the one-step `r_N`
 ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss)). The cast has four
-budget-dependent protagonists, `p*`, `p_lat`, `p_proj` and, in exp-decay, the budget-tuned log-normal `p_LN^*`, against <span style="color: red">Jeffreys, the privileged-information priors</span> and
-mis-budgeted copies of `p*` ([§2.2](#22-the-cast)). <span style="color: red">The verdict concerns `p*` first and the budget-conscious priors as a family second ([§3.7](#37-falsification)).</span> Every prior is scored in every other prior's
+budget-dependent protagonists, `p*`, `p_lat`, `p_proj` and, in exp-decay, the budget-tuned log-normal `p_LN^*`, against Jeffreys, the privileged-information priors and
+mis-budgeted copies of `p*` ([§2.2](#22-the-cast)). The verdict concerns `p*` first and the budget-conscious priors as a family second ([§3.7](#37-falsification)). Every prior is scored in every other prior's
 own world, with its own as the control ([§2.3](#23-the-natures)). No overall winner is declared
 ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)).
 
 ### 2.1 The scores: cumulative and one-step held-out log-loss
 
 The agent with prior `π` predicts through its [Bayes mixture](../GLOSSARY.md#bayes-mixture) `m_π`. The **cumulative
-score** is the [**redundancy**](../GLOSSARY.md#redundancy-and-regret) of `π` against a foreign nature `q`, over budget `N`<span style="color: red">[^2-kelly]</span>:
+score** is the [**redundancy**](../GLOSSARY.md#redundancy-and-regret) of `π` against a foreign nature `q`, over budget `N`[^2-kelly]:
 
 $$
 \begin{aligned}
@@ -690,7 +690,7 @@ unit tests (T4–T6, [§5.2](#52-test-descriptions)), not the reported numbers.
     only in simulation. On real data only the raw held-out log-likelihood can be
     computed, and its differences between priors equal the differences in excess.
 
-[^2-kelly]: <span style="color: red">Log-loss is also a betting score. A bettor who stakes on each next observation in proportion to `m_π`'s predictive (Kelly's rule) ends, in expectation and at fair odds, with `R_N^q(π)` nats less log-wealth than one who knows `θ` [recalled: Cover & Thomas, *Elements of Information Theory*, ch. 6]. This is the link to the betting games of spec 001.</span>
+[^2-kelly]: Log-loss is also a betting score. A bettor who stakes on each next observation in proportion to `m_π`'s predictive (Kelly's rule) ends, in expectation and at fair odds, with `R_N^q(π)` nats less log-wealth than one who knows `θ` [recalled: Cover & Thomas, *Elements of Information Theory*, ch. 6]. This is the link to the betting games of spec 001.
 
 [^2-onestep]: Apply (2.1.2) at budgets `N+1` and `N` and subtract. The chain rule for
     mutual information gives `I_q(Θ;X_{1:N+1}) − I_q(Θ;X_{1:N}) = I_q(Θ;X_{N+1}|X_{1:N})`, and
@@ -708,11 +708,11 @@ the one it is minimax for, and away on the other.
 |---|---|---|---|---|
 | `p*` | capacity prior of the budget-`N` channel, `argmax_π I_π(Θ;X_{1:N})`; Komaki's latent information prior at `(0, N)` | `R_N` | minimax for `R_N`, value `C_N` ([§3.1](#31-the-one-guarantee-worst-case-over-q)) | usually[^1-discrete] |
 | `p_lat` | latent information prior at `(N, 1)`, `argmax_π I_π(Θ;X_{N+1}\|X_{1:N})` [read: Komaki 2011 §3] | `r_N` | minimax for `r_N` for finite outcome spaces [read: Komaki 2011 Thm 2; Fogel & Feder 2024 Thm 1]; for Gaussian data expected but unproven [read: Komaki 2011 §4] | open; for some budgets near-full support [read: Fogel & Feder 2024 §VII] |
-| `p_proj` | [pushforward](../GLOSSARY.md#pushforward) of the [NML](../GLOSSARY.md#normalized-maximum-likelihood-nml) distribution through the MLE map ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)) | neither | NML is minimax for the pointwise regret of the `N`-sequence; `p_proj` for neither score | no, but with point masses on the lowest-dimensional edges [read: <span style="color: red">Quinn §5.2</span>] |
-| `p_LN^*` | the log-normal family of `p_LN` with `(θ̄, τ)` tuned to maximise `I_π(Θ;X_{1:N})`, in exp-decay only: a smooth prior adapted to the budget, with no atoms and no extra weight on the edges<span style="color: red">; like `p_LN`, it lives in A&M's log-rate coordinates</span> | neither | none | no |
+| `p_proj` | [pushforward](../GLOSSARY.md#pushforward) of the [NML](../GLOSSARY.md#normalized-maximum-likelihood-nml) distribution through the MLE map ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)) | neither | NML is minimax for the pointwise regret of the `N`-sequence; `p_proj` for neither score | no, but with point masses on the lowest-dimensional edges [read: Quinn §5.2] |
+| `p_LN^*` | the log-normal family of `p_LN` with `(θ̄, τ)` tuned to maximise `I_π(Θ;X_{1:N})`, in exp-decay only: a smooth prior adapted to the budget, with no atoms and no extra weight on the edges; like `p_LN`, it lives in A&M's log-rate coordinates | neither | none | no |
 | `p*_{N/10}`, `p*_{10N}` | `p*` built for a tenth or ten times the true budget: an agent that knows the construction but not its budget, and commits to one resolution | `R_M`, at the wrong budget | none at `N` | usually |
-| <span style="color: red">`p_J`</span> | <span style="color: red">the [deployable prior](../GLOSSARY.md#deployable-prior) that needs nothing beyond the likelihood: Jeffreys, unchanged by any reparametrisation</span> | — | none | no |
-| <span style="color: red">`p_U`, `p_LN`, `p_ref`</span> | <span style="color: red">**privileged-information priors**: deployable only given coordinates (uniform, log-normal) or a ranking (`p_ref`: closed form in the cones, one per OQ-8 ranking in exp-decay) supplied by the task. As good as what the task supplies and arbitrarily bad without it, so they are reference points rather than competitors on equal footing</span> | — | none | no |
+| `p_J` | the [deployable prior](../GLOSSARY.md#deployable-prior) that needs nothing beyond the likelihood: Jeffreys, unchanged by any reparametrisation | — | none | no |
+| `p_U`, `p_LN`, `p_ref` | **privileged-information priors**: deployable only given coordinates (uniform, log-normal) or a ranking (`p_ref`: closed form in the cones, one per OQ-8 ranking in exp-decay) supplied by the task. As good as what the task supplies and arbitrarily bad without it, so they are reference points rather than competitors on equal footing | — | none | no |
 | `q̄` | matched to the average of the swept natures | — | the ceiling on both scores ([§2.5](#25-controls-the-ceiling-and-self-sampling)) | — |
 
 `p*` and `p_lat` are two members of one family, maximising the information gained over two
@@ -724,7 +724,7 @@ budgets `N+1` and `N` ([§4.2](#42-prior-construction)).
 **Mis-budgeted `p*`.** They measure what knowing the budget is worth, for agents that
 commit to one prior. An agent that may instead mix the priors built for many budgets
 `N_k`, with weights `w_k`, does at most `log(1/w_k)` worse than `p*_{N_k}` at budget `N_k`
-on every [nature](../GLOSSARY.md#nature)<span style="color: red">, on `R_N`</span>, because its data marginal is at least
+on every [nature](../GLOSSARY.md#nature), on `R_N`, because its data marginal is at least
 `w_k·m_{p*_{N_k}}` everywhere. Against such an agent knowing `N` is worth a few nats
 ([`notes/budget-value-of-information.md`](../notes/budget-value-of-information.md) §2).
 The agent is mis-budgeted: it built `p*_M` for a budget `M` that is not the one it gets, and is scored at the true `N`. What a wrong resolution costs depends on the side and on the geometry (`notes/budget-value-of-information.md` §3):
@@ -734,7 +734,7 @@ The agent is mis-budgeted: it built `p*_M` for a budget `M` that is not the one 
   case in 1-D the loss grows linearly in `N/M` (that note's §3.1). In the reduced hypercone
   the coarser prior nonetheless wins on both natures computed, at every budget tested: at
   budget 16, `p*_1` beats `p*_{16}` by 4.4 nats on a nature uniform in the relevant
-  coordinate (its §3.3)<span style="color: red">[^2-reduced]</span>. A coarser prior winning is reported as a finding in its own right.
+  coordinate (its §3.3)[^2-reduced]. A coarser prior winning is reported as a finding in its own right.
 - *Too fine* (`M > N`): the prior tilts toward the states where more detail is resolvable
   at `M` than at `N`, the [co-volume](../GLOSSARY.md#co-volume) gradient of the directions
   that cross resolution between the two budgets. The tilt helps natures concentrated where
@@ -744,7 +744,7 @@ So the sign of the budget's value is a result, like every summary of
 [§2.4](#24-what-is-reported-and-what-cannot-be-asserted). Jeffreys is the `M → ∞` end of
 the fine side.
 
-[^2-reduced]: <span style="color: red">The number comes from the reduced cone, which ignores what the cross-section's data say about `θ_1`, and at `N = 16` the cross-section is resolved beyond `θ_1 = W/4` ([§1.2](#12-generative-model)). To the order of Fisher information this loses nothing: whatever the cross-section, the information left for `θ_1` is `σ^{-2}` (`[^3-schur]`), as in the reduced model. Beyond that order the effect is unchecked [guess]; the full cone at `D = 26` would settle it.</span>
+[^2-reduced]: The number comes from the reduced cone, which ignores what the cross-section's data say about `θ_1`, and at `N = 16` the cross-section is resolved beyond `θ_1 = W/4` ([§1.2](#12-generative-model)). To the order of Fisher information this loses nothing: whatever the cross-section, the information left for `θ_1` is `σ^{-2}` (`[^3-schur]`), as in the reduced model. Beyond that order the effect is unchecked [guess]; the full cone at `D = 26` would settle it.
 
 ### 2.3 The natures
 
@@ -769,7 +769,7 @@ open:
 2. *Exchange.* Does `π` lose less in the world of `π'` than `π'` loses in the world of
    `π`? KL divergence is not symmetric: one prior's mixture can cover another's cheaply
    without the reverse.
-3. *Invariance.* <span style="color: red">Does a prior's loss move as the agent is told less about which directions to ignore, while nature stays exactly fixed? Less privileged information means more modelled directions `D`, which nature knows nothing of.</span> This is the
+3. *Invariance.* Does a prior's loss move as the agent is told less about which directions to ignore, while nature stays exactly fixed? Less privileged information means more modelled directions `D`, which nature knows nothing of. This is the
    asymmetry of [§0](#0-context), asked of every prior alike.
 
 **The natures** are the rows of one table with a column per prior. Each cell holds the
@@ -783,7 +783,7 @@ prior's **mismatch**, its score minus the row's floor
   is the [self-sampling](../GLOSSARY.md#self-sampling) control
   ([§2.5](#25-controls-the-ceiling-and-self-sampling)) and a test of the pipeline, since
   no cell of a row may fall below it. The off-diagonal cells are the result.
-<span style="color: red">- **Nested natures** (question 3): nature lives once, in a model of dimension `D_max`,
+- **Nested natures** (question 3): nature lives once, in a model of dimension `D_max`,
   with one fixed law. The agent's model frees the first `D ≤ D_max` directions and fixes
   the rest at a reference value: the privileged information "these directions do not
   matter", of which less means larger `D`. The data space, the oracle and the floor never
@@ -798,7 +798,7 @@ prior's **mismatch**, its score minus the row's floor
     privileged information. Such a nature lies on the manifold's edges, where `p*` and
     `p_proj` keep weight.
 
-  What is read is each prior's loss against `D`.</span>
+  What is read is each prior's loss against `D`.
 - **Stress natures**, each declared with the prior it is aimed against and the mechanism
   ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)):
   - *a sharpened convex vertex, with nature on the faces next to it*: against `p_proj`,
@@ -807,11 +807,11 @@ prior's **mismatch**, its score minus the row's floor
   - *a smooth nature in the interior bulk*: against `p*`'s discreteness, and likely in
     favour of a `p_lat` with fuller support [guess].
 
-  A nature aimed against one prior may lie near another's home. <span style="color: red">The failure map of [§2.4](#24-what-is-reported-and-what-cannot-be-asserted) shows where each row lies.</span>
+  A nature aimed against one prior may lie near another's home. The failure map of [§2.4](#24-what-is-reported-and-what-cannot-be-asserted) shows where each row lies.
 
 **Reading the table** ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)). Along a row:
 the gaps between priors. Down a column: the largest and the mean mismatch. Per pair of
-priors: the two crossed cells. Per <span style="color: red">nested nature: the trend in `D`. No cell is set aside. The diagonal is zero by construction. A cell whose redundancy exceeds `C_N` is labelled *beyond the cap*: `p*` wins it by theorem, and the size of the loss is the finding ([§3.7](#37-falsification)). The worlds of `p*`'s relatives, the priors built from its construction or its objective (`p*_{N/10}`, `p*_{10N}`, `p_lat`, `p_proj`, `p_LN^*`), are read as a group of their own.</span> Neither column summary is neutral[^2-lean], so the table
+priors: the two crossed cells. Per nested nature: the trend in `D`. No cell is set aside. The diagonal is zero by construction. A cell whose redundancy exceeds `C_N` is labelled *beyond the cap*: `p*` wins it by theorem, and the size of the loss is the finding ([§3.7](#37-falsification)). The worlds of `p*`'s relatives, the priors built from its construction or its objective (`p*_{N/10}`, `p*_{10N}`, `p_lat`, `p_proj`, `p_LN^*`), are read as a group of their own. Neither column summary is neutral[^2-lean], so the table
 itself is the result. It is relative to the cast: another prior adds a row. And it is
 conditional: if nature is like this row, this prior loses this much. Which rows resemble
 real natures is outside this spec (`notes/parked_ideas.md`, *Benchmark natures*).
@@ -819,24 +819,24 @@ real natures is outside this spec (`notes/parked_ideas.md`, *Benchmark natures*)
 Parametrisations are pinned in [§4.3](#43-foreign-q-family). Each draw records
 its nature and its `θ`, so results split by nature and map over `Θ`.
 
-[^2-fixed]: Pinned in [§4.3](#43-foreign-q-family) (OQ-2). <span style="color: red">*Why nested.* A nature
+[^2-fixed]: Pinned in [§4.3](#43-foreign-q-family) (OQ-2). *Why nested.* A nature
     defined anew in each `D`-model must give the added directions values, and the values
     show in the data, so its data law drifts with `D`, by up to what the added directions
     carry, about `Σ_μ L_μ²/8` nats ([§1.2](#12-generative-model)). Directions that carry
     nothing would leave every posterior unchanged, Jeffreys' included, so they could not
-    test question 3 at all. Nesting removes the drift: nature is defined once.</span>
+    test question 3 at all. Nesting removes the drift: nature is defined once.
 
     *Few rates.* A `D`-component model produces fewer rates only by neutralising
     components: two rates coincide, or one leaves the observation window. Each time, a
     parameter direction stops moving the prediction at first order and the Fisher rank
-    drops, which makes the point an edge [read: <span style="color: red">A&M Fig. 2 caption</span>].
+    drops, which makes the point an edge [read: A&M Fig. 2 caption].
     `p*` keeps weight on edges for a different reason: along a sub-resolution direction
     the two ends are the most distinguishable points ([§1.2](#12-generative-model),
     footnote on corners). The two reasons meet in models built from interchangeable parts
     whose effect saturates [recalled: Transtrum's manifold-boundary reduction; Watanabe's
-    singular models], not in general: the hypercones' <span style="color: red">nested</span> natures are not on edges.
+    singular models], not in general: the hypercones' nested natures are not on edges.
 
-    *Hypercone.* <span style="color: red">In the equal-width cone the ignored directions are jointly observable ([§1.2](#12-generative-model)), so ignoring them costs the agent and question 3 is not asked there. Where the widths fall off geometrically, the cross-section's law should matter little [guess].</span>
+    *Hypercone.* In the equal-width cone the ignored directions are jointly observable ([§1.2](#12-generative-model)), so ignoring them costs the agent and question 3 is not asked there. Where the widths fall off geometrically, the cross-section's law should matter little [guess].
 
 [^2-lean]: The largest mismatch has the form of the minimax criterion that `p*` (on
     `R_N`) and `p_lat` (on `r_N`) are built for: by (2.1.2) and (3.1.1),
@@ -854,7 +854,7 @@ directions, for each model, `σ` and `N`.
 **Along a row** (one nature), per protagonist `π ∈ {p*, p_lat, p_proj}` and, in exp-decay, `p_LN^*`, and per score
 `S ∈ {R_N, r_N}`. Within a row, differences of scores are differences of mismatches.
 
-<span style="color: red">- **The gap to Jeffreys**, `Δ^J_S(π) = S(π) − S(p_J)`, the one deployable prior that
+- **The gap to Jeffreys**, `Δ^J_S(π) = S(π) − S(p_J)`, the one deployable prior that
   needs nothing beyond the likelihood. It is negative exactly when `π` beats Jeffreys, and
   it is not formed in Jeffreys' own world, where Jeffreys is at home. The verdict of
   [§3.7](#37-falsification) rests on it.
@@ -865,7 +865,7 @@ directions, for each model, `σ` and `N`.
   them[^2-max], and it reads what the task's coordinates or ranking would buy, not a
   contest on equal footing. In a privileged-information prior's own world that prior is
   left out of the minimum: it is at home, and `π` is compared with the priors that are
-  away like itself.</span>
+  away like itself.
 - **The pairwise gaps** between protagonists, `δS(p*, p_lat)`, `δS(p*, p_proj)` and
   `δS(p_lat, p_proj)`; in exp-decay also `δS(p*, p_LN^*)`.
 - For `p*` alone, **the gap to the best mis-budgeted `p*`**,
@@ -876,7 +876,7 @@ directions, for each model, `σ` and `N`.
 - For `p_LN^*` alone, **the gap to `p_LN`**, `S(p_LN^*) − S(p_LN)`: what tuning one smooth
   family to the budget is worth.
 
-<span style="color: red">**The failure map** (one prior, one score). Every row is a point. Its abscissa is the row's
+**The failure map** (one prior, one score). Every row is a point. Its abscissa is the row's
 *breadth* `x = I_q/C_N`, nature's own information as a share of the capacity: 0 for a
 nature on one distinguishable state, 1 for one as spread out as the least-favourable
 prior. Its ordinate is the *best rival's mismatch*, the smallest mismatch in that row
@@ -887,7 +887,7 @@ line: its mismatch is at most `C_N(1 − x)` (3.1.1), and the same line marks th
 beyond the cap on every map. Each nested nature's points are joined into a track across
 `D`, and relatives' worlds are marked. For `r_N` the map uses `r_N`'s floor and the
 conditional capacity that `p_lat` attains. The map is a reading aid beside the full table,
-not a summary of it.</span>
+not a summary of it.
 
 **Down a column** (one prior): its largest and its mean mismatch over the rows. Each prior
 of the cast has one row at home, where its mismatch is 0. Neither summary is neutral
@@ -899,16 +899,16 @@ of `π'` minus what `π'` loses in the world of `π`. For `R_N` it is
 `D_KL(m_{π'}‖m_π) − D_KL(m_π‖m_{π'})`; for `r_N`, the same difference of
 posterior-predictive mismatches. It is negative when `π` loses less away than `π'` does.
 
-**Across `D`** (a <span style="color: red">nested</span> nature): each prior's <span style="color: red">loss against `D`, beside the submodel's own floor</span>.
+**Across `D`** (a nested nature): each prior's loss against `D`, beside the submodel's own floor.
 
-<span style="color: red">Every reading is formed on the cast present at the cell's `D` ([§4.2](#42-prior-construction), *Coverage*). A trend in `D` is shown twice: with the full cast, as far as it is built, and with the cast present at every `D`, so that a prior dropping out cannot tilt the trend.</span>
+Every reading is formed on the cast present at the cell's `D` ([§4.2](#42-prior-construction), *Coverage*). A trend in `D` is shown twice: with the full cast, as far as it is built, and with the cast present at every `D`, so that a prior dropping out cannot tilt the trend.
 
 We **cannot** assert the sign of any of these, and must not: that a protagonist wins
 anywhere is the open question, and asserting it would make the experiment unfalsifiable
 ([§5](#5-properties-to-verify)). The test suite asserts only the *machinery*
 (decomposition, construction, controls), never the results.
 
-[^2-max]: Not `min_{π'} δS(π, π')`, which is the gap to the *worst* <span style="color: red">privileged-information</span> prior and is
+[^2-max]: Not `min_{π'} δS(π, π')`, which is the gap to the *worst* privileged-information prior and is
     negative whenever `π` beats any one of them. An earlier version of
     this spec used it (red-team report `specs/002-foreign-q-prediction-redteam01.md`,
     finding F1).
@@ -926,7 +926,7 @@ is minimised by matching `q̄`
 So no fixed prior, protagonists included, beats `q̄` on the row average, and "does `p*`
 beat `q̄`" is a non-question.
 
-`q̄` averages all rows of <span style="color: red">one cell's</span> table with equal weight<span style="color: red">, on the cast present at its `D`; the nested natures of question 3 form cells of their own</span>. A prior's mean mismatch then splits
+`q̄` averages all rows of one cell's table with equal weight, on the cast present at its `D`; the nested natures of question 3 form cells of their own. A prior's mean mismatch then splits
 exactly[^2-qbar]: `q̄`'s own mean mismatch, which any single prior must lose because the
 rows differ, plus the prior's mismatch to `q̄`. `q̄`'s mean is plotted as the **reference
 ceiling** for the column means of
@@ -937,7 +937,7 @@ weighting of natures is.
 **Self-sampling controls.** Each prior's own world is a row of the round robin
 ([§2.3](#23-the-natures)). There the prior is matched and attains the floor, so no other
 prior's mismatch in that row may be negative; the test suite asserts this (T20,
-[§5.2](#52-test-descriptions)). A protagonist whose lead appears only <span style="color: red">in its own world, or in its relatives' worlds ([§2.3](#23-the-natures)), is</span>
+[§5.2](#52-test-descriptions)). A protagonist whose lead appears only in its own world, or in its relatives' worlds ([§2.3](#23-the-natures)), is
 self-served: the [self-sampling](../GLOSSARY.md#self-sampling) failure that sank spec 001
 (finding F1 of `specs/001-infomax-betting-redteam_third.md`).
 
@@ -1001,7 +1001,7 @@ against Jeffreys alone (*Scope*, below).
 
 **Loss as missing mass.** Write `R_N^θ(π) = D_KL(p(X_{1:N}|θ)‖m_π)` for the loss of `π` at
 state `θ`, so that `R_N^q(π) = 𝔼_{θ∼q} R_N^θ(π)` (2.1.1). Let `A(θ)` be the states whose
-prediction lies within <span style="color: red">one noise unit of `y(θ)` in data space at budget `N`, `√N‖y(θ′) − y(θ)‖/σ ≤ 1`</span>: the states one experiment cannot reliably tell from `θ`. For every prior
+prediction lies within one noise unit of `y(θ)` in data space at budget `N`, `√N‖y(θ′) − y(θ)‖/σ ≤ 1`: the states one experiment cannot reliably tell from `θ`. For every prior
 ([§9.4](#94-the-mass-bound-eq-321)),
 
 $$
@@ -1074,7 +1074,7 @@ budget is predicted by the criterion of that note's §3.2, which
 
 - *Which priors.* The case is against `p_J`, whose mass per distinguishable state follows
   the co-volume. Log-normal degrades with `D` too [read: A&M §2.2], by a route this
-  section does not derive. <span style="color: red">`p_U` and `p_ref` are privileged-information priors ([§2.2](#22-the-cast)): they take their coordinates or their ranking from the task, so they are as good as what the task supplies, and arbitrarily bad without it. They are reference points, and no case is made against them here: in the cone neither weights the co-volume ([§1.2](#12-generative-model), table), and in exp-decay what `p_ref` lacks is a ranking the task does not supply</span>
+  section does not derive. `p_U` and `p_ref` are privileged-information priors ([§2.2](#22-the-cast)): they take their coordinates or their ranking from the task, so they are as good as what the task supplies, and arbitrarily bad without it. They are reference points, and no case is made against them here: in the cone neither weights the co-volume ([§1.2](#12-generative-model), table), and in exp-decay what `p_ref` lacks is a ranking the task does not supply
   ([§3.5](#35-a-third-route-ordering-instead-of-budget)).
 - *Which bias.* A flat loss profile is exactly zero bias pressure. For A&M's other
   measure, the posterior deviation `Δ`, it is only suggestive: in the equal-width cone
@@ -1093,7 +1093,7 @@ budget is predicted by the criterion of that note's §3.2, which
 [^3-slab]: This holds where the cross-section as a whole stays within about one Fisher
     length, as it does when the widths fall off geometrically (the sum of their squares
     converges). In the equal-width hypercone the `D − 1` irrelevant directions jointly
-    exceed it (<span style="color: red">[§1.2](#12-generative-model), *Irrelevant one by one, or jointly*</span>), which is why
+    exceed it ([§1.2](#12-generative-model), *Irrelevant one by one, or jointly*), which is why
     (3.2.2) uses the relevant datum alone.
 
 [^3-cb]: Settled by reading Clarke & Barron (1994), listed in [§8](#8-references) and not
@@ -1109,7 +1109,7 @@ budget is predicted by the criterion of that note's §3.2, which
 a prior moves the prediction from where the matched prior puts it, and how far it
 mis-states the spread. Approximate both posterior predictives as Gaussians,
 `m_π(x'|X_{1:N}) ≈ 𝒩(μ_π, Σ_π)` and `m_q(x'|X_{1:N}) ≈ 𝒩(μ_q, Σ_q)`, each with
-`Σ = σ²𝟙 + Cov[y(θ)|X_{1:N}]` under its own posterior. <span style="color: red">This is exact for a linear `y(θ)` with Gaussian prior and nature, which the cast does not contain, and a heuristic for every prior here; for the discrete `p*` the true predictive is a finite mixture.</span> The mismatch
+`Σ = σ²𝟙 + Cov[y(θ)|X_{1:N}]` under its own posterior. This is exact for a linear `y(θ)` with Gaussian prior and nature, which the cast does not contain, and a heuristic for every prior here; for the discrete `p*` the true predictive is a finite mixture. The mismatch
 is then the KL divergence between two Gaussians:
 
 $$
@@ -1171,7 +1171,7 @@ route. They are expected to nearly agree in exp-decay for two reasons:
    limit: Jeffreys, in the interior and in mutual information[^3-asymptotics]. That is the regime where every
    direction is resolved, far from this spec's. The
    worst-case bias keeps weight on the boundary for both (atoms for `p*`; point masses on the
-   lowest-dimensional edges for `p_proj` [read: <span style="color: red">Quinn §5.2</span>]), so the convergence is *not
+   lowest-dimensional edges for `p_proj` [read: Quinn §5.2]), so the convergence is *not
    uniform*: Jeffreys' worst-case bias pressure does not vanish as `σ→0` [read: A&M §2.1], the non-uniformity that the first corner below
    exploits.
 2. *In hyperribbon geometry at finite `σ`*, both weight the few stiff directions and collapse
@@ -1190,15 +1190,15 @@ over the cheap MDL one on held-out prediction** ([§3.7](#37-falsification)).
 **Where they part, and whether it is reachable here.** Besides the pushforward through the MLE, their structural difference is
 expected versus pointwise regret. NML weights by where the worst *individual* data land
 (the [noise halo](../GLOSSARY.md#noise-halo) just outside convex boundaries), `p*` by *expected* distinguishability
-(Fisher length). This yields two contrastive corners, **both reachable <span style="color: red">within the hypercone family</span>** ([§4.1](#41-model-families)), with no new model:
+(Fisher length). This yields two contrastive corners, **both reachable within the hypercone family** ([§4.1](#41-model-families)), with no new model:
 
 - *Adversarial to `p_proj`, benign for `p*`:* sharpen a **convex vertex** so the exterior
   halo piles up there, and score against a `q` on the interior or faces. NML over-weights
-  the halo-collecting vertex; `p*` is expected to be unmoved [guess]. **Easy**: <span style="color: red">the
+  the halo-collecting vertex; `p*` is expected to be unmoved [guess]. **Easy**: the
   cone's base corners are convex vertices, and the curvature knob sharpens one. A vertex is
   visible to the data only where the faces that meet there are resolved, so the curvature
   cells resolve the first cross-section direction and keep the others jointly irrelevant
-  ([§5.4](#54-sweep-design)): the vertex sits in a resolved face of a hyperribbon.</span>
+  ([§5.4](#54-sweep-design)): the vertex sits in a resolved face of a hyperribbon.
 - *Adversarial to `p*`, benign for `p_proj`:* a **smooth interior `q` finer than the atom
   spacing**, at moderate `σ`. `p*`'s discrete mixture ripples while `p_proj`'s cloud is
   smooth; the effect is generic but expected to be mild, because neighbouring atoms'
@@ -1226,27 +1226,27 @@ interest. The irrelevant directions get a prior conditional on the relevant one 
 integrated out; only then does the relevant direction get its prior, from that marginal
 model [read: Kass & Wasserman 1996 §3.5.2; Berger, Bernardo & Sun 2009 §1]. Their volume
 therefore never tilts it. `p_ref` is this prior with the relevant direction ranked
-first[^3-lineage]. <span style="color: red">The criterion is information-theoretic: `p_ref` maximises the information the data give about `θ`, `p*`'s own criterion, in the limit of unlimited data [read: Bernardo 2005, preprint pp. 15–16], and adds a ranking. It needs no budget because it assumes unlimited data.</span>
+first[^3-lineage]. The criterion is information-theoretic: `p_ref` maximises the information the data give about `θ`, `p*`'s own criterion, in the limit of unlimited data [read: Bernardo 2005, preprint pp. 15–16], and adds a ranking. It needs no budget because it assumes unlimited data.
 
 In the hypercone the Fisher information left for the relevant coordinate, once the
 irrelevant ones are accounted for, is `1/σ²` everywhere[^3-schur]. So `p_ref` is uniform
 in the relevant coordinate and, at each value of it, uniform across the cross-section of
-`Θ` ([§4.2](#42-prior-construction))<span style="color: red">, which is `p_U`</span>.
+`Θ` ([§4.2](#42-prior-construction)), which is `p_U`.
 
 Ranking needs a mechanism that picks the direction of interest, something like attention;
 `p*` needs none by construction. Whether `p*` removes the bias as well as `p_ref` does is
-part of this spec's question, read off `δR(p*, p_ref)` ([§6.3](#63-table-schema)). <span style="color: red">Since `p_ref` takes its ranking from the task, it is a privileged-information prior ([§2.2](#22-the-cast)): a reference point for what a supplied ranking buys, not a competitor on equal footing.</span>
+part of this spec's question, read off `δR(p*, p_ref)` ([§6.3](#63-table-schema)). Since `p_ref` takes its ranking from the task, it is a privileged-information prior ([§2.2](#22-the-cast)): a reference point for what a supplied ranking buys, not a competitor on equal footing.
 
-**Where the ranking comes from.** It can be handed over, computable, or unavailable<span style="color: red">; the geometries of [§1.2](#12-generative-model) give the first and the last</span>:
+**Where the ranking comes from.** It can be handed over, computable, or unavailable; the geometries of [§1.2](#12-generative-model) give the first and the last:
 
 1. *Handed over.* In the cone the relevant direction is a named coordinate,
    and `p_ref = p_U`. A story that names the quantity that matters is in this position,
    and so is an experiment whose instructions name the relevant stimulus dimension.
-2. *Computable.* <span style="color: red">The split is the same everywhere but lies off the axes, so the ranking follows from the likelihood once computed. No model here has this case: a rotation of the cone changes no invariant prior, and it would make a coordinate prior fail only through our choice of coordinates.</span> For a learner, being told the combination may not help[^3-told].
+2. *Computable.* The split is the same everywhere but lies off the axes, so the ranking follows from the likelihood once computed. No model here has this case: a rotation of the cone changes no invariant prior, and it would make a coordinate prior fail only through our choice of coordinates. For a learner, being told the combination may not help[^3-told].
 3. *Unavailable.* In exp-decay the relevant directions curve and vary across `Θ`, so no
    global ranking is given; choosing one is OQ-8 ([§7](#7-open-questions)). The example of
    [§0](#0-context) is of this kind: which motives the data reveal depends on the person.
-   With the rates ordered ([§1.2](#12-generative-model)), a candidate ranking names an order statistic, such as the slowest rate, or a function of several. It cannot name a component, since components are interchangeable. Two candidates count as two only if they give different priors. <span style="color: red">The two-group `p_ref` ranks one quantity and keeps conditional Jeffreys on the other rates (`[^3-schur]`'s formula), a sloppy block of its own, so it is partly Jeffreys, and `δR(p*, p_ref)` is read with that in mind.</span>
+   With the rates ordered ([§1.2](#12-generative-model)), a candidate ranking names an order statistic, such as the slowest rate, or a function of several. It cannot name a component, since components are interchangeable. Two candidates count as two only if they give different priors. The two-group `p_ref` ranks one quantity and keeps conditional Jeffreys on the other rates (`[^3-schur]`'s formula), a sloppy block of its own, so it is partly Jeffreys, and `δR(p*, p_ref)` is read with that in mind.
 
 In the cones the ranking follows from the likelihood, so `p_ref` is as automatic as `p*`
 and the budget is expected to buy only insurance. A reduced-cone computation agrees: a
@@ -1256,7 +1256,7 @@ the thin end, and loses only at the thick end and in the worst case
 world). In the square cone part of such a loss is `p*`'s own tilt: the cross-section is
 jointly observable there, and `p*` weights states by the information it carries ([§1.2](#12-generative-model)).
 The loss is therefore read against the fall-off knob: what remains of it once the
-cross-section is jointly irrelevant is what the free ranking buys. The cones are therefore the **control where ranking is free**<span style="color: red">; in exp-decay `p_ref` is built from at least two of the OQ-8 candidate rankings</span> ([§3.7](#37-falsification)). Which route
+cross-section is jointly irrelevant is what the free ranking buys. The cones are therefore the **control where ranking is free**; in exp-decay `p_ref` is built from at least two of the OQ-8 candidate rankings ([§3.7](#37-falsification)). Which route
 organisms take, and when being told the ranking helps them, is an empirical question
 outside this spec ([`empirics/`](../empirics/README.md)).
 
@@ -1307,9 +1307,9 @@ Several things can make it lose:
    `p*`'s own, rather than any budget-dependent prior's, is read off the pairwise gaps
    `δR(p*, p_proj)` and `δR(p*, p_lat)` (and, in exp-decay, `δR(p*, p_LN^*)`, against a prior that adapts to the budget but can be neither discrete nor weighted to the edges) ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)); beating only Jeffreys and
    log-normal extends A&M's comparison to a foreign `q` without separating `p*` from the
-   other budget-dependent priors (A&M neither tested uniform nor scored a foreign `q`). <span style="color: red">A lead the budget-conscious priors share counts for the budget principle, the spec's second aim ([§0.2](#02-introduction)), though not for `p*`'s particular form.</span>
+   other budget-dependent priors (A&M neither tested uniform nor scored a foreign `q`). A lead the budget-conscious priors share counts for the budget principle, the spec's second aim ([§0.2](#02-introduction)), though not for `p*`'s particular form.
 3. **`q̄` dominates** ([§2.5](#25-controls-the-ceiling-and-self-sampling)): `p*` cannot beat
-   the matched ceiling; only the <span style="color: red">gaps to Jeffreys and to the privileged-information priors are</span> live.
+   the matched ceiling; only the gaps to Jeffreys and to the privileged-information priors are live.
 4. **A ceiling is not optimality.** (3.1.1) prevents catastrophe; it does not make `p*`
    *good* in absolute terms, since `C_N` itself can be sizeable at the small `N` this spec
    targets. `p*`'s case is **robustness / insurance**, not average-case optimality: a
@@ -1317,7 +1317,7 @@ Several things can make it lose:
 5. **Ordering may do the job.** If `p_ref` matches `p*`, the bias is removable without a
    budget, and `p*`'s remaining advantage is only that it needs no ranking. In the cones
    this is expected ([§3.5](#35-a-third-route-ordering-instead-of-budget)); in exp-decay it
-   would mean that some cheap ranking does the budget's job. <span style="color: red">The ranking comes from the task, so this would measure what a supplied ranking is worth, not a failure of `p*` as a deployable prior.</span>
+   would mean that some cheap ranking does the budget's job. The ranking comes from the task, so this would measure what a supplied ranking is worth, not a failure of `p*` as a deployable prior.
 6. **The setting may leave the budget nothing to do.** Settings in which knowing the
    budget is worth little or nothing are collected in
    [`notes/budget-value-of-information.md`](../notes/budget-value-of-information.md) §5:
@@ -1326,11 +1326,6 @@ Several things can make it lose:
    show a budget advantage, whatever its result.
 
 ### 3.7 Falsification
-
-> [!warning]
-> Rewritten in Stage 3b of the full red-team pass (findings F1–F5 of
-> `specs/002-foreign-q-prediction-redteam.md`): no cell is set aside, and the verdict rests
-> on the gap to Jeffreys.
 
 The expectation is that `p*` beats Jeffreys away from home, on its home score `R_N`, and,
 second, that the budget-conscious priors as a family do. It is read off the table of
@@ -1404,17 +1399,12 @@ Three conventions hold throughout:
 
 ### 4.1 Model families
 
-> [!warning]
-> Revised in Stage 3b of the full red-team pass (F1, F6, F8): the rotation knob is gone,
-> exp-decay's `Θ` is the whole manifold in A&M's compact coordinate, and the curvature
-> cells add fall-off.
-
 All three families share the Gaussian likelihood `𝒩(y(θ), σ²𝟙)` and the Fisher metric
 (1.2.1). A family is fixed by its map `y(θ)` and its parameter set `Θ`.
 
 1. **Exponential decay** (the realistic family; A&M Eq. 6).
    `y_t(θ) = (1/D) Σ_μ e^{−k_μ t}`, `k_μ = e^{−θ_μ}`, at `m = 26` times evenly spaced in
-   `[1, 5]`, as A&M. <span style="color: red">`Θ` is the whole manifold, ordered, `θ_1 ≤ … ≤ θ_D`
+   `[1, 5]`, as A&M. `Θ` is the whole manifold, ordered, `θ_1 ≤ … ≤ θ_D`
    ([§1.2](#12-generative-model)), held as the ordered part of `[0, 1]^D` in A&M's
    compact coordinate `ξ_μ = e^{−k_μ}`, in which `y_t = (1/D) Σ_μ ξ_μ^t` [read: A&M App.
    A.5]. Its faces are the model's own edges: rates that coincide, and rates at 0 (never
@@ -1422,12 +1412,12 @@ All three families share the Gaussian likelihood `𝒩(y(θ), σ²𝟙)` and the
    at any `σ_eff`, and a rate can leave the window on either side (OQ-9). The *box* knob
    swaps in the window's range, `ξ ∈ [e^{−1}, e^{−1/5}]` (decay times 1 to 5): no rate can
    leave it, so only coinciding rates make edges, a control for the edge lean of the
-   few-rates nature</span> ([§2.3](#23-the-natures)). The Fisher metric has a closed
+   few-rates nature ([§2.3](#23-the-natures)). The Fisher metric has a closed
    form ([§9.3](#93-exponential-decay-fim)). Its relevant directions are curved and off
    the axes, and Jeffreys and log-normal degrade with `D` [read: A&M §2.2].
 2. **Square hypercone** (the analytic caricature; A&M App. A.1).
    `y = (θ_1, r θ_2, r φ θ_3, …, r φ^{D−2} θ_D)` with `r = θ_1/W`, `θ_1 ∈ [0, W]` and
-   `θ_μ ∈ [0, 1]` for `μ ≥ 2`. <span style="color: red">Three knobs</span> ([§1.2](#12-generative-model)):
+   `θ_μ ∈ [0, 1]` for `μ ≥ 2`. Three knobs ([§1.2](#12-generative-model)):
    - *taper*: on (`r = θ_1/W`) or off (`r = r_0`, family 3);
    - *fall-off* `φ ∈ (0, 1]`: `φ = 1` is the square cone, whose cross-section is jointly
      observable;
@@ -1444,9 +1434,9 @@ All three families share the Gaussian likelihood `𝒩(y(θ), σ²𝟙)` and the
      there. It narrows the angle between the lateral edge and the base face from `π/2` to
      `κπ/2`. `ρ = 5σ_eff`, so that the warped ball holds the vertex's noise halo [guess].
      The ball must also lie inside the base face, which is 1 wide, so the curvature
-     cells run where `σ_eff` is small<span style="color: red">, and at fall-off `φ = 0.05`: the base face is
+     cells run where `σ_eff` is small, and at fall-off `φ = 0.05`: the base face is
      then resolved in its first cross-section direction only, and the vertex sits in a
-     resolved face of a hyperribbon ([§3.4](#34-the-second-protagonist-infomax-vs-mdl))</span> (§5.4).
+     resolved face of a hyperribbon ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)) (§5.4).
 
    Closed forms used below: `√det g ∝ θ_1^{D−1}` for every `φ`, so Jeffreys does not
    depend on the fall-off; Jeffreys' deviation (9.2.2); and the cross-section's widths
@@ -1499,26 +1489,20 @@ def warp_vertex(y, v, kappa, rho):                   # curvature knob (§4.1, OQ
 
 ### 4.2 Prior construction
 
-> [!warning]
-> Revised in Stage 3b of the full red-team pass (F1, F3, F8, F9, m7, m8): candidate sets
-> placed by Fisher distance replace the uniform grid for the priors Blahut–Arimoto builds;
-> `p_U` is uniform in `ξ` in exp-decay; `p_ref` in the cones is `p_U`; a coverage table
-> says which prior exists where.
-
 Every prior is built from the model and a budget alone, never from `q`
-([§1.2](#12-generative-model)). In exp-decay every <span style="color: red">candidate set, grid</span> and sampler lives on the
-ordered `Θ`<span style="color: red">, held in `ξ`</span>.
+([§1.2](#12-generative-model)). In exp-decay every candidate set, grid and sampler lives on the
+ordered `Θ`, held in `ξ`.
 
-- **`p*`, the capacity prior at budget `N`.** Blahut–Arimoto on <span style="color: red">a candidate set placed by
+- **`p*`, the capacity prior at budget `N`.** Blahut–Arimoto on a candidate set placed by
   Fisher distance, at `σ_eff`, reusing spec 000's loop. Its points lie at most 0.5 Fisher
   lengths apart, from AtomicPriors.jl's `mitchell` best-candidate sampler [read:
   `resources/AtomicPriors.jl/src/max/sample.jl`, docstring of `mitchell`], seeded with
   the faces of `Θ`, where `p*` puts atoms. Its size grows with the number of
   distinguishable predictions, not with `G^D` [guess]; where such a set is infeasible, the
-  cell goes to the atomic path.</span> The per-cell divergence
+  cell goes to the atomic path. The per-cell divergence
   `D_KL(p(x|θ)‖m_π)` is estimated for Gaussian outputs by A&M's kernel approximation (App.
-  A.2, Eq. A1) or by Monte Carlo over `x`; atoms are extracted from the converged <span style="color: red">set</span>.
-  Beyond the <span style="color: red">candidate sets'</span> reach, `p*` comes from `mcabbott/AtomicPriors.jl` through `juliacall`
+  A.2, Eq. A1) or by Monte Carlo over `x`; atoms are extracted from the converged set.
+  Beyond the candidate sets' reach, `p*` comes from `mcabbott/AtomicPriors.jl` through `juliacall`
   (OQ-1); the cross-over `D_switch` is set once both paths are profiled, and where both
   run they must agree (T7b). The `p*` solver is the main feasibility risk.
 - **`p_lat`, the latent information prior at `(N, 1)`.** Maximises
@@ -1526,13 +1510,13 @@ ordered `Θ`<span style="color: red">, held in `ξ`</span>.
   [read: Komaki 2011 §4]. By sufficiency each term is a single-observation mutual
   information, at noise `σ/√(N+1)` and `σ/√N`. The same Blahut–Arimoto, with the
   update `π(θ) ← π(θ)·exp(λ[f^{(N+1)}(θ) − f^{(N)}(θ)])`, where `f^{(n)}` is the per-cell
-  divergence at noise `σ/√n` [read: Fogel & Feder 2024 Alg. 1]<span style="color: red">, on the same candidate set</span>. Its support may be nearly
+  divergence at noise `σ/√n` [read: Fogel & Feder 2024 Alg. 1], on the same candidate set. Its support may be nearly
   full [read: Fogel & Feder 2024 §VII], so no atoms are extracted. Every trial prior
   bounds the minimax one-step loss from both sides, below by its own conditional
   information and above by `max_θ [f^{(N+1)}(θ) − f^{(N)}(θ)]` [read: Fogel & Feder 2024
   Cor. 1]; iteration stops when the gap is below tolerance. The update is a small
   difference of two large divergences, so both are estimated with common random numbers.
-  <span style="color: red">Beyond the candidate sets' reach, `p_lat` needs AtomicPriors.jl to gain its objective, the difference of two `mutual` calls at budgets `N+1` and `N` [guess: a small addition]; until then it stops where the coverage table says.</span>
+  Beyond the candidate sets' reach, `p_lat` needs AtomicPriors.jl to gain its objective, the difference of two `mutual` calls at budgets `N+1` and `N` [guess: a small addition]; until then it stops where the coverage table says.
 - **`p*_{N/10}`, `p*_{10N}`, mis-budgeted.** The `p*` build at `σ/√M` for `M = N/10` and
   `M = 10N`, scored at the true `N` ([§2.2](#22-the-cast)). `M` need not be an integer.
 - **`p_proj`, the NML pushforward.** The law of the maximum-likelihood estimate `θ̂(x)`
@@ -1541,24 +1525,24 @@ ordered `Θ`<span style="color: red">, held in `ξ`</span>.
   ensemble Markov chain on `x` targets `p_NML`, each step projects `x` onto the manifold
   by a maximum-likelihood fit within `Θ`, and the `θ̂` of the retained steps form the
   cloud [read: `resources/AtomicPriors.jl/src/max/sample.jl`, docstring of
-  `transtrum`]. `p_NML` normalises because the manifold is compact. <span style="color: red">In exp-decay `Θ` is the whole manifold, so the fit within it is the unconstrained one `transtrum` makes.</span> Whether the chain
+  `transtrum`]. `p_NML` normalises because the manifold is compact. In exp-decay `Θ` is the whole manifold, so the fit within it is the unconstrained one `transtrum` makes. Whether the chain
   mixes near the edges, where the halo lies, is checked against `transtrum`'s own
   output (T12(e)).
 - **`p_J`, Jeffreys.** `√det g` normalised over `Θ` by quadrature; in the cones its
-  `θ_1`-marginal is `∝ θ_1^{D−1}` in closed form (T4). <span style="color: red">In exp-decay it is sampled; above `D ≈ 12` its determinant needs more than double precision, which AtomicPriors.jl supplies through an extended-precision path and a routine that uses the Jacobian's near-Vandermonde form [read: `resources/AtomicPriors.jl/src/mod/ymap.jl`, docstrings; A&M App. A.5]. That it normalises on the whole manifold is a [guess], checked by T4.</span>
-- **`p_U`, uniform** on `Θ` <span style="color: red">in its own coordinates: in `θ` in the cones, in `ξ` in exp-decay, where each rate is `k_μ ∼ Exp(1)` before ordering. A privileged-information prior ([§2.2](#22-the-cast)).</span>
+  `θ_1`-marginal is `∝ θ_1^{D−1}` in closed form (T4). In exp-decay it is sampled; above `D ≈ 12` its determinant needs more than double precision, which AtomicPriors.jl supplies through an extended-precision path and a routine that uses the Jacobian's near-Vandermonde form [read: `resources/AtomicPriors.jl/src/mod/ymap.jl`, docstrings; A&M App. A.5]. That it normalises on the whole manifold is a [guess], checked by T4.
+- **`p_U`, uniform** on `Θ` in its own coordinates: in `θ` in the cones, in `ξ` in exp-decay, where each rate is `k_μ ∼ Exp(1)` before ordering. A privileged-information prior ([§2.2](#22-the-cast)).
 - **`p_LN`, log-normal**, in exp-decay only, where it is A&M's prior (Eq. 10): each
   `θ_μ` normal with `(θ̄, τ) = (0, 1)` as A&M (OQ-3), restricted to the ordered `Θ`, that
-  is, `D` independent draws <span style="color: red">on `ℝ`, sorted; on the whole manifold nothing is truncated</span>. In the cones a
+  is, `D` independent draws on `ℝ`, sorted; on the whole manifold nothing is truncated. In the cones a
   normal law in `θ` has no counterpart in §0–§3, so `p_LN` is not carried there
   (auto-decided; please confirm).
 - **`p_LN^*`, the budget-tuned log-normal**, in exp-decay only (OQ-3): the member of the
   same family whose `(θ̄, τ)` maximise `I_π(Θ;X_{1:N})` at `σ_eff`. A two-parameter
-  search, Nelder–Mead from A&M's `(0, 1)` (auto-chosen; please confirm). <span style="color: red">`I_π = 𝔼_{θ∼π} D_KL(p(x|θ)‖m_π)` comes by Monte Carlo over the prior's own draws, with `m_π` from a second set of draws and common random numbers across `(θ̄, τ)`</span>; above `D_switch`, from AtomicPriors.jl's `mutual` of a
+  search, Nelder–Mead from A&M's `(0, 1)` (auto-chosen; please confirm). `I_π = 𝔼_{θ∼π} D_KL(p(x|θ)‖m_π)` comes by Monte Carlo over the prior's own draws, with `m_π` from a second set of draws and common random numbers across `(θ̄, τ)`; above `D_switch`, from AtomicPriors.jl's `mutual` of a
   weighted sample. As `τ` grows the family tends to `p_U`, and as it shrinks, to a point
   mass, so `p_LN^*` lies between them, and `I_{p_LN} ≤ I_{p_LN^*} ≤ C_N` (T23).
 - **`p_ref`, the ranked reference prior** ([§3.5](#35-a-third-route-ordering-instead-of-budget)).
-  In the cones with the curvature knob off <span style="color: red">it is `p_U`</span>. With curvature on, the Berger–Bernardo formula of `[^3-schur]` by quadrature. In
+  In the cones with the curvature knob off it is `p_U`. With curvature on, the Berger–Bernardo formula of `[^3-schur]` by quadrature. In
   exp-decay (OQ-8), one `p_ref` per ranking, from the same formula with the ranked
   quantity as the relevant coordinate and the other rates as the rest, by quadrature on
   the ordered grid:
@@ -1574,11 +1558,11 @@ ordered `Θ`<span style="color: red">, held in `ξ`</span>.
     (`notes/spec-002-stiffest-ranking/frobenius_check.py`). So stiffest first enters at
     `D = 2` only; that it fails at larger `D` too is a [guess].
 - **`q̄`, the ceiling.** Not built from the model: it is the equal-weight mixture of the
-  natures of §4.3<span style="color: red"> in one cell, on the cast present at its `D`</span>, so a draw picks a row uniformly and samples it, and `m_{q̄}` is the
+  natures of §4.3 in one cell, on the cast present at its `D`, so a draw picks a row uniformly and samples it, and `m_{q̄}` is the
   average of the rows' marginals ([§2.5](#25-controls-the-ceiling-and-self-sampling)).
   It is not deployable and is not a row itself.
 
-<span style="color: red">**Coverage.** Which prior is built where (`D_switch` is set once both `p*` paths are profiled):</span>
+**Coverage.** Which prior is built where (`D_switch` is set once both `p*` paths are profiled):
 
 | Prior | Hypercone | Exp-decay |
 |---|---|---|
@@ -1595,8 +1579,8 @@ ordered `Θ`<span style="color: red">, held in `ξ`</span>.
     sets of `ψ` are spanned by the other eigenvectors. Such a `ψ` exists locally exactly
     when `ω ∧ dω = 0` (Frobenius' theorem [recalled]). In two dimensions `ω ∧ dω` is a
     3-form and vanishes identically. A reference prior does not depend on how its
-    interest parameter is labelled [recalled], so the transversal should not matter; <span style="color: red">T15(e)</span>
-    checks it. <span style="color: red">"Stiffest" is itself a choice: it takes the eigenvectors of `g` as a matrix in the log-rate coordinates `θ`, so it depends on their Euclidean structure, and it is undefined where the top two eigenvalues cross.</span>
+    interest parameter is labelled [recalled], so the transversal should not matter; T15(e)
+    checks it. "Stiffest" is itself a choice: it takes the eigenvectors of `g` as a matrix in the log-rate coordinates `θ`, so it depends on their Euclidean structure, and it is undefined where the top two eigenvalues cross.
 
 **Prior construction (new code; pseudocode).** Blahut–Arimoto reuses spec 000's
 loop; the atomic path, the `p_lat` update, the `p_proj` sampler and `p_LN^*`'s search
@@ -1645,16 +1629,12 @@ def build_pln_star(model, rng, *, n=4096):          # OQ-3; exp-decay only
 
 ### 4.3 Foreign-`q` family
 
-> [!warning]
-> Revised in Stage 3b of the full red-team pass (F4): the fixed natures become nested
-> natures, and the fixed spectrum is gone.
-
 The natures of [§2.3](#23-the-natures), each sampled as `θ ∼ q`:
 
 - **Round robin.** `θ ∼ π` for each prior `π` of the cast other than `q̄`, which is
   defined from the rows (§4.2), from that prior's own sampler. In exp-decay each ranking
   of `p_ref` gives its own row.
-- **<span style="color: red">Nested natures</span>** (question 3)<span style="color: red">, each defined once and scored by agents of every `D`:
+- **Nested natures** (question 3), each defined once and scored by agents of every `D`:
   - *Hypercones*: nature lives in the cone of dimension `D_max = 26`, at fall-off
     `φ ∈ {0.5, 0.1}`, with `θ_1` uniform on the thin half `[0, W/2]` or on the thick half
     `[W/2, W]` and the cross-section coordinates uniform on `[0, 1]` (auto-chosen; please
@@ -1667,7 +1647,7 @@ The natures of [§2.3](#23-the-natures), each sampled as `θ ∼ q`:
     `D ≥ D_0` components represents it exactly, so nothing is fixed, and every rate is
     visible, so the row's only edge is the coincidence of rates. `D_0 = 2`, two rates each
     held by `D/2` components, joins at even `D ≥ 4` once AtomicPriors.jl extends `D`
-    (OQ-1).</span>
+    (OQ-1).
 - **Stress natures**, in the hypercone (OQ-2):
   - *Sharpened vertex*, with the curvature knob on: `θ` uniform, by area in `θ`, on the
     parts of the faces that meet at the warped vertex `v` (§4.1) and lie within `ρ` of it
@@ -1677,7 +1657,7 @@ The natures of [§2.3](#23-the-natures), each sampled as `θ ∼ q`:
     spacings, `7.5 σ_eff` (`[^1-spacing]`), truncated to `[0, W]`; the cross-section
     uniform on `[0, 1]`; in the cone's own coordinates. Along the relevant coordinate it
     is a Gaussian in prediction space, smooth at every scale. It is not run in exp-decay, where its floor
-    would be a `D`-dimensional integral and <span style="color: red">`p_U`'s and `p_LN`'s own worlds already place nature in the bulk</span> (auto-decided; please confirm).
+    would be a `D`-dimensional integral and `p_U`'s and `p_LN`'s own worlds already place nature in the bulk (auto-decided; please confirm).
 
 Each draw records its nature's label and its `θ`, so results split by nature and map
 over `Θ` ([§6.3](#63-table-schema)).
@@ -1685,13 +1665,13 @@ over `Θ` ([§6.3](#63-table-schema)).
 **Floors.** A cell's mismatch is its score minus the row's floor
 ([§2.3](#23-the-natures)). In the round robin the floor is the score of the row's own
 prior, so the mismatch of `π` in the world of `ν` is the mean over draws of
-`log m_ν(x̄) − log m_π(x̄)`, at no extra cost. A <span style="color: red">nested</span> nature's floor needs its own
+`log m_ν(x̄) − log m_π(x̄)`, at no extra cost. A nested nature's floor needs its own
 marginal `m_q`, a low-dimensional integral: over `θ_1` in the hypercones, where each
-cross-section coordinate integrates to a difference of two normal distribution functions<span style="color: red"> (at `D_max`, once for every agent);
+cross-section coordinate integrates to a difference of two normal distribution functions (at `D_max`, once for every agent);
 or over the shared rate. The submodel's own floor, the loss of an oracle that knows `θ` but
 fixes the ignored directions, is `N‖y(θ) − y(θ^{(D)})‖²/(2σ²)` per draw, with `θ^{(D)}` the
-state with the ignored coordinates set to `½`; it is zero for the few-rates nature</span>. The smooth interior takes the
-same integral over `θ_1` as the hypercone's <span style="color: red">nested</span> natures, and the sharpened vertex an
+state with the ignored coordinates set to `½`; it is zero for the few-rates nature. The smooth interior takes the
+same integral over `θ_1` as the hypercone's nested natures, and the sharpened vertex an
 integral over the faces near `v`, by quadrature at the grid's `D`. With the curvature
 knob on, the cross-section no longer factorises inside the warped ball, and every floor
 there is by quadrature.
@@ -1712,7 +1692,7 @@ def sample_nature(model, nature, n, rng):
 
 ### 4.4 Score estimation
 
-For each cell `(model, D, σ, N, box, W, taper, fall-off, curvature, nature)`<span style="color: red">, with `D` the agent's dimension; a nested nature adds `D_max`</span>:
+For each cell `(model, D, σ, N, box, W, taper, fall-off, curvature, nature)`, with `D` the agent's dimension; a nested nature adds `D_max`:
 
 ```
 1.  model = build_model(family, D, m, σ, N, knobs)        # §4.1
@@ -1738,7 +1718,7 @@ the log-ratio of every prior (`m_π(X_{1:N}) = p(X_{1:N}|x̄)·m_π(x̄)`). Henc
 on `x̄` alone, so `r_N` needs one `x̄` and one `x'` per draw. The literal `N`-fold version
 is built once as a cross-check (T7c, and AtomicPriors' `repeat` in T12).
 
-**Evaluating `m_π(x̄)` and `m_π(x'|x̄)`.** For discrete <span style="color: red">or candidate-set</span> priors (`p*`, `p_lat`,
+**Evaluating `m_π(x̄)` and `m_π(x'|x̄)`.** For discrete or candidate-set priors (`p*`, `p_lat`,
 the mis-budgeted `p*`), exact finite sums:
 `log m_π(x̄) = logsumexp_a [log λ_a + log p(x̄|θ_a)]` and
 `log m_π(x'|x̄) = logsumexp_a [log λ_a + log p(x̄|θ_a) + log p(x'|θ_a)] − log m_π(x̄)`.
@@ -1756,27 +1736,23 @@ pinned in [§5.4](#54-sweep-design).
 
 ### 4.5 Diagnostics
 
-> [!warning]
-> Revised in Stage 3b of the full red-team pass (F2, F5, m6): the ½-nat mark is gone, the
-> "beyond the cap" label replaces "settled", and the failure map's coordinates are added.
-
 Computed per cell beside the scores, for the readings of §1.2, §2.4, §3.2, §3.3 and §3.7.
 
-- **<span style="color: red">The label of [§3.7](#37-falsification).</span>** `C_N` is the capacity at the cell's
+- **The label of [§3.7](#37-falsification).** `C_N` is the capacity at the cell's
   budget: `I_{p*}` from the `p*` build, equal at convergence to the largest per-state
-  divergence of `p*` (T3). <span style="color: red">A cell is *beyond the cap* for `π` when `R_N^q(π) − C_N` exceeds its Monte-Carlo error plus the capacity gap of `p*`'s candidate set, the largest `R_N^θ(p*) − C_N` over states off the set (T3); `p*` then wins it by (3.1.1). No other mark is made.</span>
-- <span style="color: red">**The failure map of [§2.4](#24-what-is-reported-and-what-cannot-be-asserted).** Per row and score: the breadth `I_q/C_N` (for `r_N`, the conditional floor over the conditional capacity that `p_lat` attains), and, per prior, the best rival's mismatch and the signed gap to it.</span>
+  divergence of `p*` (T3). A cell is *beyond the cap* for `π` when `R_N^q(π) − C_N` exceeds its Monte-Carlo error plus the capacity gap of `p*`'s candidate set, the largest `R_N^θ(p*) − C_N` over states off the set (T3); `p*` then wins it by (3.1.1). No other mark is made.
+- **The failure map of [§2.4](#24-what-is-reported-and-what-cannot-be-asserted).** Per row and score: the breadth `I_q/C_N` (for `r_N`, the conditional floor over the conditional capacity that `p_lat` attains), and, per prior, the best rival's mismatch and the signed gap to it.
 - **The two terms of [§3.3](#33-score-decomposition-bias-vs-calibration-a-diagnostic).**
   Per draw, the posterior predictives of `π` and of the row's matched prior are
   moment-matched to Gaussians, from the finite mixture or from posterior samples, and the
   mean shift and the spread mismatch of (3.3.1) are averaged over draws. The matched
   predictive is the row's own prior's in the round robin, and the integral of §4.3 for a
-  <span style="color: red">nested</span> nature.
+  nested nature.
 - **The quantities of [§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d).**
   For `K` draws of `θ` from the row's nature:
   - the per-state loss `R_N^θ(π)`, by an inner Monte Carlo over `J` draws of `x̄` given
     `θ`;
-  - the mass `π(A(θ))` on the states <span style="color: red">within one noise unit of `y(θ)` in data space at budget `N`</span>: from
+  - the mass `π(A(θ))` on the states within one noise unit of `y(θ)` in data space at budget `N`: from
     the atoms' weights for a discrete prior, and from prior samples otherwise. Jeffreys'
     mass there is small in high `D` and may need importance sampling [guess];
   - `covered_J`, the fraction of the `K` draws with `R_N^θ(p_J) ≤ C_N`: the nature's
@@ -1803,17 +1779,13 @@ The implementation extends `src/infomax/` rather than forking it.
 | `atoms.py` | atom extraction, scalar positions | **Generalised:** an atom's position is a `D`-vector. |
 | `likelihood.py` | Bernoulli `p(x\|θ)` | **Added to:** the Gaussian likelihood and the maps and metrics of §4.1. |
 | `jeffreys.py` | Bernoulli closed form | **Added to:** `p_J ∝ √det g` in `D` dimensions. |
-| *(new)* `models.py`, `pstar.py`, `plat.py`, `pproj.py`, `pref.py`, `plognormal.py`, `qfamily.py`, `score.py`, `diagnostics.py` | — | §4.1–§4.5. `models.py` holds the vertex warp; `pstar.py` <span style="color: red">the candidate-set path</span> and the bridge to AtomicPriors.jl (OQ-1); `pref.py` the rankings, including the stiffest-direction tracing; `plognormal.py` `p_LN` and `p_LN^*`. |
+| *(new)* `models.py`, `pstar.py`, `plat.py`, `pproj.py`, `pref.py`, `plognormal.py`, `qfamily.py`, `score.py`, `diagnostics.py` | — | §4.1–§4.5. `models.py` holds the vertex warp; `pstar.py` the candidate-set path and the bridge to AtomicPriors.jl (OQ-1); `pref.py` the rankings, including the stiffest-direction tracing; `plognormal.py` `p_LN` and `p_LN^*`. |
 
 **Regression gate (T0).** `ba.py`, `prior.py` and `atoms.py` are shared with spec 000. Before
 any spec-002 number is trusted, `tests/test_000_static_infomax_fig1.py` must pass unchanged,
 and the spec-000 eye test is re-approved if its figure moved.
 
 ## 5. Properties to verify
-
-> [!warning]
-> Revised in Stage 3b of the full red-team pass (F1, F2, F4, F5, F8, F9, m8–m14): see the
-> red text below and the revision log.
 
 Test functions live in `tests/test_002_foreign_q_prediction.py`. The suite pins the
 machinery; it does **not** assert the results
@@ -1825,21 +1797,21 @@ machinery; it does **not** assert the results
 |---|---|---|
 | P0 | **Spec-000 regression gate** ([§4.6](#46-code-reuse-and-changes-to-spec-000-modules)): spec 000's suite passes unchanged after the shared-module edits | `pytest tests/test_000_static_infomax_fig1.py` (precondition) |
 | P1 | Cumulative decomposition `R_N^q(π) = I_q + D_KL(m_q‖m_π)` ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss), [§9.1](#91-the-compensation-identity-for-the-n-fold-marginal-eq-212)) | `test_t1_redundancy_decomposition` |
-| P2 | Pipeline check: with no co-volume gradient, `p_J = p_U` pointwise and `R(p_J) = R(p_U)` <span style="color: red">within `10^{-6}` nats</span> under common random numbers, at every `D` ([§4.1](#41-model-families)) | `test_t2_pipeline_pJ_equals_pU` |
-| P3 | `p*` solver: equalizer `b(θ) = 0` on `supp p*` and `≤ 0` off it<span style="color: red">, at states off the candidate set too</span>; `I_{p*} = C_N` ([§3.1](#31-the-one-guarantee-worst-case-over-q), [§4.2](#42-prior-construction)) | `test_t3_pstar_equalizer` |
+| P2 | Pipeline check: with no co-volume gradient, `p_J = p_U` pointwise and `R(p_J) = R(p_U)` within `10^{-6}` nats under common random numbers, at every `D` ([§4.1](#41-model-families)) | `test_t2_pipeline_pJ_equals_pU` |
+| P3 | `p*` solver: equalizer `b(θ) = 0` on `supp p*` and `≤ 0` off it, at states off the candidate set too; `I_{p*} = C_N` ([§3.1](#31-the-one-guarantee-worst-case-over-q), [§4.2](#42-prior-construction)) | `test_t3_pstar_equalizer` |
 | P4 | Jeffreys: `p_J ∝ √det g` normalises; its `θ_1`-marginal in the cones is `∝ θ_1^{D−1}` ([§4.2](#42-prior-construction)) | `test_t4_jeffreys_construction` |
 | P5 | The closed form (3.3.1) matches a numeric KL of two Gaussians, and both terms vanish at the matched prior ([§3.3](#33-score-decomposition-bias-vs-calibration-a-diagnostic)) | `test_t5_gaussian_kl_split` |
 | P6 | Hypercone deviation: Jeffreys' numeric posterior-mean deviation matches `(D−1)/x_1` to next order, toward the thick end, for `1 ≪ x_1 ≪ W` ([§1.2](#12-generative-model), [§9.2](#92-hypercone-posterior-deviation-eq-922)) | `test_t6_hypercone_delta` |
 | P7a | `m_π(X_{1:N})`: the discrete sum and quadrature agree ([§4.4](#44-score-estimation)) | `test_t7a_mixture_marginal_consistency` |
-| P7b | `p*`: the <span style="color: red">candidate-set</span> and atomic paths agree on `R` where both run ([§4.2](#42-prior-construction)) | `test_t7b_pstar_method_agreement` |
+| P7b | `p*`: the candidate-set and atomic paths agree on `R` where both run ([§4.2](#42-prior-construction)) | `test_t7b_pstar_method_agreement` |
 | P7c | Budget through the noise: `p*` and `R` at `σ_eff` agree with the explicit `N`-fold channel at small `D, N` ([§4](#4-algorithm)) | `test_t7c_budget_n_equivalence` |
 | P8 | Floors and ceiling: `R_N^q(π) ≥ I_q ≥ 0` and the one-step analogue per nature; `q̄` minimises the row average; the split of `[^2-qbar]` ([§2.5](#25-controls-the-ceiling-and-self-sampling)) | `test_t8_floors` |
 | P9 | A&M's prior side: `I_{p*} ≥ I_{p_J}` and `B(p*) ≤ B(p_J)` at every `D` (A&M Fig. 5) | `test_t9_am_prior_side_dominance` |
 | P10 | Determinism: a fixed seed gives identical score arrays ([§4.4](#44-score-estimation)) | `test_t10_seed_determinism` |
-| P11 | `p_proj`: the MLE projection recovers `θ̂`; `p_NML` normalises; <span style="color: red">`I_{p_proj} ≤ I_{p*} = C_N`</span>; the port agrees with `transtrum` (P12) ([§4.2](#42-prior-construction)) | `test_t11_pproj_construction` |
+| P11 | `p_proj`: the MLE projection recovers `θ̂`; `p_NML` normalises; `I_{p_proj} ≤ I_{p*} = C_N`; the port agrees with `transtrum` (P12) ([§4.2](#42-prior-construction)) | `test_t11_pproj_construction` |
 | P12 | AtomicPriors.jl references: exp-decay map and metric, `p*`, `C_N` through `repeat`, `mutual` of a fixed prior, and `transtrum`'s `p_proj` cloud match frozen values ([§5.5](#55-atomicpriorsjl-reference-fixtures)) | `test_t12_atomicpriors_reference` |
-| P13 | Models: the metric matches autodiff; exp-decay's map is invariant under permuting `θ` and <span style="color: red">its `Θ` holds only ordered `ξ`, on the whole manifold</span>; in the hypercone `√det g / θ_1^{D−1}` is constant for every `φ`, the cross-section widths are `r φ^{μ−2}√N/σ`, and the vertex warp is one-to-one, the identity outside `ρ` and gives the angle `κπ/2` ([§4.1](#41-model-families)) | `test_t13_model_and_fim` |
-| P14 | Natures: round-robin draws come from each prior's own sampler; the <span style="color: red">nested</span> natures have their laws<span style="color: red">, and the agent's fixed coordinates are `½`</span>; every draw carries its label; `q̄` averages the rows, and is not one; the stress natures lie where §4.3 places them ([§4.3](#43-foreign-q-family)) | `test_t14_nature_sampler` |
+| P13 | Models: the metric matches autodiff; exp-decay's map is invariant under permuting `θ` and its `Θ` holds only ordered `ξ`, on the whole manifold; in the hypercone `√det g / θ_1^{D−1}` is constant for every `φ`, the cross-section widths are `r φ^{μ−2}√N/σ`, and the vertex warp is one-to-one, the identity outside `ρ` and gives the angle `κπ/2` ([§4.1](#41-model-families)) | `test_t13_model_and_fim` |
+| P14 | Natures: round-robin draws come from each prior's own sampler; the nested natures have their laws, and the agent's fixed coordinates are `½`; every draw carries its label; `q̄` averages the rows, and is not one; the stress natures lie where §4.3 places them ([§4.3](#43-foreign-q-family)) | `test_t14_nature_sampler` |
 | P15 | `p_ref` in the cones: equals `p_U`; Schur complement `σ^{-2}`; in exp-decay, each ranking's `p_ref` normalises, distinct rankings give distinct priors, and the stiffest-direction ranking does not depend on its transversal ([§3.5](#35-a-third-route-ordering-instead-of-budget), [§4.2](#42-prior-construction)) | `test_t15_pref_construction` |
 | P16 | `p_lat`: conditional equalizer; the two-sided bound closes; equals `p*` at budget 1 when `N = 0` ([§4.2](#42-prior-construction)) | `test_t16_plat_construction` |
 | P17 | One-step score: `r_N = R_{N+1} − R_N`, and the decomposition (2.1.6) ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss), [§4.4](#44-score-estimation)) | `test_t17_one_step_score` |
@@ -1847,7 +1819,7 @@ machinery; it does **not** assert the results
 | P19 | Mis-budgeted `p*`: `p*_M` is the `p*` build at `σ/√M`; at its own budget it reproduces `p*`; at `N ≠ M` its worst-case per-state redundancy is at least `C_N` ([§2.2](#22-the-cast)) | `test_t19_misbudgeted_pstar` |
 | P20 | Round robin: in each prior's own world no other prior's mismatch is negative, on either score ([§2.3](#23-the-natures)) | `test_t20_round_robin` |
 | P21 | Mass bound (3.2.1) at sampled `θ`; the insurance inequality (3.2.3); Jeffreys' loss (3.2.2) in the hypercone ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d), [§9.4](#94-the-mass-bound-eq-321), [§9.5](#95-jeffreys-loss-in-the-hypercone-eq-322)) | `test_t21_mass_bound` |
-| P22 | Diagnostics: both §3.3 terms vanish on the round robin's diagonal; the <span style="color: red">beyond-the-cap label follows its definition, Monte-Carlo error and capacity gap included</span>; `covered_J` agrees with the `θ_1`-interval in the hypercone; the joint-width proxy is compared with geodesic widths at `D = 2` ([§4.5](#45-diagnostics)) | `test_t22_diagnostics` |
+| P22 | Diagnostics: both §3.3 terms vanish on the round robin's diagonal; the beyond-the-cap label follows its definition, Monte-Carlo error and capacity gap included; `covered_J` agrees with the `θ_1`-interval in the hypercone; the joint-width proxy is compared with geodesic widths at `D = 2` ([§4.5](#45-diagnostics)) | `test_t22_diagnostics` |
 | P23 | `p_LN^*`: `I_{p_LN} ≤ I_{p_LN^*} ≤ C_N`, and its `(θ̄, τ)` is a local maximum of `I` ([§4.2](#42-prior-construction)) | `test_t23_tuned_lognormal` |
 | — | **Results:** the sign of every summary of [§2.4](#24-what-is-reported-and-what-cannot-be-asserted) | *not tested: they are the open question ([§3.7](#37-falsification)); asserting them would make the experiment unfalsifiable* |
 
@@ -1865,15 +1837,15 @@ Monte-Carlo error. The tightest check that the score means what §2.1 says.
 **T2 — Pipeline check.** In the constant cross-section at every `D` of the sweep:
 `p_J(θ) = p_U(θ)` pointwise to numerical tolerance, which exercises the metric, the
 quadrature and the normalisation; then, under common random numbers,
-<span style="color: red">`|R(p_J) − R(p_U)| ≤ 10^{-6}` nats, about ten times the error of the normalising quadrature (auto-chosen; please confirm), so any larger difference is a bug.</span> `p*`'s gaps to the other priors
+`|R(p_J) − R(p_U)| ≤ 10^{-6}` nats, about ten times the error of the normalising quadrature (auto-chosen; please confirm), so any larger difference is a bug. `p*`'s gaps to the other priors
 are recorded, not asserted: on the bounded relevant axis `p*` is discrete and can win by
 an edge effect unrelated to the co-volume.
 
 **T3 — `p*` equalizer.** `b(θ) = D_KL(p(x|θ)‖m_{p*}) − I_{p*}` is about zero on
-`supp p*` and at most zero, up to numerical slack, off it<span style="color: red">, including at random states off the candidate set, where an excess measures the set's capacity gap ([§4.5](#45-diagnostics))</span>; `I_{p*}` equals the fixed-point
+`supp p*` and at most zero, up to numerical slack, off it, including at random states off the candidate set, where an excess measures the set's capacity gap ([§4.5](#45-diagnostics)); `I_{p*}` equals the fixed-point
 value. A unit test of the solver, not of any result.
 
-**T4 — Jeffreys.** `p_J` sums to one after quadrature<span style="color: red">, and in exp-decay its normaliser over the whole manifold converges as the quadrature is refined</span>; in the cones its `θ_1`-marginal is
+**T4 — Jeffreys.** `p_J` sums to one after quadrature, and in exp-decay its normaliser over the whole manifold converges as the quadrature is refined; in the cones its `θ_1`-marginal is
 `∝ θ_1^{D−1}` within quadrature tolerance. Catches a wrong determinant, a missing
 normaliser or swapped axes.
 
@@ -1883,13 +1855,13 @@ trace error in the decomposition.
 
 **T6 — Hypercone deviation.** Jeffreys' posterior in the hypercone at `1 ≪ x_1 ≪ W`
 (`W = 50`, `x_1 ≈ 10`, `D ∈ {6, 11, 26}`, as A&M). (i) The numeric posterior-mean deviation
-matches `(D−1)/x_1` within <span style="color: red">`(D−1)²/x_1³`, the first neglected order, whose coefficient is 1 for the mode (§9.2): 0.625 at `D = 26`, where `4(D−1)/x_1² ≈ 1` makes the leading term only marginal. The deviations computed by quadrature are 0.019, 0.077 and 0.418 at `D = 6, 11, 26`, against bounds of 0.025, 0.1 and 0.625.</span> (ii) The deviation is toward the thick end. (iii)
+matches `(D−1)/x_1` within `(D−1)²/x_1³`, the first neglected order, whose coefficient is 1 for the mode (§9.2): 0.625 at `D = 26`, where `4(D−1)/x_1² ≈ 1` makes the leading term only marginal. The deviations computed by quadrature are 0.019, 0.077 and 0.418 at `D = 6, 11, 26`, against bounds of 0.025, 0.1 and 0.625. (ii) The deviation is toward the thick end. (iii)
 The closed-form mode equals the exact root of `θ_1² − x_1θ_1 − (D−1) = 0`. Cross-checked
 against A&M App. A.1, with the sign note of §9.2.
 
 **T7 — Marginals, solvers and the budget.** (a) For a discrete `p*` and a coarse
 continuous prior, `log m_π(X_{1:N})` from the atom sum agrees with quadrature on a shared
-support. (b) Where both the <span style="color: red">candidate-set</span> and the atomic path run, their `R_N^q` agree within
+support. (b) Where both the candidate-set and the atomic path run, their `R_N^q` agree within
 Monte-Carlo and solver tolerance. (c) At small `(D, N)`, `p*` and `R_N^q` built at
 `σ_eff` agree with those from the literal channel `θ → X_{1:N}`; with T12(c), this pins
 the construction that the guarantee of §3.1 rests on.
@@ -1908,7 +1880,7 @@ machinery before any foreign nature is scored.
 **T10 — Determinism.** Two runs with the same seed give bit-identical score arrays
 (`skills/manage-randomness.md`).
 
-**T11 — `p_proj`.** `p_NML ∝ max_θ p(x|θ)` has a finite normaliser on the compact <span style="color: red">manifold</span>; <span style="color: red">`I_{p_proj} ≤ I_{p*} = C_N` within solver tolerance, since `p*` maximises the information (that `I_{p_proj}` tracks `I_{p*}`, far above `I_{p_J}` [read: Quinn Fig. 12], is shown in the report, [§6.1](#61-outputs), not asserted)</span>; and the projection recovers a known `θ̂` from synthetic `x` placed near a
+**T11 — `p_proj`.** `p_NML ∝ max_θ p(x|θ)` has a finite normaliser on the compact manifold; `I_{p_proj} ≤ I_{p*} = C_N` within solver tolerance, since `p*` maximises the information (that `I_{p_proj}` tracks `I_{p*}`, far above `I_{p_J}` [read: Quinn Fig. 12], is shown in the report, [§6.1](#61-outputs), not asserted); and the projection recovers a known `θ̂` from synthetic `x` placed near a
 chosen point of the manifold. The sampler itself is checked against `transtrum` in
 T12(e).
 
@@ -1916,22 +1888,22 @@ T12(e).
 `y(θ)` and metric at sampled `θ`; (b) `p*`'s atoms and weights up to relabelling,
 `I_{p*}` and `B(p*)` at a small exp-decay cell; (c) the capacity `C_N` from `repeat` and
 `mutual`, against the `σ_eff` build; (d) `mutual` of a fixed prior; (e) `transtrum`'s
-cloud of `θ̂` against the port of §4.2<span style="color: red">, which on exp-decay's whole manifold makes the same unconstrained fit `transtrum` requires [read: `resources/AtomicPriors.jl/src/max/sample.jl`, `_transtrum`]</span>: a
+cloud of `θ̂` against the port of §4.2, which on exp-decay's whole manifold makes the same unconstrained fit `transtrum` requires [read: `resources/AtomicPriors.jl/src/max/sample.jl`, `_transtrum`]: a
 two-sample test, and the mass near the manifold's edges (coinciding rates, rates outside
-the window), where the chain's mixing is least certain<span style="color: red">; and two independent chains of the port give the same cloud in a two-sample test</span>. A divergence flags a wrong model,
+the window), where the chain's mixing is least certain; and two independent chains of the port give the same cloud in a two-sample test. A divergence flags a wrong model,
 metric, information estimate, budget reduction or sampler.
 
 **T13 — Models.** (a) For each family, the metric of §4.1 matches autodiff of `y` (the
 closed form of §9.3 in exp-decay). (b) Exp-decay: `y` is unchanged by permuting `θ`, and
-`ordered_box` holds only <span style="color: red">`ξ_1 ≤ … ≤ ξ_D` in `[0, 1]^D`</span>. (c) Hypercone: `√det g / θ_1^{D−1}` is constant
+`ordered_box` holds only `ξ_1 ≤ … ≤ ξ_D` in `[0, 1]^D`. (c) Hypercone: `√det g / θ_1^{D−1}` is constant
 over `Θ` for each `φ`, and the square roots of the metric's eigenvalues along the
-cross-section equal `r φ^{μ−2}√N/σ`. <span style="color: red">(d)</span> The vertex warp: its Jacobian determinant is positive on the grid; outside the
+cross-section equal `r φ^{μ−2}√N/σ`. (d) The vertex warp: its Jacobian determinant is positive on the grid; outside the
 ball of radius `ρ` around `v`, `y` and `√det g` are unchanged; and the angle at `v`
 between the lateral edge and the base face is `κπ/2`. Catches a wrong map, a slip in
 `σ_eff`, or a knob wired to the wrong axis.
 
 **T14 — Natures.** Round-robin draws are the output of each prior's own sampler under
-the cell's seed. <span style="color: red">Nested natures: in the hypercone, at `D_max`, `θ_1` uniform on its half and the cross-section uniform, and the agent's fixed coordinates equal to `½`</span>; for few rates, exactly `D_0` distinct values, each held by `D/D_0`
+the cell's seed. Nested natures: in the hypercone, at `D_max`, `θ_1` uniform on its half and the cross-section uniform, and the agent's fixed coordinates equal to `½`; for few rates, exactly `D_0` distinct values, each held by `D/D_0`
 components and inside the window. Stress natures: every vertex draw lies on a face
 at `v`, within `ρ` of it; the smooth interior's `θ_1` has the truncated normal's mean and
 spread, and its cross-section is uniform. Every draw carries its label; `q̄` is the
@@ -1939,16 +1911,16 @@ equal-weight average of the rows and is not itself a row.
 
 **T15 — `p_ref` in the cones.** (a) At random `θ` in the hypercone, the Schur complement
 `g_{11} − g_{1⊥} g_{⊥⊥}^{-1} g_{⊥1}` of the numerical metric equals `σ^{-2}`
-(`[^3-schur]`). (b) <span style="color: red">`p_ref = p_U`</span> pointwise. <span style="color: red">(c)</span>
-Constant cross-section: `p_ref = p_U = p_J`. <span style="color: red">(d)</span> Exp-decay: each ranking's `p_ref`
+(`[^3-schur]`). (b) `p_ref = p_U` pointwise. (c)
+Constant cross-section: `p_ref = p_U = p_J`. (d) Exp-decay: each ranking's `p_ref`
 normalises, and the slowest-first, fastest-first and, at `D = 2`, stiffest-first priors
-differ pairwise. <span style="color: red">(e)</span> At `D = 2`, the stiffest-first `p_ref` built from two different
+differ pairwise. (e) At `D = 2`, the stiffest-first `p_ref` built from two different
 transversals agrees pointwise within quadrature tolerance (`[^4-stiff]`).
 
 **T16 — `p_lat`.** (a) At convergence the per-cell one-step divergence
 `f^{(N+1)} − f^{(N)}` is within tolerance of the conditional capacity on `supp p_lat`, and
 below it elsewhere. (b) The two-sided bound of §4.2 closes below tolerance. (c) At `N = 0`
-the build equals `p*` at budget 1 on the same <span style="color: red">candidate set</span>. Catches swapped noise levels or a
+the build equals `p*` at budget 1 on the same candidate set. Catches swapped noise levels or a
 wrong difference of divergences.
 
 **T17 — One-step score.** (a) Under common random numbers, `r_N^q(π)` estimated by
@@ -1972,8 +1944,8 @@ optimum.
     `log(5/4)`, as the minimax risk requires; the test uses `log(5/4)`.
 
 **T19 — Mis-budgeted `p*`.** (a) `p*_M` built at `σ/√M` equals `p*` built for budget `M`,
-same code path and <span style="color: red">candidate set</span>. (b) Scored at budget `M`, its `R` matches `p*`'s. (c) In the 1-D
-bounded channel <span style="color: red">of Fisher length `L = 3` at `N = 1`, as in `notes/budget-value-of-information.md` §3.1, so that only `N = 1` lies in the two-atom regime,</span> with `N, M ∈ {1, 4, 16, 64}`, the worst-case per-state redundancy of `p*_M`
+same code path and candidate set. (b) Scored at budget `M`, its `R` matches `p*`'s. (c) In the 1-D
+bounded channel of Fisher length `L = 3` at `N = 1`, as in `notes/budget-value-of-information.md` §3.1, so that only `N = 1` lies in the two-atom regime, with `N, M ∈ {1, 4, 16, 64}`, the worst-case per-state redundancy of `p*_M`
 at budget `N` is at least `C_N`, with equality only at `M = N`. Catches a build at the
 wrong noise, the commonest way to mis-budget by accident.
 
@@ -1986,12 +1958,12 @@ a mixture that does not normalise.
 **T21 — Mass bound.** (a) At sampled `θ` and for every prior, the Monte-Carlo
 `R_N^θ(π)` does not exceed `−log π(A(θ)) + ½` beyond Monte-Carlo error; both sides are
 recorded, since their gap is what the `[guess]` of §3.2 turns on. (b) In the hypercone the
-two sides of (3.2.3) are ordered as stated on every nature. (c) In the hypercone <span style="color: red">at `D ∈ {6, 11}`, where `θ_1 ≫ Dσ/√N` holds at the check points</span>, the divergence between the laws of the relevant datum
-under `θ` and under `p_J` matches (3.2.2) with the correction of §9.5<span style="color: red">; at `D = 26` and `100` the agreement is recorded as observed, not asserted (§9.5)</span>. (a) and (b) cannot fail; all three catch a mis-normalised mixture, a wrong
+two sides of (3.2.3) are ordered as stated on every nature. (c) In the hypercone at `D ∈ {6, 11}`, where `θ_1 ≫ Dσ/√N` holds at the check points, the divergence between the laws of the relevant datum
+under `θ` and under `p_J` matches (3.2.2) with the correction of §9.5; at `D = 26` and `100` the agreement is recorded as observed, not asserted (§9.5). (a) and (b) cannot fail; all three catch a mis-normalised mixture, a wrong
 `σ/√N`, or a Jeffreys density not `∝ θ_1^{D−1}`.
 
 **T22 — Diagnostics.** (a) On the diagonal of the round robin, both terms of (3.3.1) are
-zero within Monte-Carlo error. (b) <span style="color: red">`beyond_cap[π]` holds exactly when `R_mean[π] − C_N` exceeds its Monte-Carlo error plus the capacity gap</span>, and `C_N` equals `p*`'s largest per-state divergence
+zero within Monte-Carlo error. (b) `beyond_cap[π]` holds exactly when `R_mean[π] − C_N` exceeds its Monte-Carlo error plus the capacity gap, and `C_N` equals `p*`'s largest per-state divergence
 (T3). (c) In the axis-aligned hypercone, `covered_J` from the `K` draws matches the
 nature's mass on the `θ_1`-interval where Jeffreys' per-state loss is at most `C_N`. (d)
 At `D = 2` in exp-decay, the proxy and the geodesic widths of §4.5 are computed on the
@@ -2015,12 +1987,12 @@ so a fair anchor for the prior-side machinery
 ([Entropy 25(3):434, CC BY](https://www.mdpi.com/1099-4300/25/3/434)).
 
 - **Configuration.** Exp-decay on the ordered `Θ`, `m = 26` times in `[1, 5]`, `σ = 0.1`;
-  `D ∈ {1, 2, 3, 4}` on the <span style="color: red">candidate-set</span> path, extended toward A&M's `D = 26` through
+  `D ∈ {1, 2, 3, 4}` on the candidate-set path, extended toward A&M's `D = 26` through
   AtomicPriors.jl (OQ-1). Priors `p*` and `p_J`. Seed `20260601` (auto-chosen; please
-  confirm). <span style="color: red">`Θ` is the whole manifold, as A&M's `θ ∈ ℝ^D` (OQ-9).</span>
+  confirm). `Θ` is the whole manifold, as A&M's `θ ∈ ℝ^D` (OQ-9).
 - **Output.** `tests/figures/002_foreign_q_prediction/eyetest_am_fig5.png`: the two
   panels, one line per prior.
-- **Acceptance.** Human review against the known features. <span style="color: red">At every `D`: `I_{p*} ≥ I_{p_J}` and `B(p*) ≈ 0 ≤ B(p_J)`, which hold by `p*`'s optimality. On the range extended toward `D = 26` only: `I_{p*}` flat while `I_{p_J}` falls, and `B(p_J)` rising. A&M find `p*` flat only "once d > 3", and the scores of the other priors peak at `d ≤ 3` [read: A&M §2.2, text on Fig. 5], so on `D ≤ 4` Jeffreys may still be rising. Jeffreys not degrading on the extended range, or `p*` not flat there,</span> exposes a wrong metric, a mis-normalised Jeffreys or a
+- **Acceptance.** Human review against the known features. At every `D`: `I_{p*} ≥ I_{p_J}` and `B(p*) ≈ 0 ≤ B(p_J)`, which hold by `p*`'s optimality. On the range extended toward `D = 26` only: `I_{p*}` flat while `I_{p_J}` falls, and `B(p_J)` rising. A&M find `p*` flat only "once d > 3", and the scores of the other priors peak at `d ≤ 3` [read: A&M §2.2, text on Fig. 5], so on `D ≤ 4` Jeffreys may still be rising. Jeffreys not degrading on the extended range, or `p*` not flat there, exposes a wrong metric, a mis-normalised Jeffreys or a
   broken estimator, before any foreign-nature number is trusted. The outcome is recorded
   in `experiments/002-foreign-q-prediction/CODEGEN_LOG.md`; the full suite runs only after
   approval.
@@ -2054,15 +2026,15 @@ ratification.
 
 - **Base cell and variations** (auto-chosen; please confirm). Each model runs a base cell,
   and each knob is varied alone from it, across the `D`-sweep and every nature. The full
-  cross-product of the knobs below is about <span style="color: red">430</span> settings per `D` and nature, which the
+  cross-product of the knobs below is about 430 settings per `D` and nature, which the
   questions of §2.4 do not need. Base: `N = 1`; in exp-decay `σ = 0.1` (A&M's) and the
-  <span style="color: red">whole manifold</span>; in the hypercone `σ = 1`, `W = 50`, taper on, `φ = 1` and `κ = 1`.
+  whole manifold; in the hypercone `σ = 1`, `W = 50`, taper on, `φ = 1` and `κ = 1`.
   The hypercone needs `σ/√N ≥ 1` for its cross-section to stay below resolution
   ([§1.2](#12-generative-model)), as in §9.2 and the reduced cone of
   `notes/budget-value-of-information.md` §4.
 - **Dimension `D`.** As far as the solver allows: `D = 1` is spec 000's floor, `D = 2`
-  A&M's smallest setting, and larger `D` approach A&M's `D ≥ 11`. <span style="color: red">Candidate-set path</span> for
-  `D ≤ D_switch`, AtomicPriors.jl beyond (OQ-1). <span style="color: red">Nested natures: `D_max = 26` in the hypercone, agents at every `D` of the sweep.</span> T6 and T21(c) need no solver and run at
+  A&M's smallest setting, and larger `D` approach A&M's `D ≥ 11`. Candidate-set path for
+  `D ≤ D_switch`, AtomicPriors.jl beyond (OQ-1). Nested natures: `D_max = 26` in the hypercone, agents at every `D` of the sweep. T6 and T21(c) need no solver and run at
   `D ∈ {6, 11, 26}`.
 - **Noise `σ` and budget `N`, varied separately.** At `N = 1`, `σ ∈ {0.05, 0.1, 0.2, 0.4}`
   in exp-decay and `σ ∈ {0.5, 1, 2, 4}` in the hypercone; and `N ∈ {1, 2, 4, 8}` at the
@@ -2071,19 +2043,19 @@ ratification.
   exp-decay the range runs from far from the asymptotic regime to nearer it; in the
   hypercone, `σ < 1` and `N > 1` move the point where the cross-section crosses
   resolution, `θ_1 = Wσ/√N`, into the cone. (Auto-chosen; please confirm.)
-- **Exp-decay box.** <span style="color: red">The whole manifold, `ξ ∈ [0, 1]` (base), and the window's range, `ξ ∈ [e^{−1}, e^{−1/5}]`, the control of §4.1 (OQ-9).</span>
+- **Exp-decay box.** The whole manifold, `ξ ∈ [0, 1]` (base), and the window's range, `ξ ∈ [e^{−1}, e^{−1/5}]`, the control of §4.1 (OQ-9).
 - **Hypercone knobs.** Taper `{1, 0.5, 0}`: on, onset, and the constant cross-section of
   T2. Fall-off `φ ∈ {1, 0.5, 0.1}`: the square cone, then jointly irrelevant
-  cross-sections<span style="color: red">; question 3 runs at `φ ∈ {0.5, 0.1}` only</span>. Curvature `κ ∈ {1, ½, ¼}`: off, a 45° vertex and a 22.5°
+  cross-sections; question 3 runs at `φ ∈ {0.5, 0.1}` only. Curvature `κ ∈ {1, ½, ¼}`: off, a 45° vertex and a 22.5°
   one, against `p_proj` ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)). The
-  curvature cells run at `σ = 0.1`<span style="color: red">, `W = 5` and `φ = 0.05`</span>: the base face is then 10 noise units
-  wide <span style="color: red">in its first cross-section direction, so the warped ball, of radius `5σ_eff = 0.5`, lies inside it, while the further directions stay jointly irrelevant (`Σ L_μ² ≈ 0.25`, about 0.03 nats)</span>; the relevant
+  curvature cells run at `σ = 0.1`, `W = 5` and `φ = 0.05`: the base face is then 10 noise units
+  wide in its first cross-section direction, so the warped ball, of radius `5σ_eff = 0.5`, lies inside it, while the further directions stay jointly irrelevant (`Σ L_μ² ≈ 0.25`, about 0.03 nats); the relevant
   axis keeps the base cell's 50 Fisher lengths. (Auto-chosen; please confirm.)
 - **Natures.** Every row of [§2.3](#23-the-natures) at every cell where it is defined: the
-  round robin, the <span style="color: red">nested</span> natures of the cell's model (few rates <span style="color: red">at every `D`</span>, and with
+  round robin, the nested natures of the cell's model (few rates at every `D`, and with
   `D_0 = 2` at even `D ≥ 4` once the atomic path runs), and in the hypercone the stress
   natures (the vertex only with the curvature knob on).
-<span style="color: red">- **Candidate sets and grids.** The priors built by Blahut–Arimoto use candidate sets with points at most 0.5 Fisher lengths apart at the cell's `σ_eff`, about five per atom spacing (`[^1-spacing]`; §4.2); a cell whose set would pass `10^6` points goes to the atomic path. The quadrature grids of the continuous priors at small `D` keep `G` per axis: 50 for `D ≤ 2`, 30 for `D = 3`, 20 for `D = 4`, ordered cells only in exp-decay, and in the hypercone `G_1 = ⌈2W/σ_eff⌉` cells along `θ_1`. Refinement check at one cell with `G ∈ {20, 30, 50}` and spacings `{1, 0.5, 0.25}`. (Auto-chosen; please confirm.)</span>
+- **Candidate sets and grids.** The priors built by Blahut–Arimoto use candidate sets with points at most 0.5 Fisher lengths apart at the cell's `σ_eff`, about five per atom spacing (`[^1-spacing]`; §4.2); a cell whose set would pass `10^6` points goes to the atomic path. The quadrature grids of the continuous priors at small `D` keep `G` per axis: 50 for `D ≤ 2`, 30 for `D = 3`, 20 for `D = 4`, ordered cells only in exp-decay, and in the hypercone `G_1 = ⌈2W/σ_eff⌉` cells along `θ_1`. Refinement check at one cell with `G ∈ {20, 30, 50}` and spacings `{1, 0.5, 0.25}`. (Auto-chosen; please confirm.)
 - **Draws.** `S_q = 500` per cell, raised to `2000` where the Monte-Carlo error of a
   reported gap exceeds a tenth of its size, since the gaps are differences of large terms.
   For §4.5's quantities of §3.2, `K = 200` draws of `θ` with `J = 64` draws of `x̄` each.
@@ -2094,8 +2066,8 @@ ratification.
   and T22 at one cheap cell (exp-decay, `D = 2`, `σ = 0.1`, `N = 1`, in `p_U`'s own
   world; T14, T20 and T22 over all rows of that cell). T2 over the `D`-sweep of the
   constant cross-section. T6 and T21 at `D ∈ {6, 11, 26}` in the hypercone. T7b and T7c at
-  small `(D, N)`. T9 and T11 over the `D`-sweep. T12 at the frozen cells of §5.5. <span style="color: red">T13(d)</span>
-  at one curvature cell. <span style="color: red">T15(d), T15(e)</span> and T23 at the cheap cell. T16 at
+  small `(D, N)`. T9 and T11 over the `D`-sweep. T12 at the frozen cells of §5.5. T13(d)
+  at one curvature cell. T15(d), T15(e) and T23 at the cheap cell. T16 at
   `N ∈ {0, 1, 4}` in the 1-D bounded channel and at the cheap cell. T18 on its two
   Bernoulli grids. The experiment script runs every cell of the sweep.
 
@@ -2114,24 +2086,19 @@ without making Julia a dependency of the test suite:
 - **Consumption (every run).** `test_t12_atomicpriors_reference` compares the Python
   outputs with the JSON values; no Julia at test time.
 - **Parametrisation bridge.** Julia's `yexp` uses `k_μ = −log θ_μ` on `θ ∈ [0, 1]`, or
-  `k_μ = e^{θ_μ}` with its `loglog` option. <span style="color: red">The first coordinate is this spec's `ξ_μ = e^{−k_μ}`, so `generate.jl` needs no change of variables beyond sorting the rates</span>, and T12(a) asserts the bridge before the other fixtures are
+  `k_μ = e^{θ_μ}` with its `loglog` option. The first coordinate is this spec's `ξ_μ = e^{−k_μ}`, so `generate.jl` needs no change of variables beyond sorting the rates, and T12(a) asserts the bridge before the other fixtures are
   trusted.
 - **What is frozen.** (a) `y(θ)` and the metric at about 10 sampled `θ`; (b) `p*`'s atoms
   and weights, `I_{p*}` and `B(p*)` at exp-decay, `D ∈ {2, 3}`, `σ = 0.1`; (c)
   `C_N = sup_π I_π(Θ;X_{1:N})` through `repeat` for `N ∈ {1, 2, 4}` at `D = 2`, the
   independent check that the `σ_eff` build is the budget-`N` capacity; (d) `mutual` of a
   fixed grid prior; (e) `transtrum`'s cloud of `θ̂` at exp-decay, `D = 2`, `σ = 0.1`,
-  <span style="color: red">on the whole manifold</span>, as `transtrum` requires.
+  on the whole manifold, as `transtrum` requires.
 
 `p_lat` has no fixture here, since AtomicPriors.jl has no conditional objective; its
 references are T18 and the second eye test (§5.3).
 
 ## 6. Report
-
-> [!warning]
-> Revised in Stage 3b of the full red-team pass (F1–F5, F9, m11): the failure map is new,
-> the spectrum figure is gone, cells are labelled rather than set aside, and the gaps
-> split into gaps to Jeffreys and to the privileged-information priors.
 
 `experiments/002-foreign-q-prediction/REPORT.md`, generated by
 `experiments/002-foreign-q-prediction/run.py`.
@@ -2142,23 +2109,23 @@ Under `experiments/002-foreign-q-prediction/`:
 
 - `figures/am_fig5_reproduction.png` — `I/log 2` and `max_θ b/log 2` against `D` in
   exp-decay, for `p*`, `p_J`, `p_LN`, `p_LN^*` and `p_proj`; the `p_proj` curve
-  reproduces Quinn's Fig. 12<span style="color: red">, which shows whether `I_{p_proj}` tracks `I_{p*}` (T11 asserts only `I_{p_proj} ≤ C_N`)</span>.
+  reproduces Quinn's Fig. 12, which shows whether `I_{p_proj}` tracks `I_{p*}` (T11 asserts only `I_{p_proj} ≤ C_N`).
 - `figures/mismatch_table.png` — the table of [§2.3](#23-the-natures) as a heat map, one
-  panel per model, `D` and score: natures in rows, priors in columns. <span style="color: red">Cells beyond the cap and the worlds of `p*`'s relatives are labelled</span> ([§3.7](#37-falsification)); the margins carry each column's
+  panel per model, `D` and score: natures in rows, priors in columns. Cells beyond the cap and the worlds of `p*`'s relatives are labelled ([§3.7](#37-falsification)); the margins carry each column's
   largest and mean mismatch, with `q̄`'s mean as the reference
   ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted),
   [§2.5](#25-controls-the-ceiling-and-self-sampling)).
-- `figures/gaps_by_nature.png` — for each protagonist and score, the gap <span style="color: red">to Jeffreys and the gap to the best privileged-information prior</span> in every row, one panel per `D`, <span style="color: red">labels as above</span>.
-- <span style="color: red">`figures/failure_map.png` — for each prior and score, one point per row at breadth `I_q/C_N` against the best rival's mismatch, coloured by the prior's signed gap to that rival, with the line `C_N(1 − x)`, the nested natures' tracks across `D` and the relatives' worlds marked ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)).</span>
+- `figures/gaps_by_nature.png` — for each protagonist and score, the gap to Jeffreys and the gap to the best privileged-information prior in every row, one panel per `D`, labels as above.
+- `figures/failure_map.png` — for each prior and score, one point per row at breadth `I_q/C_N` against the best rival's mismatch, coloured by the prior's signed gap to that rival, with the line `C_N(1 − x)`, the nested natures' tracks across `D` and the relatives' worlds marked ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)).
 - `figures/exchange.png` — for each pair of priors and score, the two crossed cells of
   the round robin, against `D`.
 - `figures/protagonist_gaps.png` — the pairwise gaps between `p*`, `p_lat` and `p_proj`,
   across the stress natures and the curvature knob
   ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)); and in exp-decay `δS(p*, p_LN^*)`
   in every row ([§3.6](#36-what-would-sink-it), point 2).
-- `figures/mismatch_vs_D.png` — each prior's <span style="color: red">loss against the agent's `D` on every nested nature, beside the submodel's own floor</span>,
-  on both scores, each point marked with its `joint_width2`; in exp-decay, in both boxes<span style="color: red">; each trend twice, with the full cast and with the cast present at every `D`</span>.
-- `figures/joint_width.png` — in the cones, each prior's mismatch on the <span style="color: red">nested</span> natures
+- `figures/mismatch_vs_D.png` — each prior's loss against the agent's `D` on every nested nature, beside the submodel's own floor,
+  on both scores, each point marked with its `joint_width2`; in exp-decay, in both boxes; each trend twice, with the full cast and with the cast present at every `D`.
+- `figures/joint_width.png` — in the cones, each prior's mismatch on the nested natures
   against `joint_width2` across the fall-off sweep, `p_ref`'s included: what a loss to
   `p_ref` in the cone is read against
   ([§3.5](#35-a-third-route-ordering-instead-of-budget), [§3.7](#37-falsification)).
@@ -2187,7 +2154,7 @@ Under `experiments/002-foreign-q-prediction/`:
 `am_fig5_reproduction.png`: exp-decay's `D`-sweep at `σ = 0.1`. `mismatch_table.png`,
 `gaps_by_nature.png`, `exchange.png`, `insurance.png`, `mass_bound.png` and
 `decomposition.png`: every cell of §5.4 in exp-decay and the hypercone.
-`failure_map.png`: every cell of §5.4. `mismatch_vs_D.png`: the <span style="color: red">nested</span> natures over the `D`-sweeps, and exp-decay's box
+`failure_map.png`: every cell of §5.4. `mismatch_vs_D.png`: the nested natures over the `D`-sweeps, and exp-decay's box
 variation. `joint_width.png`: the hypercone's fall-off variation. `protagonist_gaps.png`: the
 curvature variation and the stress natures, and every exp-decay cell for `p_LN^*`.
 `negative_control.png`: the constant cross-section only.
@@ -2198,18 +2165,18 @@ curvature variation and the stress natures, and every exp-decay cell for `p_LN^*
 
 `results_table.json`, one row per `(model, D, σ, N, box, W, taper, fall-off, curvature, ν)`:
 
-- **Key.** `model`, `D` <span style="color: red">(the agent's)</span>, `sigma`, `N`, `box` (exp-decay), `W` (hypercone), `taper`,
-  `falloff`, `curvature` (`κ`), `nature` (the own-world prior, or the <span style="color: red">nested</span>
-  or stress nature's name)<span style="color: red">, and `D_max` for a nested nature</span>. `R_N` and `p*`
+- **Key.** `model`, `D` (the agent's), `sigma`, `N`, `box` (exp-decay), `W` (hypercone), `taper`,
+  `falloff`, `curvature` (`κ`), `nature` (the own-world prior, or the nested
+  or stress nature's name), and `D_max` for a nested nature. `R_N` and `p*`
   operate at `sigma_eff = sigma/√N`; `r_N` and `p_lat` use `sigma` and `N`.
 - **Scores.** `R_mean[π]`, `R_mcse[π]`, `r_mean[π]`, `r_mcse[π]` for
   `π ∈ {p*, p_lat, p_proj, p_LN^*, p*_{N/10}, p*_{10N}, p_J, p_U, p_LN, p_ref, q̄}`, in
   nats; `p_LN` and `p_LN^*` empty in the cones, `p_ref` once per ranking in exp-decay.
 - **Mismatches and marks.** `floor_R`, `floor_r` (§4.3); `mismatch_R[π]`, `mismatch_r[π]`
-  with their errors; `C_N`; <span style="color: red">`beyond_cap[π]`; `relatives_world`, true in the worlds of `p*`'s relatives; for a nested nature, `floor_sub`, the submodel's own floor</span> (§4.5).
+  with their errors; `C_N`; `beyond_cap[π]`; `relatives_world`, true in the worlds of `p*`'s relatives; for a nested nature, `floor_sub`, the submodel's own floor (§4.5).
 - **Row summaries** of [§2.4](#24-what-is-reported-and-what-cannot-be-asserted), with
   their errors, for `π ∈ {p*, p_lat, p_proj, p_LN^*}` and `S ∈ {R, r}`:
-  <span style="color: red">`gap_J[π][S]`, to Jeffreys; `gap_pi[π][S]`, over the privileged-information priors</span> other than the row's own, once per
+  `gap_J[π][S]`, to Jeffreys; `gap_pi[π][S]`, over the privileged-information priors other than the row's own, once per
   ranking of `p_ref` in exp-decay; `gap_pair[π, π'][S]` for the protagonist pairs of
   §2.4; `delta_R_pref`, once per ranking in exp-decay
   ([§3.5](#35-a-third-route-ordering-instead-of-budget)); `gap_budget[S]` and its parts
@@ -2219,24 +2186,24 @@ curvature variation and the stress natures, and every exp-decay cell for `p_LN^*
 - **Diagnostics** (§4.5). `mean_shift[π]`, `spread_mismatch[π]`; `covered_J`;
   `mass_bound_gap[π]`, the mean of `−log π(A(θ)) + ½ − R_N^θ(π)` over the `K` draws;
   `joint_width2`, and at `D = 2` in exp-decay `joint_width_ratio`, the proxy over the
-  geodesic width (T22(d)). <span style="color: red">For the failure map: `breadth[S]`, and per prior `best_rival[π][S]` and `gap_rival[π][S]`.</span>
+  geodesic width (T22(d)). For the failure map: `breadth[S]`, and per prior `best_rival[π][S]` and `gap_rival[π][S]`.
 - **Prior side.** `I_pstar`, `I_pJ`, `I_pproj`, `I_pLNstar`, `B_pstar`, `B_pJ`, `I_plat`
-  (bits); `pstar_n_atoms`, `pstar_method` (<span style="color: red">candidate set</span> or atomic); `plat_support_size`;
+  (bits); `pstar_n_atoms`, `pstar_method` (candidate set or atomic); `plat_support_size`;
   `pLNstar_theta_bar`, `pLNstar_tau`; `pref_rankings`, the rankings run in exp-decay.
 - **Provenance.** `S_q`, `seed_stream`.
 
-Computed and not kept in the table: the per-draw score arrays, the <span style="color: red">candidate sets and</span> grids, and the drawn
+Computed and not kept in the table: the per-draw score arrays, the candidate sets and grids, and the drawn
 `θ` with their labels, which go to
 `q_metadata.jsonl` so that results can be re-split by nature.
 
 ### 6.4 Report body
 
 1. The A&M Fig. 5 reproduction, with the eye-test approval note.
-2. The table of mismatches per model, `D` and score, with <span style="color: red">its labels</span>
-   and the column summaries against `q̄` (§2.4, §2.5, §3.7)<span style="color: red">, and the failure maps beside it</span>.
-3. Along the rows: the gaps per protagonist and score, <span style="color: red">to Jeffreys and to the privileged-information priors,</span> the pairwise gaps (§3.4), and the
+2. The table of mismatches per model, `D` and score, with its labels
+   and the column summaries against `q̄` (§2.4, §2.5, §3.7), and the failure maps beside it.
+3. Along the rows: the gaps per protagonist and score, to Jeffreys and to the privileged-information priors, the pairwise gaps (§3.4), and the
    exchange per pair of priors.
-4. Across `D`: each prior's <span style="color: red">loss on the nested natures beside the submodel's floor, in exp-decay in both boxes</span>, and in the cones against the joint width
+4. Across `D`: each prior's loss on the nested natures beside the submodel's floor, in exp-decay in both boxes, and in the cones against the joint width
    (§1.2, §3.5).
 5. The insurance reading and the tightness of the mass bound (§3.2).
 6. The value of knowing the budget: `Δ^{bud}` and its two parts by `D`, model and nature,
@@ -2247,7 +2214,7 @@ Computed and not kept in the table: the per-draw score arrays, the <span style="
 8. The two terms of §3.3 and the calibration histogram.
 9. Test results: T0–T23, pass or fail with the tolerances achieved, and the joint-width
    ratio of T22(d).
-10. Notes: the §3.7 reading per <span style="color: red">budget-conscious prior, `p*` first,</span> and group of rows (supported <span style="color: red">or refuted, with the labels</span>), solver caveats (OQ-1), and anything surprising.
+10. Notes: the §3.7 reading per budget-conscious prior, `p*` first, and group of rows (supported or refuted, with the labels), solver caveats (OQ-1), and anything surprising.
 
 ## 7. Open questions
 
@@ -2268,11 +2235,11 @@ revision log and the git history.
 - **OQ-2 — The laws of the natures** ([§4.3](#43-foreign-q-family)). Few rates:
   `D_0 = 1`, one rate shared by all components and uniform in `θ` over the observation
   window, so the row does not lean toward `p_U` and does not depend on the box;
-  `D_0 = 2` joins once AtomicPriors.jl extends `D` (OQ-1). <span style="color: red">A fixed spectrum was chosen here and removed in the full red-team pass (F4): its data law drifted with `D`, and clipping folded its bulk end into an edge. The few-rates nature is now a nested nature ([§2.3](#23-the-natures)).</span> Stress
+  `D_0 = 2` joins once AtomicPriors.jl extends `D` (OQ-1). A fixed spectrum was chosen here and removed in the full red-team pass (F4): its data law drifted with `D`, and clipping folded its bulk end into an edge. The few-rates nature is now a nested nature ([§2.3](#23-the-natures)). Stress
   natures: nature on the faces next to the sharpened vertex, and a smooth interior that
   is Gaussian along the hypercone's relevant coordinate, three atom spacings wide.
 - **OQ-3 — Log-normal's parameters** ([§4.2](#42-prior-construction)). `p_LN` keeps
-  A&M's `(θ̄, τ) = (0, 1)` as a <span style="color: red">privileged-information</span> prior. A second log-normal, `p_LN^*`, takes
+  A&M's `(θ̄, τ) = (0, 1)` as a privileged-information prior. A second log-normal, `p_LN^*`, takes
   the `(θ̄, τ)` that maximise `I_π(Θ;X_{1:N})` and joins the protagonists: it adapts to
   the budget but can be neither discrete nor weighted to the edges
   ([§2.2](#22-the-cast), [§3.6](#36-what-would-sink-it) point 2).
@@ -2295,7 +2262,7 @@ revision log and the git history.
   rate first and fastest rate first. The stiffest Fisher direction is a third ranking
   where it integrates to a coordinate: always at `D = 2`, and almost nowhere at `D = 3`
   and `D = 4`, so only at `D = 2`.
-- **OQ-9 — Exp-decay's parameter range** ([§4.1](#41-model-families)). <span style="color: red">First the box `[−1, 3]` in `θ`; in the full red-team pass (F8) replaced by the whole manifold, held in A&M's compact coordinate `ξ = e^{−k}`, whose faces are the model's own edges.</span> The window's range, in which no rate can leave it, stays as the control.
+- **OQ-9 — Exp-decay's parameter range** ([§4.1](#41-model-families)). First the box `[−1, 3]` in `θ`; in the full red-team pass (F8) replaced by the whole manifold, held in A&M's compact coordinate `ξ = e^{−k}`, whose faces are the model's own edges. The window's range, in which no rate can leave it, stays as the control.
 - **OQ-10 — The joint width in exp-decay** ([§4.5](#45-diagnostics)). A local proxy,
   each eigenvalue's square root times the chord of `Θ` along its eigenvector, compared
   with geodesic widths at `D = 2` (T22(d)).
@@ -2538,7 +2505,7 @@ Check against the reduced computation (`notes/budget-value-of-information.md` §
 `W = 50`, `σ = 1`, `N = 1`), which finds the `θ_1` below which Jeffreys' loss on this datum
 exceeds `C_N`. At `D = 26` (`C_N = 4.02` nats) it finds 41.1; (9.5.1) gives 41.3, and 41.0
 with the correction. At `D = 100` (`C_N = 11.25`) it finds 42.7; (9.5.1) gives 43.7, and
-42.5 with the correction. <span style="color: red">Both check points lie outside the range `θ_1 ≫ Dσ/√N` in which (9.5.1) is derived (`θ_1 ≈ 41` at `D = 26`; `θ_1 ≈ 43 < D = 100`), so the agreement there is observed, not derived; T21(c) asserts (9.5.1) only at `D ∈ {6, 11}`.</span>
+42.5 with the correction. Both check points lie outside the range `θ_1 ≫ Dσ/√N` in which (9.5.1) is derived (`θ_1 ≈ 41` at `D = 26`; `θ_1 ≈ 43 < D = 100`), so the agreement there is observed, not derived; T21(c) asserts (9.5.1) only at `D ∈ {6, 11}`.
 
 
 ## 10. Revision log
