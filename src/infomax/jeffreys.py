@@ -23,3 +23,18 @@ def jeffreys_bernoulli_cdf(theta: np.ndarray) -> np.ndarray:
     """
     theta = np.asarray(theta, dtype=np.float64)
     return (2.0 / np.pi) * np.arcsin(np.sqrt(np.clip(theta, 0.0, 1.0)))
+
+
+# ---------------------------------------------------------------------------
+# Spec 002 (appended; the spec-000 functions above are unchanged)
+# ---------------------------------------------------------------------------
+
+
+def build_jeffreys(model, *, quadrature_points: int | None = None):
+    """`p_J ∝ sqrt(det g)` on `Theta`, in `D` dimensions (spec 002 §4.2).
+
+    Normalised by quadrature with `quadrature_points` per axis (default: the
+    implementation's choice), exposed as `log_normaliser`; sampled in exp-decay, with
+    extended precision above `D ≈ 12`. Stub until the implementation stage.
+    """
+    raise NotImplementedError("spec 002 §4.2: build_jeffreys")

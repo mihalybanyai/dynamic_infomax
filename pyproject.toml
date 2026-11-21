@@ -24,3 +24,9 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/infomax"]
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: sweep-level spec-002 tests (D-sweeps, the atomic path); run with `pytest -m slow`",
+]
+addopts = "-m 'not slow'"
