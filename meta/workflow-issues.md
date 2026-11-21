@@ -287,6 +287,18 @@ here is public, history included.
 
 ---
 
+### Specs outgrow what a reviewer can hold at once [conventions]
+
+*Opened 2026-11-21*
+
+While triaging the full red-team of spec 002, MB noted that the spec is now larger than
+can be held in memory at once. Its body runs to about 2,500 lines, and the revision log
+adds more than 1,100. Every finding therefore sends MB back to sections that are no
+longer remembered in enough detail. MB's suggested direction is modularity, for example
+a conceptual core in one file with the algorithm, the tests and the report in sibling
+files, or the revision log moved out of the spec. To be considered later, together with
+"Revise write-math-spec skill after first 3 specs", since it changes the spec format.
+
 ## Resolved / dismissed
 
 <!-- Entries move here when closed, with a one-line resolution note. -->
