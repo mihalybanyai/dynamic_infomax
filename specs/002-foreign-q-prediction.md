@@ -734,7 +734,7 @@ The agent is mis-budgeted: it built `p*_M` for a budget `M` that is not the one 
   case in 1-D the loss grows linearly in `N/M` (that note's §3.1). In the reduced hypercone
   the coarser prior nonetheless wins on both natures computed, at every budget tested: at
   budget 16, `p*_1` beats `p*_{16}` by 4.4 nats on a nature uniform in the relevant
-  coordinate (its §3.3). A coarser prior winning is reported as a finding in its own right.
+  coordinate (its §3.3)<span style="color: red">[^2-reduced]</span>. A coarser prior winning is reported as a finding in its own right.
 - *Too fine* (`M > N`): the prior tilts toward the states where more detail is resolvable
   at `M` than at `N`, the [co-volume](../GLOSSARY.md#co-volume) gradient of the directions
   that cross resolution between the two budgets. The tilt helps natures concentrated where
@@ -743,6 +743,8 @@ The agent is mis-budgeted: it built `p*_M` for a budget `M` that is not the one 
 So the sign of the budget's value is a result, like every summary of
 [§2.4](#24-what-is-reported-and-what-cannot-be-asserted). Jeffreys is the `M → ∞` end of
 the fine side.
+
+[^2-reduced]: <span style="color: red">The number comes from the reduced cone, which ignores what the cross-section's data say about `θ_1`, and at `N = 16` the cross-section is resolved beyond `θ_1 = W/4` ([§1.2](#12-generative-model)). To the order of Fisher information this loses nothing: whatever the cross-section, the information left for `θ_1` is `σ^{-2}` (`[^3-schur]`), as in the reduced model. Beyond that order the effect is unchecked [guess]; the full cone at `D = 26` would settle it.</span>
 
 ### 2.3 The natures
 
@@ -3738,7 +3740,7 @@ their changed prose red. §0 flips to draft; §1–§3 were draft already.
   Jeffreys in extended precision.
 - **Minor.** m2 cites original sources (A&M Figs. 1–2 and App. A.1, Mattingly's footnote
   ∥, Quinn §5.2, `cone_pstar.out`), and `[^0-matched]` gives its argument. m4, m5, m6,
-  m7, m9–m14 as decided. m3 is not applied: see the report.
+  m7, m9–m14 as decided. m3: the planned recompute proved unworkable, since scaling `σ` keeps the cross-section unresolved at every budget, so the 4.4-nat number in §2.2 is flagged as a reduced-model figure instead (`[^2-reduced]`), as MB decided.
 
 The glossary's *deployable prior* entry follows F3(b). Downstream: no test or
 implementation exists yet.
