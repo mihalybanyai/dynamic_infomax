@@ -18,8 +18,10 @@ from dataclasses import dataclass
 
 import numpy as np
 
-FAMILIES: tuple[str, ...] = ("exp_decay", "hypercone")
-"""Model families; the constant cross-section is the hypercone with `taper = 0`."""
+FAMILIES: tuple[str, ...] = ("exp_decay", "hypercone", "binomial")
+"""Model families; the constant cross-section is the hypercone with `taper = 0`. The
+binomial model (spec 000's Bernoulli likelihood) serves only T18 and the Komaki eye test
+(§5.3), so that they run `build_plat`'s own update."""
 
 BOX: dict[str, tuple[float, float]] = {
     "full": (0.0, 1.0),
@@ -129,3 +131,13 @@ def warp_vertex(y: np.ndarray, v: np.ndarray, kappa: float, rho: float) -> np.nd
     of radius `rho`, and is the identity outside it.
     """
     raise NotImplementedError("spec 002 §4.1: warp_vertex")
+
+
+def binomial_model(N: int, M: int = 1) -> Model:
+    """Spec 000's Bernoulli likelihood, `N` observations seen and `M` to predict, counted
+    as a binomial (spec §5.2 T18, §5.3): `family = "binomial"`, `D = 1`, `Theta = [0, 1]`.
+
+    `build_plat` on this model uses the binomial divergences and `N + M` in place of
+    `N + 1`; its candidates are the grid of `theta` passed to it.
+    """
+    raise NotImplementedError("spec 002 §5.3: binomial_model")

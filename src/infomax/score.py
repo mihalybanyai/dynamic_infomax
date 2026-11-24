@@ -17,7 +17,11 @@ from infomax.models import Model
 class CellScores:
     """One cell's scores per prior, with Monte-Carlo errors, floors and mismatches (§4.4).
 
-    Dict keys are prior names. `draws_R` and `draws_r` hold the per-draw arrays.
+    Dict keys are prior names. `draws_R` and `draws_r` hold the per-draw arrays. The
+    errors of mismatches come from per-draw differences (§4.4, "Errors of differences").
+    `theta` and `labels` are the nature's draws and their labels (§4.3). `floor_sub` is the
+    submodel's own floor for a nested hypercone nature, `None` otherwise. `mean_shift` and
+    `spread_mismatch` are the two terms of (3.3.1) per prior, averaged over draws (§4.5).
     """
 
     R_mean: dict
@@ -30,6 +34,13 @@ class CellScores:
     mismatch_r: dict
     draws_R: dict
     draws_r: dict
+    mismatch_R_mcse: dict | None = None
+    mismatch_r_mcse: dict | None = None
+    theta: np.ndarray | None = None
+    labels: np.ndarray | None = None
+    floor_sub: float | None = None
+    mean_shift: dict | None = None
+    spread_mismatch: dict | None = None
 
 
 def score_cell(
@@ -40,8 +51,13 @@ def score_cell(
     S_q: int,
     rng: np.random.Generator,
     literal_nfold: bool = False,
+    nature_model: Model | None = None,
 ) -> CellScores:
-    """Score every prior in `priors` on one cell, under common random numbers (§4.4)."""
+    """Score every prior in `priors` on one cell, under common random numbers (§4.4).
+
+    `model` is the agent's model. For a nested hypercone nature, `nature_model` is the
+    `D_max` cone the nature lives in (§2.3); the agent's predictions share its data space.
+    """
     raise NotImplementedError("spec 002 §4.4: score_cell")
 
 

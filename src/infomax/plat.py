@@ -1,8 +1,9 @@
 """The latent information prior `p_lat` (spec 002 §4.2; Komaki 2011; Fogel & Feder 2024).
 
 Maximises `I_pi(Theta; X_{N+1:N+M} | X_{1:N})` by the Blahut–Arimoto variant whose update
-uses `f^(N+M) - f^(N)`; the spec's cast uses `M = 1`. The binomial build serves T18 and
-the second eye test. Stubs until the implementation stage.
+uses `f^(N+M) - f^(N)`; the spec's cast uses `M = 1`. The same build runs on the binomial
+model of `infomax.models.binomial_model` for T18 and the second eye test. Stubs until the
+implementation stage.
 """
 from __future__ import annotations
 
@@ -34,7 +35,9 @@ def build_plat(
 ) -> PLatResult:
     """`p_lat` at `(N, M)` on the model's candidate set, or on `candidates` (§4.2).
 
-    `model.N = 0` is allowed: then `p_lat` is `p*` at budget `M` (T16(c)).
+    `model.N = 0` is allowed: then `p_lat` is `p*` at budget `M` (T16(c)). No atoms are
+    extracted: `prior.atoms` is the candidate set in the order given, `prior.weights` its
+    weights. On a binomial model the divergences are the binomial ones (§5.3).
     """
     raise NotImplementedError("spec 002 §4.2: build_plat")
 
@@ -42,17 +45,3 @@ def build_plat(
 def conditional_divergence(result: PLatResult, model: Model, theta: np.ndarray, *, M: int = 1) -> np.ndarray:
     """Per-state `f^(N+M)(theta) - f^(N)(theta)` under `result.prior` (T16)."""
     raise NotImplementedError("spec 002 §4.2: conditional_divergence")
-
-
-@dataclass(frozen=True)
-class BinomialPLat:
-    """`p_lat` of the binomial model on a finite grid of `theta` (T18, eye test)."""
-
-    theta_grid: np.ndarray
-    weights: np.ndarray
-    conditional_information: float
-
-
-def build_plat_binomial(theta_grid: np.ndarray, N: int, M: int = 1, *, tol: float = 1e-10) -> BinomialPLat:
-    """`p_lat` at `(N, M)` for Bernoulli data counted as binomial (spec 000's likelihood)."""
-    raise NotImplementedError("spec 002 §5.3: build_plat_binomial")

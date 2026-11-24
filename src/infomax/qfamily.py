@@ -42,3 +42,12 @@ def submodel_floor(model_max: Model, D: int, theta: np.ndarray) -> np.ndarray:
 def build_qbar(rows: list[tuple]):
     """`q̄`: the equal-weight mixture of one cell's rows; not itself a row (§4.2, §2.5)."""
     raise NotImplementedError("spec 002 §4.2: build_qbar")
+
+
+def cell_rows(model: Model, cast: dict) -> list[tuple]:
+    """The rows (natures) of a cell whose agent model is `model` (§2.3, §4.3): the own
+    world of every prior in `cast` except `q̄`, which is not a row; few rates in exp-decay;
+    in the hypercone the interior stress nature, and the vertex one with curvature on. The
+    hypercone's nested halves are rows only of a submodel agent's cell, whose nature model
+    is the `D_max` cone."""
+    raise NotImplementedError("spec 002 §4.3: cell_rows")

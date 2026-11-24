@@ -27,3 +27,12 @@ def build_pref(model: Model, ranking: str | None = None, *, transversal: np.ndar
     traced; the prior must not depend on it (T15(e)).
     """
     raise NotImplementedError("spec 002 §4.2: build_pref")
+
+
+def ranking_coordinate(
+    model: Model, ranking: str, theta: np.ndarray, *, transversal: np.ndarray | None = None
+) -> np.ndarray:
+    """`psi(theta)`, the coordinate a ranking names (§3.5, §4.2): `xi_D` for slowest first,
+    `xi_1` for fastest first, and for stiffest first the label of the sloppy eigenvector's
+    integral curve through `theta`, traced from `transversal`."""
+    raise NotImplementedError("spec 002 §4.2: ranking_coordinate")

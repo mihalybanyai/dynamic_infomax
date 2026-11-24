@@ -17,8 +17,8 @@ def mle_project(model: Model, x: np.ndarray) -> np.ndarray:
     raise NotImplementedError("spec 002 §4.2: mle_project")
 
 
-def nml_log_normaliser(model: Model, rng: np.random.Generator, *, n: int = 4096) -> float:
-    """`log ∫ max_theta p(x|theta) dx` at `sigma_eff`; finite on a compact manifold (T11)."""
+def nml_log_normaliser(model: Model, rng: np.random.Generator, *, n: int = 4096) -> tuple[float, float]:
+    """`log ∫ max_theta p(x|theta) dx` at `sigma_eff`, with its Monte-Carlo error (T11)."""
     raise NotImplementedError("spec 002 §4.2: nml_log_normaliser")
 
 
