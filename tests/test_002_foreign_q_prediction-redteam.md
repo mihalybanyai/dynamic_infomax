@@ -221,6 +221,7 @@ missing: `p_LN`'s law and density, `p_U`'s normaliser, and the samplers of `p_U`
 > test. A&M's Fig. 5 plots it [read: A&M Fig. 5]: its `I` stays near 3 bits for `D ≤ 3`,
 > below Jeffreys', and falls more slowly, crossing Jeffreys between `D = 3` and 5. The
 > acceptance adds `I_{p*} ≥ I_{p_LN}` at every `D`, by `p*`'s optimality.
+> Spec part applied in commit 01c5775; the tests wait for Stage 3c.
 
 ---
 
@@ -283,6 +284,7 @@ and the vertex's, by quadrature.
 > cell and of one cone cell. Spec: §5.2's T21(b) holds "on every nature in the agent's own
 > model"; §3.2 states that (3.2.3) is guaranteed for those natures only; §6.1's insurance
 > figure marks nested natures scored by a smaller agent as outside that guarantee.
+> Spec part applied in commit 01c5775; the tests wait for Stage 3c.
 
 ---
 
@@ -325,6 +327,7 @@ error, of a difference under common random numbers, is untested too.
 > how a gap's error is computed (a cell's priors share its draws, so the error of a
 > difference is the MCSE of the per-draw differences). It now says only "MCSE of each",
 > and §3.7's verdict rests on gaps.
+> Spec part applied in commit 01c5775; the tests wait for Stage 3c.
 
 ---
 
@@ -383,6 +386,7 @@ Keep T1, T8(c) and T17(b) as consistency checks, and say so in their docstrings.
 > and `p_LN`, not only `p_U`. T1, T8(c) and T17(b) stay, with docstrings calling them
 > consistency checks. Spec: §5.2 drops "the tightest check that the score means what §2.1
 > says" from T1, an identity of its estimators, and names (1) as T1's anchor.
+> Spec part applied in commit 01c5775; the tests wait for Stage 3c.
 
 ---
 
@@ -440,6 +444,7 @@ Two smaller gaps in T12(e):
 > T13(b) gains the in-suite known answers `y(a, …, a) = a^t` and `y(0, 1) = ½` at the 26
 > times; T12(e) adds the mass near `ξ = 0` and near `ξ = 1` (rates outside the window) to
 > the coinciding-rates edge.
+> Spec part applied in commit 01c5775; the tests wait for Stage 3c.
 
 ---
 
@@ -536,6 +541,7 @@ seed, gives identical `R` arrays and different `r` arrays.
 > `(0.1, 1)` and `(0.2, 4)` with the same priors and seed gives the same `R` per draw to
 > floating-point precision and a different `r`. The docstrings of T13(a), T21(a) and
 > T23(b), which claim a `σ_eff` check, then hold. Spec: §5.4 names the twin cells.
+> Spec part applied in commit 01c5775; the tests wait for Stage 3c.
 
 ---
 
@@ -797,6 +803,7 @@ figure. Add `p_LN`, and a Gaussian `p_lat` against `D`.
 > Gaussian `p_lat` panel, against the finding: it has no published figure, and
 > `skills/write-math-spec.md` does not anchor an eye test on an unknown shape; F2's
 > reference covers it. The first extended run is timed, and §5.3 records the time.
+> Spec part applied in commit 01c5775; the tests wait for Stage 3c.
 
 ## Minor
 
@@ -904,6 +911,7 @@ figure. Add `p_LN`, and a Gaussian `p_lat` against `D`.
 >   law tends to `½δ_0 + ½δ_1` per rate, not to `p_U` (a Gumbel law in `θ`). The sentence
 >   is corrected. `I_{p_LN} ≤ I_{p_LN^*} ≤ C_N` stands without it (`p_LN` is in the family,
 >   and `C_N` is the maximum), so T23 is unaffected.
+> Spec part applied in commit 01c5775; the tests wait for Stage 3c.
 
 ## What the test suite gets right
 
