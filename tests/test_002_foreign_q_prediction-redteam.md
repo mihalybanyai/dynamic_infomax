@@ -90,6 +90,19 @@ curvature=κ)` for `κ ∈ {½, ¼}`:
 Add `p_ref` at `κ = ½`: it normalises, and it equals `p_U` on cross-sections that miss
 the ball.
 
+> M: let's add these tests
+
+> C: Agreed; tests only. T13(d) gains checks through `build_model(D=3, **CURVATURE_CELL,
+> curvature=κ)`, `κ ∈ {½, ¼}`: the base face leaves `v` at angle `κπ/2` for `u < ρ/2`; for
+> `ρ/2 < u < ρ` its angle follows `κ(u) = κ + (1 − κ) S(2u/ρ − 1)`, the smoothstep pinned in
+> 48bef96; `y` is continuous across `u = ρ` (points at `ρ ± 1e-6`); outside `5σ_eff` of `v`,
+> `y` and `√det fim` equal the `κ = 1` model's; and `√det fim > 0` on the candidate set,
+> `v` itself excluded, since the warp is not differentiable there. T13(a)'s
+> finite-difference check of the metric gains a curvature model, at states inside the
+> ball. T15 gains `p_ref` at `κ = ½`: it normalises, and on cross-sections that miss the
+> ball it is *proportional* to `p_U`, with one constant ratio. The finding says "equals",
+> but the warp changes the normaliser.
+
 ---
 
 ### F2: The Gaussian `p_lat` has no reference, and is tested only where `σ_eff = σ` [severity: high]
@@ -130,6 +143,19 @@ The suite has neither the 1-D channel nor `N = 4`.
   maximise `I(Θ; X̄_{N+1}) − I(Θ; X̄_N)` over the simplex with scipy (each term is a 1-D
   quadrature), and compare the weights to `1e-4`. Alternatively, route T18 through
   `build_plat`'s own Blahut–Arimoto core.
+
+> M: let's add these tests
+
+> C: Agreed; tests and stubs. T16(a)–(c) run where §5.4 puts them: `N ∈ {0, 1, 4}` in the
+> 1-D cone with `W/σ = 3`, and at the cheap cell. T16 gains: `conditional_capacity` equals
+> `mutual_information` of `res.prior` at budget `N + 1` minus the same at `N`; that
+> difference is at least as large for `p_lat` as for `p*` and `p_U`; and a reference for
+> the Gaussian build: in the 1-D cone, on a 3- and a 5-point grid, the test maximises
+> `I(Θ; X̄_{N+1}) − I(Θ; X̄_N)` over the simplex with scipy (concave in the weights, §4.2),
+> each term by 1-D quadrature, and compares the weights to `1e-4`. T18 and the Komaki eye
+> test call `build_plat` on a binomial model, as §5.2 (T18) and §5.3 already say, so they
+> exercise the Gaussian build's update: the separate `build_plat_binomial` stub goes, and
+> `models.py` gains a binomial-model stub.
 
 ---
 
@@ -180,6 +206,22 @@ missing: `p_LN`'s law and density, `p_U`'s normaliser, and the samplers of `p_U`
   draws against the marginal of its own `log_density`, by quadrature.
 - **Eye test.** Add `p_LN` to the eye test.
 
+> M: let's do these tests
+
+> C: Agreed; tests, and the spec's eye test (§5.3, §5.3.1). Tests: `p_LN`'s draws, mapped
+> by `log_time_from_xi`, pass a KS test against the order statistics of `N(0, 1)`, and
+> `p_LN.log_density` matches the change of variables from `θ` to `ξ` (factor
+> `1/(ξ(−log ξ))`) at a few `ξ`. At `D = 2` the test computes each ranking's `p_ref` from
+> `[^3-schur]` by nested 1-D quadratures (`g_11` depends on `ξ_1` alone) and compares it
+> with `build_pref` at a few points, which also pins the labels. T15(e) asserts that the
+> traced coordinate differs between the two transversals. Absolute normalisation:
+> `log p_U = log D!` on exp-decay's ordered `Θ`, and `−log W` in the cone. Samplers: at
+> the cheap cell, a KS test of one 1-D marginal of each continuous prior's draws against
+> the marginal of its own `log_density`, by quadrature. Spec: §5.3 adds `p_LN` to the eye
+> test. A&M's Fig. 5 plots it [read: A&M Fig. 5]: its `I` stays near 3 bits for `D ≤ 3`,
+> below Jeffreys', and falls more slowly, crossing Jeffreys between `D = 3` and 5. The
+> acceptance adds `I_{p*} ≥ I_{p_LN}` at every `D`, by `p*`'s optimality.
+
 ---
 
 ### F4: Question 3's machinery is untested, and two slow tests call nested natures in a model of the wrong dimension [severity: high]
@@ -222,6 +264,26 @@ and the vertex's, by quadrature.
 - Rewrite T21(b) and T22(c) on submodel agents, or on round-robin and stress natures.
 - Extend T8(a) to every nature of the cheap cell and of one cone cell.
 
+> M: how expensive is the brute force MC? which option makes more sense for T21(b) and T22(c)? The rest seems reasonable.
+
+> C: Resolved in chat; MB chose round-robin and stress natures for T21(b) and T22(c).
+> Cost: brute-force Monte Carlo over `θ ∼ q`, 10⁶ draws, takes about 0.3 s per `x̄` with
+> a standard error of 0.0025–0.005 nats (measured on the thin and thick halves at
+> `D_max = 26`, `σ_eff ∈ {1, ½}`, and on few rates at the cheap cell), so it runs in the
+> fast suite. Why not submodel agents: (3.2.3) assumes `R_N^θ(p*) ≤ C_N`, which holds only
+> at states in the agent's own model, so a `D = 6` agent facing a nested nature could fail
+> T21(b) without a bug. Tests: `nature_log_marginal` against that Monte Carlo at three `x̄`
+> for thin, thick, few rates and interior, within 4 of the test's standard errors;
+> `submodel_floor` against `N‖y(θ) − y(θ^{(D)})‖²/(2σ²)` at `N = 4`; one nested cell
+> through `score_cell` with the agent `submodel(cone_model(26, falloff=0.5), D)`, asserting
+> that the nature's draws and floor are the same at every `D` under one seed; T21(b) on the
+> own worlds of `p*`, `p_J` and `p_U` and the interior stress nature, at `D = 6`; T22(c) on
+> `p_U`'s own world and the interior stress nature, with the expected mass in closed form
+> (`(W − θ_lo)/W`, and normal distribution functions); T8(a) on every nature of the cheap
+> cell and of one cone cell. Spec: §5.2's T21(b) holds "on every nature in the agent's own
+> model"; §3.2 states that (3.2.3) is guaranteed for those natures only; §6.1's insurance
+> figure marks nested natures scored by a smaller agent as outside that guarantee.
+
 ---
 
 ### F5: Monte-Carlo errors come from the code under test and are never checked [severity: high]
@@ -252,6 +314,17 @@ error, of a difference under common random numbers, is untested too.
   of the estimate over about 20 seeds.
 - Check that a gap's error comes from per-draw differences. For `p*` against `p*_{10N}`
   it should be much smaller than the root-sum-square of the two scores' errors.
+
+> M: we should do these
+
+> C: Agreed; tests, and one sentence of spec (§4.4). Tests: `R_mcse[π] =
+> std(draws_R[π], ddof=1)/√S_q`, and the same for `r`; the errors that `matched_floor` and
+> `marginal_mismatch` report agree within a factor of 2 with each estimate's spread over 20
+> seeds (slow); and the error of `p*`'s gap to `p*_{10N}` is the MCSE of the per-draw
+> differences, well below the root-sum-square of the two scores' errors. Spec: §4.4 says
+> how a gap's error is computed (a cell's priors share its draws, so the error of a
+> difference is the MCSE of the per-draw differences). It now says only "MCSE of each",
+> and §3.7's verdict rests on gaps.
 
 ---
 
@@ -297,6 +370,20 @@ other than the flat `p_U`, and the tapered hypercone's marginals.
 
 Keep T1, T8(c) and T17(b) as consistency checks, and say so in their docstrings.
 
+> M: these changes sound very reasonable
+
+> C: Agreed; tests, and §5.2's description of T1. Tests: (1) a known answer in the 1-D cone
+> at `σ = W/3`: `R_N^q(π)` for `q = p_U` and `π ∈ {p_U, two atoms at 0 and W}` by
+> deterministic quadrature in the test, against `score_cell` within its MCSE (checked by
+> F5); (2) in the tapered cone at `D = 4` and 6, `log m_{p_J}(x̄)` and `log m_{p_U}(x̄)` at a
+> few `x̄` against brute-force Monte Carlo over `θ` (Jeffreys drawn as `θ_1 = W U^{1/D}`,
+> cross-section uniform), within 4 of the test's own standard errors rather than the
+> finding's `1e-3`: 10⁶ draws give about 0.003 nats in 0.3 s per `x̄` (measured at
+> `D_max = 26`; see F4), and `1e-3` would take 10⁸; (3) T7(a)'s continuous case for `p_J`
+> and `p_LN`, not only `p_U`. T1, T8(c) and T17(b) stay, with docstrings calling them
+> consistency checks. Spec: §5.2 drops "the tightest check that the score means what §2.1
+> says" from T1, an identity of its estimators, and names (1) as T1's anchor.
+
 ---
 
 ### F7: T12's tolerances and cells live in fixture files written with the implementation [severity: high]
@@ -339,6 +426,21 @@ Two smaller gaps in T12(e):
   `y(0, 1) = ½`, at the 26 times.
 - Add the edge masses near `ξ = 0` and `ξ = 1` to T12(e).
 
+> M: we should add these
+
+> C: Agreed; tests, and spec §5.5. Spec: `generate.jl` no longer writes tolerances; §5.5
+> fixes the tolerances and the cells (values proposed in Stage 3b, flagged auto-chosen),
+> and `spec002_common.py` pins them; the JSON holds values and metadata only. §5.5's bridge
+> is corrected for (e): `transtrum` needs the unclamped log-rate coordinate [read:
+> `resources/AtomicPriors.jl/src/max/sample.jl`, `_transtrum`: "expected an unclamped
+> prior!"], Julia's `θ = log k`, so `generate.jl` maps the cloud to sorted
+> `ξ = exp(−exp θ)`; (a)–(d) use the compact `ξ` and need only sorting. Tests: T12 asserts
+> each fixture's metadata before its values (`σ = 0.1`, `D`, `N`, at least 10 states, the
+> cloud size, the coordinate system, the AtomicPriors commit, the Julia version, the seed);
+> T13(b) gains the in-suite known answers `y(a, …, a) = a^t` and `y(0, 1) = ½` at the 26
+> times; T12(e) adds the mass near `ξ = 0` and near `ξ = 1` (rates outside the window) to
+> the coinciding-rates edge.
+
 ---
 
 ### F8: T17's tolerance is larger than the one-step score it checks [severity: high]
@@ -377,6 +479,20 @@ test, though for a discrete prior §4.4 gives it as an exact atom sum.
   rejects both bugs, though one seed only barely.
 - Raise `S_q` until the error is under a tenth of `r_N`.
 
+> M: let's do these
+
+> C: Agreed; tests only, plus one check of my own. (1) T7(a)'s analogue for the posterior
+> predictive: for a `DiscretePrior` at `N = 4`, `log_predictive` equals the finding's exact
+> atom sum. (2) T17(a)'s tolerance is the error of the per-draw difference `R_{N+1} − R_N`
+> under common random numbers, and the test asserts that this error is below a tenth of
+> `r_N`, which also checks that the two runs share their draws; `S_q` is raised until it
+> is. (3) Added: per draw, with `x̄_{N+1} = (N x̄_N + x′)/(N + 1)`,
+> `log_predictive(x′ | x̄_N) = log m_{N+1}(x̄_{N+1}) − log m_N(x̄_N)
+> − (m/2) log(2πσ²(N+1)/N) − N‖x′ − x̄_N‖²/(2(N+1)σ²)`, each marginal at its own noise
+> `σ/√n`. It holds for any prior, continuous ones by quadrature, to numerical precision
+> (checked on a discrete prior: 4e-15 over 200 draws), so it pins both noise levels with
+> no Monte-Carlo slack. T17(b) stays as a consistency check (F6).
+
 ---
 
 ### F9: The noise-dependent pieces are tested only at `N ≤ 1`, so `σ` and `σ_eff` are interchangeable there [severity: medium]
@@ -410,6 +526,17 @@ among other things, a score that draws `x̄` at `σ`.
 invariance check: `score_cell` at `(0.1, 1)` and at `(0.2, 4)`, with the same priors and
 seed, gives identical `R` arrays and different `r` arrays.
 
+> M: yes, do these
+
+> C: Agreed; tests, and §5.4's list of cells. Tests: the tests of the noise-dependent
+> pieces (T13(a, c), T15(a), T21(a), T22(a), T23 and the candidate set's spacing) also run
+> at a twin of their cell with the same `σ_eff` and `N = 4`: `(σ, N) = (0.2, 4)` for the
+> cheap cell, `(2, 4)` for the cone's base cell. T13(a)'s reference is written from the
+> cell's `σ` and `N`, not from `model.sigma_eff`. New: §2.1's invariance, `score_cell` at
+> `(0.1, 1)` and `(0.2, 4)` with the same priors and seed gives the same `R` per draw to
+> floating-point precision and a different `r`. The docstrings of T13(a), T21(a) and
+> T23(b), which claim a `σ_eff` check, then hold. Spec: §5.4 names the twin cells.
+
 ---
 
 ### F10: The row summaries of §2.4 have no test [severity: medium]
@@ -441,6 +568,20 @@ Wrong implementations that pass:
 - `relatives_world` true for exactly `p*_{N/10}`, `p*_{10N}`, `p_lat`, `p_proj` and
   `p_LN^*`.
 
+> M: ok let's add the tests for these functions, as per the chat about this
+
+> C: Agreed, after the chat explanation of the row summaries; tests and stubs. Hand-made
+> score tables with known answers, in the style of T22(e), no sampling: `gap_J` is not
+> formed in Jeffreys' own world; `gap_pi` takes the best (lowest-scoring)
+> privileged-information prior on a row where min and max differ, leaves the row's own
+> prior out in `p_LN`'s world, and counts both `p_ref` rankings in exp-decay;
+> `gap_budget = max(gap_coarse, gap_fine)`; `gap_pair`, `gap_tune` and `delta_R_pref`
+> against hand-computed values; the exchange is antisymmetric, with §2.4's sign on one
+> hand-made pair; `relatives_world` is true for exactly `p*_{N/10}`, `p*_{10N}`, `p_lat`,
+> `p_proj` and `p_LN^*`; and the every-`D` trend drops a prior missing at one `D`. The row
+> summaries and the report-time readings (exchange, trends) get stubs in `diagnostics.py`
+> for the tests to call.
+
 ---
 
 ### F11: The §3.3 split is checked on its formula only, and T22(a) compares a predictive with itself [severity: medium]
@@ -471,6 +612,16 @@ Wrong implementations that pass:
 - Make T22(a) read the cell's `mean_shift` and `spread_mismatch` for the own prior over
   every row of the cheap cell. Assert both are nonzero for a prior that is away.
 
+> M: let's do these
+
+> C: Agreed; tests only. T5 gains a pure-shift case (`Σ_π = Σ_q`: spread 0, shift the
+> Mahalanobis distance) and a pure-spread case (`μ_π = μ_q`: shift 0), so a split that
+> swaps or mixes the two terms fails. `moment_matched_predictive` is tested at `N = 4`: a
+> one-atom prior gives `(y(θ_a), σ²𝟙)`, and a two-atom prior gives the mean and covariance
+> under its posterior weights, computed in the test, with noise `σ`, not `σ_eff`. T22(a)
+> reads the cell's `mean_shift` and `spread_mismatch` over every row of the cheap cell:
+> both vanish for each prior on its own row and are nonzero for a prior that is away.
+
 ---
 
 ### F12: T6 passes the leading-order formula itself, and the mode [severity: medium]
@@ -498,6 +649,16 @@ values above, to `1e-3`, or compute the mean in the test with `scipy.integrate.q
 mode, check that the derivative of `−½(x_1 − θ)² + (D − 1) log θ` vanishes there, and that
 it is a maximum.
 
+> M: let's implement the suggestion
+
+> C: Agreed; tests only. T6 computes Jeffreys' posterior mean in the test with
+> `scipy.integrate.quad` and compares `hypercone_jeffreys_mean` with it to `1e-6`. The
+> departures from `(D − 1)/x_1` are −0.0187, −0.0773 and −0.4185 at `D = 6, 11, 26`
+> (reproduced here by quadrature), against −0.0228, −0.0839 and −0.4289 for the mode, so
+> the test separates the two. T6(iii) checks the mode by the derivative of
+> `−½(x_1 − θ)² + (D − 1) log θ` vanishing there with a negative second derivative,
+> instead of by its own closed form.
+
 ---
 
 ### F13: T10 builds the cast once [severity: medium]
@@ -518,6 +679,12 @@ not compared either.
 **What would resolve it**: Inside the test, build the cast twice from the same seed, and
 compare score arrays, floors and mismatches. Assert that a different seed changes
 `draws_R`.
+
+> M: yes, good suggestion.
+
+> C: Agreed; tests only. T10 builds the cast twice from the same seed inside the test,
+> and compares the score arrays, floors and mismatches bit for bit; a different seed must
+> change `draws_R`.
 
 ---
 
@@ -553,6 +720,17 @@ Quinn's slab-and-spike: mass `1/(2Z) = 0.228` at each end, and a uniform slab be
 In exp-decay, project data from beyond the manifold and assert that `θ̂` lies on a face
 inside the ordered box (coinciding `ξ`, or `ξ ∈ {0, 1}`). Run T11 over `D_SWEEP_GRID`.
 
+> M: yes, do these
+
+> C: Agreed; tests only. In `cone_model(1, sigma=50/3)`: `nml_log_normaliser` equals
+> `log(1 + W/(σ√(2π))) = log 2.197` within its Monte-Carlo error (the closed form is ½ for
+> each tail plus `W/(σ√(2π))` for the slab); the cloud's fractions at exactly 0 and at
+> exactly `W` are each `1/(2Z) = 0.228`, within a binomial error inflated by the chain's
+> autocorrelation (batch means); the interior is KS-uniform; `mle_project` maps `x < 0` and
+> `x > W` to the endpoints. In exp-decay, data placed beyond the manifold project to a face
+> of the ordered box (coinciding `ξ`, or `ξ ∈ {0, 1}`), sorted. T11 runs over
+> `D_SWEEP_GRID`, as §5.4 says.
+
 ---
 
 ### F15: The sharpened-vertex nature is checked for support, not law [severity: medium]
@@ -570,6 +748,15 @@ gaps there measure. Its floor is untested (F4), and the test is blind to the war
 faces' `θ`-areas within `ρ`, which the test can compute at `D = 3`. On each face, KS-test
 a 1-D statistic, such as the distance from `v`, against its law under area-uniform
 sampling.
+
+> M: sounds reasonable
+
+> C: Agreed; tests only. At `D = 3` the test computes the `θ`-areas of the three face
+> pieces within `ρ` of `v` (the base face and the lateral faces `θ_2 = 0` and `θ_3 = 0`;
+> the warp keeps distances from `v`, so the pieces are those of the unwarped cone), and
+> checks each face's share of the draws against them with a χ² test. On each face, the
+> distance from `v` passes a KS test against its law under area-uniform sampling, computed
+> in the test.
 
 ---
 
@@ -594,6 +781,22 @@ Other gaps:
 **What would resolve it**: Make approval require the `--extended` run, and say so in the
 script's printout. Overlay A&M's Fig. 5 values at the computed `D`, read off the published
 figure. Add `p_LN`, and a Gaussian `p_lat` against `D`.
+
+> M: the eye test should be simple and fairly quick. Would it be so with the extended run? On the other hand we should be as close to the reference figures as possible.
+
+> C: Resolved in chat. MB: nothing expensive in the eye test, so no `D = 26`. Spec (§5.3,
+> §5.3.1) and the script: the default run, `D ≤ 4` on the candidate-set path, is the quick
+> smoke check. Approval needs one extended run at A&M's own `D ∈ {5, 7, 11}` (through
+> AtomicPriors.jl, OQ-1); it saves its numbers beside the figure, so the figure redraws
+> without recomputing, and the printout says approval needs it. These `D` already show
+> the features that expose a wrong metric: `I_{p_J}` falls from about 3.2 to 1.2 bits
+> between `D = 3` and 11 while `I_{p*}` stays near 4.8, and `B(p_J)` rises from about 10
+> to over 100 bits [read: A&M Fig. 5]. Both panels overlay A&M's points at
+> `D ∈ {1, 2, 3, 5, 7, 11}`, digitised from the published figure by eye and tagged so.
+> `p_LN` joins the figure (F3); the Komaki panel goes through `build_plat` (F2). No
+> Gaussian `p_lat` panel, against the finding: it has no published figure, and
+> `skills/write-math-spec.md` does not anchor an eye test on an unknown shape; F2's
+> reference covers it. The first extended run is timed, and §5.3 records the time.
 
 ## Minor
 
