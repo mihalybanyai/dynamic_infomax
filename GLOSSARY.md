@@ -54,6 +54,16 @@ A distribution `q` defines a code assigning `−log q(x)` nats to outcome `x`, s
 *is* code length. The expected excess code length of `q` over the true distribution `p`
 is `D_KL(p‖q)`.
 
+### Convex vertex
+
+A corner of a manifold's boundary where the manifold lies inside an angle smaller than a
+straight one: the corner of a square, not the notch of an L. Observations that land
+outside the manifold beyond the corner, between the perpendiculars to the faces that meet
+there, have the corner as their nearest manifold point, and so, under Gaussian noise, as
+their maximum-likelihood estimate. That region is the corner's [noise halo](#noise-halo).
+The sharper the corner, the wider the region: in the plane, a corner of angle `α` has a
+halo of angle `π − α`. Spec 002 §1.2 draws one.
+
 ### Co-volume
 
 In a model with [relevant and irrelevant directions](#relevant-and-irrelevant-directions), the volume contributed by the
@@ -161,8 +171,8 @@ data. "Nature's distribution" is the distribution of the true `θ`.
 ### Noise halo
 
 The region of data space just outside the model manifold whose points have their maximum
-likelihood estimate at a given boundary point. At a *convex vertex* (a corner where the
-manifold bends away) the halo is large, and sharpening the corner enlarges it.
+likelihood estimate at a given boundary point. At a [convex vertex](#convex-vertex) the
+halo is large, and sharpening the corner enlarges it.
 Constructions that push data back to their MLE, such as `p_proj`, therefore put extra
 mass on edges and corners [read: A&M App. A.3; Quinn §5.1, Fig. 10].
 

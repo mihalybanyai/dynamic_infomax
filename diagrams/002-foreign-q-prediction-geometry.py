@@ -29,7 +29,9 @@ Four panels, (a) and (b) on top, (c) and (d) below:
       p* instead places atoms ≈1 Fisher length apart along the relevant axis and
       collapses the irrelevant ones onto the boundary. Dashed lines show further
       irrelevant directions under the fall-off knob (0.5 per direction); at
-      fall-off 1 they all match the outer envelope.
+      fall-off 1 they all match the outer envelope. Drawn one-sided, as the map is
+      (theta_mu in [0, 1]), so the theta_1-axis is the lower edge, and the vertex v
+      that the curvature knob sharpens is the base corner on it (vertex figure).
 
   (c) Constant cross-section cone (taper 0, the flat-co-volume null of §2.4). Same
       family with r(theta_1)=r0 constant: no co-volume gradient, sqrt(det g)
@@ -112,42 +114,39 @@ def draw_cone(ax, r_of_theta, title, *, taper, falloff=None):
     """Side view of the (square) hypercone manifold along the relevant axis.
 
     The filled envelope shows one representative irrelevant direction's extent
-    +/- r(theta_1)/2; the co-volume is the product over all D-1 such directions.
+    [0, r(theta_1)]; the co-volume is the product over all D-1 such directions.
     For D=2 there is exactly one irrelevant direction, so this panel IS the full
-    model manifold (drawn centred about the spine rather than the one-sided
-    [0, r] of the literal map; same triangle).
+    model manifold, drawn one-sided as the literal map: the theta_1-axis is its
+    lower edge (the lateral edge of spec §1.2).
     """
     L = 5.0
     th = np.linspace(0.0, L, 200)
-    half = r_of_theta(th) / 2.0
+    width = r_of_theta(th)
 
-    # manifold envelope (one irrelevant direction)
-    upper = list(zip(th, half))
-    lower = list(zip(th[::-1], -half[::-1]))
+    # manifold envelope (one irrelevant direction), one-sided as the map
+    upper = list(zip(th, width))
+    lower = list(zip(th[::-1], np.zeros_like(th)))
     ax.add_patch(Polygon(upper + lower, closed=True,
                          facecolor=IRREL, edgecolor="#7a7a7a", lw=1.2, alpha=0.55))
     # fall-off knob (spec §1.2): each further irrelevant direction is narrower by a
     # factor `falloff`; at falloff = 1 they all match the outer envelope
     if falloff:
         for k in (1, 2):
-            ax.plot(th, half * falloff**k, color="#7a7a7a", lw=0.8, ls="--")
-            ax.plot(th, -half * falloff**k, color="#7a7a7a", lw=0.8, ls="--")
-    # relevant axis (the spine)
-    ax.plot([0, L], [0, 0], color="#7a7a7a", lw=0.8, ls=":")
+            ax.plot(th, width * falloff**k, color="#7a7a7a", lw=0.8, ls="--")
 
     # a few cross-sections, to read off how the (co-)volume changes along theta_1
     for tc in [1.0, 2.5, 4.0]:
-        hc = r_of_theta(np.array([tc]))[0] / 2.0
-        ax.plot([tc, tc], [-hc, hc], color="#5a5a5a", lw=1.4)
+        wc = r_of_theta(np.array([tc]))[0]
+        ax.plot([tc, tc], [0.0, wc], color="#5a5a5a", lw=1.4)
 
     # p* atoms: tile the relevant axis (≈1 Fisher length apart, g_rel ≈ 1) AND
     # collapse each irrelevant direction onto its TWO endpoints -> the two cone
-    # edges, a pair per relevant tile, merging at the tip as r -> 0. (Not on the
-    # spine: a single interior atom would resolve nothing.)
+    # edges, a pair per relevant tile, merging at the tip as r -> 0. (Not in the
+    # interior: a single interior atom would resolve nothing.)
     tiles = np.arange(0.5, L, 1.0)
-    edge = r_of_theta(tiles) / 2.0
+    edge = r_of_theta(tiles)
     ax.plot(tiles, edge, "o", color=PSTAR, ms=6.0, zorder=5)
-    ax.plot(tiles, -edge, "o", color=PSTAR, ms=6.0, zorder=5)
+    ax.plot(tiles, np.zeros_like(tiles), "o", color=PSTAR, ms=6.0, zorder=5)
 
     # Jeffreys co-volume density sqrt(det g) on a twin axis
     ax2 = ax.twinx()
@@ -160,7 +159,7 @@ def draw_cone(ax, r_of_theta, title, *, taper, falloff=None):
     ax2.set_yticks([])
 
     ax.set_xlim(-0.25, L + 0.25)
-    ax.set_ylim(-0.95, 0.95)
+    ax.set_ylim(-0.95, 1.25)
     ax.set_xlabel(r"relevant coordinate $\theta_1$ (tip $0 \to$ base $W$)")
     ax.set_title(title, fontsize=10.5)
     ax.set_yticks([])
@@ -176,7 +175,7 @@ axB.text(2.55, -0.63,
          color="#555555", fontsize=7.8, ha="center")
 ax2b.text(5.15, 1.0, r"$\sqrt{\det g}\propto\theta_1^{\,D-1}$",
           color=JEFF, fontsize=9, va="center", ha="left", rotation=90)
-axB.annotate("Jeffreys mass\n& posterior pull", xy=(4.55, 0.0), xytext=(2.5, 0.62),
+axB.annotate("Jeffreys mass\n& posterior pull", xy=(4.55, 0.45), xytext=(2.3, 0.98),
              fontsize=8.5, color=JEFF, ha="center",
              arrowprops=dict(arrowstyle="->", color=JEFF, lw=1.4))
 axB.text(2.55, -0.8,
@@ -184,6 +183,10 @@ axB.text(2.55, -0.8,
          color=PSTAR, fontsize=8.0, ha="center")
 axB.text(0.15, 0.78, "thin end\n(irrelevant\nextent $\\to 0$)", fontsize=7.8,
          color="#555555", ha="left", va="top")
+axB.plot(5.0, 0.0, "o", color="#d08c2b", mec="k", ms=8, zorder=6)
+axB.annotate("vertex $v$ (curvature knob; vertex figure)", xy=(4.97, -0.03), xytext=(2.4, -0.3),
+             fontsize=7.8, color="k", ha="center", va="center",
+             arrowprops=dict(arrowstyle="->", color="k", lw=0.9))
 
 
 # ---- panel (c): constant cross-section (negative control) -----------------
@@ -191,7 +194,7 @@ ax2c = draw_cone(axC, lambda t: 0.7 * np.ones_like(t),
                  "(c) constant cross-section: the null", taper=False)
 ax2c.text(5.15, 1.0, r"$\sqrt{\det g}=$ const", color=JEFF, fontsize=9,
           va="center", ha="left", rotation=90)
-axC.text(2.5, 0.62, r"no co-volume gradient $\Rightarrow p_J = p_U$",
+axC.text(2.5, 0.82, r"no co-volume gradient $\Rightarrow p_J = p_U$",
          color=ACCENT, fontsize=9, ha="center")
 axC.text(2.5, -0.74, "pipeline check T2 ($p^*$ need not tie)",
          color=ACCENT, fontsize=8.5, ha="center")

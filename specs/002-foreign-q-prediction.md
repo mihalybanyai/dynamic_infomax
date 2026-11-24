@@ -4,10 +4,10 @@
 |---|---|---|
 | [0. Context](#0-context) | reviewed | 261121 |
 | [1. Setup](#1-setup) | reviewed | 261121 |
-| [1.2 Generative model](#12-generative-model) | reviewed | 261121 |
+| [1.2 Generative model](#12-generative-model) | draft | 261124 |
 | [2. Objective](#2-objective) | reviewed | 261121 |
 | [3. The case for transfer (and how it could fail)](#3-the-case-for-transfer-and-how-it-could-fail) | reviewed | 261121 |
-| [4. Algorithm](#4-algorithm) | reviewed | 261121 |
+| [4. Algorithm](#4-algorithm) | draft | 261124 |
 | [5. Properties to verify](#5-properties-to-verify) | reviewed | 261121 |
 | [6. Report](#6-report) | reviewed | 261121 |
 | [7. Open questions](#7-open-questions) | reviewed | 261121 |
@@ -372,6 +372,8 @@ test transfer rather than self-consistency, and why `π` is absent from the diag
 
 ![Model geometry](../diagrams/002-foreign-q-prediction-geometry.svg)
 
+<span style="color: red">*Geometry figure.* Panels b and c draw the cones one-sided, as their maps are: the `θ_1`-axis is the lower edge.</span>
+
 All three families share the Gaussian likelihood, so a model is fixed by its prediction
 map `θ ↦ y(θ)`: as `θ` ranges over the box `Θ ⊂ ℝ^D`, `y(θ)` sweeps a `D`-dimensional
 **model manifold** in data space `ℝ^m`. What the data can *resolve* on it is measured by
@@ -471,12 +473,17 @@ realism. Exp-decay is the realistic instance.
 
 Two knobs reshape the hypercone:
 
-- **Boundary curvature** sharpens a convex vertex, whose [noise halo](../GLOSSARY.md#noise-halo) `p_proj`
-  over-weights [read: A&M App. A.3: `p_proj` "has extra weight on the edges"] while `p*`
-  is expected to be unmoved [guess]. This is the axis on which the two are expected to
-  differ ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)).
+- **Boundary curvature** <span style="color: red">`κ ∈ (0, 1]` sharpens one corner of the manifold, the vertex `v` of the next paragraph; `κ = 1` is off.</span>
 
 - **Fall-off** `φ ∈ (0, 1]` shrinks each further irrelevant direction by a factor `φ`: `y_μ = r φ^{μ−2} θ_μ` for `μ ≥ 2`. At `φ = 1` this is the square cone, whose `D − 1` equal widths are jointly observable. For `φ < 1` the widths fall off geometrically and the cross-section stays jointly irrelevant, as in A&M's own variant [read: A&M App. A.1]. `√det g ∝ θ_1^{D−1}` for every `φ`, so Jeffreys is the same prior throughout; what changes is what `p*` can see.
+
+<span style="color: red">**The vertex and its noise halo.** The hypercone's boundary is made of flat *faces*: the *base face*, where `θ_1 = W`, and the *lateral faces*, where one of `θ_2, …, θ_D` is 0 or 1. Faces meet in *edges*, and edges in the manifold's corners, its *vertices*: the tip and the `2^{D−1}` corners of the base. The cone is convex, so each of them is a [convex vertex](../GLOSSARY.md#convex-vertex). The curvature knob sharpens one, `v = y(W, 0, …, 0)`: the base corner on the `θ_1`-axis, where the *lateral edge* along that axis (`θ_2 = ⋯ = θ_D = 0`) meets the base face at a right angle (vertex figure, panel a; geometry figure, panel b).</span>
+
+![Vertex figure](../diagrams/002-foreign-q-prediction-vertex.svg)
+
+<span style="color: red">Under the Gaussian likelihood the maximum-likelihood estimate `θ̂_x` is the parameter whose prediction `y(θ̂_x)` is the point of the manifold nearest `x`. So every observation outside the manifold whose nearest point is `v` has its estimate at `v` itself. These observations form `v`'s [noise halo](../GLOSSARY.md#noise-halo). At `D = 2` the manifold is a triangle and the halo is the quarter-plane beyond `v` (panel a), so data from a nature at `v` put the estimate exactly on `v` with probability ¼ (panel b).</span>
+
+<span style="color: red">The knob narrows the corner from `π/2` to `κπ/2` inside a ball of radius `ρ = 5σ/√N` around `v`, and leaves the manifold unchanged outside it; at `D > 2` it does this in every half-plane that contains the lateral edge (panels c–d; the map is in [§4.1](#41-model-families)). Between `ρ/2` and `ρ` the face swings back to its old position, so there the boundary bends inward (panel c). At `D = 2` the halo's angle widens from `π/2` to `π − κπ/2`, and the probability of an estimate on `v` becomes about `½ − κ/4`: 3/8 at `κ = ½`. `p_proj` gives each parameter the [NML](../GLOSSARY.md#normalized-maximum-likelihood-nml) weight of the data whose estimate it is ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)), so it puts the halo's whole weight on `v` and over-weights it [read: A&M App. A.3: `p_proj` "has extra weight on the edges"], while `p*` is expected to be unmoved [guess]. This is the axis on which the two are expected to differ ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)). Jeffreys depends only on `√det g`, so it is unchanged outside the ball.</span>
 
 Exact maps, Fisher metrics and knob ranges are in [§4.1](#41-model-families).
 
@@ -1424,11 +1431,11 @@ All three families share the Gaussian likelihood `𝒩(y(θ), σ²𝟙)` and the
    - *curvature* `κ ∈ (0, 1]`: a local warp of prediction space that narrows one convex
      vertex, against `p_proj` ([§3.4](#34-the-second-protagonist-infomax-vs-mdl))
      (OQ-12). The vertex is `v = y(W, 0, …, 0)`, the base corner on the `θ_1`-axis, where
-     the lateral edge (direction `−e_1`) meets the base face at a right angle. A point
+     the lateral edge (direction `−e_1`) meets the base face at a right angle <span style="color: red">([§1.2](#12-generative-model), vertex figure)</span>. A point
      near `v` is `v + u(−cos β e_1 + sin β ê_⊥)`, with `u` its distance from `v`, `ê_⊥` a
      unit vector in the span of the cross-section, and `β ∈ [0, π/2]` its angle from the
-     lateral edge; the base face is `β = π/2`. The warp replaces `β` by `κ(u) β`, where
-     `κ(u) = κ` for `u ≤ ρ/2`, rises smoothly to 1 at `u = ρ`, and is 1 beyond. It
+     lateral edge; the base face is `β = π/2`. The warp<span style="color: red">, `warp_vertex` in the pseudocode below,</span> replaces `β` by `κ(u) β`, where
+     `κ(u) = κ` for `u ≤ ρ/2`, <span style="color: red">is 1 for `u ≥ ρ`, and in between is `κ + (1 − κ) S(2u/ρ − 1)`, with the smoothstep `S(s) = 3s² − 2s³`. `S` has zero slope at both ends, so `κ(u)` and the warp's Jacobian, and with them `g`, are continuous at `u = ρ/2` and `u = ρ`.</span> It
      changes neither `u` nor `ê_⊥`, so it is one-to-one. Outside the ball of radius `ρ`
      around `v` it is the identity, so `√det g`, and with it Jeffreys, is unchanged
      there. It narrows the angle between the lateral edge and the base face from `π/2` to
@@ -1485,6 +1492,9 @@ def warp_vertex(y, v, kappa, rho):                   # curvature knob (§4.1, OQ
     out = concat([(v[0] - u * cos(k * beta))[..., None],
                   (u * sin(k * beta))[..., None] * e_perp], axis=-1)
     return where((u < rho)[..., None], out, y)
+
+def smoothstep(s):                                   # S(s) = 3s² − 2s³: 0 to 1, zero slope at both ends
+    return s * s * (3 - 2 * s)
 ```
 
 ### 4.2 Prior construction
@@ -3714,3 +3724,23 @@ their changed prose red. §0 flips to draft; §1–§3 were draft already.
 
 The glossary's *deployable prior* entry follows F3(b). Downstream: no test or
 implementation exists yet.
+
+### 2026-11-24 — Clarification (§1.2, §4.1; the vertex)
+
+At MB's request, found while reading the test red-team report
+(`tests/test_002_foreign_q_prediction-redteam.md`) as a lens on the spec. §1.2 said "a
+convex vertex" without saying what a vertex is or which one; only §4.1 named `v`. §1.2 now
+names the cone's faces, edges and vertices, defines `v`, the lateral edge and the base face,
+and states `v`'s noise halo: at `D = 2` a quarter-plane, so data from a nature at `v` put
+the estimate on `v` with probability ¼, about `½ − κ/4` with the knob on. A new vertex
+figure (`diagrams/002-foreign-q-prediction-vertex.py`) draws this at `D = 2`. It also
+shows that between `ρ/2` and `ρ` the warped boundary bends inward, which §1.2 now says. The
+geometry figure's panels b and c are redrawn one-sided, as their maps are, so the
+`θ_1`-axis is an edge and `v` a corner; before, they were drawn centred on the axis. §4.1
+names `warp_vertex` in its prose and pins the ramp of `κ(u)` to the smoothstep
+`S(s) = 3s² − 2s³`, which the pseudocode used but never defined; the new `smoothstep` line in
+the pseudocode is unmarked, since a code block cannot carry red. The glossary gains a
+*convex vertex* entry. §1.2 and §4 flip to draft.
+
+Downstream: the test suite of `cf4df6e` tests `warp_vertex` in T13(d). The pinned ramp
+gives that test a closed form to check `κ(u)` against.
