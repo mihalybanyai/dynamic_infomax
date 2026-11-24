@@ -868,6 +868,43 @@ figure. Add `p_LN`, and a Gaussian `p_lat` against `D`.
   `θ` sends `ξ` to 0 or 1, so the law tends to `½δ_0 + ½δ_1` for fixed `θ̄`; `p_U` is a
   Gumbel law in `θ`. T23 does not depend on the claim. — Correct the sentence in §4.2.
 
+> M: apply all
+
+> C: Agreed on all fourteen; tests and stubs, except m14, which is spec.
+> - m1: T4 compares `log_normaliser` at `D = 2` with an independent `scipy` `dblquad` over
+>   the ordered triangle. The docstring drops "normalisability is a [guess]": in `ξ`,
+>   `√det g` is a bounded polynomial on a compact set.
+> - m2: T7(c) computes the two-fold per-state KL in the test, by explicit Monte Carlo over
+>   `(x_1, x_2)`, and compares it with `per_state_redundancy`.
+> - m3: T13(d) checks that a base point along `e_2` maps with zero `e_3` component, and the
+>   angle at several `u ≤ ρ/2`.
+> - m4: T14(b) and T14(e) KS-test each cross-section coordinate on its own, and check that
+>   pairwise correlations are near 0.
+> - m5: T14(a) samples two natures and asserts that their labels differ.
+> - m6: T14(f) asserts that the cell's own list of rows excludes `q̄`; `qfamily.py` gains a
+>   stub that lists a cell's rows.
+> - m7: T8 and T20 take their slack from the mismatch's own error, that of the per-draw
+>   differences (F5); `CellScores` gains the mismatch errors §6.3 requires.
+> - m8: T21(a) adds a discrete-prior case at `N = 4`, where `π(A(θ))` is a known sum of
+>   weights, and also runs where §5.4 puts it: in the hypercone at `D ∈ {6, 11, 26}`,
+>   under `slow`.
+> - m9: T21(c) adds `per_state_redundancy(p_J, cone_model(D), θ)` ≥ the relevant-datum
+>   divergence, minus Monte-Carlo error (dropping data cannot raise a KL divergence), and
+>   tightens `rtol` to `2e-3`.
+> - m10: T22(b) tests `capacity_gap` against T3's largest off-support divergence, and
+>   asserts that the capacity equals the largest per-state divergence over the candidates.
+> - m11: T22(e) adds a case where the mapped prior's own mismatch would be the smallest if
+>   it were not excluded (mapping `p_LN`), a nested row with `own_prior=None`, and a case
+>   for `r_N` with its conditional capacity.
+> - m12: T22(d) asserts `joint_width2` in the cone at `r = 1`: the sum of
+>   `(φ^{μ−2}√N/σ)²` over the sub-resolution directions.
+> - m13: T23 asserts that the information rises from `(0, 1)` by more than its
+>   Monte-Carlo error.
+> - m14 (spec §4.2, a Correction): as `τ` grows, each `ξ_μ` is pushed to 0 or 1, so the
+>   law tends to `½δ_0 + ½δ_1` per rate, not to `p_U` (a Gumbel law in `θ`). The sentence
+>   is corrected. `I_{p_LN} ≤ I_{p_LN^*} ≤ C_N` stands without it (`p_LN` is in the family,
+>   and `C_N` is the maximum), so T23 is unaffected.
+
 ## What the test suite gets right
 
 It never asserts a result (§2.4), and it says so where a quantity is only recorded (T22(d)).

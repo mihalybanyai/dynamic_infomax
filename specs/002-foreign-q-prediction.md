@@ -6,10 +6,10 @@
 | [1. Setup](#1-setup) | reviewed | 261121 |
 | [1.2 Generative model](#12-generative-model) | draft | 261124 |
 | [2. Objective](#2-objective) | reviewed | 261121 |
-| [3. The case for transfer (and how it could fail)](#3-the-case-for-transfer-and-how-it-could-fail) | reviewed | 261121 |
+| [3. The case for transfer (and how it could fail)](#3-the-case-for-transfer-and-how-it-could-fail) | draft | 261124 |
 | [4. Algorithm](#4-algorithm) | draft | 261124 |
-| [5. Properties to verify](#5-properties-to-verify) | reviewed | 261121 |
-| [6. Report](#6-report) | reviewed | 261121 |
+| [5. Properties to verify](#5-properties-to-verify) | draft | 261124 |
+| [6. Report](#6-report) | draft | 261124 |
 | [7. Open questions](#7-open-questions) | reviewed | 261121 |
 | [8. References](#8-references) | reviewed | 261121 |
 | [9. Derivations](#9-derivations) | reviewed | 261121 |
@@ -1049,7 +1049,7 @@ slopes are compared there.
 
 **From the worst case to an average.** Call `Θ_J = {θ : R_N^θ(p_J) ≤ C_N}` Jeffreys'
 **covered set**: the states where it costs no more than `p*`'s cap. Since
-`R_N^θ(p*) ≤ C_N` everywhere and `R_N^θ(p_J) ≥ 0`,
+`R_N^θ(p*) ≤ C_N` everywhere <span style="color: red">on the agent's `Θ`</span> and `R_N^θ(p_J) ≥ 0`,
 
 $$
 R_N^q(p_J) - R_N^q(p^\star) \;\ge\; \int_{\Theta\setminus\Theta_J}\!\big(R_N^\theta(p_J) - C_N\big)\,q(d\theta) \;-\; C_N\,q(\Theta_J). \tag{3.2.3}
@@ -1059,6 +1059,8 @@ The first term is the loss insured against, the second the premium. `p*` beats J
 every nature for which the first exceeds the second. The premium is at most `C_N`, and the
 insured loss per state grows with `D` (3.2.2), so what remains is one property of nature:
 **its mass on Jeffreys' covered set**.
+
+<span style="color: red">(3.2.3) is guaranteed only for natures inside the agent's model: the round robin, the stress natures and few rates. The hypercone's nested natures live at `D_max` ([§2.3](#23-the-natures)); scored by an agent of smaller `D`, they place `θ` outside its `Θ`, where `p*`'s per-state loss can exceed `C_N`, so there (3.2.3) is a reading, not a bound.</span>
 
 In the reduced cone at `D = 26` the covered set is `θ_1 > 41.1` of 50
 (`notes/budget-value-of-information.md` §4; (3.2.2) gives 41.3). That is 18% of the
@@ -1549,8 +1551,7 @@ ordered `Θ`, held in `ξ`.
 - **`p_LN^*`, the budget-tuned log-normal**, in exp-decay only (OQ-3): the member of the
   same family whose `(θ̄, τ)` maximise `I_π(Θ;X_{1:N})` at `σ_eff`. A two-parameter
   search, Nelder–Mead from A&M's `(0, 1)` (auto-chosen; please confirm). `I_π = 𝔼_{θ∼π} D_KL(p(x|θ)‖m_π)` comes by Monte Carlo over the prior's own draws, with `m_π` from a second set of draws and common random numbers across `(θ̄, τ)`; above `D_switch`, from AtomicPriors.jl's `mutual` of a
-  weighted sample. As `τ` grows the family tends to `p_U`, and as it shrinks, to a point
-  mass, so `p_LN^*` lies between them, and `I_{p_LN} ≤ I_{p_LN^*} ≤ C_N` (T23).
+  weighted sample. <span style="color: red">As `τ` grows, each `ξ_μ = exp(−e^{−θ_μ})` is pushed to 0 or 1, so the family tends to `½δ_0 + ½δ_1` per rate, not to `p_U` (which is a Gumbel law in `θ`); as `τ` shrinks, it tends to a point mass. `p_LN` is a member of the family and `C_N` the maximum over all priors, so `I_{p_LN} ≤ I_{p_LN^*} ≤ C_N` (T23).</span>
 - **`p_ref`, the ranked reference prior** ([§3.5](#35-a-third-route-ordering-instead-of-budget)).
   In the cones with the curvature knob off it is `p_U`. With curvature on, the Berger–Bernardo formula of `[^3-schur]` by quadrature. In
   exp-decay (OQ-8), one `p_ref` per ranking, from the same formula with the ranked
@@ -1721,6 +1722,8 @@ For each cell `(model, D, σ, N, box, W, taper, fall-off, curvature, nature)`, w
 5.  cross-checks: the decompositions (2.1.2) (T1) and (2.1.6) (T17).
 ```
 
+<span style="color: red">**Errors of differences.** Every prior of a cell is scored on the cell's draws, so the error of a difference, a mismatch or a gap of [§2.4](#24-what-is-reported-and-what-cannot-be-asserted), is the MCSE of the per-draw differences, not the root-sum-square of the two errors. For two similar priors it is much smaller, and §3.7's verdict reads it.</span>
+
 **Why one draw of `x̄`.** For the Gaussian, `x̄` is sufficient:
 `p(X_{1:N}|θ) = p(X_{1:N}|x̄)·p(x̄|θ)` with the first factor free of `θ`, so it cancels in
 the log-ratio of every prior (`m_π(X_{1:N}) = p(X_{1:N}|x̄)·m_π(x̄)`). Hence
@@ -1845,7 +1848,7 @@ dimensions broke the base case, and is fixed before any spec-002 number is trust
 
 **T1 — Cumulative decomposition.** At one cheap cell, estimate `R_N^q(π)` directly by
 (2.1.1) and, separately, as `I_q + D_KL(m_q‖m_π)`; the two agree within their combined
-Monte-Carlo error. The tightest check that the score means what §2.1 says.
+Monte-Carlo error. <span style="color: red">This is a consistency check of the three estimators: (2.1.2) holds for any functions standing in for the marginals, so it cannot show that they are right. The score's level is anchored by a known answer: in the 1-D cone at `σ = W/3`, `R_N^q(π)` for `q = p_U` and `π ∈ {p_U, two atoms at 0 and W}`, by deterministic quadrature, matches `score_cell` within its Monte-Carlo error.</span>
 
 **T2 — Pipeline check.** In the constant cross-section at every `D` of the sweep:
 `p_J(θ) = p_U(θ)` pointwise to numerical tolerance, which exercises the metric, the
@@ -1971,7 +1974,7 @@ a mixture that does not normalise.
 **T21 — Mass bound.** (a) At sampled `θ` and for every prior, the Monte-Carlo
 `R_N^θ(π)` does not exceed `−log π(A(θ)) + ½` beyond Monte-Carlo error; both sides are
 recorded, since their gap is what the `[guess]` of §3.2 turns on. (b) In the hypercone the
-two sides of (3.2.3) are ordered as stated on every nature. (c) In the hypercone at `D ∈ {6, 11}`, where `θ_1 ≫ Dσ/√N` holds at the check points, the divergence between the laws of the relevant datum
+two sides of (3.2.3) are ordered as stated on every nature <span style="color: red">inside the agent's model, the round robin and the interior stress nature ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d))</span>. (c) In the hypercone at `D ∈ {6, 11}`, where `θ_1 ≫ Dσ/√N` holds at the check points, the divergence between the laws of the relevant datum
 under `θ` and under `p_J` matches (3.2.2) with the correction of §9.5; at `D = 26` and `100` the agreement is recorded as observed, not asserted (§9.5). (a) and (b) cannot fail; all three catch a mis-normalised mixture, a wrong
 `σ/√N`, or a Jeffreys density not `∝ θ_1^{D−1}`.
 
@@ -1999,13 +2002,12 @@ rising for Jeffreys. A published result with a known shape, and not this spec's 
 so a fair anchor for the prior-side machinery
 ([Entropy 25(3):434, CC BY](https://www.mdpi.com/1099-4300/25/3/434)).
 
-- **Configuration.** Exp-decay on the ordered `Θ`, `m = 26` times in `[1, 5]`, `σ = 0.1`;
-  `D ∈ {1, 2, 3, 4}` on the candidate-set path, extended toward A&M's `D = 26` through
-  AtomicPriors.jl (OQ-1). Priors `p*` and `p_J`. Seed `20260601` (auto-chosen; please
+- **Configuration.** Exp-decay on the ordered `Θ`, `m = 26` times in `[1, 5]`, `σ = 0.1`.
+  <span style="color: red">Two runs. The default run, `D ∈ {1, 2, 3, 4}` on the candidate-set path, is quick and is the smoke check. Approval needs one extended run at A&M's own `D ∈ {5, 7, 11}`, through AtomicPriors.jl (OQ-1). A&M's `D = 26` is left out, so that the eye test stays cheap. The extended run saves its numbers beside the figure, so the figure redraws without recomputing; the time of its first run is recorded here [TODO: time of the first extended run]. Priors `p*`, `p_J` and `p_LN`.</span> Seed `20260601` (auto-chosen; please
   confirm). `Θ` is the whole manifold, as A&M's `θ ∈ ℝ^D` (OQ-9).
 - **Output.** `tests/figures/002_foreign_q_prediction/eyetest_am_fig5.png`: the two
-  panels, one line per prior.
-- **Acceptance.** Human review against the known features. At every `D`: `I_{p*} ≥ I_{p_J}` and `B(p*) ≈ 0 ≤ B(p_J)`, which hold by `p*`'s optimality. On the range extended toward `D = 26` only: `I_{p*}` flat while `I_{p_J}` falls, and `B(p_J)` rising. A&M find `p*` flat only "once d > 3", and the scores of the other priors peak at `d ≤ 3` [read: A&M §2.2, text on Fig. 5], so on `D ≤ 4` Jeffreys may still be rising. Jeffreys not degrading on the extended range, or `p*` not flat there, exposes a wrong metric, a mis-normalised Jeffreys or a
+  panels, one line per prior<span style="color: red">, with A&M's own points at `D ∈ {1, 2, 3, 5, 7, 11}` overlaid as open markers, read off the published figure by eye [read: A&M Fig. 5, digitised by eye]</span>.
+- **Acceptance.** Human review against the known features. At every `D`: `I_{p*} ≥ I_{p_J}`<span style="color: red">, `I_{p*} ≥ I_{p_LN}`</span> and `B(p*) ≈ 0 ≤ B(p_J)`, which hold by `p*`'s optimality. On the <span style="color: red">extended `D ∈ {5, 7, 11}`</span> only: `I_{p*}` flat while `I_{p_J}` falls, and `B(p_J)` rising. <span style="color: red">In A&M's figure `I_{p_J}` falls from about 3.2 bits at `D = 3` to 1.2 at `D = 11` while `I_{p*}` stays near 4.8, and `B(p_J)` rises from about 10 to over 100 bits; `I_{p_LN}` stays near 3 bits for `D ≤ 3`, below Jeffreys, and falls more slowly, crossing Jeffreys between `D = 3` and 5 [read: A&M Fig. 5]. The computed lines follow the overlaid points.</span> A&M find `p*` flat only "once d > 3", and the scores of the other priors peak at `d ≤ 3` [read: A&M §2.2, text on Fig. 5], so on `D ≤ 4` Jeffreys may still be rising. Jeffreys not degrading on the extended range, or `p*` not flat there, exposes a wrong metric, a mis-normalised Jeffreys or a
   broken estimator, before any foreign-nature number is trusted. The outcome is recorded
   in `experiments/002-foreign-q-prediction/CODEGEN_LOG.md`; the full suite runs only after
   approval.
@@ -2027,9 +2029,9 @@ Gaussian reference figure, so the anchor is binomial: latent information priors 
 #### 5.3.1 Eye-test file structure
 
 Standalone script `tests/eye_test_002_foreign_q_prediction.py` (no `test_` prefix, so not
-collected by pytest): builds exp-decay over the `D`-sweep, computes `p*` and `p_J`,
-estimates `I` and `max_θ b` for each, builds the binomial `p_lat` panels, writes both
-figures, and prints that human approval gates the suite. Running it is the smoke check:
+collected by pytest): builds exp-decay <span style="color: red">at `D ≤ 4`, and with `--extended` at `D ∈ {5, 7, 11}`, whose numbers it saves to a JSON file beside the figure; computes `p*`, `p_J` and `p_LN`,</span>
+estimates `I` and `max_θ b` for each, <span style="color: red">overlays A&M's digitised points, which the script holds,</span> builds the binomial `p_lat` panels <span style="color: red">through `build_plat`</span>, writes both
+figures, and prints that human approval gates the suite <span style="color: red">and needs the extended run</span>. Running it is the smoke check:
 it must finish and write non-empty figures before review.
 
 ### 5.4 Sweep design
@@ -2082,7 +2084,7 @@ ratification.
   small `(D, N)`. T9 and T11 over the `D`-sweep. T12 at the frozen cells of §5.5. T13(d)
   at one curvature cell. T15(d), T15(e) and T23 at the cheap cell. T16 at
   `N ∈ {0, 1, 4}` in the 1-D bounded channel and at the cheap cell. T18 on its two
-  Bernoulli grids. The experiment script runs every cell of the sweep.
+  Bernoulli grids. <span style="color: red">At `N = 1`, `σ_eff = σ`, so the tests of the noise-dependent pieces (T13(a), (c), T15(a), T21(a), T22(a), T23) also run at a *twin* of their cell, with the same `σ_eff` and `N = 4`: `(σ, N) = (0.2, 4)` for the cheap cell, `(2, 4)` for the cone's base cell. Scoring the cheap cell and its twin with the same priors and seed checks §2.1's invariance: the same `R` per draw, a different `r`.</span> The experiment script runs every cell of the sweep.
 
 ### 5.5 AtomicPriors.jl reference fixtures
 
@@ -2093,20 +2095,20 @@ Bayes predictive (`fbayes`, `predict`) and the `N`-fold channel (`repeat`). It s
 without making Julia a dependency of the test suite:
 
 - **Generation (dev time, by hand).** A committed `tests/fixtures/atomicpriors/generate.jl`
-  runs the Julia routines on a few small cells and writes golden values and tolerances to
+  runs the Julia routines on <span style="color: red">the cells fixed below and writes their values</span> to
   `tests/fixtures/atomicpriors/*.json`, with the AtomicPriors commit, the Julia version and
-  the seed beside each value. Run when (re)generating; not part of pytest.
+  the seed beside each value. <span style="color: red">It writes no tolerances: they are fixed below and pinned in `tests/spec002_common.py`, so the bar is set before the reference is computed. Each file also records its cell (`σ`, `D`, `N`, the number of states or the cloud size, the coordinate system) and, for each estimated value, its spread over two Julia seeds. T12 asserts this metadata before it compares values, and fails if a recorded spread exceeds a quarter of its tolerance.</span> Run when (re)generating; not part of pytest.
 - **Consumption (every run).** `test_t12_atomicpriors_reference` compares the Python
   outputs with the JSON values; no Julia at test time.
 - **Parametrisation bridge.** Julia's `yexp` uses `k_μ = −log θ_μ` on `θ ∈ [0, 1]`, or
-  `k_μ = e^{θ_μ}` with its `loglog` option. The first coordinate is this spec's `ξ_μ = e^{−k_μ}`, so `generate.jl` needs no change of variables beyond sorting the rates, and T12(a) asserts the bridge before the other fixtures are
-  trusted.
-- **What is frozen.** (a) `y(θ)` and the metric at about 10 sampled `θ`; (b) `p*`'s atoms
-  and weights, `I_{p*}` and `B(p*)` at exp-decay, `D ∈ {2, 3}`, `σ = 0.1`; (c)
+  `k_μ = e^{θ_μ}` with its `loglog` option. The first coordinate is this spec's `ξ_μ = e^{−k_μ}`, so <span style="color: red">for (a)–(d)</span> `generate.jl` needs no change of variables beyond sorting the rates, and T12(a) asserts the bridge before the other fixtures are
+  trusted. <span style="color: red">`transtrum`, for (e), refuses the compact coordinate and needs the unbounded one, `θ = log k` [read: `resources/AtomicPriors.jl/src/max/sample.jl`, `_transtrum`: "expected an unclamped prior!"], so `generate.jl` maps its cloud to `ξ = exp(−e^{θ})` and sorts it.</span>
+- **What is frozen<span style="color: red">, at which cell, and to what tolerance</span>** <span style="color: red">(auto-chosen; please confirm). All at exp-decay, `σ = 0.1`.</span> (a) `y(θ)` and the metric at <span style="color: red">10 states drawn uniformly on the ordered `Θ` at `D = 3`, to a relative `1e-10` for `y` and `1e-8` for the metric</span>; (b) `p*`'s atoms
+  and weights, `I_{p*}` and `B(p*)` at `D ∈ {2, 3}`<span style="color: red">, `N = 1`. An atom matches when its prediction lies within half a Fisher length of the reference atom's, `‖y(θ_a) − y(θ_a^{ref})‖ ≤ ½σ_eff`, since the candidate set and Julia's continuous atoms need not coincide; weights to `0.02`, `I_{p*}` to `0.01` nats, and `B(p*)` to `0.2` nats, about A&M's own numerical error for it [read: A&M Fig. 5, 0.1–0.2 bits for the optimal prior]</span>; (c)
   `C_N = sup_π I_π(Θ;X_{1:N})` through `repeat` for `N ∈ {1, 2, 4}` at `D = 2`, the
-  independent check that the `σ_eff` build is the budget-`N` capacity; (d) `mutual` of a
-  fixed grid prior; (e) `transtrum`'s cloud of `θ̂` at exp-decay, `D = 2`, `σ = 0.1`,
-  on the whole manifold, as `transtrum` requires.
+  independent check that the `σ_eff` build is the budget-`N` capacity<span style="color: red">, to `0.01` nats</span>; (d) `mutual` of a
+  fixed grid prior<span style="color: red">, the 15 ordered points of `{0.1, 0.3, 0.5, 0.7, 0.9}²` with equal weights at `D = 2`, to `0.005` nats</span>; (e) `transtrum`'s cloud of `θ̂` at `D = 2`<span style="color: red">, `N = 1`, 2000 points</span>,
+  on the whole manifold, as `transtrum` requires<span style="color: red">: a two-sample KS test per coordinate at `p > 10⁻³`, and the mass within `0.02` in `ξ` of each edge (coinciding rates, `ξ = 0`, `ξ = 1`) within four binomial standard errors at the two clouds' sizes, the port's inflated by its autocorrelation</span>.
 
 `p_lat` has no fixture here, since AtomicPriors.jl has no conditional objective; its
 references are T18 and the second eye test (§5.3).
@@ -2144,7 +2146,7 @@ Under `experiments/002-foreign-q-prediction/`:
   ([§3.5](#35-a-third-route-ordering-instead-of-budget), [§3.7](#37-falsification)).
 - `figures/insurance.png` — for every nature, Jeffreys' `R_N` minus `p*`'s against
   `covered_J`: the insurance reading of (3.2.3)
-  ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)).
+  ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)). <span style="color: red">The hypercone's nested natures scored by an agent of smaller `D` are marked, since (3.2.3) is not guaranteed for them.</span>
 - `figures/mass_bound.png` — both sides of (3.2.1) per prior at sampled `θ`: how tight the
   bound is, which §3.2's `[guess]` turns on.
 - `figures/budget_value.png` — `p*`'s gaps to `p*_{N/10}`, to `p*_{10N}` and to Jeffreys
@@ -3744,3 +3746,31 @@ the pseudocode is unmarked, since a code block cannot carry red. The glossary ga
 
 Downstream: the test suite of `cf4df6e` tests `warp_vertex` in T13(d). The pinned ramp
 gives that test a closed form to check `κ(u)` against.
+
+### 2026-11-24 — Correction + Clarification (§3.2, §4.2, §4.4, §5.2–§5.5, §6.1; test red-team, Stage 3b)
+
+Applies the spec side of the `> C:` decisions in
+`tests/test_002_foreign_q_prediction-redteam.md`, taken with MB in Stage 3a. Edits are
+marked red. §3, §5 and §6 flip to draft; §4 was draft already.
+
+- **F4.** (3.2.3) is guaranteed only for natures inside the agent's model; the hypercone's
+  nested natures, scored by a smaller agent, place `θ` outside it (§3.2). T21(b) runs on
+  those natures only (§5.2), and the insurance figure marks the others (§6.1).
+- **F5.** §4.4 says how the error of a difference is computed: from the per-draw
+  differences, since a cell's priors share its draws.
+- **F6.** T1 is described as a consistency check, anchored by a known answer in the 1-D
+  cone (§5.2).
+- **F3, F16.** The eye test adds `p_LN`, overlays A&M's points read off their Fig. 5, and
+  needs one extended run at `D ∈ {5, 7, 11}`; `D = 26` is dropped so the eye test stays
+  cheap (§5.3, §5.3.1). Its acceptance quotes A&M's figure.
+- **F7 (Correction).** §5.5's bridge was wrong for (e): `transtrum` needs the unbounded
+  coordinate `θ = log k`, so `generate.jl` maps its cloud to `ξ`. `generate.jl` no longer
+  writes tolerances; §5.5 fixes the cells and tolerances (auto-chosen), and each fixture
+  records metadata that T12 asserts.
+- **F9.** §5.4 adds twin cells with the same `σ_eff` at `N = 4`, and the check of §2.1's
+  invariance.
+- **m14 (Correction).** §4.2 said the log-normal tends to `p_U` as `τ` grows; it tends to
+  `½δ_0 + ½δ_1` per rate. `I_{p_LN} ≤ I_{p_LN^*} ≤ C_N` stands without it.
+
+Downstream: the test suite of `cf4df6e` is regenerated in Stage 3c, after MB re-reviews
+§3–§6; the tests-only decisions of the report join that regeneration.
