@@ -110,6 +110,9 @@ class DifferenceObjective:
         self.one_d = getattr(a, "one_d", True)
         # with no second term the objective is exactly `a`, on exactly `a`'s path (T16(c))
         self.precision = getattr(a, "precision", 0.0) * (1 if b is None else 2)
+        # the difference of two divergences keeps the light damping it was tuned with
+        # (p_lat's solve stalled at MU_FLOOR); with no second term it is `a` exactly
+        self.mu_floor = getattr(a, "mu_floor", MU_FLOOR) if b is None else 1e-10
         if b is None and hasattr(a, "upper_bound"):
             self.upper_bound = a.upper_bound
 
@@ -138,6 +141,8 @@ class DifferenceObjective:
 
 class BinomialObjective:
     """Binomial divergences `D_KL(Bin(n, theta_i) || sum_j w_j Bin(n, theta_j))`, exact."""
+
+    mu_floor = 1e-10
 
     def __init__(self, theta: np.ndarray, n: int) -> None:
         theta = np.asarray(theta, dtype=float).reshape(-1)
@@ -216,7 +221,8 @@ def _newton(obj, S: np.ndarray, w: np.ndarray, *, tol: float, max_iter: int = 40
     tol = max(tol, prec)
     f, J = obj.f_and_jac(S, w)
     I = float(w @ f)
-    mu = MU_FLOOR
+    mu_floor = getattr(obj, "mu_floor", MU_FLOOR)
+    mu = mu_floor
     stall = 0
     for _ in range(max_iter):
         lam = float(w @ f)
@@ -286,7 +292,7 @@ def _newton(obj, S: np.ndarray, w: np.ndarray, *, tol: float, max_iter: int = 40
                 break
             continue
         stall = 0
-        mu = max(mu / 10.0, MU_FLOOR)
+        mu = max(mu / 10.0, mu_floor)
         gain = I_try - I
         w = w_try
         lam = float(w @ f_try)

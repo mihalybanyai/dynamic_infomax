@@ -118,8 +118,9 @@ The Newton step's damping has a floor of `1e-5` of the Hessian's scale (`capacit
 With near-duplicate candidates the system is near-singular, and at `1e-8`, rounding-level
 differences in the divergences (`1e-14`) sent the steps in different directions and the
 solve stalled. At the cheap cell `1e-5` was the fastest robust floor: 6.8 s, against 9.3 s
-at `1e-6`, and 16.8 s with a residual of 2e-3 at `1e-4`. Adding more than 32 violators per
-round was tried and made `p*_{10N}` slower (795 s against 340 s): its support grew to 1669
+at `1e-6`, and 16.8 s with a residual of 2e-3 at `1e-4`. `p_lat`'s objective, a difference of two divergences, keeps the light damping (`1e-10`)
+it was tuned with: at `1e-5` its solve stalled and took 990 s instead of 51 s. Adding more
+than 32 violators per round was tried and made `p*_{10N}` slower (795 s against 340 s): its support grew to 1669
 atoms, many near zero, and Newton stopped converging.
 
 Tolerances. With one-dimensional data or a binomial channel the divergences are exact,
