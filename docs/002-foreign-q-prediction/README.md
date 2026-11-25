@@ -48,20 +48,29 @@ mis-budgeted `p*` is built on the same geometry at another noise.
 
 **DD-K1 — The per-state divergence.** (`mixture.KernelTable`.) `p*`'s equalizer test
 (T3) needs `D_KL(N(y_0, s^2) || sum_j w_j N(y_j, s^2))` to about `1e-3` nats at thousands
-of states. Plain Monte Carlo at the spec's `J = 64` draws is off by about 0.1 nats, and
-scrambled Sobol by 2e-3 at 1024 points. The integrand depends on the noise only through
-its projection onto the span of the nearby atoms, and that span is effectively two- or
+of states. Plain Monte Carlo at the spec's `J = 64` draws is far from that, and scrambled
+Sobol is off by 2e-3 at 1024 points. The integrand depends on the noise only through its
+projection onto the span of the nearby atoms, and that span is effectively two- or
 three-dimensional at the cheap cell (singular values 1, 0.2–0.7, 0.05–0.1, then ≤ 0.015).
 So the expectation is a Gauss–Hermite tensor product on the leading one to three
-directions (64, 28² or 12³ nodes), plus the exact second-order term of the remaining
+directions (48, 20² or 10³ nodes), plus the exact second-order term of the remaining
 directions: `-1/2` times the variance of their components under the posterior over
 neighbours. Directions below `1e-3` of the leading one are dropped. Atoms more than 8
 noise units away are dropped too: their terms are below `e^-8` of the dominant one even
 at a three-sigma noise draw. In one dimension it is plain Gauss–Hermite (96 nodes).
-Against a 50 000-point Sobol reference the error is 1.6e-4 nats at worst (4e-5 on
-average) over 203 states. The estimator is deterministic, so `per_state_redundancy` of a
-discrete prior ignores `rng` and `n_x`. A cheaper rule (32, 12², 6³ nodes, float32,
-about 3e-3 nats) serves as the solver's fast objective.
+Against the mean of two 32 768-point Sobol estimates the error is at most 3.4e-4 nats over
+406 states (1.8e-4 with 64, 28, 12 nodes at twice the cost). The estimator is
+deterministic, so `per_state_redundancy` of a discrete prior ignores `rng` and `n_x`. A
+cheaper rule (32, 12², 6³ nodes, about 3e-3 nats) serves as the solver's fast objective.
+The derivation is in `tutorials/math/quadrature.md` §4.
+
+**DD-K3 — Compiled kernels (numba).** (`mixture._divergence_kernel`, `mixture._rows_lse`.)
+The divergence above and the mixture log-density are fused, multi-core loops compiled by
+numba. The divergence's exponents `-d2/2 + z . c_top` are formed on the fly from compact
+per-state data, never stored as a (states x nodes x neighbours) array. A cheap-cell `p*`
+build fell from 47 s to 8.4 s; together with DD-K1's smaller rule, the divergence kernel
+is about 17 times faster than the numpy version. The capacity found is unchanged
+(3.09792 against 3.09795 nats).
 
 **DD-K2 — Warm start by A&M's kernel approximation.** (`mixture.elk_divergence`.) The
 solver's first Blahut–Arimoto pass runs on `-log sum_j w_j exp(-|y_i - y_j|^2 / 4 s^2)`

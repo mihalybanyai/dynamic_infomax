@@ -24,6 +24,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+import numba
 import numpy as np
 import scipy.special
 import scipy.stats
@@ -76,23 +77,90 @@ def sq_dists(x: np.ndarray, Y: np.ndarray) -> np.ndarray:
     return d2
 
 
+@numba.njit(parallel=True, cache=True)
+def _rows_lse(G, xx, yy, logw, inv2s2):
+    """`log sum_j exp(logw_j - (xx_i - 2 G_ij + yy_j) inv2s2)` for each row `i`."""
+    n, K = G.shape
+    out = np.empty(n)
+    for i in numba.prange(n):
+        mx = -np.inf
+        for j in range(K):
+            d2 = xx[i] - 2.0 * G[i, j] + yy[j]
+            if d2 < 0.0:
+                d2 = 0.0
+            v = logw[j] - d2 * inv2s2
+            if v > mx:
+                mx = v
+        acc = 0.0
+        for j in range(K):
+            d2 = xx[i] - 2.0 * G[i, j] + yy[j]
+            if d2 < 0.0:
+                d2 = 0.0
+            acc += np.exp(logw[j] - d2 * inv2s2 - mx)
+        out[i] = mx + np.log(acc)
+    return out
+
+
 def mixture_logpdf(
-    x: np.ndarray, Y: np.ndarray, logw: np.ndarray, s: float, *, chunk: int = 2_000_000
+    x: np.ndarray, Y: np.ndarray, logw: np.ndarray, s: float, *, chunk: int = 32_000_000
 ) -> np.ndarray:
-    """`log sum_j w_j N(x_i; Y_j, s^2 1)` for each row `x_i`, shape (n,)."""
+    """`log sum_j w_j N(x_i; Y_j, s^2 1)` for each row `x_i`, shape (n,).
+
+    The cross term `x . Y` is a BLAS product, the log-sum-exp a compiled multi-core loop
+    (DD-K3), in row chunks of at most `chunk` entries. Precision: the squared distances
+    come from the expansion `|x|^2 - 2 x.Y + |Y|^2`, exact to about `1e-16 |x|^2`."""
     x = np.atleast_2d(np.asarray(x, dtype=float))
     Y = np.atleast_2d(np.asarray(Y, dtype=float))
     logw = np.asarray(logw, dtype=float)
     keep = np.isfinite(logw)
-    Y, logw = Y[keep], logw[keep]
+    Y, logw = np.ascontiguousarray(Y[keep]), np.ascontiguousarray(logw[keep])
     m = x.shape[-1]
     const = -0.5 * m * np.log(2.0 * np.pi * s**2)
+    yy = np.einsum("ij,ij->i", Y, Y)
     out = np.empty(x.shape[0])
     rows = max(1, chunk // max(1, Y.shape[0]))
+    inv2s2 = 0.5 / s**2
     for a in range(0, x.shape[0], rows):
-        d2 = sq_dists(x[a : a + rows], Y)
-        out[a : a + rows] = scipy.special.logsumexp(logw[None, :] - 0.5 * d2 / s**2, axis=1)
+        xa = x[a : a + rows]
+        G = xa @ Y.T
+        xx = np.einsum("ij,ij->i", xa, xa)
+        out[a : a + rows] = _rows_lse(G, xx, yy, logw, inv2s2)
     return out + const
+
+
+SPARSE_RADIUS: float = 9.0
+"""Noise units beyond which a node's term is dropped from a large mixture's log density
+(its share is below `exp(-40)` of the nearest node's)."""
+
+
+def sparse_mixture_logpdf(x: np.ndarray, Y: np.ndarray, logw: np.ndarray, s: float, tree: cKDTree | None = None) -> np.ndarray:
+    """`mixture_logpdf` for mixtures of many components: each row of `x` sums only over the
+    components within `SPARSE_RADIUS` noise units (and its 8 nearest)."""
+    x = np.atleast_2d(np.asarray(x, dtype=float))
+    Y = np.asarray(Y, dtype=float)
+    logw = np.asarray(logw, dtype=float)
+    tree = cKDTree(Y / s) if tree is None else tree
+    m = x.shape[1]
+    out = np.empty(x.shape[0])
+    step = 2048
+    for a in range(0, x.shape[0], step):
+        xs = x[a : a + step] / s
+        lists = tree.query_ball_point(xs, r=SPARSE_RADIUS)
+        _, nn = tree.query(xs, k=min(8, Y.shape[0]))
+        nn = np.atleast_2d(nn).reshape(xs.shape[0], -1)
+        rows, cols = [], []
+        for i, lst in enumerate(lists):
+            js = np.union1d(np.asarray(lst, dtype=int), nn[i])
+            rows.append(np.full(js.size, i))
+            cols.append(js)
+        rows, cols = np.concatenate(rows), np.concatenate(cols)
+        d = xs[rows] - Y[cols] / s
+        val = logw[cols] - 0.5 * np.einsum("ij,ij->i", d, d)
+        starts = np.flatnonzero(np.r_[True, rows[1:] != rows[:-1]])
+        mx = np.maximum.reduceat(val, starts)
+        tot = np.add.reduceat(np.exp(val - np.repeat(mx, np.diff(np.r_[starts, rows.size]))), starts)
+        out[a : a + step] = mx + np.log(tot)
+    return out - 0.5 * m * np.log(2.0 * np.pi * s**2)
 
 
 def posterior_weights(x: np.ndarray, Y: np.ndarray, logw: np.ndarray, s: float) -> np.ndarray:
@@ -140,9 +208,10 @@ def _seed_from(rng: np.random.Generator | None) -> int:
 # ---------------------------------------------------------------------------
 
 
-GH_TOP: dict[int, int] = {1: 64, 2: 28, 3: 12}
+GH_TOP: dict[int, int] = {1: 48, 2: 20, 3: 10}
 """Gauss–Hermite nodes per direction when the leading span has 1, 2 or 3 directions:
-about 2e-4 nats of error at the cheap cell (DD-K1)."""
+at most 3.4e-4 nats of error at the cheap cell (DD-K1; 1.8e-4 with 64, 28, 12 nodes at
+twice the cost)."""
 
 GH_TOP_FAST: dict[int, int] = {1: 32, 2: 12, 3: 6}
 """The fast objective's rule: about 3e-3 nats, eight times cheaper."""
@@ -162,8 +231,11 @@ def _gh_tensor(k: int, top: dict | None = None) -> tuple[np.ndarray, np.ndarray]
     return z1[idx], np.prod(w1[idx], axis=1)
 
 
-class KernelTable:
-    """Per-state quadrature tables for the per-state divergence `f_i` (DD-K1).
+class SobolKernelTable:
+    """The numpy implementation with explicit `E[i, k, j]` tables, kept for the Sobol
+    reference (`method="sobol"`), against which the default rule is checked (DD-K1).
+
+    Per-state quadrature tables for the per-state divergence `f_i`.
 
     States `Y0` (n, m) and atoms `Y` (K, m) are in data units; `s` is the noise. For
     each state the atoms within `CUTOFF` noise units (and at least the nearest
@@ -298,6 +370,217 @@ class KernelTable:
         lse_safe = np.where(self.omega > 0, lse, 0.0)
         ratio = np.exp(self.E - lse_safe[:, :, None].astype(self.dtype))  # p_j / m at the nodes
         dJ = -np.einsum("ik,ikj->ij", self.omega.astype(self.dtype), ratio).astype(float)
+        jac = np.zeros((self.n_states, self.n_atoms))
+        rows = np.repeat(np.arange(self.n_states), self.idx.shape[1])
+        cols = self.idx.ravel()
+        ok = cols >= 0
+        np.add.at(jac, (rows[ok], cols[ok]), dJ.ravel()[ok])
+        return f, jac
+
+
+@numba.njit(parallel=True, cache=True)
+def _divergence_kernel(d2, ctop, cres, nres, idx, nj, set_id, set_start, set_len, Z, W, lw, need_jac):
+    """Fused per-state divergence (DD-K1, DD-K3): for each state, over its node set, the
+    exponents `-d2/2 + z . c_top` are formed on the fly, then log-sum-exp with the weights,
+    the residual directions' second-order term, and (optionally) `d f / d w`."""
+    n, J = d2.shape
+    kres = cres.shape[2]
+    f = np.zeros(n)
+    jac = np.zeros((n, J if need_jac else 1))
+    for i in numba.prange(n):
+        sid = set_id[i]
+        st = set_start[sid]
+        ln = set_len[sid]
+        kt = 3 if sid == 3 else (2 if sid == 2 else (1 if (sid == 1 or sid == 4) else 0))
+        nji = nj[i]
+        nr = nres[i]
+        a = np.empty(nji)
+        e = np.empty(nji)
+        m1 = np.empty(max(kres, 1))
+        acc = 0.0
+        bad = False
+        for q in range(ln):
+            z0 = Z[st + q, 0]
+            z1 = Z[st + q, 1]
+            z2 = Z[st + q, 2]
+            wq = W[st + q]
+            mx = -np.inf
+            for j in range(nji):
+                ej = -0.5 * d2[i, j]
+                if kt >= 1:
+                    ej += z0 * ctop[i, j, 0]
+                if kt >= 2:
+                    ej += z1 * ctop[i, j, 1]
+                if kt >= 3:
+                    ej += z2 * ctop[i, j, 2]
+                e[j] = ej
+                aj = ej + lw[idx[i, j]]
+                a[j] = aj
+                if aj > mx:
+                    mx = aj
+            if mx == -np.inf:
+                bad = True
+                break
+            ssum = 0.0
+            for j in range(nji):
+                ssum += np.exp(a[j] - mx)
+            lse = mx + np.log(ssum)
+            corr = 0.0
+            if nr > 0:
+                for r in range(nr):
+                    m1[r] = 0.0
+                m2 = 0.0
+                for j in range(nji):
+                    pj = np.exp(a[j] - lse)
+                    if pj > 0.0:
+                        sq = 0.0
+                        for r in range(nr):
+                            c = cres[i, j, r]
+                            sq += c * c
+                            m1[r] += pj * c
+                        m2 += pj * sq
+                v = m2
+                for r in range(nr):
+                    v -= m1[r] * m1[r]
+                corr = 0.5 * v
+            acc += wq * (lse + corr)
+            if need_jac:
+                for j in range(nji):
+                    jac[i, j] -= wq * np.exp(e[j] - lse)
+        f[i] = np.inf if bad else -acc
+    return f, jac
+
+
+def _node_sets(gh_top: dict | None):
+    """The packed Gauss–Hermite node sets: 0 a single node at the origin, 1–3 the tensor
+    rules on 1–3 leading directions, 4 the one-dimensional rule for scalar data."""
+    top = GH_TOP if gh_top is None else gh_top
+    sets = [(np.zeros((1, 3)), np.ones(1))]
+    for k in (1, 2, 3):
+        z, w = _gh_tensor(k, top)
+        zz = np.zeros((z.shape[0], 3))
+        zz[:, :k] = z
+        sets.append((zz, w))
+    z1, w1 = _gauss_hermite(N_GH)
+    zz = np.zeros((z1.size, 3))
+    zz[:, 0] = z1
+    sets.append((zz, w1))
+    lens = np.array([z.shape[0] for z, _ in sets])
+    starts = np.concatenate([[0], np.cumsum(lens)[:-1]])
+    return np.concatenate([z for z, _ in sets]), np.concatenate([w for _, w in sets]), starts, lens
+
+
+class KernelTable:
+    """Per-state quadrature data for the per-state divergence `f_i` (DD-K1, DD-K3).
+
+    States `Y0` (n, m) and atoms `Y` (K, m) are in data units; `s` is the noise. For
+    each state the atoms within `CUTOFF` noise units (and at least the nearest
+    `N_MIN_NEIGHBOURS`) enter; `idx[i]` lists them. With `c_ij = (Y_j - Y0_i)/s` split into
+    its components on the leading directions of their span (`c_top`, at most three) and on
+    the rest (`c_res`),
+    `f_i = sum_k omega_k [-log sum_j w_j exp(-|c_ij|^2/2 + z_k . c_top_ij) - V_ik/2]`, where
+    `z_k` are Gauss–Hermite nodes on the leading directions and `V_ik` is the variance of
+    `c_res` under the posterior over neighbours at node `k`: the second-order term of the
+    expectation over the residual directions. Evaluated by the compiled
+    `_divergence_kernel`; `method="sobol"` returns the numpy `SobolKernelTable` instead.
+    """
+
+    def __new__(cls, *args, method: str = "gh", **kwargs):
+        if method == "sobol":
+            return SobolKernelTable(*args, method="sobol", **{k: v for k, v in kwargs.items() if k != "gh_top"})
+        return super().__new__(cls)
+
+    def __init__(
+        self,
+        Y0: np.ndarray,
+        Y: np.ndarray,
+        s: float,
+        *,
+        n_q: int = DEFAULT_NQ,
+        seed: int = FIXED_SEED,
+        cutoff: float = CUTOFF,
+        tree: cKDTree | None = None,
+        dtype=None,
+        method: str = "gh",
+        gh_top: dict | None = None,
+    ) -> None:
+        Y0 = np.atleast_2d(np.asarray(Y0, dtype=float)) / s
+        Yh = np.atleast_2d(np.asarray(Y, dtype=float)) / s
+        n, m = Y0.shape
+        K = Yh.shape[0]
+        tree = cKDTree(Yh) if tree is None else tree
+        near = tree.query_ball_point(Y0, r=cutoff)
+        k_min = min(N_MIN_NEIGHBOURS, K)
+        _, nearest = tree.query(Y0, k=k_min)
+        nearest = np.atleast_2d(nearest).reshape(n, k_min)
+        lists = []
+        for i in range(n):
+            lst = set(near[i])
+            lst.update(int(j) for j in nearest[i])
+            lists.append(np.array(sorted(lst), dtype=np.int64))
+        jmax = max(len(lst) for lst in lists)
+        d2 = np.zeros((n, jmax))
+        ctop = np.zeros((n, jmax, 3))
+        res_parts = []
+        idx = np.zeros((n, jmax), dtype=np.int64)
+        nj = np.zeros(n, dtype=np.int64)
+        set_id = np.zeros(n, dtype=np.int64)
+        for i in range(n):
+            js = lists[i]
+            nj[i] = js.size
+            idx[i, : js.size] = js
+            delta = Yh[js] - Y0[i]
+            dd = np.einsum("ij,ij->i", delta, delta)
+            d2[i, : js.size] = dd
+            res_parts.append(None)
+            if m == 1:
+                ctop[i, : js.size, 0] = delta[:, 0]
+                set_id[i] = 4
+                continue
+            big = dd > 1e-24
+            if not np.any(big):
+                set_id[i] = 0
+                continue
+            _, sv, vt = np.linalg.svd(delta[big], full_matrices=False)
+            rank = int(np.sum(sv > RES_REL * sv[0]))
+            Q = vt[:rank].T
+            c = delta @ Q
+            k_top = int(min(3, np.sum(sv[:rank] > TOP_REL * sv[0])))
+            set_id[i] = k_top
+            ctop[i, : js.size, :k_top] = c[:, :k_top]
+            if rank > k_top:
+                res_parts[i] = c[:, k_top:]
+        k_res = max((r.shape[1] for r in res_parts if r is not None), default=0)
+        cres = np.zeros((n, jmax, max(k_res, 1)))
+        nres = np.zeros(n, dtype=np.int64)
+        for i, r in enumerate(res_parts):
+            if r is not None:
+                cres[i, : r.shape[0], : r.shape[1]] = r
+                nres[i] = r.shape[1]
+        self._data = (d2, ctop, cres, nres, idx, nj, set_id)
+        self._sets = _node_sets(gh_top)
+        self.idx = np.where(np.arange(jmax)[None, :] < nj[:, None], idx, -1)
+        self.n_states = n
+        self.n_atoms = K
+        self.dtype = np.float64 if dtype is None else dtype
+
+    def _run(self, logw: np.ndarray, need_jac: bool):
+        d2, ctop, cres, nres, idx, nj, set_id = self._data
+        Z, W, starts, lens = self._sets
+        lw = np.asarray(logw, dtype=float)
+        return _divergence_kernel(d2, ctop, cres, nres, idx, nj, set_id, starts, lens, Z, W, lw, need_jac)
+
+    def f(self, logw: np.ndarray) -> np.ndarray:
+        """Per-state divergence for log weights `logw` over the atoms (`-inf` allowed)."""
+        return self._run(logw, False)[0]
+
+    def f_and_jacobian(self, w: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """`f` and `df_i/dw_l`, shape (n_states, n_atoms), for weights `w` (not logs); the
+        Jacobian omits the derivative of the second-order correction."""
+        w = np.asarray(w, dtype=float)
+        with np.errstate(divide="ignore"):
+            logw = np.log(w)
+        f, dJ = self._run(logw, True)
         jac = np.zeros((self.n_states, self.n_atoms))
         rows = np.repeat(np.arange(self.n_states), self.idx.shape[1])
         cols = self.idx.ravel()

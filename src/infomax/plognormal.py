@@ -105,7 +105,7 @@ def build_pln_star(model: Model, rng: np.random.Generator, *, n: int = 4096) -> 
 
     res = scipy.optimize.minimize(
         neg_info, x0=np.array([0.0, 0.0]), method="Nelder-Mead",
-        options={"xatol": 1e-3, "fatol": 1e-5, "initial_simplex": np.array([[0.0, 0.0], [0.5, 0.0], [0.0, 0.5]]), "maxiter": 200},
+        options={"xatol": 1e-2, "fatol": 1e-5, "initial_simplex": np.array([[0.0, 0.0], [0.5, 0.0], [0.0, 0.5]]), "maxiter": 200},
     )
     bar, tau = float(res.x[0]), float(np.exp(res.x[1]))
     prior = build_pln(model, bar, tau)

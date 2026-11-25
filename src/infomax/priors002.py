@@ -22,7 +22,9 @@ import numpy as np
 import scipy.special
 import scipy.stats
 
-from infomax.mixture import log_normal_iso, mixture_logpdf, posterior_weights, sq_dists
+from scipy.spatial import cKDTree
+
+from infomax.mixture import log_normal_iso, mixture_logpdf, posterior_weights, sparse_mixture_logpdf, sq_dists
 from infomax.models import Model
 from infomax.quadrature import cone_theta1_rule, exp_decay_grid
 
@@ -69,6 +71,11 @@ def _model_key(model: Model) -> tuple:
         float(model.curvature), round(model.rho, 14) if model.curvature != 1.0 else None, fixed,
         tuple(np.asarray(model.box.low, float)), tuple(np.asarray(model.box.high, float)),
     )
+
+
+SPARSE_NODES: int = 10**9
+"""Node sets larger than this would be summed sparsely (`mixture.sparse_mixture_logpdf`);
+off, since the dense BLAS sum is 40 times faster at 4e4 nodes."""
 
 
 class PriorBase:
@@ -239,6 +246,14 @@ class ContinuousPrior(PriorBase):
 
     def _lmn(self, model: Model, x: np.ndarray, s: float) -> np.ndarray:
         Y, logw = self._node_y(model, s)
+        x = np.atleast_2d(x)
+        if Y.shape[0] > SPARSE_NODES and x.shape[0] > 64:
+            key = ("tree", _model_key(model), round(float(s), 14))
+            tree = self._node_cache.get(key)
+            if tree is None:
+                tree = cKDTree(Y / s)
+                self._node_cache[key] = tree
+            return sparse_mixture_logpdf(x, Y, logw, s, tree)
         return mixture_logpdf(x, Y, logw, s)
 
 

@@ -108,7 +108,10 @@ class DifferenceObjective:
         self.a, self.b = a, b
         self.n = a.n
         self.one_d = getattr(a, "one_d", True)
-        self.precision = 2 * getattr(a, "precision", 0.0)
+        # with no second term the objective is exactly `a`, on exactly `a`'s path (T16(c))
+        self.precision = getattr(a, "precision", 0.0) * (1 if b is None else 2)
+        if b is None and hasattr(a, "upper_bound"):
+            self.upper_bound = a.upper_bound
 
     def f_and_jac(self, S, w):
         fa, ja = self.a.f_and_jac(S, w)
@@ -377,7 +380,13 @@ def solve_capacity(
         if others.size:
             ub = obj.upper_bound(others, S, w)
             if ub is None:
-                f_all[others] = obj.f(others, S, w)
+                check = others
+                if fast is not obj:
+                    f_fast = fast.f(others, S, w)
+                    f_all[others] = f_fast
+                    check = others[f_fast > lam + add_tol - 0.02]
+                if check.size:
+                    f_all[check] = obj.f(check, S, w)
             else:
                 f_all[others] = ub
                 check = others[ub > lam + add_tol]

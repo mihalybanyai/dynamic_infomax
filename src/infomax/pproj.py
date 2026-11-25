@@ -56,7 +56,8 @@ def _lm(model: Model, x: np.ndarray, theta0: np.ndarray, *, iters: int = 40) -> 
         hold = ((th <= lo + 1e-15) & (g > 0)) | ((th >= hi - 1e-15) & (g < 0))
         JtJ = np.einsum("nmd,nme->nde", J, J)
         diag = np.einsum("ndd->nd", JtJ)
-        A = JtJ + (lam[:, None] * (diag + 1e-12))[:, :, None] * np.eye(D)[None]
+        ridge = 1e-12 * np.maximum(diag.max(axis=1), 1e-300)
+        A = JtJ + (lam[:, None] * diag + ridge[:, None])[:, :, None] * np.eye(D)[None]
         H = hold.astype(float)
         A = A * (1.0 - H)[:, :, None] * (1.0 - H)[:, None, :] + np.eye(D)[None] * H[:, :, None]
         rhs = -g * (1.0 - H)
@@ -68,7 +69,7 @@ def _lm(model: Model, x: np.ndarray, theta0: np.ndarray, *, iters: int = 40) -> 
         th = np.where(better[:, None], th_new, th)
         r = np.where(better[:, None], r_new, r)
         cost = np.where(better, c_new, cost)
-        lam = np.where(better, lam * 0.3, lam * 10.0)
+        lam = np.where(better, np.maximum(lam * 0.3, 1e-9), lam * 10.0)
         if np.all(lam > 1e8):
             break
     return th, cost
