@@ -50,6 +50,8 @@ mathematical sub-areas.
 - `math/kelly.md` — Kelly betting, calibrated to the infomax-betting experiment
 - `math/redundancy-capacity.md` — coding redundancy, capacity, equalizer
   priors, and why `p*` is discrete (the design-loss case)
+- `math/nml-mdl.md` — NML, stochastic complexity and the projected prior `p_proj`
+- `math/quadrature.md` — numerical integration, calibrated to spec 002's integrals
 
 ## Adding a new tutorial
 
