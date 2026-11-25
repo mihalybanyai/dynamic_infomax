@@ -2006,8 +2006,8 @@ so a fair anchor for the prior-side machinery
   Two runs. The default run, `D ∈ {1, 2, 3, 4}` on the candidate-set path, is quick and is the smoke check. Approval needs one extended run at A&M's own `D ∈ {5, 7, 11}`, through AtomicPriors.jl (OQ-1). A&M's `D = 26` is left out, so that the eye test stays cheap. The extended run saves its numbers beside the figure, so the figure redraws without recomputing; the time of its first run is recorded here [TODO: time of the first extended run]. Priors `p*`, `p_J` and `p_LN`. Seed `20260601` (auto-chosen; please
   confirm). `Θ` is the whole manifold, as A&M's `θ ∈ ℝ^D` (OQ-9).
 - **Output.** `tests/figures/002_foreign_q_prediction/eyetest_am_fig5.png`: the two
-  panels, one line per prior, with A&M's own points at `D ∈ {1, 2, 3, 5, 7, 11}` overlaid as open markers, read off the published figure by eye [read: A&M Fig. 5, digitised by eye].
-- **Acceptance.** Human review against the known features. At every `D`: `I_{p*} ≥ I_{p_J}`, `I_{p*} ≥ I_{p_LN}` and `B(p*) ≈ 0 ≤ B(p_J)`, which hold by `p*`'s optimality. On the extended `D ∈ {5, 7, 11}` only: `I_{p*}` flat while `I_{p_J}` falls, and `B(p_J)` rising. In A&M's figure `I_{p_J}` falls from about 3.2 bits at `D = 3` to 1.2 at `D = 11` while `I_{p*}` stays near 4.8, and `B(p_J)` rises from about 10 to over 100 bits; `I_{p_LN}` stays near 3 bits for `D ≤ 3`, below Jeffreys, and falls more slowly, crossing Jeffreys between `D = 3` and 5 [read: A&M Fig. 5]. The computed lines follow the overlaid points. A&M find `p*` flat only "once d > 3", and the scores of the other priors peak at `d ≤ 3` [read: A&M §2.2, text on Fig. 5], so on `D ≤ 4` Jeffreys may still be rising. Jeffreys not degrading on the extended range, or `p*` not flat there, exposes a wrong metric, a mis-normalised Jeffreys or a
+  panels, one line per prior, with A&M's own points at `D ∈ {1, 2, 3, 5, 7, 11}` overlaid as open markers, read off the published figure by eye [read: A&M Fig. 5, digitised by eye]. <span style="color: red">The bottom panel draws, for each prior, a band between two maxima of `b`: over 2000 draws from the prior itself, and over all of `Θ` (`p*`'s candidate set, faces included). A&M write `B = max_θ b(θ)` but do not say over which states it runs [read: A&M §2.2, App. A.4], and the choice matters: Jeffreys' `b` is about 0 in the interior at `D = 1` and about 1.3 bits on the faces, where half the noise falls off the manifold, and over `D ≤ 3` the two maxima differ by up to a factor of 6 (first runs of the eye test, 2026-11-25). A band from states one Fisher length from every face was tried first: it is empty at `D ≥ 3`, where every state lies within 0.6 noise units of a face.</span>
+- **Acceptance.** Human review against the known features. At every `D`: `I_{p*} ≥ I_{p_J}`, `I_{p*} ≥ I_{p_LN}` and `B(p*) ≈ 0 ≤ B(p_J)`, which hold by `p*`'s optimality. On the extended `D ∈ {5, 7, 11}` only: `I_{p*}` flat while `I_{p_J}` falls, and `B(p_J)` rising. In A&M's figure `I_{p_J}` falls from about 3.2 bits at `D = 3` to 1.2 at `D = 11` while `I_{p*}` stays near 4.8, and `B(p_J)` rises from about 10 to over 100 bits; `I_{p_LN}` stays near 3 bits for `D ≤ 3`, below Jeffreys, and falls more slowly, crossing Jeffreys between `D = 3` and 5 [read: A&M Fig. 5]. The computed lines follow the overlaid points<span style="color: red">; a `B` point outside its band is recorded, not by itself a rejection</span>. A&M find `p*` flat only "once d > 3", and the scores of the other priors peak at `d ≤ 3` [read: A&M §2.2, text on Fig. 5], so on `D ≤ 4` Jeffreys may still be rising. Jeffreys not degrading on the extended range, or `p*` not flat there, exposes a wrong metric, a mis-normalised Jeffreys or a
   broken estimator, before any foreign-nature number is trusted. The outcome is recorded
   in `experiments/002-foreign-q-prediction/CODEGEN_LOG.md`; the full suite runs only after
   approval.
@@ -2030,7 +2030,7 @@ Gaussian reference figure, so the anchor is binomial: latent information priors 
 
 Standalone script `tests/eye_test_002_foreign_q_prediction.py` (no `test_` prefix, so not
 collected by pytest): builds exp-decay at `D ≤ 4`, and with `--extended` at `D ∈ {5, 7, 11}`, whose numbers it saves to a JSON file beside the figure; computes `p*`, `p_J` and `p_LN`,
-estimates `I` and `max_θ b` for each, overlays A&M's digitised points, which the script holds, builds the binomial `p_lat` panels through `build_plat`, writes both
+estimates `I` and `max_θ b` for each<span style="color: red"> (each maximum in two stages: `b` on the states thinned to two Fisher lengths, then the states near the best of them re-evaluated with 512 draws of `x`, so that Monte-Carlo noise does not inflate the maximum)</span>, overlays A&M's digitised points, which the script holds, builds the binomial `p_lat` panels through `build_plat`, writes both
 figures, and prints that human approval gates the suite and needs the extended run. Running it is the smoke check:
 it must finish and write non-empty figures before review.
 
@@ -3786,3 +3786,17 @@ Downstream: the stubs gain `binomial_model`, `ranking_coordinate`, `cell_rows`,
 `row_summaries`, `exchange` and `cast_present_at_every_D`, `score_cell`'s `nature_model`,
 and `CellScores`' mismatch errors, draws, labels, submodel floor and split terms;
 `build_plat_binomial` is gone, and `nml_log_normaliser` returns its error.
+
+### 2026-11-25 — Clarification (§5.3, §5.3.1; first runs of the eye test)
+
+The first default run of the eye test (`D ≤ 4`) matched A&M's mutual information within
+0.05 bits for every prior, but its worst-case bias pressure for Jeffreys and the
+log-normal lay 2–8 times above A&M's points. The maximum then ran over `p*`'s candidate
+set, faces included, and `b` rises toward the faces. A&M do not say over which states
+their maximum runs, so the figure now draws a band between the maximum over 2000 draws
+from the prior and the maximum over all of `Θ` (red), and a point outside the band is
+recorded rather than rejected. Over `D ≤ 3` the band contains every A&M point except
+Jeffreys' at `D = 1` (0.15 bits against 1.37–1.43). A band from interior states, one
+Fisher length from every face, was tried first and is empty at `D ≥ 3`. The maximum is
+found in two stages, so that noise in 64-draw estimates does not inflate it. §5 is
+already draft. Downstream: the eye-test script, and `diagnostics.worst_case_bias_pressure`.
