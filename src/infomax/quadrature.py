@@ -27,6 +27,16 @@ ARC_CELL: float = 0.3
 """Exp-decay grid cell length along each axis, in noise units (two GL nodes per cell):
 about 4e-4 nats of error in `p_LN`'s log marginal at the cheap cell, 4e-5 in `p_U`'s."""
 
+GL_NODES_PER_AXIS: dict[int, int] = {}
+"""Gauss–Legendre nodes per axis cell by dimension (default 2). One node per cell is not
+used: in a cell whose indices tie, the sorted single node lies on the diagonal, where
+Jeffreys' density vanishes, and the cell's mass is lost (DD-Q1)."""
+
+ARC_CELL_BY_D: dict[int, float] = {3: 0.6, 4: 0.6}
+"""Cell length in noise units by dimension (default `ARC_CELL`): at `D >= 3`, two nodes in
+cells of 0.6 cost about what one node in cells of 0.3 did, with per-state errors of
+2.7e-4 (`p_LN`, `D = 4`), 2.4e-3 (`p_J`, `D = 3`) and 6e-2 (`p_J`, `D = 4`) nats."""
+
 MAX_GRID_NODES: int = 2_000_000
 """Exp-decay grids are coarsened until they hold at most this many nodes."""
 
@@ -47,7 +57,7 @@ def axis_edges(m: int, D: int, lo: float, hi: float, s: float, *, n_cells: int |
     xi, A = _arc_profile(m, float(lo), float(hi))
     total = A[-1] / D / s
     if n_cells is None:
-        n_cells = max(4, int(np.ceil(total / ARC_CELL)))
+        n_cells = max(4, int(np.ceil(total / ARC_CELL_BY_D.get(D, ARC_CELL))))
     targets = np.linspace(0.0, A[-1], n_cells + 1)
     edges = np.interp(targets, A, xi)
     edges[0], edges[-1] = lo, hi
@@ -112,7 +122,7 @@ def exp_decay_grid(model, s: float, *, n_per_axis: int | None = None, q: int | N
     `xi = H^-1(H(a) + (H(b) - H(a)) u_k)`, with log weights `log (H(b) - H(a)) + log w_k`."""
     D = model.D
     lo, hi = float(model.box.low[0]), float(model.box.high[0])
-    q = (2 if D <= 2 else 1) if q is None else q
+    q = GL_NODES_PER_AXIS.get(D, 2) if q is None else q
     if n_per_axis is not None:
         edges = axis_edges(model.m, D, lo, hi, s, n_cells=max(1, n_per_axis // q))
     else:
