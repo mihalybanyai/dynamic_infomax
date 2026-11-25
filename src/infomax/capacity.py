@@ -192,6 +192,14 @@ class CapacitySolution:
     support_residual: float = 0.0
 
 
+MU_FLOOR = 1e-5
+"""Floor of the Newton step's Levenberg–Marquardt damping, relative to the Hessian's scale
+(DD-S1). With near-duplicate candidates the system is near-singular; at a floor of `1e-8`
+rounding-level differences in the divergences sent the steps in different directions and
+the solve stalled. `1e-5` was the fastest robust value at the cheap cell (`1e-6`: 9.3 s,
+`1e-5`: 6.8 s, `1e-4`: 16.8 s and a residual of 2e-3)."""
+
+
 def _newton(obj, S: np.ndarray, w: np.ndarray, *, tol: float, max_iter: int = 40):
     """Projected Newton ascent on `I(w) = sum_i w_i f_i(w)` over the simplex (DD-S1).
 
@@ -208,7 +216,7 @@ def _newton(obj, S: np.ndarray, w: np.ndarray, *, tol: float, max_iter: int = 40
     tol = max(tol, prec)
     f, J = obj.f_and_jac(S, w)
     I = float(w @ f)
-    mu = 1e-8
+    mu = MU_FLOOR
     stall = 0
     for _ in range(max_iter):
         lam = float(w @ f)
@@ -278,7 +286,7 @@ def _newton(obj, S: np.ndarray, w: np.ndarray, *, tol: float, max_iter: int = 40
                 break
             continue
         stall = 0
-        mu = max(mu / 10.0, 1e-10)
+        mu = max(mu / 10.0, MU_FLOOR)
         gain = I_try - I
         w = w_try
         lam = float(w @ f_try)
@@ -365,13 +373,14 @@ def solve_capacity(
         S, w, _, _ = _newton(fast, S, w, tol=1e-6)
     for outer in range(max_outer):
         # 2b. Newton on the fixed-point equations of the accurate objective
-        S, w, lam, f_S = _newton(obj, S, w, tol=0.1 * add_tol)
+        tol_round = 0.1 * add_tol
+        S, w, lam, f_S = _newton(obj, S, w, tol=tol_round)
         for _again in range(2):
             act = w > 0
             if float(np.max(np.abs(f_S[act] - lam))) <= support_tol:
                 break
             w = _ba_on(obj, S, w, cheap=False, iters=30)
-            S, w, lam, f_S = _newton(obj, S, w, tol=0.1 * add_tol)
+            S, w, lam, f_S = _newton(obj, S, w, tol=tol_round)
         # 3. sweep every candidate: the Jensen bound first, then the fast objective, then
         # the accurate one only where a violation is still possible
         f_all = np.full(n, -np.inf)

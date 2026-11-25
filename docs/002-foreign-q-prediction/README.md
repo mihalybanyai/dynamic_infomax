@@ -114,6 +114,14 @@ the fixed point is finished by:
    and at least 2 noise units apart: many adjacent zero-weight candidates at once make
    the Newton system near-singular.
 
+The Newton step's damping has a floor of `1e-5` of the Hessian's scale (`capacity.MU_FLOOR`).
+With near-duplicate candidates the system is near-singular, and at `1e-8`, rounding-level
+differences in the divergences (`1e-14`) sent the steps in different directions and the
+solve stalled. At the cheap cell `1e-5` was the fastest robust floor: 6.8 s, against 9.3 s
+at `1e-6`, and 16.8 s with a residual of 2e-3 at `1e-4`. Adding more than 32 violators per
+round was tried and made `p*_{10N}` slower (795 s against 340 s): its support grew to 1669
+atoms, many near zero, and Newton stopped converging.
+
 Tolerances. With one-dimensional data or a binomial channel the divergences are exact,
 and the stopping rule is the spec's `tol`. Beyond one dimension, near-duplicate
 candidates make the split of an atom's mass between neighbours ill-determined and
@@ -158,6 +166,10 @@ box-constrained Levenberg–Marquardt fit, started from the three nearest points
 Fisher-spaced seed net (`candidate_set` at spacing 1) and, in the chain, from the
 walker's previous estimate. In exp-decay it runs on the unordered cube (the map is
 permutation-symmetric) and sorts the result. In the 1-D cone the projection is the clip.
+
+Each fit stops once a step lowers its cost by less than `1e-12` of it, or its damping
+passes `1e6`; all starting points of a batch run as one array. That took `p_proj`'s build at
+the cheap cell from 44 s to 12 s, mostly by removing Python overhead.
 
 **DD-P2 — The NML normaliser.** (`pproj.nml_log_normaliser`.) Importance sampling from
 `p_U`'s marginal at 1.25 times the noise, with the delta-method error of `log Z`.
@@ -227,6 +239,14 @@ found in two stages. First `b` on the states thinned to two Fisher lengths (64 d
 A first band, from states at least one Fisher length from every face, was dropped. It is
 empty at `D ≥ 3`: every candidate lies within 0.58 (`D = 3`) or 0.39 (`D = 4`) noise units
 of a face, because the irrelevant directions are thinner than the noise.
+
+**DD-S2 — Builds are memoised within a process.** (`pstar._BUILD_CACHE`,
+`plat._BUILD_CACHE`.) `p*` and `p_lat` are deterministic functions of their arguments, so
+a repeated build (`build_cast` in many tests, `p*` and its copies) returns the stored
+result. `p*`'s key uses the effective noise `sigma/sqrt(budget)`, on which the reduced
+build alone depends, so the cheap cell's `p*_{10N}` and its twin's `p*_{40}` share one build.
+The memo lives in memory only; a cache that survives the process is left for later, when
+the code is stable.
 
 **DD-A1 — The atomic path.** (`pstar.build_pstar(method="atomic")`.) AtomicPriors.jl
 through `juliacall` (OQ-1) needs Julia, which is not installed. The path raises

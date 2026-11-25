@@ -13,6 +13,7 @@ stiffest-direction ranking).
 from __future__ import annotations
 
 import dataclasses
+import functools
 from dataclasses import dataclass
 
 import numpy as np
@@ -38,6 +39,13 @@ cross-section carried along the whole relevant axis. Not fixed by the spec (desi
 decision DD-M1 in `docs/002-foreign-q-prediction/README.md`)."""
 
 _CONTAIN_TOL = 1e-12
+
+
+@functools.lru_cache(maxsize=8)
+def _times(m: int) -> np.ndarray:
+    t = np.linspace(OBSERVATION_WINDOW[0], OBSERVATION_WINDOW[1], m)
+    t.setflags(write=False)
+    return t
 
 
 @dataclass(frozen=True)
@@ -149,7 +157,7 @@ class Model:
     @property
     def times(self) -> np.ndarray:
         """Exp-decay's observation times, evenly spaced in A&M's window (§4.1)."""
-        return np.linspace(OBSERVATION_WINDOW[0], OBSERVATION_WINDOW[1], self.m)
+        return _times(self.m)
 
     @property
     def vertex(self) -> np.ndarray:

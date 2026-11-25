@@ -521,35 +521,32 @@ class KernelTable:
         jmax = max(len(lst) for lst in lists)
         d2 = np.zeros((n, jmax))
         ctop = np.zeros((n, jmax, 3))
-        res_parts = []
         idx = np.zeros((n, jmax), dtype=np.int64)
-        nj = np.zeros(n, dtype=np.int64)
+        nj = np.array([lst.size for lst in lists], dtype=np.int64)
         set_id = np.zeros(n, dtype=np.int64)
-        for i in range(n):
-            js = lists[i]
-            nj[i] = js.size
+        valid = np.arange(jmax)[None, :] < nj[:, None]
+        for i, js in enumerate(lists):
             idx[i, : js.size] = js
-            delta = Yh[js] - Y0[i]
-            dd = np.einsum("ij,ij->i", delta, delta)
-            d2[i, : js.size] = dd
-            res_parts.append(None)
-            if m == 1:
-                ctop[i, : js.size, 0] = delta[:, 0]
-                set_id[i] = 4
-                continue
-            big = dd > 1e-24
-            if not np.any(big):
-                set_id[i] = 0
-                continue
-            _, sv, vt = np.linalg.svd(delta[big], full_matrices=False)
-            rank = int(np.sum(sv > RES_REL * sv[0]))
-            Q = vt[:rank].T
-            c = delta @ Q
-            k_top = int(min(3, np.sum(sv[:rank] > TOP_REL * sv[0])))
-            set_id[i] = k_top
-            ctop[i, : js.size, :k_top] = c[:, :k_top]
-            if rank > k_top:
-                res_parts[i] = c[:, k_top:]
+        # neighbour offsets, zero-padded: padding rows leave the SVD's leading part unchanged
+        delta = np.where(valid[:, :, None], Yh[idx] - Y0[:, None, :], 0.0)  # (n, jmax, m)
+        d2[:] = np.einsum("nij,nij->ni", delta, delta)
+        res_parts = [None] * n
+        if m == 1:
+            ctop[:, :, 0] = delta[:, :, 0]
+            set_id[:] = 4
+        else:
+            _, sv, vt = np.linalg.svd(delta, full_matrices=False)  # batched over states
+            lead = sv[:, :1]
+            ok = lead[:, 0] > 1e-12
+            rank = np.where(ok, np.sum(sv > RES_REL * np.maximum(lead, 1e-300), axis=1), 0)
+            k_top = np.where(ok, np.minimum(3, np.sum(sv > TOP_REL * np.maximum(lead, 1e-300), axis=1)), 0)
+            set_id[:] = k_top
+            c = np.einsum("nij,nkj->nik", delta, vt)  # components on every right singular vector
+            for k in (1, 2, 3):
+                sel = k_top >= k
+                ctop[sel, :, k - 1] = c[sel, :, k - 1]
+            for i in np.flatnonzero(rank > k_top):
+                res_parts[i] = c[i, : nj[i], k_top[i] : rank[i]]
         k_res = max((r.shape[1] for r in res_parts if r is not None), default=0)
         cres = np.zeros((n, jmax, max(k_res, 1)))
         nres = np.zeros(n, dtype=np.int64)

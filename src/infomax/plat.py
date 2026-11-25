@@ -63,6 +63,29 @@ def build_plat(
     extracted: `prior.atoms` is the candidate set in the order given, `prior.weights` its
     weights. On a binomial model the divergences are the binomial ones (§5.3).
     """
+    from infomax.priors002 import _model_key
+    from infomax.pstar import _initial_support, candidate_set
+
+    key = (
+        _model_key(model), float(model.sigma), float(model.N), int(M), float(spacing), float(tol),
+        None if candidates is None else np.asarray(candidates, dtype=float).tobytes(),
+    )
+    hit = _BUILD_CACHE.get(key)
+    if hit is not None:
+        return hit
+    result = _build_plat(model, M, spacing, candidates, tol)
+    if len(_BUILD_CACHE) > 32:
+        _BUILD_CACHE.clear()
+    _BUILD_CACHE[key] = result
+    return result
+
+
+_BUILD_CACHE: dict = {}
+"""Builds are deterministic functions of their arguments (as `p*`'s), so a repeated build
+reuses the result within a process."""
+
+
+def _build_plat(model: Model, M: int, spacing: float, candidates, tol: float) -> PLatResult:
     from infomax.pstar import _initial_support, candidate_set
 
     if candidates is None:

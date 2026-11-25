@@ -16,6 +16,7 @@ with the step scaled by the local Fisher metric. The construction is determinist
 """
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass
 from itertools import product
 
@@ -342,13 +343,16 @@ def build_pstar(
         raise NotImplementedError("the atomic path needs AtomicPriors.jl through juliacall (OQ-1), not installed")
     from infomax.priors002 import _model_key
 
+    # the reduced build depends on sigma and the budget only through sigma / sqrt(budget),
+    # so the cheap cell's p*_10N and its twin's p*_40 share one build
+    noise = (float(model.sigma), M) if literal_nfold else (round(float(model.sigma / np.sqrt(M)), 14),)
     key = (
-        _model_key(model), float(model.sigma), M, float(spacing), method, bool(literal_nfold), float(tol),
+        _model_key(model), noise, float(spacing), method, bool(literal_nfold), float(tol),
         None if candidates is None else np.asarray(candidates, dtype=float).tobytes(),
     )
     hit = _BUILD_CACHE.get(key)
     if hit is not None:
-        return hit
+        return hit if hit.budget == M else dataclasses.replace(hit, budget=M)
     result = _build_pstar(model, M, spacing, candidates, literal_nfold, tol)
     if len(_BUILD_CACHE) > 64:
         _BUILD_CACHE.clear()
