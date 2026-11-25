@@ -542,7 +542,7 @@ class KernelTable:
             k_top = np.where(ok, np.minimum(3, np.sum(sv > TOP_REL * np.maximum(lead, 1e-300), axis=1)), 0)
             set_id[:] = k_top
             c = np.einsum("nij,nkj->nik", delta, vt)  # components on every right singular vector
-            for k in (1, 2, 3):
+            for k in range(1, min(3, c.shape[2]) + 1):  # the span has at most min(jmax, m) directions
                 sel = k_top >= k
                 ctop[sel, :, k - 1] = c[sel, :, k - 1]
             for i in np.flatnonzero(rank > k_top):

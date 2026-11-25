@@ -3,6 +3,14 @@
 Science session: implementing spec 002 (`specs/002-foreign-q-prediction.md`) per
 `workflows/implement-spec.md`. (The previous handoff, 2026-05-19, is in git history.)
 
+## Update (end of session)
+
+The fast suite finished at `762eae0`: 140 passed, 17 failed in 18.5 min. One failure was a
+code bug (T7(c), batched kernel tables with two-dimensional data), fixed and committed
+after the run. The other 16 are the open threads below, plus a new test-side issue: T14(a)
+for `p_LN` and `p_LN^*` (the test's midpoint grid misses the density spike at `xi -> 0`;
+docs *Testing notes*). Next: re-run the fast suite once to confirm, then the slow suite.
+
 ## Where we left off
 
 Stage 1 (codegen) is done and committed, one commit per file; stage 2 (eye test) is

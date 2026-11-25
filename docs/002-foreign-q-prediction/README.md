@@ -268,3 +268,12 @@ is approved, at the human's request).
   degenerate points out of the net.
 - **T12, AtomicPriors.jl fixtures.** `tests/fixtures/atomicpriors/` does not exist:
   generating it needs Julia (§5.5), so T12(a)–(e) fail at "missing fixture".
+- **T14(a), `p_LN` and `p_LN^*` samplers.** The test integrates each density on its own
+  600-point midpoint grid and requires the total to be 1 within `5e-3`. For the
+  log-normals it gets 0.972, because midpoints miss the density's integrable spike at
+  `xi -> 0` (the mechanism of T7(a), DD-Q2). The densities are exact in closed form (T23
+  checks `p_LN`'s to `1e-8`). Open: integrate the test's marginal in the CDF, or loosen it.
+- **First fast-suite run** (`762eae0`, 18.5 min): 140 passed, 17 failed: the T12 fixtures
+  (8), T13(d) (2), T7(a) (2), T14(a) log-normals (2), T21(a) `mass_near`, T16(b) at the
+  cheap cell, and T7(c), a bug in the batched kernel tables (two-dimensional data have two
+  singular directions, not three), fixed after the run.
