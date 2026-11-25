@@ -261,11 +261,13 @@ asks for `D ≤ 4`): `build_pref` raises `NotImplementedError` at `D ≥ 3`.
 Opened at the first run of the suite (stage 3, run as a debugging aid before the eye test
 is approved, at the human's request).
 
-- **T13(d), the cone's tip.** `test_t13d_curvature_knob_through_the_model` requires
-  `det g > 0` on the candidate set, `v` excluded. The tip `theta_1 = 0` is a vertex of
-  `Theta`, and the net includes it (DD-C1). There `det g ∝ theta_1^(D-1) = 0` exactly, so
-  the test fails at two candidates. Open: exclude the tip in the test, or keep exact
-  degenerate points out of the net.
+- **T13(d), the cone's tip.** `test_t13d_curvature_knob_through_the_model` required
+  `det g > 0` on the whole candidate set, `v` excluded. The tip `theta_1 = 0` is a vertex
+  of `Theta`, and the net includes it (DD-C1). There `det g ∝ theta_1^(D-1) = 0` exactly,
+  so both `kappa` cases failed, each at that one candidate, 5 from `v` and far outside the
+  warp. Resolved (MB, 2026-11-25): the check runs on the candidates within `rho` of `v`
+  only, where the warp acts; spec §5.2's "on the grid" now says so. The tip stays in the
+  net, since `p*` may put an atom there.
 - **T12, AtomicPriors.jl fixtures.** `tests/fixtures/atomicpriors/` does not exist:
   generating it needs Julia (§5.5), so T12(a)–(e) fail at "missing fixture".
 - **T14(a), `p_LN` and `p_LN^*` samplers.** The test integrates each density on its own

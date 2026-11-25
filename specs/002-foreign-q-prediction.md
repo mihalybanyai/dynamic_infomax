@@ -1913,7 +1913,7 @@ metric, information estimate, budget reduction or sampler.
 closed form of §9.3 in exp-decay). (b) Exp-decay: `y` is unchanged by permuting `θ`, and
 `ordered_box` holds only `ξ_1 ≤ … ≤ ξ_D` in `[0, 1]^D`. (c) Hypercone: `√det g / θ_1^{D−1}` is constant
 over `Θ` for each `φ`, and the square roots of the metric's eigenvalues along the
-cross-section equal `r φ^{μ−2}√N/σ`. (d) The vertex warp: its Jacobian determinant is positive on the grid; outside the
+cross-section equal `r φ^{μ−2}√N/σ`. (d) The vertex warp: <span style="color: red">`det g > 0` on the candidate set within `ρ` of `v`, `v` excluded, so the warp collapses no direction of the model there (outside the ball the warp is the identity, and the cone's tip has `det g = 0` by construction, as (c) implies)</span>; outside the
 ball of radius `ρ` around `v`, `y` and `√det g` are unchanged; and the angle at `v`
 between the lateral edge and the base face is `κπ/2`. Catches a wrong map, a slip in
 `σ_eff`, or a knob wired to the wrong axis.
@@ -3800,3 +3800,14 @@ Jeffreys' at `D = 1` (0.15 bits against 1.37–1.43). A band from interior state
 Fisher length from every face, was tried first and is empty at `D ≥ 3`. The maximum is
 found in two stages, so that noise in 64-draw estimates does not inflate it. §5 is
 already draft. Downstream: the eye-test script, and `diagnostics.worst_case_bias_pressure`.
+
+### 2026-11-25 — Clarification (§5.2; T13(d), first fast-suite run)
+
+T13(d) asked for the warp's Jacobian determinant to be positive "on the grid", which named
+no grid. The test read it as `det g > 0` on the whole candidate set, and failed at one
+candidate: the cone's tip `θ_1 = 0`, a vertex of `Θ` at distance `W = 5` from `v`, where
+`det g ∝ θ_1^{D−1} = 0` by construction (T13(c)), far outside the warped ball (`ρ = 0.5`).
+The check now runs on the candidate set within `ρ` of `v`, `v` excluded (red): about 240–300
+candidates at the curvature cell, smallest `det g` 8.1 at `κ = ¼`. Outside the ball the
+test already compares `√det g` with the unwarped model's. §5 is already draft.
+Downstream: `test_t13d_curvature_knob_through_the_model`.

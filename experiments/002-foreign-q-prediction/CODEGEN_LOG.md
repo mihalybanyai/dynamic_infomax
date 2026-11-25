@@ -64,7 +64,7 @@ hashes are filled at stage 3, after the eye test is approved.
 | `test_002_models.py::test_t13b_matched_box_is_the_window` | 1 | passing | (none yet) |
 | `test_002_models.py::test_t13c_constant_cross_section_has_flat_volume` | 1 | passing | (none yet) |
 | `test_002_models.py::test_t13c_hypercone_covolume_and_widths` | 6 | passing | (none yet) |
-| `test_002_models.py::test_t13d_curvature_knob_through_the_model` | 2 | failing (cone tip, det g = 0; Testing notes) | (none yet) |
+| `test_002_models.py::test_t13d_curvature_knob_through_the_model` | 2 | passing (check restricted to the warped ball; Testing notes) | (none yet) |
 | `test_002_models.py::test_t13d_curvature_off_is_identity` | 1 | passing | (none yet) |
 | `test_002_models.py::test_t13d_vertex_warp` | 2 | passing | (none yet) |
 | `test_002_natures.py::test_t14a_round_robin_draws_come_from_the_prior` | 1 | passing | (none yet) |

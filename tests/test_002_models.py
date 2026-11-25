@@ -216,9 +216,13 @@ def test_t13d_curvature_knob_through_the_model(kappa):
     `kappa(u) pi/2` with `kappa(u) = kappa + (1 - kappa) S(2u/rho - 1)` for
     `rho/2 < u < rho`, `S` the smoothstep of §4.1; the map is continuous across `u = rho`;
     outside `rho = 5 sigma_eff` of `v` the map and `sqrt(det g)` equal the `kappa = 1`
-    model's; and `sqrt(det g) > 0` on the candidate set, `v` itself excluded. A knob that is
-    ignored, a ball of the wrong radius, a warp around the wrong vertex or one that jumps
-    at `rho` fails here.
+    model's; and `sqrt(det g) > 0` on the candidate set within `rho` of `v`, `v` itself
+    excluded. The check stays inside the ball because the warp is the identity outside it,
+    where `sqrt(det g)` is already compared with the `kappa = 1` model's, and because the
+    cone's tip `theta_1 = 0`, a vertex of `Theta` and a candidate, has `det g = 0` by
+    construction (T13(c)), with or without the warp. A knob that is ignored, a ball of the
+    wrong radius, a warp around the wrong vertex, one that jumps at `rho` or one that folds
+    prediction space fails here.
     """
     rng = np.random.default_rng(20261129)
     model = build_model(D=3, **CURVATURE_CELL, curvature=kappa)
@@ -244,9 +248,11 @@ def test_t13d_curvature_knob_through_the_model(kappa):
     np.testing.assert_allclose(model.y(theta[far]), flat.y(theta[far]), rtol=1e-12, atol=1e-14)
     vol, vol_flat = np.sqrt(np.linalg.det(model.fim(theta[far]))), np.sqrt(np.linalg.det(flat.fim(theta[far])))
     np.testing.assert_allclose(vol, vol_flat, rtol=1e-8)
-    # The metric stays non-degenerate on the candidate set, v excluded.
+    # The metric stays non-degenerate on the candidate set inside the warped ball, v excluded.
     cands = candidate_set(model)
-    cands = cands[np.linalg.norm(model.y(cands) - v, axis=-1) > 1e-9]
+    dist = np.linalg.norm(model.y(cands) - v, axis=-1)
+    cands = cands[(dist > 1e-9) & (dist <= rho)]
+    assert len(cands) >= 10
     dets = np.linalg.det(model.fim(cands))
     assert np.all(np.isfinite(dets)) and np.all(dets > 0)
 
