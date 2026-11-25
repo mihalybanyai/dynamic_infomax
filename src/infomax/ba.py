@@ -8,6 +8,7 @@ fixed-point updates), so no RNG is threaded through the API — see the
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Callable
 
 import numpy as np
 from scipy.special import logsumexp
@@ -54,9 +55,11 @@ def _f_kl_from_masses(
 
 
 def blahut_arimoto(
-    log_likelihood: np.ndarray,
-    theta_grid: np.ndarray,
+    log_likelihood: np.ndarray | None = None,
+    theta_grid: np.ndarray | None = None,
     *,
+    f_kl: Callable[[np.ndarray], np.ndarray] | None = None,
+    n_cells: int | None = None,
     init: np.ndarray | None = None,
     alpha: float = 2.0,
     eps_i: float = 1e-12,
@@ -96,7 +99,14 @@ def blahut_arimoto(
         diagnostics.
 
     Spec §3.4.
+
+    Spec 002 (§4.6) injects the per-cell divergence: with `f_kl` given (a callable from
+    masses to the per-cell divergence vector) and `n_cells`, `log_likelihood` and
+    `theta_grid` are not used, the returned prior lives on the cell indices
+    `0, ..., n_cells - 1`, and everything else is unchanged. Spec 000 passes neither.
     """
+    if f_kl is not None:
+        return _blahut_arimoto_injected(f_kl, n_cells, init=init, alpha=alpha, eps_i=eps_i, tau_min=tau_min, tau_max=tau_max)
     theta = np.asarray(theta_grid, dtype=np.float64)
     n_theta = theta.size
     if init is None:
@@ -164,6 +174,63 @@ def blahut_arimoto(
         prior=GridPrior(theta, p),
         mi=mi,
         f_kl=f_kl,
+        mi_history=np.asarray(history, dtype=np.float64),
+        n_iters=tau,
+        converged=converged,
+    )
+
+
+def _blahut_arimoto_injected(
+    f_kl: Callable[[np.ndarray], np.ndarray],
+    n_cells: int,
+    *,
+    init: np.ndarray | None,
+    alpha: float,
+    eps_i: float,
+    tau_min: int,
+    tau_max: int,
+) -> BAResult:
+    """The loop of `blahut_arimoto` with an injected per-cell divergence (spec 002 §4.6):
+    the same overrelaxed update, the same fallback to `alpha = 1` when a step would lower
+    the information, and the same Csiszár-gap stopping rule."""
+    if n_cells is None:
+        raise ValueError("n_cells is required with an injected f_kl")
+    if init is None:
+        p = np.full(n_cells, 1.0 / n_cells)
+    else:
+        p = np.asarray(init, dtype=np.float64).copy()
+        if p.shape != (n_cells,) or not (np.isfinite(p).all() and np.all(p > 0)):
+            raise ValueError("init must be strictly positive, finite and of shape (n_cells,)")
+        p = p / p.sum()
+    log_p = np.log(p)
+    history: list[float] = []
+    converged = False
+    tau = 0
+    fk = np.zeros(n_cells)
+    mi = 0.0
+    for tau in range(tau_max + 1):
+        fk = np.asarray(f_kl(p), dtype=np.float64)
+        mi = float(p @ fk)
+        history.append(mi)
+        if tau >= tau_min and float(np.max(fk)) - mi < eps_i:
+            converged = True
+            break
+        if tau == tau_max:
+            break
+        log_try = alpha * fk + log_p
+        log_try -= logsumexp(log_try)
+        if alpha != 1.0:
+            p_try = np.exp(log_try)
+            mi_try = float(p_try @ np.asarray(f_kl(p_try), dtype=np.float64))
+            if mi_try < mi:
+                log_try = fk + log_p
+                log_try -= logsumexp(log_try)
+        log_p = log_try
+        p = np.exp(log_p)
+    return BAResult(
+        prior=GridPrior(np.arange(n_cells, dtype=np.float64), p),
+        mi=mi,
+        f_kl=fk,
         mi_history=np.asarray(history, dtype=np.float64),
         n_iters=tau,
         converged=converged,
