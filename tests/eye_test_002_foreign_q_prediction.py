@@ -5,6 +5,9 @@ Two figures for human review, against published shapes:
 1. A&M (2023) Fig. 5: against `D` in exp-decay (`m = 26` times in [1, 5], `sigma = 0.1`),
    the mutual information `I/log 2` and the worst-case bias pressure `max b / log 2`, for
    `p*`, Jeffreys and the log-normal, with A&M's own points overlaid as open markers.
+   The bias-pressure panel draws, per prior, a band between the maximum of `b` over 2000
+   draws from the prior and the maximum over all of `Theta` (§5.3; A&M do not say over
+   which states their maximum runs).
    Accept, at every `D`: `I_{p*} >= I_{p_J}`, `I_{p*} >= I_{p_LN}` and
    `B(p*) ≈ 0 <= B(p_J)`. On the extended `D in {5, 7, 11}` only: `I_{p*}` flat while
    `I_{p_J}` falls, and `B(p_J)` rising; the computed lines follow the overlaid points.
@@ -36,12 +39,13 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
+from infomax.diagnostics import worst_case_bias_pressure
 from infomax.jeffreys import build_jeffreys
 from infomax.models import binomial_model, build_model
 from infomax.plat import build_plat
 from infomax.plognormal import build_pln
 from infomax.pstar import build_pstar
-from infomax.score import bias_pressure, mutual_information
+from infomax.score import mutual_information
 
 SEED = 20260601
 D_GRID = (1, 2, 3, 4)
@@ -79,7 +83,8 @@ STYLE = {"p*": ("o-", "C0"), "p_J": ("s--", "C3"), "p_LN": ("^-.", "C2")}
 
 
 def _scores_at(D: int, rng: np.random.Generator) -> dict:
-    """`I` and `max_theta b` in nats for each prior, on `p*`'s candidate set."""
+    """`I` in nats for each prior, and the band `[B_interior, B_all]` of `max_theta b` over
+    `p*`'s candidate set (§5.3.1)."""
     model = build_model("exp_decay", D, m=26, sigma=0.1, N=1)
     pstar = build_pstar(model)
     priors = {"p*": pstar.prior, "p_J": build_jeffreys(model), "p_LN": build_pln(model)}
@@ -87,7 +92,7 @@ def _scores_at(D: int, rng: np.random.Generator) -> dict:
     out = {"I": {}, "B": {}}
     for name, prior in priors.items():
         out["I"][name] = pstar.capacity if name == "p*" else mutual_information(prior, model, rng=rng)
-        out["B"][name] = float(np.max(bias_pressure(prior, model, states, rng=rng)))
+        out["B"][name] = list(worst_case_bias_pressure(prior, model, states, rng))
     return out
 
 
@@ -109,7 +114,10 @@ def am_fig5(rng: np.random.Generator, extended: bool) -> Path:
     for name in PRIORS:
         marker, colour = STYLE[name]
         top.plot(Ds, [rows[D]["I"][name] / np.log(2) for D in Ds], marker, color=colour, label=name)
-        bottom.plot(Ds, [rows[D]["B"][name] / np.log(2) for D in Ds], marker, color=colour, label=name)
+        band = np.array([rows[D]["B"][name] for D in Ds]) / np.log(2)
+        bottom.fill_between(Ds, np.maximum(band[:, 0], 1e-3), np.maximum(band[:, 1], 1e-3), color=colour, alpha=0.25)
+        bottom.plot(Ds, np.maximum(band[:, 1], 1e-3), marker, color=colour, label=name)
+        bottom.plot(Ds, np.maximum(band[:, 0], 1e-3), marker, color=colour, alpha=0.5)
         top.plot(AM_FIG5["D"], AM_FIG5["I"][name], "o", mfc="none", color=colour, ms=9)
         bottom.plot(AM_FIG5["D"], AM_FIG5["B_lower"][name], "o", mfc="none", color=colour, ms=9)
         if name in AM_FIG5["B_upper"]:
@@ -118,7 +126,7 @@ def am_fig5(rng: np.random.Generator, extended: bool) -> Path:
     top.set_ylabel("I(X; Θ) / log 2  (bits)")
     top.legend(fontsize=8)
     bottom.set_yscale("log")
-    bottom.set_ylabel("max b(θ) / log 2  (bits)")
+    bottom.set_ylabel("max b(θ) / log 2  (bits)\nband: own draws ↔ all of Θ")
     bottom.set_xlabel("D")
     fig.suptitle("Eye test: A&M Fig. 5 (exp-decay, σ = 0.1)" + ("" if max(Ds) > 4 else " — default run only"))
     path = FIG_DIR / "eyetest_am_fig5.png"

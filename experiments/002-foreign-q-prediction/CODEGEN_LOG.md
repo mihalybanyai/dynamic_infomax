@@ -139,6 +139,6 @@ hashes are filled at stage 3, after the eye test is approved.
 
 | Eye test | Status | Figure path |
 |----------|--------|-------------|
-| A&M Fig. 5, default run `D <= 4` | not-yet-run | tests/figures/002_foreign_q_prediction/eyetest_am_fig5.png |
+| A&M Fig. 5, default run `D <= 4` (band for `B`, §5.3 as revised) | pending review (286 s) | tests/figures/002_foreign_q_prediction/eyetest_am_fig5.png |
 | A&M Fig. 5, extended run `D in {5, 7, 11}` | not-yet-run (needs AtomicPriors.jl) | tests/figures/002_foreign_q_prediction/eyetest_am_fig5.png |
 | Komaki Fig. 1 (binomial `p_lat`) | pending review | tests/figures/002_foreign_q_prediction/eyetest_komaki_fig1.png |

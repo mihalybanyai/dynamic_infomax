@@ -126,12 +126,19 @@ deviation from the build's `tol = 1e-8` default (spec §4.2 pseudocode) and need
 review.** The two-sided bound of `p_lat` (T16(b), `1e-6`) is affected the same way.
 
 **DD-Q1 — Exp-decay quadrature.** (`quadrature.exp_decay_grid`.) In `xi` the diagonal of
-the metric is separable and the same on every axis. Each axis is cut into cells of 0.4
-noise units of its arc length, with Gauss–Legendre nodes (two per axis at `D ≤ 2`, one
-beyond). Cells with tied indices are the ordered region's boundary: each holds `1/g!` of
-its box, and its nodes are sorted into the ordered region. The spec's `G` per axis (50,
-30, 20) is replaced by this resolution rule, which is finer where the metric is large.
-Grids are coarsened until they hold at most 2 million nodes.
+the metric is separable and the same on every axis. Each axis is cut into cells of equal
+arc length: 0.3 noise units at `D ≤ 2` and 0.6 beyond. Each cell has two Gauss–Legendre
+nodes per axis. Cells with tied indices are the ordered region's boundary: each holds
+`1/g!` of its box, and its nodes are sorted into the ordered region. One node per cell is
+not used. In a tied cell the sorted single node lies on the diagonal, where Jeffreys'
+density vanishes, so the cell's mass is lost: at `D = 4` that cost 0.16 nats in per-state
+divergences against 0.06 for two nodes at the same cost. Measured per-state errors (spread
+after the mean, which cancels in `b`): 2e-4 (`D = 2`), 7.5e-4 (`p_LN`, `D = 3`),
+2.4e-3 (`p_J`, `D = 3`), 2.7e-4 (`p_LN`, `D = 4`) and 6e-2 nats (`p_J`, `D = 4`, against a
+reference that may itself be unconverged). Jeffreys is the hard case at `D ≥ 3`: its
+density vanishes on every coincidence face. The spec's `G` per axis (50, 30, 20) is
+replaced by this resolution rule, which is finer where the metric is large. Grids are
+coarsened until they hold at most 2 million nodes.
 
 **DD-Q2 — Normalised quadrature weights, and exact cell masses for product laws.**
 (`priors002.ContinuousPrior.nodes`, `ExpDecayProductPrior`.) Every continuous prior's
@@ -205,6 +212,21 @@ posterior predictive is computed for every prior from two marginals by the ident
 data, deterministic `H(m) - H(noise)` on a fine `x` grid. Discrete priors with at most 600
 atoms use `sum w f` with DD-K1's estimator. Larger clouds and continuous priors use Monte
 Carlo over 4096 draws from the prior's own sampler.
+
+**DD-E1 — The eye test's bias-pressure band.** (`diagnostics.worst_case_bias_pressure`;
+spec §5.3, §5.3.1 as revised 2026-11-25.) A&M's `B = max_theta b(theta)` does not say over
+which states it runs. At `D = 1` Jeffreys' `b` is about 0 in the interior (median −0.04
+bits) and about 1.3–1.4 bits on the faces `xi = 0` and `xi = 1`, where half the noise
+falls off the manifold. The figure therefore draws a band, from the maximum over 2000 draws
+from the prior itself to the maximum over `p*`'s candidate set, faces included. Each is
+found in two stages. First `b` on the states thinned to two Fisher lengths (64 draws of
+`x`), then the states within one Fisher length of the 16 best re-evaluated with 512 draws
+(at most 64 states). Over `D ≤ 3` the band contains every A&M point except Jeffreys' at
+`D = 1` (0.15 bits against 1.37–1.43).
+
+A first band, from states at least one Fisher length from every face, was dropped. It is
+empty at `D ≥ 3`: every candidate lies within 0.58 (`D = 3`) or 0.39 (`D = 4`) noise units
+of a face, because the irrelevant directions are thinner than the noise.
 
 **DD-A1 — The atomic path.** (`pstar.build_pstar(method="atomic")`.) AtomicPriors.jl
 through `juliacall` (OQ-1) needs Julia, which is not installed. The path raises

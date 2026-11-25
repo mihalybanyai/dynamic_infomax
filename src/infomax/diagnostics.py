@@ -324,3 +324,57 @@ def cast_present_at_every_D(cast_by_D: dict) -> set:
     names, so that a prior dropping out cannot tilt the trend."""
     sets = [set(v) for v in cast_by_D.values()]
     return set.intersection(*sets) if sets else set()
+
+
+def on_faces(model: Model, theta: np.ndarray, *, eps: float = 1e-12) -> np.ndarray:
+    """True for states on a face of `Theta`: a coordinate at its bound, or (exp-decay) two
+    rates coinciding."""
+    theta = np.atleast_2d(np.asarray(theta, dtype=float))
+    lo, hi = np.asarray(model.box.low, float), np.asarray(model.box.high, float)
+    face = np.any((theta <= lo + eps) | (theta >= hi - eps), axis=1)
+    if model.box.ordered and theta.shape[1] > 1:
+        face |= np.any(np.diff(theta, axis=1) <= eps, axis=1)
+    return face
+
+
+def worst_case_bias_pressure(
+    prior,
+    model: Model,
+    states: np.ndarray,
+    rng: np.random.Generator,
+    *,
+    n_own: int = 2000,
+    screen_spacing: float = 2.0,
+    n_screen: int = 64,
+    n_refine: int = 512,
+    top: int = 32,
+) -> tuple[float, float]:
+    """The eye test's band for `B = max_theta b(theta)` (§5.3, §5.3.1), in nats:
+    `(B over n_own draws from the prior itself, B over all of `states`)`.
+
+    `states` is a state set that includes the faces of `Theta` (`p*`'s candidate set).
+    Each maximum is found in two stages: `b` on a subset thinned to `screen_spacing` Fisher
+    lengths, with `n_screen` draws of `x`; then the states within half that spacing of the
+    best screened ones (at most `2 top`) re-evaluated with `n_refine` draws, so that noise in
+    the screen does not inflate the maximum and thinning does not lose it."""
+    from scipy.spatial import cKDTree
+
+    from infomax.pstar import _initial_support
+    from infomax.score import mutual_information, per_state_redundancy
+
+    info = mutual_information(prior, model, rng=rng)
+
+    def two_stage(pts: np.ndarray) -> float:
+        Yh = model.y(pts) / model.sigma_eff
+        net = _initial_support(Yh, radius=0.5 * screen_spacing, max_size=10**7)
+        f_screen = per_state_redundancy(prior, model, pts[net], rng=rng, n_x=n_screen)
+        best = net[np.argsort(-f_screen)[: max(1, top // 2)]]
+        near = cKDTree(Yh).query_ball_point(Yh[best], r=0.5 * screen_spacing)
+        cand = np.unique(np.concatenate([best] + [np.asarray(n, dtype=int) for n in near]))
+        if cand.size > 2 * top:  # keep the best-screened neighbourhoods first
+            cand = np.concatenate([best, np.setdiff1d(cand, best)[: 2 * top - best.size]])
+        f_ref = per_state_redundancy(prior, model, pts[cand], rng=rng, n_x=n_refine)
+        return float(np.max(f_ref)) - info
+
+    own = prior.sample(n_own, rng)
+    return two_stage(own), two_stage(np.atleast_2d(np.asarray(states, dtype=float)))
