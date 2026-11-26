@@ -29,6 +29,7 @@ from infomax.score import (
 from spec002_common import (
     CHEAP_TWIN,
     MC_SIGMAS,
+    PRODUCT_LAWS,
     S_Q_TEST,
     agree_mc,
     build_cast,
@@ -37,6 +38,7 @@ from spec002_common import (
     cone_model,
     log_mean_exp_with_error,
     paired_mcse,
+    per_rate_law,
 )
 
 W_CONE = 50.0
@@ -185,17 +187,10 @@ def test_t7a_discrete_predictive_is_the_atom_sum():
     np.testing.assert_allclose(prior.log_predictive(model, x_prime, xbar), expected, rtol=1e-12)
 
 
-_PER_RATE_CDF = {
-    "p_U": lambda c: c,  # each rate k ~ Exp(1), so xi = exp(-k) is uniform
-    "p_LN": lambda c: scipy.stats.norm.cdf(-np.log(-np.log(c))),  # log decay time ~ N(0, 1), A&M's (0, 1)
-}
-"""Closed-form per-rate CDFs in `xi` of the product laws, written here so that T7(a)'s
-reference does not share the code's own CDF."""
-
-
 def _fine_grid_prior(name: str, prior, G: int = 400) -> DiscretePrior:
     """`prior` on a `G x G` grid of `xi`-cells over the ordered triangle. A product law gets
-    each cell's exact mass from its closed-form CDF: `2 dF_1 dF_2` off the diagonal, and on
+    each cell's exact mass from its closed-form per-rate CDF (`per_rate_law`):
+    `2 dF_1 dF_2` off the diagonal, and on
     it the ordered half of the cell, `dF^2`, with the atom at that half's centroid. Midpoint
     densities misjudge `p_LN`'s integrable spike at `xi -> 0` by 4e-2 nats, and full-weight
     diagonal cells put twice the mass on coinciding rates (2.5e-3 nats for `p_U`; MB,
@@ -206,12 +201,11 @@ def _fine_grid_prior(name: str, prior, G: int = 400) -> DiscretePrior:
     i, j = np.meshgrid(np.arange(G), np.arange(G), indexing="ij")
     keep = i <= j
     i, j = i[keep], j[keep]
-    if name not in _PER_RATE_CDF:
+    if name not in PRODUCT_LAWS:
         grid = np.column_stack([mid[i], mid[j]])
         weights = np.exp(prior.log_density(grid))
         return DiscretePrior(f"{name} on a grid", grid, weights / weights.sum())
-    with np.errstate(divide="ignore"):
-        F = _PER_RATE_CDF[name](e)
+    F = per_rate_law(name, prior)[0](e)
     F[0], F[-1] = 0.0, 1.0
     dF = np.diff(F)
     weights = np.where(i < j, 2.0 * dF[i] * dF[j], dF[i] ** 2)

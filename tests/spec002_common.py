@@ -7,6 +7,7 @@ each test (`skills/manage-randomness.md`, rule 3).
 from __future__ import annotations
 
 import numpy as np
+import scipy.stats
 
 from infomax.jeffreys import build_jeffreys
 from infomax.models import Model, build_model
@@ -121,6 +122,33 @@ def xi_from_log_time(theta: np.ndarray) -> np.ndarray:
 def log_time_from_xi(xi: np.ndarray) -> np.ndarray:
     """Inverse of `xi_from_log_time`: `theta = -log(-log xi)`."""
     return -np.log(-np.log(np.asarray(xi, dtype=float)))
+
+
+PRODUCT_LAWS: tuple[str, ...] = ("p_U", "p_LN", "p_LN^*")
+"""Exp-decay's priors whose rates are i.i.d. before ordering (DD-Q2)."""
+
+
+def per_rate_law(name: str, prior=None):
+    """`(H, log_h)`: the closed-form CDF and log density in `xi` of one rate under a product
+    law, written here so that the references of T7(a) and T14(a) do not share the code's
+    own. `p_U`'s rates are `Exp(1)`, so `xi` is uniform. A log-normal's log decay time
+    `-log(-log xi)` is `N(theta_bar, tau^2)`: A&M's `(0, 1)` for `p_LN`, and for `p_LN^*`
+    the searched values, read off `prior`."""
+    if name == "p_U":
+        return (lambda c: np.clip(np.asarray(c, dtype=float), 0.0, 1.0)), (lambda c: np.zeros(np.shape(c)))
+    if name not in ("p_LN", "p_LN^*"):
+        raise KeyError(f"{name} is not a product law")
+    bar, tau = (0.0, 1.0) if name == "p_LN" else (prior.theta_bar, prior.tau)
+
+    def H(c):
+        with np.errstate(divide="ignore"):
+            return scipy.stats.norm.cdf((log_time_from_xi(np.clip(c, 0.0, 1.0)) - bar) / tau)
+
+    def log_h(c):
+        c = np.asarray(c, dtype=float)
+        return scipy.stats.norm.logpdf(log_time_from_xi(c), bar, tau) - np.log(c) - np.log(-np.log(c))
+
+    return H, log_h
 
 
 def build_cast(model: Model, rng: np.random.Generator) -> dict:

@@ -20,11 +20,13 @@ from infomax.score import score_cell
 from spec002_common import (
     CURVATURE_CELL,
     MC_SIGMAS,
+    PRODUCT_LAWS,
     build_cast,
     cheap_model,
     cone_model,
     log_mean_exp_with_error,
     log_time_from_xi,
+    per_rate_law,
     xi_from_log_time,
 )
 
@@ -77,24 +79,34 @@ def _continuous_prior(model, name: str):
 )
 def test_t14a_samplers_match_their_densities(name):
     """T14 (F3): at the cheap cell each continuous prior's sampler, which draws its
-    round-robin row, follows its own density: a KS test of the draws' `xi_1` against the
-    marginal of `log_density`, integrated over `xi_2 >= xi_1` on a fine midpoint grid of the
-    ordered triangle. A sampler that drifts from its own mixture is otherwise seen only by
-    T20, and only when the drift moves it toward another prior."""
+    round-robin row, follows its own density: a KS test of the draws' `xi_1`. A sampler that
+    drifts from its own mixture is otherwise seen only by T20, and only when the drift moves
+    it toward another prior. For the product laws, `log_density` equals the closed-form
+    `log 2 + log h(xi_1) + log h(xi_2)` pointwise, and `xi_1`, the smaller of two i.i.d.
+    rates, has the CDF `1 - (1 - H)^2` (`per_rate_law`). A midpoint grid misses 3% and 9%
+    of the log-normals' mass, in their integrable spike at `xi -> 0` (MB, 2026-11-26). For
+    the other priors, the reference is the marginal of `log_density`, integrated over
+    `xi_2 >= xi_1` on a fine midpoint grid of the ordered triangle."""
     model = cheap_model(D=2)
     prior = _continuous_prior(model, name)
-    n = 600
-    g = (np.arange(n) + 0.5) / n
-    a, b = np.meshgrid(g, g, indexing="ij")
-    keep = a <= b
-    dens = np.zeros((n, n))
-    dens[keep] = np.exp(prior.log_density(np.column_stack([a[keep], b[keep]])))
-    marginal = dens.sum(axis=1) / n
-    edges = np.linspace(0.0, 1.0, n + 1)
-    cdf = np.concatenate([[0.0], np.cumsum(marginal) / n])
-    np.testing.assert_allclose(cdf[-1], 1.0, atol=5e-3)
     draws = prior.sample(4000, np.random.default_rng(20261160))[:, 0]
-    assert scipy.stats.kstest(draws, lambda x: np.interp(x, edges, cdf / cdf[-1])).pvalue > 1e-3
+    if name in PRODUCT_LAWS:
+        H, log_h = per_rate_law(name, prior)
+        xi = np.array([[1e-4, 0.5], [0.05, 0.99], [0.1, 0.3], [0.2, 0.9], [0.5, 0.6]])
+        np.testing.assert_allclose(prior.log_density(xi), np.log(2.0) + log_h(xi).sum(-1), atol=1e-8)
+        assert scipy.stats.kstest(draws, lambda x: 1.0 - (1.0 - H(x)) ** 2).pvalue > 1e-3
+    else:
+        n = 600
+        g = (np.arange(n) + 0.5) / n
+        a, b = np.meshgrid(g, g, indexing="ij")
+        keep = a <= b
+        dens = np.zeros((n, n))
+        dens[keep] = np.exp(prior.log_density(np.column_stack([a[keep], b[keep]])))
+        marginal = dens.sum(axis=1) / n
+        edges = np.linspace(0.0, 1.0, n + 1)
+        cdf = np.concatenate([[0.0], np.cumsum(marginal) / n])
+        np.testing.assert_allclose(cdf[-1], 1.0, atol=5e-3)
+        assert scipy.stats.kstest(draws, lambda x: np.interp(x, edges, cdf / cdf[-1])).pvalue > 1e-3
 
 
 # ---------------------------------------------------------------------------
