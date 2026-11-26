@@ -132,7 +132,8 @@ At the cheap cell this gives `C_N = 3.09795` nats (A&M: 4.47 bits = 3.10 nats). 
 independent 8192-point Sobol estimate puts the support within `[-3e-4, +1.3e-4]` of
 `C_N`, and every candidate below `C_N + 1e-3`. The solve takes 35 s. **This is a
 deviation from the build's `tol = 1e-8` default (spec §4.2 pseudocode) and needs your
-review.** The two-sided bound of `p_lat` (T16(b), `1e-6`) is affected the same way.
+review.** The two-sided bound of `p_lat` is affected the same way: T16(b) holds it to
+`1e-6` in 1-D and to this `1e-3` beyond (MB, 2026-11-26).
 
 **DD-Q1 — Exp-decay quadrature.** (`quadrature.exp_decay_grid`.) In `xi` the diagonal of
 the metric is separable and the same on every axis. Each axis is cut into cells of equal
@@ -469,11 +470,31 @@ is approved, at the human's request).
   `p*`'s bias pressure within 0.05 nats of zero at every Julia atom (largest seen: 0.024 at
   `D = 3`). That value is above the solver's 1e-3 stopping threshold (DD-S1): either
   Monte-Carlo noise or a location between candidates.
-- **T14(a), `p_LN` and `p_LN^*` samplers.** The test integrates each density on its own
-  600-point midpoint grid and requires the total to be 1 within `5e-3`. For the
-  log-normals it gets 0.972, because midpoints miss the density's integrable spike at
-  `xi -> 0` (the mechanism of T7(a), DD-Q2). The densities are exact in closed form (T23
-  checks `p_LN`'s to `1e-8`). Open: integrate the test's marginal in the CDF, or loosen it.
+- **T14(a), `p_LN` and `p_LN^*` samplers.** The test integrated each density on its own
+  600-point midpoint grid and required the total to be 1 within `5e-3`. For the
+  log-normals it got 0.972 and 0.914, because midpoints miss the density's integrable spike
+  at `xi -> 0` (the mechanism of T7(a), DD-Q2). The true mass of `xi_1 < 1/600` is 6.2% and
+  12%. Loosening the total would not have helped: against the renormalised grid CDF the KS
+  test gives p = 9e-5 and 1e-31. Resolved (MB, 2026-11-26): the product laws (`p_U`,
+  `p_LN`, `p_LN^*`) are checked against closed forms written in the test
+  (`spec002_common.per_rate_law`, shared with T7(a)). `log_density` matches
+  `log 2 + sum log h` pointwise, and the draws' `xi_1` follow `1 - (1 - H)^2` (KS p = 0.85,
+  0.64, 0.64). The two log-normals' p-values coincide because their draws are one monotone
+  map of the same normals. `p_J` and the `p_ref`s keep the grid. The test runs in about
+  40 s, not slow; spec §5.1's marker is removed.
+- **T21(a), `mass_near`'s precondition.** The test moves 10 atoms by 0.01 in `xi` and
+  required every moved state to keep some atom within one noise unit (`want > 0`). Near
+  `xi = 1` a move of 0.01 is up to about 3 noise units at `N = 4`, and two states landed 2.51
+  and 1.07 units from their own atom, with no atom in reach. `mass_near` itself matched
+  the test's sum to 4e-16, exact zeros included. Resolved (MB, 2026-11-26): the states are
+  kept, since they cover 0, 1 and 2 atoms in reach. The precondition now asks for at least
+  one state with no mass, one with some, and none with all of it. The docstring had the
+  direction backwards: an understated mass, not an overstated one, loosens the bound.
+- **T16(b), the two-sided bound at the cheap cell.** It closed to 9.3e-4 nats against the
+  test's `1e-6`. That is DD-S1's stopping rule: beyond 1-D, violations below 1e-3 are not
+  chased. Resolved (MB, 2026-11-26): `1e-6` in 1-D, where the divergences are exact, and
+  `1e-3` at the cheap cell (`PLAT_GAP_EXACT`, `PLAT_GAP_QUADRATURE`; spec §5.2). There (b)
+  checks only that the solve ended by its own rule. It follows DD-S1, still open.
 - **First fast-suite run** (`762eae0`, 18.5 min): 140 passed, 17 failed: the T12 fixtures
   (8), T13(d) (2), T7(a) (2), T14(a) log-normals (2), T21(a) `mass_near`, T16(b) at the
   cheap cell, and T7(c), a bug in the batched kernel tables (two-dimensional data have two

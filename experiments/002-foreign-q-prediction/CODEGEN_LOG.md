@@ -36,7 +36,7 @@ hashes are filled at stage 3, after the eye test is approved.
 |---|---|---|---|
 | `test_002_diagnostics.py::test_t21a_mass_bound` | 2 | passing | (none yet) |
 | `test_002_diagnostics.py::test_t21a_mass_bound_in_the_hypercone` | 3 | not-yet-run | (none yet) |
-| `test_002_diagnostics.py::test_t21a_mass_near_is_a_sum_of_weights` | 1 | failing (Testing notes) | (none yet) |
+| `test_002_diagnostics.py::test_t21a_mass_near_is_a_sum_of_weights` | 1 | passing (precondition fixed; Testing notes) | (none yet) |
 | `test_002_diagnostics.py::test_t21b_insurance_inequality` | 4 | not-yet-run | (none yet) |
 | `test_002_diagnostics.py::test_t21c_full_loss_exceeds_the_relevant_datum_divergence` | 2 | passing | (none yet) |
 | `test_002_diagnostics.py::test_t21c_jeffreys_cone_loss_formula` | 2 | passing | (none yet) |
@@ -69,7 +69,7 @@ hashes are filled at stage 3, after the eye test is approved.
 | `test_002_models.py::test_t13d_curvature_off_is_identity` | 1 | passing | (none yet) |
 | `test_002_models.py::test_t13d_vertex_warp` | 2 | passing | (none yet) |
 | `test_002_natures.py::test_t14a_round_robin_draws_come_from_the_prior` | 1 | passing | (none yet) |
-| `test_002_natures.py::test_t14a_samplers_match_their_densities` | 7 | failing [p_LN, p_LN^*] (Testing notes) | (none yet) |
+| `test_002_natures.py::test_t14a_samplers_match_their_densities` | 7 | passing (closed-form reference for product laws; Testing notes) | (none yet) |
 | `test_002_natures.py::test_t14b_nested_cone_laws` | 2 | passing | (none yet) |
 | `test_002_natures.py::test_t14c_agent_fixes_ignored_coordinates_at_centre` | 1 | passing | (none yet) |
 | `test_002_natures.py::test_t14d_few_rates_share_one_rate_in_the_window` | 1 | passing | (none yet) |
@@ -94,7 +94,7 @@ hashes are filled at stage 3, after the eye test is approved.
 | `test_002_priors.py::test_t15d_exp_decay_rankings_normalise_and_differ` | 1 | passing | (none yet) |
 | `test_002_priors.py::test_t15e_stiffest_ranking_ignores_transversal` | 1 | passing | (none yet) |
 | `test_002_priors.py::test_t15f_cone_pref_with_curvature` | 1 | passing | (none yet) |
-| `test_002_priors.py::test_t16a_b_plat_conditional_equalizer_and_bounds` | 3 | failing [cheap-1] (Testing notes) | (none yet) |
+| `test_002_priors.py::test_t16a_b_plat_conditional_equalizer_and_bounds` | 3 | passing (DD-S1 tolerance at the cheap cell; Testing notes) | (none yet) |
 | `test_002_priors.py::test_t16c_plat_at_zero_budget_is_pstar` | 2 | passing | (none yet) |
 | `test_002_priors.py::test_t16d_conditional_capacity_is_a_difference_of_informations` | 2 | passing | (none yet) |
 | `test_002_priors.py::test_t16e_gaussian_plat_matches_a_direct_maximisation` | 4 | passing | (none yet) |
