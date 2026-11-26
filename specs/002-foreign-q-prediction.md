@@ -9,7 +9,7 @@
 | [3. The case for transfer (and how it could fail)](#3-the-case-for-transfer-and-how-it-could-fail) | reviewed | 261124 |
 | [4. Algorithm](#4-algorithm) | reviewed | 261126 |
 | [5. Properties to verify](#5-properties-to-verify) | reviewed | 261126 |
-| [6. Report](#6-report) | reviewed | 261124 |
+| [6. Report](#6-report) | reviewed | 261126 |
 | [7. Open questions](#7-open-questions) | reviewed | 261126 |
 | [8. References](#8-references) | reviewed | 261121 |
 | [9. Derivations](#9-derivations) | reviewed | 261121 |
@@ -1514,9 +1514,7 @@ ordered `Θ`, held in `ξ`.
   cell goes to the atomic path. The per-cell divergence
   `D_KL(p(x|θ)‖m_π)` is estimated for Gaussian outputs by A&M's kernel approximation (App.
   A.2, Eq. A1) or by Monte Carlo over `x`; atoms are extracted from the converged set.
-  Beyond the candidate sets' reach, `p*` comes from `mcabbott/AtomicPriors.jl` through `juliacall`
-  (OQ-1); the cross-over `D_switch` is set once both paths are profiled, and where both
-  run they must agree (T7b). The `p*` solver is the main feasibility risk.
+  Beyond the candidate sets' reach, `p*` is solved on an adaptive pool, the atomic path (OQ-1). Each round the pool holds the current support; fresh states on random faces of `Θ` (in exp-decay rates coinciding, at 0, at 1 or free; in the hypercone coordinates at their bounds or free, untested there) and in its interior; and small moves of the support's atoms. The pool is thinned so that no two of its states lie within a quarter of a noise unit, the candidate net's own minimum separation, since near-duplicate states stall the Newton step (DD-S1). The candidate-set solver then solves the weights on the pool, starting from the support, and adds the pool's violators. Rounds stop when one adds no atom and `I` has risen by less than `1e-4` nats. The equalizer is certified only over each round's pool. The pool matched the candidate set at `D = 2` and `D = 4` within 0.0005 nats. At `D = 5` it reached `I = 3.3254 ± 0.0013` nats by direct Monte Carlo, against `3.2987 ± 0.0018` for AtomicPriors.jl, whose optimiser maximises a kernel bound and not `I`; it took about 4 minutes, three times AtomicPriors.jl's (2026-11-26). `D_switch` is the largest `D` whose candidate set stays under `10^6` points (§5.4). The pool also runs below it, where both paths must agree (T7b), and AtomicPriors.jl's `p*` at A&M's `D = 5, 7` is a frozen external reference (T12(f)). The `p*` solver is the main feasibility risk.
 - **`p_lat`, the latent information prior at `(N, 1)`.** Maximises
   `I_π(Θ;X_{N+1}|X_{1:N}) = I_π(Θ;X_{1:N+1}) − I_π(Θ;X_{1:N})`, which is concave in `π`
   [read: Komaki 2011 §4]. By sufficiency each term is a single-observation mutual
@@ -1528,14 +1526,14 @@ ordered `Θ`, held in `ξ`.
   information and above by `max_θ [f^{(N+1)}(θ) − f^{(N)}(θ)]` [read: Fogel & Feder 2024
   Cor. 1]; iteration stops when the gap is below tolerance. The update is a small
   difference of two large divergences, so both are estimated with common random numbers.
-  Beyond the candidate sets' reach, `p_lat` needs AtomicPriors.jl to gain its objective, the difference of two `mutual` calls at budgets `N+1` and `N` [guess: a small addition]; until then it stops where the coverage table says.
+  Beyond the candidate sets' reach, the atomic path's pool takes any objective the candidate-set solver takes, `p_lat`'s difference included, but it is untested there; until it is, `p_lat` stops where the coverage table says.
 - **`p*_{N/10}`, `p*_{10N}`, mis-budgeted.** The `p*` build at `σ/√M` for `M = N/10` and
   `M = 10N`, scored at the true `N` ([§2.2](#22-the-cast)). `M` need not be an integer.
 - **`p_proj`, the NML pushforward.** The law of the maximum-likelihood estimate `θ̂(x)`
   for `x` drawn from the NML distribution `p_NML(x) ∝ max_θ p(x|θ)` at `σ_eff` [read:
   A&M App. A.3; Quinn §5.2]. Sampled by adaptive importance sampling (OQ-6). Each round draws `θ` from a proposal made of atoms, adds noise at `σ_eff`, fits `θ̂(x)` within `Θ`, and weights the draw by `p(x|θ̂(x)) / m_q(x)`, where `m_q`, the proposal's Bayes mixture, is a finite sum. The first proposal is Jeffreys' draws used as atoms; each later one is the previous round's weighted cloud, mixed with 10% of those Jeffreys atoms so that no weight is unbounded. Rounds continue until the effective sample size reaches 85% in two consecutive rounds; a last round with tight fits gives the result, the weighted `θ̂` carried as a discrete prior. The fit itself supplies the faces' mass: data beyond a face project onto it, so the next proposal has atoms there. A cell varied by one knob from a cell already built starts from that cell's cloud, with 2000 draws per round; a cell with no such neighbour starts from Jeffreys, with 8000. A cell whose last round falls below 85% repeats from Jeffreys. The weights make each cloud consistent for `p_proj` whatever its proposal, so a warm start changes only the cost. Fits must be tight (polished to `1e-15` tolerances): along sloppy directions the likelihood is nearly flat, and a fit's stopping rule moves `θ̂`, by 0.03–0.06 in exp-decay's coinciding-rates fraction (2026-11-26). At seven of the sweep's hardest cells (`D ≤ 4`) the sampler agreed with a run started from `p*`'s atoms within about two standard errors, in 1–4 s per warm-started cell and 30–45 s per cold start (2026-11-26). `p_NML` normalises because the manifold is compact. In exp-decay `Θ` is the whole manifold, so the fit within it is the unconstrained one `transtrum` makes. The sampler is checked against `transtrum`'s cloud and against a second, independent start (T12(e)).
 - **`p_J`, Jeffreys.** `√det g` normalised over `Θ` by quadrature; in the cones its
-  `θ_1`-marginal is `∝ θ_1^{D−1}` in closed form (T4). In exp-decay it is sampled; above `D ≈ 12` its determinant needs more than double precision, which AtomicPriors.jl supplies through an extended-precision path and a routine that uses the Jacobian's near-Vandermonde form [read: `resources/AtomicPriors.jl/src/mod/ymap.jl`, docstrings; A&M App. A.5]. That it normalises on the whole manifold is a [guess], checked by T4.
+  `θ_1`-marginal is `∝ θ_1^{D−1}` in closed form (T4). In exp-decay it is integrated on the quadrature grid at `D ≤ 3`. From `D = 4` it is sampled by adaptive importance sampling in unordered log decay times, where its density is `√det g` times the Jacobian of `ξ`. The first round draws independent normal log times; each later round draws from a kernel density of the previous weighted cloud, with 10% of the first law as the defensive part. It stops once `log Z` has varied by less than 0.02 nats over three rounds, and the same weights give the normaliser. The grid is set aside from `D = 4` because it loses Jeffreys' mass where rates nearly coincide: 5% at `D = 4` and 24% at `D = 5`, against brute force over uniform draws, which the sampler matched at `D = 5` within 0.003 nats (2026-11-26). Above `D ≈ 12` its determinant needs more than double precision, which AtomicPriors.jl supplies through an extended-precision path and a routine that uses the Jacobian's near-Vandermonde form [read: `resources/AtomicPriors.jl/src/mod/ymap.jl`, docstrings; A&M App. A.5]. That it normalises on the whole manifold is a [guess], checked by T4.
 - **`p_U`, uniform** on `Θ` in its own coordinates: in `θ` in the cones, in `ξ` in exp-decay, where each rate is `k_μ ∼ Exp(1)` before ordering. A privileged-information prior ([§2.2](#22-the-cast)).
 - **`p_LN`, log-normal**, in exp-decay only, where it is A&M's prior (Eq. 10): each
   `θ_μ` normal with `(θ̄, τ) = (0, 1)` as A&M (OQ-3), restricted to the ordered `Θ`, that
@@ -1567,14 +1565,14 @@ ordered `Θ`, held in `ξ`.
   average of the rows' marginals ([§2.5](#25-controls-the-ceiling-and-self-sampling)).
   It is not deployable and is not a row itself.
 
-**Coverage.** Which prior is built where (`D_switch` is set once both `p*` paths are profiled):
+**Coverage.** Which prior is built where (`D_switch` is the largest `D` whose candidate set stays under `10^6` points):
 
 | Prior | Hypercone | Exp-decay |
 |---|---|---|
 | `p*`, `p*_{N/10}`, `p*_{10N}` | candidate sets to `D_switch`, atomic path beyond | the same |
-| `p_lat` | candidate sets to `D_switch` | the same; beyond only with AtomicPriors.jl's conditional objective |
+| `p_lat` | candidate sets to `D_switch` | the same; beyond only once the atomic path is tested on its objective |
 | `p_proj` | adaptive importance sampling, every `D` (checked to `D = 4`) | the same |
-| `p_J` | closed form, every `D` | sampled, every `D`; extended precision above `D ≈ 12` |
+| `p_J` | closed form, every `D` | quadrature to `D = 3`, adaptive importance sampling from `D = 4`; extended precision above `D ≈ 12` |
 | `p_U` | every `D` | every `D` |
 | `p_LN`, `p_LN^*` | not carried | every `D` |
 | `p_ref` | `= p_U` with curvature off; quadrature with curvature on, `D ≤ 4` | quadrature, `D ≤ 4` |
@@ -1597,7 +1595,7 @@ def build_pstar(model, *, tol=1e-8, mc_x=4096):
     def f_kl(masses):                                # D_KL[p(.|theta_i) || m_pi] per cell
         return gaussian_fkl(model.y(grid), model.sigma_eff, masses, mc_x)
     if len(model.box) > D_SWITCH:                    # OQ-1
-        return atomic_priors_optim(model)            # AtomicPriors.jl through juliacall
+        return adaptive_pool_pstar(model)            # the atomic path: adaptive pool, same solver
     result = blahut_arimoto(f_kl=f_kl, n_cells=len(grid), tol=tol)   # src/infomax/ba.py
     return extract_atoms(GridPrior(grid, result.masses))
 
@@ -1664,7 +1662,7 @@ The natures of [§2.3](#23-the-natures), each sampled as `θ ∼ q`:
     in `θ` over the observation window `[0, log 5]` (decay times 1 to 5). Every agent with
     `D ≥ D_0` components represents it exactly, so nothing is fixed, and every rate is
     visible, so the row's only edge is the coincidence of rates. `D_0 = 2`, two rates each
-    held by `D/2` components, joins at even `D ≥ 4` once AtomicPriors.jl extends `D`
+    held by `D/2` components, joins at even `D ≥ 4` once the atomic path extends `D`
     (OQ-1).
 - **Stress natures**, in the hypercone (OQ-2):
   - *Sharpened vertex*, with the curvature knob on: `θ` uniform, by area in `θ`, on the
@@ -1754,6 +1752,8 @@ the calibration histogram ([§6](#6-report)).
 (`skills/manage-randomness.md`); Blahut–Arimoto itself is deterministic. The seed is
 pinned in [§5.4](#54-sweep-design).
 
+**Marginals of continuous priors without a grid.** Where a continuous prior has no quadrature grid (`p_J` from `D = 4`; `p_U`, `p_LN` and `p_LN^*` once their grids pass `10^6` nodes, which in exp-decay is above `D = 5`), `log m_π(x)` is the mixture over a cloud of 20000 of its draws, weighted where the draws are. That is accurate where the prior has mass near `x`: at `D = 5` it lay within 0.11 nats of the per-point estimate below at the 95th percentile, and the information it gives within 0.03 nats. Where the prior has little mass near `x`, as at the faces where the worst-case bias pressure lives, the cloud underestimates `m`. There `log m_π(x)` is estimated per point by importance sampling. The cloud weighted by the likelihood gives posterior draws; a kernel density around up to 200 of them is the proposal, with 20% of a kernel density of the whole cloud as the defensive part; 1000 draws are used, and each point's effective sample size is recorded. At `D = 5` two independent versions of this estimate (full and diagonal kernels) agreed within 0.04 nats on per-state divergences at face states, at about 0.2 s per point. The worst-case bias pressure `B` is then found in two stages: the cloud screens every state, and the per-point estimate refines the 20 highest (2026-11-26).
+
 ### 4.5 Diagnostics
 
 Computed per cell beside the scores, for the readings of §1.2, §2.4, §3.2, §3.3 and §3.7.
@@ -1799,7 +1799,7 @@ The implementation extends `src/infomax/` rather than forking it.
 | `atoms.py` | atom extraction, scalar positions | **Generalised:** an atom's position is a `D`-vector. |
 | `likelihood.py` | Bernoulli `p(x\|θ)` | **Added to:** the Gaussian likelihood and the maps and metrics of §4.1. |
 | `jeffreys.py` | Bernoulli closed form | **Added to:** `p_J ∝ √det g` in `D` dimensions. |
-| *(new)* `models.py`, `pstar.py`, `plat.py`, `pproj.py`, `pref.py`, `plognormal.py`, `qfamily.py`, `score.py`, `diagnostics.py` | — | §4.1–§4.5. `models.py` holds the vertex warp; `pstar.py` the candidate-set path and the bridge to AtomicPriors.jl (OQ-1); `pref.py` the rankings, including the stiffest-direction tracing; `plognormal.py` `p_LN` and `p_LN^*`. |
+| *(new)* `models.py`, `pstar.py`, `plat.py`, `pproj.py`, `pref.py`, `plognormal.py`, `qfamily.py`, `score.py`, `diagnostics.py` | — | §4.1–§4.5. `models.py` holds the vertex warp; `pstar.py` the candidate-set path and the atomic path's adaptive pool (OQ-1); `pref.py` the rankings, including the stiffest-direction tracing; `plognormal.py` `p_LN` and `p_LN^*`. |
 
 **Regression gate (T0).** `ba.py`, `prior.py` and `atoms.py` are shared with spec 000. Before
 any spec-002 number is trusted, `tests/test_000_static_infomax_fig1.py` must pass unchanged,
@@ -1822,7 +1822,7 @@ machinery; it does **not** assert the results
 | P1 | Cumulative decomposition `R_N^q(π) = I_q + D_KL(m_q‖m_π)` ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss), [§9.1](#91-the-compensation-identity-for-the-n-fold-marginal-eq-212)) | `test_002_scores.py::test_t1_redundancy_decomposition`, `::test_t1b_score_matches_quadrature_in_the_1d_cone`, `::test_t1c_mcse_is_the_standard_error_of_the_draws`, `::test_t1d_floor_and_mismatch_errors_match_their_spread` (slow), `::test_t1e_gap_error_comes_from_per_draw_differences` |
 | P2 | Pipeline check: with no co-volume gradient, `p_J = p_U` pointwise and `R(p_J) = R(p_U)` within `10^{-6}` nats under common random numbers, at every `D` ([§4.1](#41-model-families)) | `test_002_pipeline.py::test_t2_pipeline_pJ_equals_pU` |
 | P3 | `p*` solver: equalizer `b(θ) = 0` on `supp p*` and `≤ 0` off it, at states off the candidate set too; `I_{p*} = C_N` ([§3.1](#31-the-one-guarantee-worst-case-over-q), [§4.2](#42-prior-construction)) | `test_002_priors.py::test_t3_pstar_equalizer` |
-| P4 | Jeffreys: `p_J ∝ √det g` normalises; its `θ_1`-marginal in the cones is `∝ θ_1^{D−1}` ([§4.2](#42-prior-construction)) | `test_002_priors.py::test_t4_jeffreys_normalises`, `::test_t4_jeffreys_normaliser_converges_on_whole_manifold`, `::test_t4_jeffreys_normaliser_matches_an_independent_quadrature`, `::test_t4_uniform_density_is_absolute`, `::test_t4_jeffreys_cone_marginal` |
+| P4 | Jeffreys: `p_J ∝ √det g` normalises; its `θ_1`-marginal in the cones is `∝ θ_1^{D−1}`; the sampled `p_J` and the per-point marginal agree with brute force and with each other ([§4.2](#42-prior-construction)) | `test_002_priors.py::test_t4_jeffreys_normalises`, `::test_t4_jeffreys_normaliser_converges_on_whole_manifold`, `::test_t4_jeffreys_normaliser_matches_an_independent_quadrature`, `::test_t4_uniform_density_is_absolute`, `::test_t4_jeffreys_cone_marginal`, `::test_t4_sampled_jeffreys_normaliser_matches_brute_force` (slow), `::test_t4_pointwise_marginals_agree` (slow) |
 | P5 | The closed form (3.3.1) matches a numeric KL of two Gaussians, and both terms vanish at the matched prior ([§3.3](#33-score-decomposition-bias-vs-calibration-a-diagnostic)) | `test_002_diagnostics.py::test_t5_gaussian_kl_split_matches_numeric_kl`, `::test_t5_gaussian_kl_split_vanishes_when_matched`, `::test_t5_pure_shift_and_pure_spread` |
 | P6 | Hypercone deviation: Jeffreys' numeric posterior-mean deviation matches `(D−1)/x_1` to next order, toward the thick end, for `1 ≪ x_1 ≪ W` ([§1.2](#12-generative-model), [§9.2](#92-hypercone-posterior-deviation-eq-922)) | `test_002_diagnostics.py::test_t6_hypercone_jeffreys_deviation`, `::test_t6_hypercone_jeffreys_mode_is_the_exact_root` |
 | P7a | `m_π(X_{1:N})`: the discrete sum and quadrature agree ([§4.4](#44-score-estimation)) | `test_002_scores.py::test_t7a_discrete_marginal_is_the_atom_sum`, `::test_t7a_discrete_predictive_is_the_atom_sum`, `::test_t7a_continuous_quadrature_matches_a_fine_atom_sum`, `::test_t7a_tapered_cone_marginal_matches_brute_force` |
@@ -1832,7 +1832,7 @@ machinery; it does **not** assert the results
 | P9 | A&M's prior side: `I_{p*} ≥ I_{p_J}` and `B(p*) ≤ B(p_J)` at every `D` (A&M Fig. 5) | `test_002_references.py::test_t9_am_prior_side_dominance` (slow) |
 | P10 | Determinism: a fixed seed gives identical score arrays ([§4.4](#44-score-estimation)) | `test_002_pipeline.py::test_t10_seed_determinism` |
 | P11 | `p_proj`: the MLE projection recovers `θ̂`; `p_NML` normalises; `I_{p_proj} ≤ I_{p*} = C_N`; the sampler agrees with `transtrum` (P12) ([§4.2](#42-prior-construction)) | `test_002_priors.py::test_t11_nml_normaliser_in_the_1d_cone`, `::test_t11_pproj_cloud_is_slab_and_spike_in_the_1d_cone`, `::test_t11_projection_maps_outside_data_to_the_endpoints`, `::test_t11_pproj_projection_recovers_mle`, `::test_t11_projection_of_data_beyond_the_manifold_lands_on_a_face`, `::test_t11_pproj_information_below_capacity` |
-| P12 | AtomicPriors.jl references: exp-decay map and metric, `p*`, `C_N` at reduced noise, `mutual` of a fixed prior, and `transtrum`'s `p_proj` cloud match frozen values ([§5.5](#55-atomicpriorsjl-reference-fixtures)) | `test_002_references.py::test_t12a_exp_decay_map_and_metric`, `::test_t12b_pstar_matches_atomicpriors`, `::test_t12c_capacity_at_reduced_noise`, `::test_t12d_mutual_information_of_a_fixed_prior`, `::test_t12e_pproj_port_matches_transtrum` |
+| P12 | AtomicPriors.jl references: exp-decay map and metric, `p*`, `C_N` at reduced noise, `mutual` of a fixed prior, and `transtrum`'s `p_proj` cloud match frozen values, and the atomic path's `I_{p*}` does not fall below AtomicPriors.jl's at `D = 5, 7` ([§5.5](#55-atomicpriorsjl-reference-fixtures)) | `test_002_references.py::test_t12a_exp_decay_map_and_metric`, `::test_t12b_pstar_matches_atomicpriors`, `::test_t12c_capacity_at_reduced_noise`, `::test_t12d_mutual_information_of_a_fixed_prior`, `::test_t12e_pproj_port_matches_transtrum`, `::test_t12f_atomic_path_not_below_atomicpriors` (slow) |
 | P13 | Models: the metric matches autodiff; exp-decay's map is invariant under permuting `θ` and its `Θ` holds only ordered `ξ`, on the whole manifold; in the hypercone `√det g / θ_1^{D−1}` is constant for every `φ`, the cross-section widths are `r φ^{μ−2}√N/σ`, and the vertex warp is one-to-one, the identity outside `ρ` and gives the angle `κπ/2` ([§4.1](#41-model-families)) | `test_002_models.py::test_t13a_metric_matches_finite_differences`, `::test_t13a_metric_with_curvature_matches_finite_differences`, `::test_t13b_exp_decay_symmetry_and_ordered_theta`, `::test_t13b_exp_decay_map_known_values`, `::test_t13b_matched_box_is_the_window`, `::test_t13c_hypercone_covolume_and_widths`, `::test_t13c_constant_cross_section_has_flat_volume`, `::test_t13d_vertex_warp`, `::test_t13d_curvature_knob_through_the_model`, `::test_t13d_curvature_off_is_identity` |
 | P14 | Natures: round-robin draws come from each prior's own sampler; the nested natures have their laws, and the agent's fixed coordinates are `½`; every draw carries its label; `q̄` averages the rows, and is not one; the stress natures lie where §4.3 places them ([§4.3](#43-foreign-q-family)) | `test_002_natures.py::test_t14a_round_robin_draws_come_from_the_prior`, `::test_t14a_samplers_match_their_densities` (slow), `::test_t14b_nested_cone_laws`, `::test_t14c_agent_fixes_ignored_coordinates_at_centre`, `::test_t14d_few_rates_share_one_rate_in_the_window`, `::test_t14e_vertex_nature_lies_on_faces_near_v`, `::test_t14e_vertex_nature_is_uniform_by_area`, `::test_t14e_interior_nature_is_truncated_normal`, `::test_t14f_qbar_is_the_average_of_the_rows`, `::test_t14i_nested_cell_is_one_nature_for_every_agent` |
 | P15 | `p_ref` in the cones: equals `p_U`; Schur complement `σ^{-2}`; in exp-decay, each ranking's `p_ref` normalises, distinct rankings give distinct priors, and the stiffest-direction ranking does not depend on its transversal ([§3.5](#35-a-third-route-ordering-instead-of-budget), [§4.2](#42-prior-construction)) | `test_002_priors.py::test_t15a_cone_schur_complement`, `::test_t15b_c_cone_pref_is_uniform`, `::test_t15d_exp_decay_rankings_normalise_and_differ`, `::test_t15d_exp_decay_pref_matches_the_berger_bernardo_formula` (slow), `::test_t15e_stiffest_ranking_ignores_transversal`, `::test_t15f_cone_pref_with_curvature` |
@@ -1869,7 +1869,7 @@ an edge effect unrelated to the co-volume.
 value. A unit test of the solver, not of any result.
 
 **T4 — Jeffreys.** `p_J` sums to one after quadrature, and in exp-decay its normaliser over the whole manifold converges as the quadrature is refined; in the cones its `θ_1`-marginal is
-`∝ θ_1^{D−1}` within quadrature tolerance. Catches a wrong determinant, a missing
+`∝ θ_1^{D−1}` within quadrature tolerance. In exp-decay at `D = 4, 5`, the sampled `p_J`'s `log Z` agrees with brute force over `2·10^6` uniform ordered draws within three standard errors; and at `D = 5`, at a typical and a face-adjacent state, the two per-point marginals of §4.4 agree within 0.1 nats. Catches a wrong determinant, a missing
 normaliser or swapped axes.
 
 **T5 — Gaussian split.** For random `(μ_q, Σ_q, μ_π, Σ_π)`, (3.3.1) matches a numeric
@@ -1912,7 +1912,7 @@ T12(e).
 cloud of `θ̂` against the sampler of §4.2, which on exp-decay's whole manifold makes the same unconstrained fit `transtrum` requires [read: `resources/AtomicPriors.jl/src/max/sample.jl`, `_transtrum`]: a
 two-sample test, and the mass near the manifold's edges (coinciding rates, rates outside
 the window), where the proposal's coverage is least certain; and two independent starts of the sampler, from Jeffreys and from `p_U`, give the same cloud in a two-sample test. A divergence flags a wrong model,
-metric, information estimate, budget reduction or sampler.
+metric, information estimate, budget reduction or sampler. (f) The atomic path's `I_{p*}` at A&M's `D ∈ {5, 7}` against AtomicPriors.jl's, one-sided: since `p*` maximises `I`, the atomic path must not fall below the reference, but may exceed it.
 
 **T13 — Models.** (a) For each family, the metric of §4.1 matches autodiff of `y` (the
 closed form of §9.3 in exp-decay). (b) Exp-decay: `y` is unchanged by permuting `θ`, and
@@ -2008,7 +2008,7 @@ so a fair anchor for the prior-side machinery
 ([Entropy 25(3):434, CC BY](https://www.mdpi.com/1099-4300/25/3/434)).
 
 - **Configuration.** Exp-decay on the ordered `Θ`, `m = 26` times in `[1, 5]`, `σ = 0.1`.
-  Two runs. The default run, `D ∈ {1, 2, 3, 4}` on the candidate-set path, is quick and is the smoke check. Approval needs one extended run at A&M's own `D ∈ {5, 7, 11}`, through AtomicPriors.jl (OQ-1). A&M's `D = 26` is left out, so that the eye test stays cheap. The extended run saves its numbers beside the figure, so the figure redraws without recomputing; the time of its first run is recorded here [TODO: time of the first extended run]. Priors `p*`, `p_J` and `p_LN`. Seed `20260601` (auto-chosen; please
+  Two runs. The default run, `D ∈ {1, 2, 3, 4}` on the candidate-set path, is quick and is the smoke check. Approval needs one extended run at A&M's own `D ∈ {5, 7, 11}`, on the atomic path (OQ-1). A&M's `D = 26` is left out, so that the eye test stays cheap. The extended run saves its numbers beside the figure, so the figure redraws without recomputing; the time of its first run is recorded here [TODO: time of the first extended run]. Priors `p*`, `p_J` and `p_LN`. Seed `20260601` (auto-chosen; please
   confirm). `Θ` is the whole manifold, as A&M's `θ ∈ ℝ^D` (OQ-9).
 - **Output.** `tests/figures/002_foreign_q_prediction/eyetest_am_fig5.png`: the two
   panels, one line per prior, with A&M's own points at `D ∈ {1, 2, 3, 5, 7, 11}` overlaid as open markers, read off the published figure by eye [read: A&M Fig. 5, digitised by eye]. The bottom panel draws, for each prior, a band between two maxima of `b`: over 2000 draws from the prior itself, and over all of `Θ` (`p*`'s candidate set, faces included). A&M write `B = max_θ b(θ)` but do not say over which states it runs [read: A&M §2.2, App. A.4], and the choice matters: Jeffreys' `b` is about 0 in the interior at `D = 1` and about 1.3 bits on the faces, where half the noise falls off the manifold, and over `D ≤ 3` the two maxima differ by up to a factor of 6 (first runs of the eye test, 2026-11-25). A band from states one Fisher length from every face was tried first: it is empty at `D ≥ 3`, where every state lies within 0.6 noise units of a face.
@@ -2054,7 +2054,7 @@ ratification.
   `notes/budget-value-of-information.md` §4.
 - **Dimension `D`.** As far as the solver allows: `D = 1` is spec 000's floor, `D = 2`
   A&M's smallest setting, and larger `D` approach A&M's `D ≥ 11`. Candidate-set path for
-  `D ≤ D_switch`, AtomicPriors.jl beyond (OQ-1). Nested natures: `D_max = 26` in the hypercone, agents at every `D` of the sweep. T6 and T21(c) need no solver and run at
+  `D ≤ D_switch`, the atomic path's adaptive pool beyond (OQ-1). Nested natures: `D_max = 26` in the hypercone, agents at every `D` of the sweep. T6 and T21(c) need no solver and run at
   `D ∈ {6, 11, 26}`.
 - **Noise `σ` and budget `N`, varied separately.** At `N = 1`, `σ ∈ {0.05, 0.1, 0.2, 0.4}`
   in exp-decay and `σ ∈ {0.5, 1, 2, 4}` in the hypercone; and `N ∈ {1, 2, 4, 8}` at the
@@ -2075,7 +2075,7 @@ ratification.
   round robin, the nested natures of the cell's model (few rates at every `D`, and with
   `D_0 = 2` at even `D ≥ 4` once the atomic path runs), and in the hypercone the stress
   natures (the vertex only with the curvature knob on).
-- **Candidate sets and grids.** The priors built by Blahut–Arimoto use candidate sets with points at most 0.5 Fisher lengths apart at the cell's `σ_eff`, about five per atom spacing (`[^1-spacing]`; §4.2); a cell whose set would pass `10^6` points goes to the atomic path. The quadrature grids of the continuous priors at small `D` keep `G` per axis: 50 for `D ≤ 2`, 30 for `D = 3`, 20 for `D = 4`, ordered cells only in exp-decay, and in the hypercone `G_1 = ⌈2W/σ_eff⌉` cells along `θ_1`. Refinement check at one cell with `G ∈ {20, 30, 50}` and spacings `{1, 0.5, 0.25}`. (Auto-chosen; please confirm.)
+- **Candidate sets and grids.** The priors built by Blahut–Arimoto use candidate sets with points at most 0.5 Fisher lengths apart at the cell's `σ_eff`, about five per atom spacing (`[^1-spacing]`; §4.2); a cell whose set would pass `10^6` points goes to the atomic path. The quadrature grids of the continuous priors at small `D` keep `G` per axis: 50 for `D ≤ 2`, 30 for `D = 3`, 20 for `D = 4`, ordered cells only in exp-decay, and in the hypercone `G_1 = ⌈2W/σ_eff⌉` cells along `θ_1`. Refinement check at one cell with `G ∈ {20, 30, 50}` and spacings `{1, 0.5, 0.25}`. (Auto-chosen; please confirm.) Beyond the grids, continuous priors are sampled (§4.4): `p_J` from `D = 4`, the others once their grids pass `10^6` nodes.
 - **Draws.** `S_q = 500` per cell, raised to `2000` where the Monte-Carlo error of a
   reported gap exceeds a tenth of its size, since the gaps are differences of large terms.
   For §4.5's quantities of §3.2, `K = 200` draws of `θ` with `J = 64` draws of `x̄` each.
@@ -2112,7 +2112,7 @@ without making Julia a dependency of the test suite:
   and weights, `I_{p*}` and `B(p*)` at `D ∈ {2, 3}`, `N = 1`. The atoms are compared through the cross-equalizer: the Python `p*`'s bias pressure lies within `0.05` nats of zero at every reference atom. The capacity-achieving Bayes mixture is unique while the prior need not be, so every optimal prior's atoms lie where any other's bias pressure vanishes [recalled][^5-unique-mixture]; atoms and weights are not matched one to one, since the candidate set's unmerged atoms outnumber Julia's continuous ones about two to one at any merge radius (first fixtures, 2026-11-25); `I_{p*}` to `0.01` nats, and `B(p*)` to `0.2` nats, about A&M's own numerical error for it [read: A&M Fig. 5, 0.1–0.2 bits for the optimal prior]; (c)
   `C_N = sup_π I_π(Θ;X_{1:N})` at `σ_eff = σ/√N` for `N ∈ {2, 4}` at `D = 2`, from (b)'s AtomicPriors recipe run at the same reduced noise, to `0.01` nats: an external check of the capacity solver where `p*` has more atoms. The reduction itself is shown in §4.4 and checked by T7(c) and the twin cells (§5.4); `repeat`, named here first, builds the `N`-fold channel of a discrete-outcome likelihood and cannot run on 26-dimensional Gaussian data; (d) `mutual` of a
   fixed grid prior, the 15 ordered points of `{0.1, 0.3, 0.5, 0.7, 0.9}²` with equal weights at `D = 2`, to `0.005` nats; (e) `transtrum`'s cloud of `θ̂` at `D = 2`, `N = 1`, 2000 points,
-  on the whole manifold, as `transtrum` requires: a two-sample KS test per coordinate at `p > 10⁻³`, and the mass within `0.02` in `ξ` of each edge (coinciding rates, `ξ = 0`, `ξ = 1`) within four binomial standard errors at the two clouds' sizes, the sampler's at its effective sample size. `generate.jl` keeps `transtrum`'s data points and re-fits each `θ̂` with §4.2's tight solve, since `transtrum`'s own fits stop early along flat ridges; its chain keeps every 1600th step, from seeded random walkers, the first setting at which the cloud stopped drifting (docs DD-J3).
+  on the whole manifold, as `transtrum` requires: a two-sample KS test per coordinate at `p > 10⁻³`, and the mass within `0.02` in `ξ` of each edge (coinciding rates, `ξ = 0`, `ξ = 1`) within four binomial standard errors at the two clouds' sizes, the sampler's at its effective sample size. `generate.jl` keeps `transtrum`'s data points and re-fits each `θ̂` with §4.2's tight solve, since `transtrum`'s own fits stop early along flat ridges; its chain keeps every 1600th step, from seeded random walkers, the first setting at which the cloud stopped drifting (docs DD-J3). (f) `I_{p*}` at `D ∈ {5, 7}`, `N = 1`, from (b)'s recipe; the atomic path's `I_{p*}` may fall below it by at most `0.01` nats, with no bound above, since the reference optimises a kernel bound and fell 0.027 nats short of the atomic path at `D = 5` (2026-11-26).
 
 `p_lat` has no fixture here, since AtomicPriors.jl has no conditional objective; its
 references are T18 and the second eye test (§5.3).
@@ -2167,7 +2167,7 @@ Under `experiments/002-foreign-q-prediction/`:
 - `results_table.json` — one row per cell; schema in §6.3.
 - `provenance.json` — the git `HEAD`, `HEAD:src/infomax`, package versions and the spec's
   commit, written at run time and cited by the report (`meta/workflow-issues.md`, "Wire
-  experiment commit hashes"); the Julia and AtomicPriors versions when that path ran.
+  experiment commit hashes"); for every cell on the atomic path, its rounds and the largest violation over its last pool.
 - `REPORT.md` — body per §6.4.
 
 ### 6.2 Sweep coverage per output
@@ -2250,13 +2250,12 @@ Each entry gives the decision and where it is applied. The options weighed are i
 revision log and the git history.
 
 - **OQ-1 — `p*` beyond the grid.** Python grid Blahut–Arimoto for `D ≤ D_switch`; above
-  it, AtomicPriors.jl through `juliacall`. `D_switch` is set once both paths are
-  profiled; where both run they must agree (T7b, T12). Cheaper stand-ins for `p*` are
+  it, the adaptive pool of §4.2, on the same solver. AtomicPriors.jl through `juliacall` was the plan, and runs: at A&M's `D = 5, 7` it gave 4.76 and 4.82 bits in 3–6 minutes. But it maximises a kernel bound, not `I`, and fell 0.027 nats short at `D = 5`; its `B` was 0.14–0.15 nats at `D = 2, 3`, against the candidate set's 0.001. It also brings a runtime Julia dependency. It is kept as a frozen reference (T12(f)). `D_switch` is the largest `D` whose candidate set stays under `10^6` points; where both run they must agree (T7b, T12). Cheaper stand-ins for `p*` are
   collected, unworked, in `notes/budget-value-of-information.md` §9.
 - **OQ-2 — The laws of the natures** ([§4.3](#43-foreign-q-family)). Few rates:
   `D_0 = 1`, one rate shared by all components and uniform in `θ` over the observation
   window, so the row does not lean toward `p_U` and does not depend on the box;
-  `D_0 = 2` joins once AtomicPriors.jl extends `D` (OQ-1). A fixed spectrum was chosen here and removed in the full red-team pass (F4): its data law drifted with `D`, and clipping folded its bulk end into an edge. The few-rates nature is now a nested nature ([§2.3](#23-the-natures)). Stress
+  `D_0 = 2` joins once the atomic path extends `D` (OQ-1). A fixed spectrum was chosen here and removed in the full red-team pass (F4): its data law drifted with `D`, and clipping folded its bulk end into an edge. The few-rates nature is now a nested nature ([§2.3](#23-the-natures)). Stress
   natures: nature on the faces next to the sharpened vertex, and a smooth interior that
   is Gaussian along the hypercone's relevant coordinate, three atom spacings wide.
 - **OQ-3 — Log-normal's parameters** ([§4.2](#42-prior-construction)). `p_LN` keeps
@@ -2273,8 +2272,8 @@ revision log and the git history.
   ([§3.6](#36-what-would-sink-it), point 2).
 - **OQ-6 — The `p_proj` sampler** ([§4.2](#42-prior-construction)). Adaptive importance sampling, started from Jeffreys or from a neighbouring cell's cloud. A port of `transtrum`'s ensemble chain was tried first. At the cheap cell it needs about 200 steps per independent point, and a random walk's mixing time grows with the square of the manifold's length in Fisher lengths [guess beyond the cheap cell], so the sweep's row would have cost hours. Langevin moves on the free NML score, `−(x − y(θ̂))/σ²` (Danskin's theorem), mixed two to four times faster on the edge masses but no faster along the manifold. `transtrum`'s own cloud, re-fitted tightly, stays the external check (§5.5, T12(e)).
 - **OQ-7 — Julia as a dependency.** AtomicPriors.jl generates the frozen fixtures of §5.5
-  at dev time, so pytest never imports Julia, and supplies `p*` above `D_switch` (OQ-1).
-  Julia ≥ 1.6 stays outside the uv environment; `README.md`'s *Local setup* lists it as
+  at dev time, so pytest never imports Julia, and the experiment does not need it either (OQ-1).
+  Julia ≥ 1.11 stays outside the uv environment; `README.md`'s *Local setup* lists it as
   optional.
 - **OQ-8 — Rankings for `p_ref` in exp-decay** ([§4.2](#42-prior-construction)). Slowest
   rate first and fastest rate first. The stiffest Fisher direction is a third ranking
@@ -2290,6 +2289,7 @@ revision log and the git history.
 - **OQ-12 — The curvature knob's map** ([§4.1](#41-model-families)). A local warp that
   narrows the angle of one base vertex inside a ball of radius `ρ` and is the identity
   outside it, so that `√det g`, and with it Jeffreys, is unchanged away from the vertex.
+- **OQ-13 — Continuous priors beyond the grids** ([§4.2](#42-prior-construction), [§4.4](#44-score-estimation)). Tensor quadrature grids in `ξ` grow combinatorially: 6·10^5 to 8·10^5 nodes at `D = 5`, too many to hold at `D = 7`. Jeffreys' grid also loses mass where rates nearly coincide from `D = 4`. So `p_J` is sampled from `D = 4`, and every continuous prior's marginal comes from a cloud of its draws, refined per point where its mass is thin (§4.4). This was needed for the extended eye test at `D = 7, 11` and for scoring the cast there.
 
 ## 8. References
 
@@ -3867,3 +3867,69 @@ manifolds, so the sweep's `p_proj` row would have cost hours. Decided with MB; e
 `build_cast` passes the weighted cloud as a `DiscretePrior`; `generate.jl` keeps
 `transtrum`'s data points and re-fits them; T12(e)'s two starts; docs DD-P1 and the Testing
 notes.
+
+### 2026-11-26 — Correction + Refinement (§4.2, §4.3, §4.6, §5.1–§5.5, §6.1, §7; the atomic path)
+
+OQ-1 planned `p*` above `D_switch` through AtomicPriors.jl and `juliacall`. AtomicPriors.jl
+runs at A&M's `D = 5, 7`, giving 4.76 and 4.82 bits in 3–6 minutes, so speed was not what
+decided it. Its optimiser maximises a kernel bound on the entropy, not `I`. At `D = 5` its
+prior carried `3.2987 ± 0.0018` nats by direct Monte Carlo with the exact mixture, against
+`3.3254 ± 0.0013` for an adaptive pool on our own solver: a gap of 12 standard errors. Our
+kernel estimator agreed with the direct estimate to 0.0005 nats there. At `D = 2, 3` the
+AtomicPriors `p*` left `B` at 0.14–0.15 nats. Decided with MB; edits are red.
+
+- **§4.2, OQ-1.** The atomic path is the adaptive pool: fresh face, interior and nearby
+  states each round, thinned to the net's minimum separation of a quarter noise unit, and
+  solved by the candidate-set solver (DD-S1). Thinning took the `D = 2` prototype from
+  1528 s to 115 s. `D_switch` becomes the largest `D` whose candidate set stays under
+  `10^6` points. The pseudocode names the new path; a code block cannot carry red.
+- **`p_lat` beyond `D_switch` (§4.2, coverage).** The pool takes `p_lat`'s objective in
+  principle; until that is tested, `p_lat` stays where it was.
+- **T12(f), §5.5(f).** AtomicPriors.jl's `I_{p*}` at `D = 5, 7` is a frozen reference.
+  The comparison is one-sided, since `p*` maximises `I`: the atomic path may fall at most
+  `0.01` nats below it, and may exceed it without bound.
+- **OQ-7, §6.1.** Julia stays a development-time dependency only. Provenance records the
+  atomic path's rounds and its last pool's largest violation, not Julia versions.
+- **§4.3, §5.3, §5.4, OQ-2.** Wording only: "AtomicPriors.jl" becomes "the atomic path".
+
+§4, §5, §6 and §7 flip to draft. Downstream: `pstar.build_pstar(method="atomic")` (the
+pool); T7b, whose docstring says it needs AtomicPriors.jl; a new slow
+`test_t12f_atomic_path_not_below_atomicpriors`; `generate.jl` writes `pstar_D5` and
+`pstar_D7`; docs DD-A1, DD-J3 and DD-C1.
+
+### 2026-11-26 — Correction + Refinement (§4.2, §4.4, §5.1, §5.2, §5.4, §7; continuous priors beyond the grids)
+
+The extended eye test at `D = 7, 11` could not run: `p_J`'s and `p_LN`'s quadrature grids,
+6·10^5 to 8·10^5 nodes at `D = 5`, grow too large to hold at `D = 7`, and `p_J`'s sampler is
+rejection on its grid. A check against brute force (2·10^6 uniform ordered draws) found that
+Jeffreys' exp-decay grid also loses mass where rates nearly coincide: 0.0% at `D = 2`, 0.2%
+at `D = 3`, 5.0% at `D = 4` and 24% at `D = 5`. Its weights are renormalised, so it stood
+for a distorted Jeffreys. At `D = 5`, two rates within 0.02 of each other carried 1.3% of
+its mass against 5.5% in truth. The eye test's `I(p_J)` at `D = 4, 5` still sat within 0.03
+bits of A&M, but its `B` band and the sweep's `p_J` scores there rested on the distortion.
+Decided with MB; edits are red.
+
+- **§4.2, coverage.** `p_J` is quadrature to `D = 3` and adaptive importance sampling from
+  `D = 4`. At `D = 5` the sampler's `log Z` was −4.0674, against brute force's
+  −4.0646 ± 0.0022.
+- **§4.4.** Marginals without a grid come from a cloud of 20000 draws. Where the prior is
+  thin near `x`, they are refined per point by importance sampling from the likelihood-weighted
+  cloud. At `D = 5` the cloud was within 0.11 nats of the per-point estimate (95th
+  percentile), and two per-point versions within 0.04 nats on face states' divergences, at
+  about 0.2 s per point. A first per-point proposal, a Gaussian at the tight fit, failed: 1%
+  effective sample size, and 3–4 nats between versions. `B` is found in two stages.
+- **At `D = 7` (prototype, 128 s in all).** The sampler's `log Z` was −19.416 and brute
+  force's −19.393 ± 0.008. The clouds gave `I(p_J) = 1.692 ± 0.035` bits and
+  `I(p_LN) = 2.224 ± 0.036`, against A&M's 1.71 and 2.25. The per-point estimate weakens:
+  the sampler's effective sample size levels off near 8% (32% at `D = 5`), and the two
+  per-point versions differ by up to 0.92 nats on face states' divergences, which reach 43
+  bits. A better proposal for the sampler is open.
+- **§5.4.** Beyond the grids, continuous priors are sampled.
+- **T4 (§5.1, §5.2).** Two slow tests: the sampled normaliser against brute force at
+  `D = 4, 5`, and the two per-point marginals against each other at `D = 5`.
+- **OQ-13 (§7.2).** Records the decision.
+
+§4, §5 and §7 flip to draft. Downstream: `jeffreys.py` (the sampled path), a cloud-marginal
+and per-point marginal for continuous priors (`priors002.py`, `diagnostics.worst_case_bias_pressure`),
+T4's two tests, the eye test at `D = 7, 11`, and docs DD-Q1 and the *Testing notes*. The
+`D = 4, 5` eye-test rows need redrawing once `p_J` is sampled there.
