@@ -260,7 +260,7 @@ def test_t7a_sampled_marginal_matches_the_grid_at_thin_states(name):
     model = cheap_model(D=3)
     s = model.sigma_eff
     grid = {"p_LN": build_pln, "p_J": build_jeffreys}[name](model)
-    assert not hasattr(grid, "refined_log_marginal"), "at D = 3 the reference must be the grid"
+    assert not hasattr(grid, "per_point_log_marginal"), "at D = 3 the reference must be the grid"
     sampled = sampled_from(grid, model, name) if name == "p_LN" else build_sampled_jeffreys(model)
     off = {}
     for k, (label, theta) in enumerate(THIN_STATES_D3.items()):

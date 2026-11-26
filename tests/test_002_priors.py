@@ -162,7 +162,7 @@ def test_t4_sampled_jeffreys_normaliser_matches_brute_force(D):
 
     model = cheap_model(D=D)
     p_J = build_jeffreys(model)
-    assert hasattr(p_J, "refined_log_marginal"), "p_J should be the sampled prior from D = 4"
+    assert hasattr(p_J, "per_point_log_marginal"), "p_J should be the sampled prior from D = 4"
     rng = np.random.default_rng(20261205)
     lv = np.concatenate([_log_sqrt_det_g(model, np.sort(rng.uniform(size=(100_000, D)), axis=-1)) for _ in range(20)])
     r = np.exp(lv - lv.max())
@@ -175,9 +175,10 @@ def test_t4_sampled_jeffreys_normaliser_matches_brute_force(D):
 @pytest.mark.slow
 def test_t4_pointwise_marginals_agree():
     """T4 (§5.2, §4.4): at `D = 5`, at a typical and a face-adjacent state, the per-point
-    marginal's two variants (full and diagonal kernels) agree within 0.1 nats on the mean
-    `log m` over 16 draws of `x` from the state. Catches a proposal whose density is
-    mis-evaluated, since two different proposals then disagree."""
+    marginal's two variants (Student-t proposals with 5 and 3 degrees of freedom, core scales
+    1.5 and 2) agree within 0.1 nats on the mean `log m` over 16 draws of `x` from the state.
+    Catches a proposal whose density is mis-evaluated, since two different proposals then
+    disagree. Agreement is not accuracy: T7(a)'s thin-state test checks that (OQ-14)."""
     model = cheap_model(D=5)
     p_J = build_jeffreys(model)
     rng = np.random.default_rng(20261206)
@@ -186,8 +187,8 @@ def test_t4_pointwise_marginals_agree():
     for state in (typical, face):
         y = model.y(state[None])[0]
         x = y + model.sigma_eff * rng.standard_normal((16, model.m_out))
-        a, ess_a = p_J.refined_log_marginal(model, x, rng, kernel="full")
-        b, ess_b = p_J.refined_log_marginal(model, x, rng, kernel="diagonal")
+        a, ess_a = p_J.per_point_log_marginal(model, x, variant=0)
+        b, ess_b = p_J.per_point_log_marginal(model, x, variant=1)
         assert abs(a.mean() - b.mean()) <= 0.1, (state, a.mean(), b.mean(), ess_a.min(), ess_b.min())
 
 

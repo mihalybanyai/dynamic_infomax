@@ -133,7 +133,7 @@ hashes are filled at stage 3, after the eye test is approved.
 | `test_002_scores.py::test_t7a_discrete_marginal_is_the_atom_sum` | 1 | passing | (none yet) |
 | `test_002_scores.py::test_t7a_discrete_predictive_is_the_atom_sum` | 1 | passing | (none yet) |
 | `test_002_scores.py::test_t7a_tapered_cone_marginal_matches_brute_force` | 4 | passing | (none yet) |
-| `test_002_scores.py::test_t7a_sampled_marginal_matches_the_grid_at_thin_states` | 2 | failing, expected until OQ-14 (Testing notes) | (none yet) |
+| `test_002_scores.py::test_t7a_sampled_marginal_matches_the_grid_at_thin_states` | 2 | passing (OQ-14's per-point estimate; Testing notes) | (none yet) |
 | `test_002_scores.py::test_t7c_budget_through_the_noise` | 1 | passing | (none yet) |
 | `test_002_scores.py::test_t7c_two_fold_divergence_by_explicit_monte_carlo` | 1 | passing | (none yet) |
 | `test_002_scores.py::test_t8_floors_and_matched_prior` | 1 | passing | (none yet) |

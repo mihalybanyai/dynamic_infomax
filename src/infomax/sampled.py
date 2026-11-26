@@ -2,9 +2,11 @@
 
 Exp-decay's tensor grids in `xi` grow combinatorially with `D`, and Jeffreys' grid loses mass
 where rates nearly coincide from `D = 4` (2026-11-26). There a continuous prior is a weighted
-cloud of its own draws (`SampledPrior`, a `CloudPrior`): its marginal is the mixture over the
-cloud, and where the prior is thin near `x`, `refined_log_marginal` estimates `log m(x)`
-per point by importance sampling.
+cloud of its own draws (`SampledPrior`, a `CloudPrior`). Its marginal is the mixture over the
+cloud where the cloud has draws near `x`. Where the prior is thin near `x`, the cloud has none,
+and `per_point_log_marginal` estimates `log m(x)` by importance sampling from the posterior
+itself, found by optimisation in log decay times (OQ-14). `_lmn` routes between the two, so
+`log_marginal` and `log_predictive` both use the routed marginal.
 
 Jeffreys is sampled by adaptive importance sampling in unordered log decay times
 `theta = -log(-log xi)`, where its density is `sqrt(det g)` times the Jacobian of `xi`
@@ -22,13 +24,18 @@ redrawn, at most `FINAL_REDRAWS` times, and then the build fails. Builds are det
 """
 from __future__ import annotations
 
+import hashlib
+import itertools
+import math
+import warnings
 from math import lgamma
 
 import numpy as np
+import scipy.optimize
 import scipy.special
 import scipy.stats
 
-from infomax.mixture import log_normal_iso
+from infomax.mixture import log_normal_iso, mixture_logpdf
 from infomax.models import Model
 from infomax.priors002 import CloudPrior
 
@@ -49,6 +56,87 @@ GRID_MAX_D: int = 5
 N_PROPOSAL: int = 1000
 N_CENTRES: int = 200
 LOCAL_SHARE: float = 0.8
+"""The superseded kernel estimator's settings (`kernel_log_marginal`)."""
+
+# the per-point estimate (§4.4, OQ-14)
+N0_THIN: float = 300.0
+"""A point is thin, and estimated per point, when the cloud weighted by its likelihood keeps
+fewer effective draws than this. The cloud's mixture is an importance-sampling estimate of
+`m(x)` with the prior as proposal, so its relative error is about `1 / sqrt(n0)`. At `D = 3`,
+over 896 data at thin and typical states, the cloud's error per datum was at most 0.056 nats
+for `n0 >= 300` and up to 0.26 for `n0 >= 100` (2026-11-26)."""
+N_PER_POINT: int = 1000
+N_STARTS: int = 3
+MAX_MODES: int = 3
+T_NU: tuple[float, float] = (5.0, 3.0)
+CORE_SCALE: tuple[float, float] = (1.5, 2.0)
+WIDE_SCALE: float = 3.0
+WIDE_SHARE: float = 0.2
+THETA_RANGE: tuple[float, float] = (-8.0, 35.0)
+"""Log decay times the mode search may visit: beyond them `xi` rounds to 0 or 1 in double
+precision."""
+EIG_FLOOR: float = 1e-2
+"""Laplace precision floor: a flat direction gets a scale of 10 log-time units."""
+CLUSTER_GAP: float = 6.0
+"""Neighbouring sorted mode coordinates closer than this many core scales share a block."""
+MAX_GROUP: int = 5040
+"""At most this many relabellings (7!); larger blocks are split at their widest gap."""
+PERM_CHUNK: int = 256
+PER_POINT_MAX_D: int = 5
+"""Above this `D` the per-point estimate is not validated: at `D = 7` it kept 0.1-1% of its
+draws effective for Jeffreys, and its two variants differed by up to 0.9 nats (2026-11-26).
+It still runs there, with a warning (OQ-14)."""
+MIN_EFFECTIVE: float = 20.0
+"""A per-point estimate with fewer effective draws than this is flagged."""
+
+
+def _theta_of(xi):
+    """Log decay time `-log(-log xi)`, finite at the faces (`xi` clipped to (1e-300, 1 - 1e-16))."""
+    return -np.log(-np.log(np.clip(xi, 1e-300, 1.0 - 1e-16)))
+
+
+def _laplace_cov(obj, mu: np.ndarray, h: float = 1e-3) -> np.ndarray:
+    """The inverse of `obj`'s finite-difference Hessian at `mu`, eigenvalues floored at
+    `EIG_FLOOR`; a unit covariance if the Hessian is not finite (a mode on a bound)."""
+    D = mu.size
+    E = np.eye(D) * h
+    H = np.empty((D, D))
+    for i in range(D):
+        for j in range(i, D):
+            H[i, j] = H[j, i] = (obj(mu + E[i] + E[j]) - obj(mu + E[i] - E[j]) - obj(mu - E[i] + E[j])
+                                 + obj(mu - E[i] - E[j])) / (4 * h * h)
+    if not np.all(np.isfinite(H)) or np.max(np.abs(H)) > 1e250:
+        return np.eye(D)
+    w, V = np.linalg.eigh(H)
+    return (V / np.maximum(w, EIG_FLOOR)) @ V.T
+
+
+def _clusters(mu: np.ndarray, scale: np.ndarray) -> list[np.ndarray]:
+    """Blocks of consecutive coordinates of the sorted `mu` closer than `CLUSTER_GAP` scales,
+    split at their widest gap until the within-block permutations number at most `MAX_GROUP`."""
+    gaps = np.diff(mu) / (CLUSTER_GAP * np.maximum(scale[:-1], scale[1:]))
+    cuts = set((np.flatnonzero(gaps >= 1.0) + 1).tolist())
+    while True:
+        edges = [0] + sorted(cuts) + [mu.size]
+        blocks = [np.arange(a, b) for a, b in zip(edges[:-1], edges[1:])]
+        if np.prod([math.factorial(len(b)) for b in blocks]) <= MAX_GROUP:
+            return blocks
+        inner = max(blocks, key=len)[1:]
+        cuts.add(int(inner[np.argmax(gaps[inner - 1])]))
+
+
+def _block_permutations(blocks: list[np.ndarray]) -> np.ndarray:
+    """Every permutation of the coordinates that permutes within each block, as index rows."""
+    parts = [list(itertools.permutations(b.tolist())) for b in blocks]
+    return np.array([sum((list(q) for q in combo), []) for combo in itertools.product(*parts)], dtype=int)
+
+
+def _mvt_logpdf(z: np.ndarray, mu: np.ndarray, L: np.ndarray, nu: float) -> np.ndarray:
+    """Multivariate t log density over the last axis, scale `L L^T`."""
+    d = mu.size
+    u = np.linalg.solve(L, (z - mu).reshape(-1, d).T).T.reshape(z.shape)
+    return (scipy.special.gammaln((nu + d) / 2) - scipy.special.gammaln(nu / 2) - 0.5 * d * np.log(nu * np.pi)
+            - np.sum(np.log(np.diag(L))) - 0.5 * (nu + d) * np.log1p(np.sum(u * u, -1) / nu))
 
 
 class SampledPrior(CloudPrior):
@@ -85,9 +173,158 @@ class SampledPrior(CloudPrior):
             ok &= np.all(np.diff(z, axis=1) >= 0, axis=1)
         return ok
 
-    def refined_log_marginal(self, model: Model, x: np.ndarray, rng: np.random.Generator, *,
-                             kernel: str = "full") -> tuple[np.ndarray, np.ndarray]:
-        """`log m(x)` per point by importance sampling, and each point's ESS share (§4.4).
+    def cloud(self) -> CloudPrior:
+        """The plain weighted cloud, whose marginal is the mixture over its draws everywhere:
+        cheap, and accurate wherever the prior has draws near `x` (screens, §4.5)."""
+        return CloudPrior(self.name, self.atoms, self.weights)
+
+    def _lmn(self, model: Model, x: np.ndarray, s: float) -> np.ndarray:
+        """`log m(x)` at noise `s`, routed (§4.4, OQ-14): the cloud's mixture where the cloud
+        weighted by the likelihood keeps at least `N0_THIN` effective draws, the per-point
+        estimate elsewhere. `log_marginal` and `log_predictive` both come through here."""
+        x = np.atleast_2d(np.asarray(x, dtype=float))
+        keep = self.weights > 0
+        Y, lw = model.y(self.atoms[keep]), self.log_weights[keep]
+        m = x.shape[-1]
+        lse1 = mixture_logpdf(x, Y, lw, s) + 0.5 * m * np.log(2.0 * np.pi * s**2)
+        lse2 = mixture_logpdf(x, Y, 2.0 * lw, s / np.sqrt(2.0)) + 0.5 * m * np.log(np.pi * s**2)
+        out = lse1 - 0.5 * m * np.log(2.0 * np.pi * s**2)
+        thin = np.exp(2.0 * lse1 - lse2) < N0_THIN
+        if thin.any():
+            if model.D > PER_POINT_MAX_D:
+                warnings.warn(f"{self.name}: the per-point estimate is not validated above D = {PER_POINT_MAX_D} "
+                              f"(OQ-14); {int(thin.sum())} thin points at D = {model.D}")
+            lm, ess = self.per_point_log_marginal(model, x[thin], s)
+            ok = np.isfinite(lm)
+            weak = ok & (ess * N_PER_POINT < MIN_EFFECTIVE)
+            if weak.any() or not ok.all():
+                warnings.warn(f"{self.name}: the per-point estimate kept fewer than {MIN_EFFECTIVE:.0f} effective "
+                              f"draws at {int(weak.sum())} and failed at {int((~ok).sum())} of {int(thin.sum())} "
+                              "thin points; the cloud's value is used where it failed")
+            idx = np.flatnonzero(thin)
+            out[idx[ok]] = lm[ok]
+        return out
+
+    def per_point_log_marginal(self, model: Model, x: np.ndarray, s: float | None = None, *,
+                               variant: int = 0) -> tuple[np.ndarray, np.ndarray]:
+        """`log m(x)` at noise `s` (default `sigma_eff`) for each row of `x`, by importance
+        sampling from the posterior itself (§4.4, OQ-14), and each point's ESS share.
+
+        In unordered log decay times `theta = -log(-log xi)` the faces of `Theta` lie at
+        infinity, and the target is `pi(sorted xi) / D!` times the Jacobian times the
+        likelihood. The posterior's modes are found by L-BFGS from the `N_STARTS` cloud draws
+        that best explain `x`, sorted, and given Laplace scales (a finite-difference Hessian,
+        eigenvalues floored at `EIG_FLOOR`). The proposal mixes, per mode weighted by its
+        Laplace mass, a Student-t core at `CORE_SCALE` times the Laplace scale and a wide t at
+        `WIDE_SCALE` (share `WIDE_SHARE`), symmetrised over the permutations within blocks of
+        near-equal coordinates of the main mode. Only draws whose blocks keep the main mode's
+        order count, and the mean is multiplied by `D! / |G|`, which is exact for any blocking;
+        the blocking sets only the efficiency. Validated to `D = PER_POINT_MAX_D` (OQ-14).
+        `variant=1` changes the t's degrees of freedom and core scale (T4's second version).
+        Each point's draws come from a generator seeded by its own bytes, so the estimate is a
+        deterministic function of `x`, shared by every caller (common random numbers)."""
+        s = model.sigma_eff if s is None else float(s)
+        x = np.atleast_2d(np.asarray(x, dtype=float))
+        keep = self.weights > 0
+        atoms, lw = self.atoms[keep], self.log_weights[keep]
+        Y = model.y(atoms)
+        out, ess = np.empty(len(x)), np.empty(len(x))
+        for i in range(len(x)):
+            digest = hashlib.blake2b(x[i].tobytes() + bytes([variant]), digest_size=16).digest()
+            rng = np.random.default_rng(np.frombuffer(digest, dtype=np.uint32))
+            l0 = lw + log_normal_iso(x[i], Y, s)
+            out[i], ess[i] = self._per_point_one(model, x[i], s, atoms[np.argsort(-l0)[:N_STARTS]], rng, variant)
+        return out, ess
+
+    def _per_point_one(self, model: Model, x: np.ndarray, s: float, starts: np.ndarray,
+                       rng: np.random.Generator, variant: int) -> tuple[float, float]:
+        D = self.atoms.shape[1]
+        nu, core = T_NU[variant], CORE_SCALE[variant]
+        box = model.box
+        lo_t = [max(THETA_RANGE[0], float(_theta_of(b))) for b in np.asarray(box.low, float)]
+        hi_t = [min(THETA_RANGE[1], float(_theta_of(b))) for b in np.asarray(box.high, float)]
+        log_dfact = lgamma(D + 1)
+
+        def log_f(th):
+            th = np.atleast_2d(th)
+            xi = np.sort(np.exp(-np.exp(-th)), axis=-1)
+            with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
+                v = (self.log_density(xi) - log_dfact + np.sum(-np.exp(-th) - th, axis=-1)
+                     + log_normal_iso(x, model.y(xi), s))
+            v[~np.isfinite(v)] = -np.inf
+            return v
+
+        best = {"f": np.inf, "x": None}
+
+        def obj(t):
+            v = -float(log_f(t)[0])
+            if not np.isfinite(v):
+                return 1e300
+            if v < best["f"]:
+                best["f"], best["x"] = v, np.array(t, dtype=float)
+            return v
+
+        # L-BFGS can step onto states where the density vanishes numerically (Jeffreys at
+        # coinciding rates, or rates that round to xi = 1) and stop there; the best state seen
+        # is kept, and a derivative-free polish runs from it when L-BFGS ends worse.
+        bounds = list(zip(lo_t, hi_t))
+        modes = []
+        for t0 in np.clip(_theta_of(np.sort(starts, axis=-1)), lo_t, hi_t):
+            best["f"], best["x"] = np.inf, None
+            r = scipy.optimize.minimize(obj, t0, method="L-BFGS-B", bounds=bounds)
+            if best["x"] is not None and r.fun > best["f"] + 1e-9:
+                scipy.optimize.minimize(obj, best["x"], method="Powell", bounds=bounds,
+                                        options={"maxfev": 400 * D, "xtol": 1e-4, "ftol": 1e-10})
+            if best["x"] is not None:
+                modes.append((float(best["f"]), np.sort(best["x"])))
+        modes.sort(key=lambda m: m[0])
+        uniq = []
+        for val, mu in modes:
+            if all(np.max(np.abs(mu - u)) > 1e-3 for _, u in uniq):
+                uniq.append((val, mu))
+        if not uniq:
+            return -np.inf, 0.0
+        comps, log_a = [], []
+        for val, mu in uniq[:MAX_MODES]:
+            Sigma = _laplace_cov(obj, mu)
+            comps.append((mu, np.linalg.cholesky(core**2 * Sigma), np.linalg.cholesky(WIDE_SCALE**2 * Sigma)))
+            log_a.append(-val + 0.5 * np.linalg.slogdet(Sigma)[1])
+        log_a = np.asarray(log_a) - scipy.special.logsumexp(log_a)
+        blocks = _clusters(comps[0][0], np.sqrt(np.diag(comps[0][1] @ comps[0][1].T)))
+        group = _block_permutations(blocks)
+        # draws: a mode by its Laplace mass, core or wide, then a random relabelling within blocks
+        k = rng.choice(len(comps), size=N_PER_POINT, p=np.exp(log_a))
+        wide = rng.uniform(size=N_PER_POINT) < WIDE_SHARE
+        z = np.empty((N_PER_POINT, D))
+        for j, (mu, Lc, Lw) in enumerate(comps):
+            for L, sel in ((Lc, (k == j) & ~wide), (Lw, (k == j) & wide)):
+                n = int(sel.sum())
+                z[sel] = mu + (rng.standard_normal((n, D)) @ L.T) * np.sqrt(nu / rng.chisquare(nu, (n, 1)))
+        z = np.take_along_axis(z, group[rng.integers(0, len(group), N_PER_POINT)], axis=1)
+        log_q = np.full(N_PER_POINT, -np.inf)
+        for a in range(0, len(group), PERM_CHUNK):
+            zp = z[:, group[a:a + PERM_CHUNK]]  # (n, perms, D)
+            for j, (mu, Lc, Lw) in enumerate(comps):
+                for L, share in ((Lc, 1.0 - WIDE_SHARE), (Lw, WIDE_SHARE)):
+                    lp = _mvt_logpdf(zp, mu, L, nu)
+                    log_q = np.logaddexp(log_q, log_a[j] + np.log(share) + scipy.special.logsumexp(lp, axis=1))
+        log_q -= np.log(len(group))
+        in_order = np.ones(N_PER_POINT, dtype=bool)
+        for b0, b1 in zip(blocks[:-1], blocks[1:]):
+            in_order &= z[:, b0].max(axis=1) < z[:, b1].min(axis=1)
+        lw = np.where(in_order, log_f(z) - log_q, -np.inf)
+        if not np.isfinite(lw).any():
+            return -np.inf, 0.0
+        w = np.exp(lw - lw.max())
+        share = float(1.0 / np.sum((w / w.sum()) ** 2) / N_PER_POINT)
+        lm = log_dfact - np.log(len(group)) + scipy.special.logsumexp(lw) - np.log(N_PER_POINT)
+        return float(lm), share
+
+    def kernel_log_marginal(self, model: Model, x: np.ndarray, rng: np.random.Generator, *,
+                            kernel: str = "full") -> tuple[np.ndarray, np.ndarray]:
+        """Superseded (OQ-14): the first per-point estimate, kept for the thin-states figure
+        (`diagrams/002-foreign-q-prediction-thin-states.py`). Its centres come from the cloud,
+        so at thin states it misses the posterior. `log m(x)` and each point's ESS share.
 
         The cloud weighted by the likelihood gives posterior draws; the proposal is a Gaussian
         kernel density around up to `N_CENTRES` of them (`kernel="full"`: their covariance at

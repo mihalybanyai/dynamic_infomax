@@ -182,13 +182,23 @@ with a normalised log density.
   −19.388 ± 0.010. It builds in 20–40 s. `I(p_J)` at `D = 7` was 1.72 bits (1.73 and 1.77
   under two other seeds), against A&M's 1.71. The effective sample share is about 53% at
   `D = 4`, 31% at `D = 5` and 7.5–8% at `D = 7`.
-- *Marginals.* The weighted cloud's mixture by default. `refined_log_marginal` gives a
-  per-point estimate: up to 200 posterior centres resampled from the likelihood-weighted
-  cloud, full-covariance or diagonal kernels, 20% defensive kernel density of the cloud,
-  1000 draws, and each point's effective sample size. `worst_case_bias_pressure` screens
-  with the cloud and refines the 20 highest states per point, with 64 draws each.
-- *First attempt.* A Gaussian at the tight fit, with covariance `(g + 100 I)^-1`, reached
-  1% effective sample size, and two such proposals differed by 3–4 nats.
+- *Marginals* (OQ-14). `_lmn` routes: the weighted cloud's mixture where the cloud weighted
+  by the likelihood keeps at least `N0_THIN = 300` effective draws, `per_point_log_marginal`
+  elsewhere. Both `log_marginal` and `log_predictive` come through `_lmn`. The per-point
+  estimate works in unordered log decay times. Modes come from L-BFGS from the three
+  best-explaining cloud draws, keeping the best state seen, with a Powell polish when
+  L-BFGS ends worse. Each mode gets a finite-difference Laplace scale. The proposal is a
+  Student-t core (5 degrees of freedom, scale 1.5) plus a wide part (scale 3, 20%),
+  symmetrised over permutations within blocks of near-equal mode coordinates (at most 7!).
+  It takes 1000 draws per point, seeded by the point's bytes. `variant=1` (3 degrees of
+  freedom, core 2) is T4's second version. Above `D = 5` it warns, and it warns when fewer
+  than 20 draws are effective. `cloud()` gives the plain cloud, which screens in
+  `worst_case_bias_pressure`.
+- *Superseded.* `kernel_log_marginal`: Gaussian kernels around up to 200 likelihood-weighted
+  cloud draws, 20% defensive kernel density, 1000 draws. Its centres come from the cloud, so
+  at thin states it misses the posterior. It is kept for the thin-states figure. Before it,
+  a Gaussian at the tight fit with covariance `(g + 100 I)^-1` reached 1% effective sample
+  size, and two such proposals differed by 3–4 nats.
 
 **DD-P1 — The maximum-likelihood projection.** (`pproj.mle_project`.) A batched,
 box-constrained Levenberg–Marquardt fit, started from the three nearest points of a
@@ -490,7 +500,7 @@ is approved, at the human's request).
   against brute force's −19.39 ± 0.01. T4's three-standard-error check would have passed
   it. Resolved (MB, 2026-11-26): a Student-t first law and a last-round guard (DD-Q4). T4
   adds `D = 7` and a 1% floor on the effective share.
-- **Sampled priors at thin states (open, OQ-14).** The extended eye test's upper `B` edge
+- **Sampled priors at thin states (OQ-14; implemented, open for Jeffreys from `D = 5`).** The extended eye test's upper `B` edge
   for `p_LN` at `D = 7` was 416 bits, against A&M's 45–50. At `D = 5`, where `p_LN` still has
   its exact grid, the `D = 7` path on the eye test's 1533 states gave `B` = 114 nats, against
   the grid's 44. At the no-decay corner the per-state divergence was 46 nats by the grid, 121
@@ -505,6 +515,32 @@ is approved, at the human's request).
   the grid at five thin states and a typical one. The grid agrees there with one of half its
   cell length within 0.03 nats, but not at the corner itself (0.11–0.16), which is left out.
   It fails for both priors until OQ-14 is resolved (2026-11-26).
+- **OQ-14's per-point estimate, tested** (2026-11-26).
+  - *`D = 3`, against a grid of half the default cell length.* The estimate is within
+    0.011 nats (`p_LN`) and 0.034 (`p_J`, at the exact corner) at seven states, with
+    18–47% of its draws effective. The routed marginal is within 0.02 nats everywhere. The
+    thin-state test passes.
+  - *`D = 5`, `p_LN` against its exact grid on the eye test's 1533 states.* `B` is 43.3
+    nats against 44.2. Over the 20 states that set it, the routed `log m` is within 0.03
+    nats at the median and 0.41 at worst.
+  - *`D = 5`, Jeffreys (no exact reference).* At the corner, coincident, mixed and typical
+    states, 7–33% of draws are effective and the two variants agree within 0.02 nats on
+    average. On the face with one instantly decaying and four non-decaying rates, 0.1% are
+    effective, and the variants differ by 0.8 nats on average and 17 at worst.
+  - *`D = 7`.* For Jeffreys, 0.1–1% of draws are effective at faces, and the variants
+    differ by 0.2–0.9 nats.
+  - *Two other tries, set aside.* Ordered log decay times with log gaps remove the
+    relabelling sum: 0.06–0.4 s per point at `D = 7`, against 2.9 s. But they were worse at
+    `D = 3` (0.09–0.18 nats at interior states, 4% effective) and no better for Jeffreys at
+    `D = 7`. Covariances from the likelihood's Gauss–Newton term plus the cloud's spread, or
+    from the curvature floored at the prior's precision, did not help either. In the four
+    directions the data leave free, the posterior is Jeffreys' own conditional, which is far
+    from Gaussian there. The next candidate is annealed importance sampling from the cloud.
+  - *A bug on the way.* At `D = 7`, L-BFGS stepped onto states where Jeffreys' density is
+    zero in double precision (rates rounding to `xi = 1` and coinciding) and stopped there.
+    scipy returned that last point, not the best one, so the estimate was `-inf`. The search
+    now keeps the best state seen, is bounded to log decay times in `[-8, 35]`, and polishes
+    with Powell when L-BFGS ends worse.
 - **First fast-suite run** (`762eae0`, 18.5 min): 140 passed, 17 failed: the T12 fixtures
   (8), T13(d) (2), T7(a) (2), T14(a) log-normals (2), T21(a) `mass_near`, T16(b) at the
   cheap cell, and T7(c), a bug in the batched kernel tables (two-dimensional data have two

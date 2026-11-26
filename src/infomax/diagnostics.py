@@ -368,23 +368,25 @@ def worst_case_bias_pressure(
     def two_stage(pts: np.ndarray) -> float:
         Yh = model.y(pts) / model.sigma_eff
         net = _initial_support(Yh, radius=0.5 * screen_spacing, max_size=10**7)
-        f_screen = per_state_redundancy(prior, model, pts[net], rng=rng, n_x=n_screen)
+        sampled = hasattr(prior, "per_point_log_marginal")
+        screen = prior.cloud() if sampled else prior  # the cloud screens a sampled prior (cheap)
+        f_screen = per_state_redundancy(screen, model, pts[net], rng=rng, n_x=n_screen)
         best = net[np.argsort(-f_screen)[: max(1, top // 2)]]
         near = cKDTree(Yh).query_ball_point(Yh[best], r=0.5 * screen_spacing)
         cand = np.unique(np.concatenate([best] + [np.asarray(n, dtype=int) for n in near]))
         if cand.size > 2 * top:  # keep the best-screened neighbourhoods first
             cand = np.concatenate([best, np.setdiff1d(cand, best)[: 2 * top - best.size]])
-        if hasattr(prior, "refined_log_marginal"):
-            # a sampled continuous prior (§4.4, OQ-13): the cloud screens, and the 20
+        if sampled:
+            # a sampled continuous prior (§4.4, OQ-13, OQ-14): the cloud screens, and the 20
             # highest states are refined with the per-point marginal, where the cloud
             # underestimates m because the prior is thin there
-            f_c = per_state_redundancy(prior, model, pts[cand], rng=rng, n_x=n_screen)
+            f_c = per_state_redundancy(screen, model, pts[cand], rng=rng, n_x=n_screen)
             cand = cand[np.argsort(-f_c)[:20]]
             Yc = model.y(pts[cand])
             f_ref = np.empty(cand.size)
             for k in range(cand.size):
                 x = Yc[k] + model.sigma_eff * rng.standard_normal((n_screen, Yc.shape[1]))
-                lm, _ = prior.refined_log_marginal(model, x, rng)
+                lm, _ = prior.per_point_log_marginal(model, x)
                 f_ref[k] = float(np.mean(log_normal_iso(x, Yc[k], model.sigma_eff) - lm))
             return float(np.max(f_ref)) - info
         f_ref = per_state_redundancy(prior, model, pts[cand], rng=rng, n_x=n_refine)
