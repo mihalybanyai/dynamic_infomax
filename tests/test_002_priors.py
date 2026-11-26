@@ -221,6 +221,29 @@ def test_t4_sampled_jeffreys_normaliser_matches_brute_force(D):
 
 
 @pytest.mark.slow
+def test_t4_annealed_jeffreys_normaliser_matches_brute_force():
+    """T4 (§4.2): the annealed Jeffreys build, which takes over when importance sampling
+    collapses (`D = 11`), is checked at `D = 7`, the largest `D` where brute force over `2e6`
+    uniform ordered draws is a reference (its effective sample there is about 10^4; at `D = 11`
+    it is 8). Forced to anneal, the build's `log Z` agrees with brute force within three
+    combined errors, the build's taken as at least 0.03 nats: its reported error ignores the
+    steps' correlation, and three seeds at `D = 11` spread by 0.06 (2026-11-26)."""
+    import math
+
+    from infomax.sampled import _log_sqrt_det_g, build_sampled_jeffreys
+
+    model = cheap_model(D=7)
+    p_J = build_sampled_jeffreys(model, anneal=True)
+    assert np.allclose(p_J.weights, 1.0 / p_J.weights.size), "the annealed build has equal weights"
+    rng = np.random.default_rng(20261205)
+    lv = np.concatenate([_log_sqrt_det_g(model, np.sort(rng.uniform(size=(100_000, 7)), axis=-1)) for _ in range(20)])
+    r = np.exp(lv - lv.max())
+    log_z = lv.max() + np.log(r.mean()) - math.lgamma(8)
+    se = r.std() / (r.mean() * np.sqrt(r.size))
+    assert abs(p_J.log_normaliser - log_z) <= 3 * np.hypot(se, max(p_J.log_normaliser_se, 0.03)), (p_J.log_normaliser, log_z, se)
+
+
+@pytest.mark.slow
 def test_t4_pointwise_marginals_agree():
     """T4 (§5.2, §4.4): at `D = 5`, at a typical and a face-adjacent state, the per-point
     marginal's two variants (Student-t proposals with 5 and 3 degrees of freedom, core scales

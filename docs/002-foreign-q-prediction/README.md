@@ -174,7 +174,11 @@ with a normalised log density.
   nats over three rounds, and a last round of 20000 draws gives the cloud, `log_normaliser`
   and its standard error. A last round below half the adaptive rounds' median effective
   sample share is redrawn, at most three times; then the build raises. Seed
-  `SAMPLED_SEED + D`. Round 0 was `N(0.8, 1.5²)` until 2026-11-26. Toward slow rates
+  `SAMPLED_SEED + D`. A build that stays collapsed or ends below `JEFFREYS_ANNEAL_BELOW = 2%`
+  anneals instead (`_anneal_jeffreys`). It tempers 20000 first-law particles in
+  `u = (theta_(1), log gaps)` toward Jeffreys, keeping 80% effective per step, with 10
+  random-walk moves per step; `log Z` is the sum of the steps' log mean incremental weights.
+  `anneal=True` forces it. Round 0 was `N(0.8, 1.5²)` until 2026-11-26. Toward slow rates
   Jeffreys' density in log time falls only exponentially, so the normal's tails could not
   bound the weights (*Testing notes*).
 - *Results* (t first law). `log Z` was 0.828 ± 0.007 at `D = 4`, −4.063 ± 0.010 at `D = 5` and
@@ -572,6 +576,21 @@ is approved, at the human's request).
   8e-12 (`D = 5`), 1.4e-9 (`D = 7`), 5.8e-7 (`D = 9`), 5.7e-5 (`D = 11`) and 3.2 (`D = 13`).
   It takes 1.1 s per 10^5 states at `D = 11`. Test:
   `test_t4_jeffreys_density_matches_high_precision`.
+- **Jeffreys to `D = 11`** (2026-11-26, on the corrected density).
+  - *Importance sampling.* Effective share 53% (`D = 4`), 31% (5), 7.7% (7), 1.2% (9) and
+    0.09–0.20% (11, three seeds). `log Z` matches brute force at `D = 4`–9. At `D = 11`
+    brute force keeps 8 effective draws and is no reference.
+  - *Annealed build.* At `D = 9`, `log Z` = −42.053 (importance sampling: −42.044 ± 0.064). At
+    `D = 11`, three seeds gave −72.089, −72.137 and −72.147, each in 69–78 s, with about 19,940
+    distinct particles of 20,000. Its reported error, 0.011, ignores the steps' correlation;
+    the seeds spread by 0.06. `I(p_J)` from the clouds was 1.37 bits at `D = 9` and
+    1.09–1.12 at `D = 11`, against A&M's ≈ 1.19 (digitised, ±0.05).
+  - *Faces at `D = 5, 7`, corrected density.* The bell-shaped estimate kept 21–33% effective
+    at the corner, near the corner, the fast-and-slow faces and the coincident state.
+    Bell-shaped minus annealed was −0.04 to +0.003 nats on average. Two annealed runs
+    differed by at most 0.06 nats on average and 0.38 at worst. The forward–backward bracket
+    was at most 0.04 nats wide on average and 0.15 at worst. The annealed estimate took 3–4.5
+    s per point at faces at `D = 7`.
 - **First fast-suite run** (`762eae0`, 18.5 min): 140 passed, 17 failed: the T12 fixtures
   (8), T13(d) (2), T7(a) (2), T14(a) log-normals (2), T21(a) `mass_near`, T16(b) at the
   cheap cell, and T7(c), a bug in the batched kernel tables (two-dimensional data have two

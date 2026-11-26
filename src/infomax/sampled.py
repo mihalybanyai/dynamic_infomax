@@ -19,7 +19,9 @@ about 5000 times the mean weight and left 15 effective draws of 20000 (2026-11-2
 polynomial tails bound them. Rounds stop once `log Z` has varied by less than `LOGZ_TOL` over
 three rounds; a last round of `N_CLOUD` draws gives the cloud and the normaliser. A last round
 whose effective sample share falls below `FINAL_ESS_SHARE` of the adaptive rounds' median is
-redrawn, at most `FINAL_REDRAWS` times, and then the build fails. Builds are deterministic
+redrawn, at most `FINAL_REDRAWS` times. A build that stays collapsed, or whose last round keeps
+less than `JEFFREYS_ANNEAL_BELOW` effective, anneals from the first law to Jeffreys instead
+(`_anneal_jeffreys`). Builds are deterministic
 (`SAMPLED_SEED`), since the builders take no generator (`skills/manage-randomness.md`, rule 7).
 """
 from __future__ import annotations
@@ -50,6 +52,10 @@ MAX_ROUNDS: int = 15
 FINAL_ESS_SHARE: float = 0.5
 FINAL_REDRAWS: int = 3
 JEFFREYS_SAMPLED_FROM_D: int = 4
+JEFFREYS_ANNEAL_BELOW: float = 0.02
+"""A Jeffreys build whose last importance-sampling round keeps less than this share effective
+is redone by annealing from the first law (`_anneal_jeffreys`): at `D = 11` importance
+sampling kept 0.1-0.2% (2026-11-26)."""
 """Exp-decay `p_J` is sampled from this `D` (its grid misses 5% of the mass at `D = 4`)."""
 GRID_MAX_D: int = 5
 """Exp-decay product laws (`p_U`, `p_LN`) keep their grids up to this `D` (843k nodes at `D = 5`)."""
@@ -379,10 +385,29 @@ class SampledPrior(CloudPrior):
         for i in range(len(x)):
             digest = hashlib.blake2b(x[i].tobytes() + b"anneal" + bytes([replicate]), digest_size=16).digest()
             rng = np.random.default_rng(np.frombuffer(digest, dtype=np.uint32))
-            out[i], steps[i] = self._annealed_one(model, x[i], s, rng)
+            out[i], _, steps[i] = self._annealed_one(model, x[i], s, rng)
         return out, steps
 
-    def _annealed_one(self, model: Model, x: np.ndarray, s: float, rng: np.random.Generator) -> tuple[float, int]:
+    def annealed_bracket(self, model: Model, x: np.ndarray, s: float | None = None, *,
+                         replicate: int = 0) -> tuple[np.ndarray, np.ndarray]:
+        """The forward and backward annealed estimates of `log m(x)` from one run (§4.4): the
+        forward one, `sum_i log mean p(x|theta)^(beta_i - beta_{i-1})` over the particles before
+        each step's reweighting, errs low; the backward one, `-sum_i log mean
+        p(x|theta)^-(beta_i - beta_{i-1})` over the particles after each step's moves, errs high.
+        When the moves equilibrate they bracket `log m` in expectation, as Bennett's forward and
+        backward estimates do for A&M [read: A&M App. A.4]; the bracket's width measures the
+        estimate's own error."""
+        s = model.sigma_eff if s is None else float(s)
+        x = np.atleast_2d(np.asarray(x, dtype=float))
+        lo, hi = np.empty(len(x)), np.empty(len(x))
+        for i in range(len(x)):
+            digest = hashlib.blake2b(x[i].tobytes() + b"anneal" + bytes([replicate]), digest_size=16).digest()
+            rng = np.random.default_rng(np.frombuffer(digest, dtype=np.uint32))
+            lo[i], hi[i], _ = self._annealed_one(model, x[i], s, rng)
+        return lo, hi
+
+    def _annealed_one(self, model: Model, x: np.ndarray, s: float,
+                      rng: np.random.Generator) -> tuple[float, float, int]:
         D = self.atoms.shape[1]
         lo, hi = np.asarray(model.box.low, float), np.asarray(model.box.high, float)
 
@@ -404,11 +429,11 @@ class SampledPrior(CloudPrior):
         lp, ll = prior_and_lik(u)
         ok = np.isfinite(lp) & np.isfinite(ll)
         if not ok.any():
-            return -np.inf, 0
+            return -np.inf, np.inf, 0
         if not ok.all():  # draws that lose their density on the way to u (rates within 1e-13)
             j = rng.choice(np.flatnonzero(ok), size=N_ANNEAL)
             u, lp, ll = u[j], lp[j], ll[j]
-        beta, log_z, n_steps, scale = 0.0, 0.0, 0, 2.38 / np.sqrt(D)
+        beta, log_z, log_z_back, n_steps, scale = 0.0, 0.0, 0.0, 0, 2.38 / np.sqrt(D)
 
         def ess(d):
             a = d * ll
@@ -418,7 +443,7 @@ class SampledPrior(CloudPrior):
         while beta < 1.0:
             n_steps += 1
             if n_steps > ANNEAL_MAX_STEPS:
-                return -np.inf, n_steps
+                return -np.inf, np.inf, n_steps
             d_hi = 1.0 - beta
             if ess(d_hi) >= ANNEAL_ESS * N_ANNEAL:
                 d = d_hi
@@ -442,7 +467,8 @@ class SampledPrior(CloudPrior):
                     acc = np.log(rng.uniform(size=N_ANNEAL)) < (lp_p + beta * ll_p) - (lp + beta * ll)
                 u[acc], lp[acc], ll[acc] = prop[acc], lp_p[acc], ll_p[acc]
                 scale = float(np.clip(scale * np.exp(acc.mean() - 0.25), 0.02, 3.0))
-        return log_z, n_steps
+            log_z_back -= float(scipy.special.logsumexp(-d * ll) - np.log(N_ANNEAL))
+        return log_z, log_z_back, n_steps
 
     def kernel_log_marginal(self, model: Model, x: np.ndarray, rng: np.random.Generator, *,
                             kernel: str = "full") -> tuple[np.ndarray, np.ndarray]:
@@ -571,10 +597,12 @@ def _kde_logpdf(x: np.ndarray, centres: np.ndarray, w: np.ndarray, bw: np.ndarra
     return out
 
 
-def build_sampled_jeffreys(model: Model) -> SampledPrior:
+def build_sampled_jeffreys(model: Model, *, anneal: bool | None = None) -> SampledPrior:
     """Exp-decay Jeffreys by adaptive importance sampling (§4.2): a cloud of `N_CLOUD`
     weighted draws in ordered `xi`, its normaliser over ordered `xi` and that estimate's
-    standard error."""
+    standard error. `anneal=None` anneals from the first law only when importance sampling
+    keeps less than `JEFFREYS_ANNEAL_BELOW` effective; `True` always anneals (T4 checks the
+    annealed build at `D = 7`, where brute force is a reference)."""
     if model.family != "exp_decay":
         raise ValueError("the sampled Jeffreys path is exp-decay's (§4.2)")
     D = model.D
@@ -639,20 +667,91 @@ def build_sampled_jeffreys(model: Model) -> SampledPrior:
         if share >= floor:
             break
     else:
-        raise RuntimeError(
-            f"sampled Jeffreys at D = {D}: the last round's effective sample share {share:.2%} stayed "
-            f"below {floor:.2%} over {FINAL_REDRAWS} redraws"
-        )
+        share = 0.0  # the last round stayed collapsed over its redraws: anneal instead (below)
     keep = wf > 0
     atoms = np.sort(xi_of(th[keep]), axis=-1)
     log_z_ordered = log_z - lgamma(D + 1)
+    weights = wf[keep]
+    if anneal or (anneal is None and share < JEFFREYS_ANNEAL_BELOW):
+        # importance sampling has collapsed (D = 11: 0.1-0.2% effective); anneal from the first
+        # law to Jeffreys instead, with moves that rejuvenate the particles (§4.2)
+        atoms, log_z_ordered, se = _anneal_jeffreys(model, log_q0, draw_q0, lo, hi, rng)
+        weights = np.full(len(atoms), 1.0 / len(atoms))
 
     def log_density(xi):
         out = _log_sqrt_det_g(model, xi) - log_z_ordered
         out[~(np.all((xi >= lo) & (xi <= hi), axis=1) & np.all(np.diff(xi, axis=1) >= 0, axis=1))] = -np.inf
         return out
 
-    return SampledPrior("p_J", model, atoms, wf[keep], log_density, log_normaliser=log_z_ordered, log_normaliser_se=se)
+    return SampledPrior("p_J", model, atoms, weights, log_density, log_normaliser=log_z_ordered, log_normaliser_se=se)
+
+
+def _anneal_jeffreys(model: Model, log_q0, draw_q0, lo: np.ndarray, hi: np.ndarray,
+                     rng: np.random.Generator) -> tuple[np.ndarray, float, float]:
+    """Jeffreys by annealing from the first law (§4.2): `N_CLOUD` particles drawn from the
+    Student-t first law, sorted, in `u = (theta_(1), log gaps)`, tempered toward Jeffreys'
+    ordered density in steps that keep `ANNEAL_ESS` of them effective, each followed by
+    resampling and `ANNEAL_MOVES` random-walk Metropolis moves with the particles' covariance.
+    Returns the final particles in ordered `xi` (equal weights), `log Z` over ordered `xi` and a
+    delta-method standard error that ignores the steps' correlation."""
+    D = model.D
+    log_dfact = lgamma(D + 1)
+
+    def parts(u):
+        th = _theta_of_u(u)
+        xi = np.exp(-np.exp(-th))
+        jac = np.sum(u[:, 1:], axis=-1)
+        with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
+            lt = _log_sqrt_det_g(model, xi) + np.sum(-np.exp(-th) - th, axis=-1) + jac
+            lb = log_dfact + log_q0(th) + jac  # the first law, sorted: D! times the product
+        bad = ~(np.isfinite(lt) & np.isfinite(lb) & np.all((xi >= lo) & (xi <= hi), axis=-1))
+        lt[bad] = -np.inf
+        return lt, lb
+
+    u = _u_of_theta(draw_q0(N_CLOUD))
+    lt, lb = parts(u)
+    ok = np.isfinite(lt) & np.isfinite(lb)
+    u, lt, lb = u[ok], lt[ok], lb[ok]
+    n = len(u)
+    beta, log_z, var, scale = 0.0, 0.0, 0.0, 2.38 / np.sqrt(D)
+    for _ in range(ANNEAL_MAX_STEPS):
+        lam = lt - lb
+
+        def ess(d):
+            a = d * lam
+            w = np.exp(a - a.max())
+            return w.sum() ** 2 / np.sum(w * w)
+
+        d_hi = 1.0 - beta
+        if ess(d_hi) >= ANNEAL_ESS * n:
+            d = d_hi
+        else:
+            a_, b_ = 0.0, d_hi
+            for _ in range(40):
+                mid = 0.5 * (a_ + b_)
+                a_, b_ = (mid, b_) if ess(mid) >= ANNEAL_ESS * n else (a_, mid)
+            d = max(a_, 1e-12)
+        inc = d * lam
+        log_z += float(scipy.special.logsumexp(inc) - np.log(n))
+        w = np.exp(inc - inc.max())
+        var += float(np.var(w) / np.mean(w) ** 2 / n)
+        beta = 1.0 if d == d_hi else beta + d
+        j = _systematic(w / w.sum(), rng)
+        u, lt, lb = u[j], lt[j], lb[j]
+        L = np.linalg.cholesky(np.atleast_2d(np.cov(u.T)) + 1e-10 * np.eye(D))
+        for _ in range(ANNEAL_MOVES):
+            prop = u + scale * (rng.standard_normal((n, D)) @ L.T)
+            lt_p, lb_p = parts(prop)
+            with np.errstate(invalid="ignore"):
+                acc = np.log(rng.uniform(size=n)) < (beta * lt_p + (1 - beta) * lb_p) - (beta * lt + (1 - beta) * lb)
+            u[acc], lt[acc], lb[acc] = prop[acc], lt_p[acc], lb_p[acc]
+            scale = float(np.clip(scale * np.exp(acc.mean() - 0.25), 0.02, 3.0))
+        if beta >= 1.0:
+            break
+    else:
+        raise RuntimeError(f"annealed Jeffreys at D = {D} did not reach beta = 1")
+    atoms = np.sort(np.exp(-np.exp(-_theta_of_u(u))), axis=-1)
+    return atoms, log_z, float(np.sqrt(var))
 
 
 def sampled_from(prior, model: Model, name: str) -> SampledPrior:
