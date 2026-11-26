@@ -77,6 +77,10 @@ SPARSE_NODES: int = 10**9
 """Node sets larger than this would be summed sparsely (`mixture.sparse_mixture_logpdf`);
 off, since the dense BLAS sum is 40 times faster at 4e4 nodes."""
 
+ROW_BATCH_ENTRIES: int = 4_000_000
+"""Data rows times nodes per batch in `posterior_predictive_moments` and `mass_within`:
+their temporaries take about 51 bytes per entry, so about 200 MB per batch (DD-K4)."""
+
 
 class PriorBase:
     """Common methods: the marginal at the budget, the predictive and posterior moments."""
@@ -110,34 +114,49 @@ class PriorBase:
         out = log_normal_iso(xb, xp, np.sqrt(a + b)) + self._lmn(model, c, np.sqrt(v)) - self._lmn(model, xb, np.sqrt(a))
         return out.reshape(lead)
 
+    def _node_predictions(self, model: Model, s: float) -> tuple[np.ndarray, np.ndarray]:
+        """`y` at the nodes and their log weights. A continuous prior's node cache already
+        holds `y` for the very states `nodes` returned; anything else recomputes it (DD-K4)."""
+        theta, logw = self.nodes(model, s)
+        cache = getattr(self, "_node_cache", None)
+        hit = None if cache is None else cache.get((_model_key(model), round(float(s), 14)))
+        if hit is not None and len(hit) == 3 and hit[0] is theta:
+            return hit[2], logw
+        return model.y(theta), logw
+
     def posterior_predictive_moments(self, model: Model, xbar: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """Mean and covariance of the posterior predictive of `x'` given each `xbar` (§4.5):
-        `sigma^2 1 + Cov[y | xbar]`, from the prior's node representation."""
+        `sigma^2 1 + Cov[y | xbar]`, from the prior's node representation. The posterior
+        weights are formed for a batch of rows at a time (`ROW_BATCH_ENTRIES`, DD-K4)."""
         xbar = np.atleast_2d(np.asarray(xbar, dtype=float))
-        theta, logw = self.nodes(model, model.sigma_eff)
-        Y = model.y(theta)
-        W = posterior_weights(xbar, Y, logw, model.sigma_eff)
+        Y, logw = self._node_predictions(model, model.sigma_eff)
         m = Y.shape[1]
         mus = np.empty((xbar.shape[0], m))
         covs = np.empty((xbar.shape[0], m, m))
-        for i in range(xbar.shape[0]):
-            w = W[i]
-            keep = w > 1e-14 * w.max()
-            wk = w[keep] / w[keep].sum()
-            Yk = Y[keep]
-            mu = wk @ Yk
-            d = Yk - mu
-            mus[i] = mu
-            covs[i] = model.sigma**2 * np.eye(m) + (d.T * wk) @ d
+        rows = max(1, ROW_BATCH_ENTRIES // max(1, Y.shape[0]))
+        for a in range(0, xbar.shape[0], rows):
+            W = posterior_weights(xbar[a : a + rows], Y, logw, model.sigma_eff)
+            for j, w in enumerate(W):
+                keep = w > 1e-14 * w.max()
+                wk = w[keep] / w[keep].sum()
+                Yk = Y[keep]
+                mu = wk @ Yk
+                d = Yk - mu
+                mus[a + j] = mu
+                covs[a + j] = model.sigma**2 * np.eye(m) + (d.T * wk) @ d
         return mus, covs
 
     def mass_within(self, model: Model, y0: np.ndarray, radius: float) -> np.ndarray:
-        """The prior's mass on the states whose prediction lies within `radius` of each `y0`."""
-        theta, logw = self.nodes(model, model.sigma_eff)
-        Y = model.y(theta)
+        """The prior's mass on the states whose prediction lies within `radius` of each `y0`,
+        a batch of rows at a time (`ROW_BATCH_ENTRIES`, DD-K4)."""
+        Y, logw = self._node_predictions(model, model.sigma_eff)
         w = np.exp(logw)
-        d2 = sq_dists(np.atleast_2d(y0), Y)
-        return (d2 <= radius**2) @ w
+        y0 = np.atleast_2d(y0)
+        out = np.empty(y0.shape[0])
+        rows = max(1, ROW_BATCH_ENTRIES // max(1, Y.shape[0]))
+        for a in range(0, y0.shape[0], rows):
+            out[a : a + rows] = (sq_dists(y0[a : a + rows], Y) <= radius**2) @ w
+        return out
 
 
 # ---------------------------------------------------------------------------

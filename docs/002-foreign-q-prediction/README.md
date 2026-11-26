@@ -77,6 +77,20 @@ solver's first Blahut–Arimoto pass runs on `-log sum_j w_j exp(-|y_i - y_j|^2 
 (A&M App. A.2, `sigma sqrt 2`), on a thinned subset of the candidates (every candidate
 within 1.25 noise units). Only the starting support comes from it.
 
+**DD-K4 — Posterior moments and masses in batches.** (`priors002.PriorBase.posterior_predictive_moments`,
+`.mass_within`, `ROW_BATCH_ENTRIES`.) §3.3's split runs in every `score_cell`, tier 0
+included. It formed the posterior weights of all the data at once: about 51 bytes per
+(datum, node) in temporaries, 1.4 GB for 100 data on the 280,800 nodes of `p_U` at
+exp-decay `D = 4`, and about 7 GB extrapolated to tier 0's 500. The weights are now formed
+for at most `4·10^6` (datum, node) pairs at a time, and the node predictions come from the
+continuous priors' node cache instead of being recomputed. At 500 data the peak is 304 MB
+(15 s), and at 100 data the time fell from 3.9 to 3.3 s; `mass_within` from 0.85 to 0.35 s.
+On fixed data, the moments and masses of `p_U` and sampled `p_J` at `D = 4`, `p_LN` at
+`D = 3`, `p*` at `D = 2` and the cone's `p_U` at `D = 6` are bit-identical to the unbatched
+code (2026-11-27). Neither method is on the eye test's path: run with both made to raise,
+the eye test's computation completes at `D = 1`–4, and its other calls do not reach them.
+`sq_dists`, which the solver's warm start (DD-K2) uses, is unchanged.
+
 **DD-C1 — The candidate set.** (`pstar.candidate_set`.) The spec cites AtomicPriors.jl's
 `mitchell` sampler for a net with points at most 0.5 Fisher lengths apart, seeded with the
 faces of `Theta`. Implemented as a Poisson-disk net (Bridson's algorithm) in prediction
