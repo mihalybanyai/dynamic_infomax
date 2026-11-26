@@ -10,7 +10,7 @@
 | [4. Algorithm](#4-algorithm) | draft | 261125 |
 | [5. Properties to verify](#5-properties-to-verify) | draft | 261124 |
 | [6. Report](#6-report) | reviewed | 261124 |
-| [7. Open questions](#7-open-questions) | reviewed | 261121 |
+| [7. Open questions](#7-open-questions) | draft | 261126 |
 | [8. References](#8-references) | reviewed | 261121 |
 | [9. Derivations](#9-derivations) | reviewed | 261121 |
 | [10. Revision log](#10-revision-log) | n/a | — |
@@ -1533,13 +1533,7 @@ ordered `Θ`, held in `ξ`.
   `M = 10N`, scored at the true `N` ([§2.2](#22-the-cast)). `M` need not be an integer.
 - **`p_proj`, the NML pushforward.** The law of the maximum-likelihood estimate `θ̂(x)`
   for `x` drawn from the NML distribution `p_NML(x) ∝ max_θ p(x|θ)` at `σ_eff` [read:
-  A&M App. A.3; Quinn §5.2]. Sampled as AtomicPriors.jl's `transtrum` does (OQ-6): an
-  ensemble Markov chain on `x` targets `p_NML`, each step projects `x` onto the manifold
-  by a maximum-likelihood fit within `Θ`, and the `θ̂` of the retained steps form the
-  cloud [read: `resources/AtomicPriors.jl/src/max/sample.jl`, docstring of
-  `transtrum`]. `p_NML` normalises because the manifold is compact. In exp-decay `Θ` is the whole manifold, so the fit within it is the unconstrained one `transtrum` makes. Whether the chain
-  mixes near the edges, where the halo lies, is checked against `transtrum`'s own
-  output (T12(e)).
+  A&M App. A.3; Quinn §5.2]. <span style="color: red">Sampled by adaptive importance sampling (OQ-6). Each round draws `θ` from a proposal made of atoms, adds noise at `σ_eff`, fits `θ̂(x)` within `Θ`, and weights the draw by `p(x|θ̂(x)) / m_q(x)`, where `m_q`, the proposal's Bayes mixture, is a finite sum. The first proposal is Jeffreys' draws used as atoms; each later one is the previous round's weighted cloud, mixed with 10% of those Jeffreys atoms so that no weight is unbounded. Rounds continue until the effective sample size reaches 85% in two consecutive rounds; a last round with tight fits gives the result, the weighted `θ̂` carried as a discrete prior. The fit itself supplies the faces' mass: data beyond a face project onto it, so the next proposal has atoms there. A cell varied by one knob from a cell already built starts from that cell's cloud, with 2000 draws per round; a cell with no such neighbour starts from Jeffreys, with 8000. A cell whose last round falls below 85% repeats from Jeffreys. The weights make each cloud consistent for `p_proj` whatever its proposal, so a warm start changes only the cost. Fits must be tight (polished to `1e-15` tolerances): along sloppy directions the likelihood is nearly flat, and a fit's stopping rule moves `θ̂`, by 0.03–0.06 in exp-decay's coinciding-rates fraction (2026-11-26). At seven of the sweep's hardest cells (`D ≤ 4`) the sampler agreed with a run started from `p*`'s atoms within about two standard errors, in 1–4 s per warm-started cell and 30–45 s per cold start (2026-11-26).</span> `p_NML` normalises because the manifold is compact. In exp-decay `Θ` is the whole manifold, so the fit within it is the unconstrained one `transtrum` makes. <span style="color: red">The sampler is checked against `transtrum`'s cloud and against a second, independent start (T12(e)).</span>
 - **`p_J`, Jeffreys.** `√det g` normalised over `Θ` by quadrature; in the cones its
   `θ_1`-marginal is `∝ θ_1^{D−1}` in closed form (T4). In exp-decay it is sampled; above `D ≈ 12` its determinant needs more than double precision, which AtomicPriors.jl supplies through an extended-precision path and a routine that uses the Jacobian's near-Vandermonde form [read: `resources/AtomicPriors.jl/src/mod/ymap.jl`, docstrings; A&M App. A.5]. That it normalises on the whole manifold is a [guess], checked by T4.
 - **`p_U`, uniform** on `Θ` in its own coordinates: in `θ` in the cones, in `ξ` in exp-decay, where each rate is `k_μ ∼ Exp(1)` before ordering. A privileged-information prior ([§2.2](#22-the-cast)).
@@ -1579,7 +1573,7 @@ ordered `Θ`, held in `ξ`.
 |---|---|---|
 | `p*`, `p*_{N/10}`, `p*_{10N}` | candidate sets to `D_switch`, atomic path beyond | the same |
 | `p_lat` | candidate sets to `D_switch` | the same; beyond only with AtomicPriors.jl's conditional objective |
-| `p_proj` | the port, every `D` | the same |
+| `p_proj` | <span style="color: red">adaptive importance sampling, every `D` (checked to `D = 4`)</span> | the same |
 | `p_J` | closed form, every `D` | sampled, every `D`; extended precision above `D ≈ 12` |
 | `p_U` | every `D` | every `D` |
 | `p_LN`, `p_LN^*` | not carried | every `D` |
@@ -1617,14 +1611,27 @@ def build_plat(model, *, tol=1e-6, mc_x=4096):
     result = blahut_arimoto(f_kl=f_cond, n_cells=len(grid), tol=tol, stop="two_sided_bound")
     return GridPrior(grid, result.masses)            # support may be full: no atom extraction
 
-def build_pproj(model, n_samples, rng, *, n_walkers=64, burn=1000):   # port of transtrum (OQ-6)
-    def log_target(x):                               # log p_NML(x), up to a constant
-        th_hat = mle_project(model, x)               # max over theta in Theta (the whole manifold, in exp-decay)
-        return log_gauss(x, model.y(th_hat), model.sigma_eff), th_hat
-    x0 = model.y(model.box.sample(n_walkers, rng))   # walkers start on the manifold
-    chain = ensemble_mcmc(log_target, x0, n_samples, rng, burn=burn)   # affine-invariant, as emcee
-    return CloudPrior(atoms=chain.blobs)             # the th_hat of each retained x
-                                                     # m_{p_proj}(x) = mean_j N(x; y(th_hat_j), sigma_eff^2 𝟙)
+def build_pproj(model, rng, *, start=None, alpha=0.1, ess_ok=0.85, max_rounds=12):   # OQ-6
+    n = 2000 if start is not None else 8000          # warm start: a neighbouring cell's cloud
+    jeff = build_jeffreys(model).sample(n, rng)      # Jeffreys draws as atoms: first and defensive proposal
+    atoms, w = start if start is not None else (jeff, full(n, 1 / n))
+    ok = 0
+    for rnd in range(max_rounds):
+        atoms, w, ess = is_round(model, atoms, w, jeff, alpha, n, rng)
+        ok = ok + 1 if ess >= ess_ok else 0
+        if rnd >= 1 and ok >= 2:
+            break
+    atoms, w, ess = is_round(model, atoms, w, jeff, alpha, n, rng, tight=True)
+    if ess < ess_ok and start is not None:
+        return build_pproj(model, rng)               # cold restart
+    return DiscretePrior(atoms, w)                   # weighted th_hat
+
+def is_round(model, atoms, w, jeff, alpha, n, rng, tight=False):
+    q = mixture(atoms, w, 1 - alpha) + mixture(jeff, uniform, alpha)   # the proposal, a finite mixture
+    x = model.y(q.sample(n, rng)) + model.sigma_eff * rng.normal(size=(n, model.m_out))
+    th_hat = mle_project(model, x, tight=tight)      # max over theta in Theta; tight: polished to 1e-15
+    log_w = log_gauss(x, model.y(th_hat), model.sigma_eff) - q.log_marginal(x, model.sigma_eff)
+    return th_hat, normalise(exp(log_w)), 1 / sum(normalise(exp(log_w)) ** 2) / n
 
 def build_pln_star(model, rng, *, n=4096):          # OQ-3; exp-decay only
     z_a, z_b = rng.normal(size=(2, n, model.D))      # common random numbers across (theta_bar, tau)
@@ -1824,7 +1831,7 @@ machinery; it does **not** assert the results
 | P8 | Floors and ceiling: `R_N^q(π) ≥ I_q ≥ 0` and the one-step analogue per nature; `q̄` minimises the row average; the split of `[^2-qbar]` ([§2.5](#25-controls-the-ceiling-and-self-sampling)) | `test_002_scores.py::test_t8_floors_and_matched_prior`, `::test_t8_floors_on_every_row` (slow), `::test_t8_qbar_wins_the_row_average_and_splits_the_mean`, `test_002_natures.py::test_t14g_nature_marginals_match_brute_force`, `::test_t14h_submodel_floor_is_the_projection_loss` |
 | P9 | A&M's prior side: `I_{p*} ≥ I_{p_J}` and `B(p*) ≤ B(p_J)` at every `D` (A&M Fig. 5) | `test_002_references.py::test_t9_am_prior_side_dominance` (slow) |
 | P10 | Determinism: a fixed seed gives identical score arrays ([§4.4](#44-score-estimation)) | `test_002_pipeline.py::test_t10_seed_determinism` |
-| P11 | `p_proj`: the MLE projection recovers `θ̂`; `p_NML` normalises; `I_{p_proj} ≤ I_{p*} = C_N`; the port agrees with `transtrum` (P12) ([§4.2](#42-prior-construction)) | `test_002_priors.py::test_t11_nml_normaliser_in_the_1d_cone`, `::test_t11_pproj_cloud_is_slab_and_spike_in_the_1d_cone`, `::test_t11_projection_maps_outside_data_to_the_endpoints`, `::test_t11_pproj_projection_recovers_mle`, `::test_t11_projection_of_data_beyond_the_manifold_lands_on_a_face`, `::test_t11_pproj_information_below_capacity` |
+| P11 | `p_proj`: the MLE projection recovers `θ̂`; `p_NML` normalises; `I_{p_proj} ≤ I_{p*} = C_N`; <span style="color: red">the sampler</span> agrees with `transtrum` (P12) ([§4.2](#42-prior-construction)) | `test_002_priors.py::test_t11_nml_normaliser_in_the_1d_cone`, `::test_t11_pproj_cloud_is_slab_and_spike_in_the_1d_cone`, `::test_t11_projection_maps_outside_data_to_the_endpoints`, `::test_t11_pproj_projection_recovers_mle`, `::test_t11_projection_of_data_beyond_the_manifold_lands_on_a_face`, `::test_t11_pproj_information_below_capacity` |
 | P12 | AtomicPriors.jl references: exp-decay map and metric, `p*`, <span style="color: red">`C_N` at reduced noise</span>, `mutual` of a fixed prior, and `transtrum`'s `p_proj` cloud match frozen values ([§5.5](#55-atomicpriorsjl-reference-fixtures)) | `test_002_references.py::test_t12a_exp_decay_map_and_metric`, `::test_t12b_pstar_matches_atomicpriors`, `::test_t12c_capacity_at_reduced_noise`, `::test_t12d_mutual_information_of_a_fixed_prior`, `::test_t12e_pproj_port_matches_transtrum` |
 | P13 | Models: the metric matches autodiff; exp-decay's map is invariant under permuting `θ` and its `Θ` holds only ordered `ξ`, on the whole manifold; in the hypercone `√det g / θ_1^{D−1}` is constant for every `φ`, the cross-section widths are `r φ^{μ−2}√N/σ`, and the vertex warp is one-to-one, the identity outside `ρ` and gives the angle `κπ/2` ([§4.1](#41-model-families)) | `test_002_models.py::test_t13a_metric_matches_finite_differences`, `::test_t13a_metric_with_curvature_matches_finite_differences`, `::test_t13b_exp_decay_symmetry_and_ordered_theta`, `::test_t13b_exp_decay_map_known_values`, `::test_t13b_matched_box_is_the_window`, `::test_t13c_hypercone_covolume_and_widths`, `::test_t13c_constant_cross_section_has_flat_volume`, `::test_t13d_vertex_warp`, `::test_t13d_curvature_knob_through_the_model`, `::test_t13d_curvature_off_is_identity` |
 | P14 | Natures: round-robin draws come from each prior's own sampler; the nested natures have their laws, and the agent's fixed coordinates are `½`; every draw carries its label; `q̄` averages the rows, and is not one; the stress natures lie where §4.3 places them ([§4.3](#43-foreign-q-family)) | `test_002_natures.py::test_t14a_round_robin_draws_come_from_the_prior`, `::test_t14a_samplers_match_their_densities` (slow), `::test_t14b_nested_cone_laws`, `::test_t14c_agent_fixes_ignored_coordinates_at_centre`, `::test_t14d_few_rates_share_one_rate_in_the_window`, `::test_t14e_vertex_nature_lies_on_faces_near_v`, `::test_t14e_vertex_nature_is_uniform_by_area`, `::test_t14e_interior_nature_is_truncated_normal`, `::test_t14f_qbar_is_the_average_of_the_rows`, `::test_t14i_nested_cell_is_one_nature_for_every_agent` |
@@ -1902,9 +1909,9 @@ T12(e).
 
 **T12 — AtomicPriors.jl references.** Against the frozen values of §5.5: (a) exp-decay's
 `y(θ)` and metric at sampled `θ`; (b) <span style="color: red">`I_{p*}`, `B(p*)` and the cross-equalizer at `p*`'s reference atoms</span> at a small exp-decay cell; (c) the capacity `C_N` <span style="color: red">at the reduced noise of `N = 2, 4`</span>, against the `σ_eff` build; (d) `mutual` of a fixed prior; (e) `transtrum`'s
-cloud of `θ̂` against the port of §4.2, which on exp-decay's whole manifold makes the same unconstrained fit `transtrum` requires [read: `resources/AtomicPriors.jl/src/max/sample.jl`, `_transtrum`]: a
+cloud of `θ̂` against the <span style="color: red">sampler</span> of §4.2, which on exp-decay's whole manifold makes the same unconstrained fit `transtrum` requires [read: `resources/AtomicPriors.jl/src/max/sample.jl`, `_transtrum`]: a
 two-sample test, and the mass near the manifold's edges (coinciding rates, rates outside
-the window), where the chain's mixing is least certain; and two independent chains of the port give the same cloud in a two-sample test. A divergence flags a wrong model,
+the window), where <span style="color: red">the proposal's coverage is least certain; and two independent starts of the sampler, from Jeffreys and from `p_U`, give the same cloud</span> in a two-sample test. A divergence flags a wrong model,
 metric, information estimate, budget reduction or sampler.
 
 **T13 — Models.** (a) For each family, the metric of §4.1 matches autodiff of `y` (the
@@ -2105,7 +2112,7 @@ without making Julia a dependency of the test suite:
   and weights, `I_{p*}` and `B(p*)` at `D ∈ {2, 3}`, `N = 1`. <span style="color: red">The atoms are compared through the cross-equalizer: the Python `p*`'s bias pressure lies within `0.05` nats of zero at every reference atom. The capacity-achieving Bayes mixture is unique while the prior need not be, so every optimal prior's atoms lie where any other's bias pressure vanishes [recalled][^5-unique-mixture]; atoms and weights are not matched one to one, since the candidate set's unmerged atoms outnumber Julia's continuous ones about two to one at any merge radius (first fixtures, 2026-11-25)</span>; `I_{p*}` to `0.01` nats, and `B(p*)` to `0.2` nats, about A&M's own numerical error for it [read: A&M Fig. 5, 0.1–0.2 bits for the optimal prior]; (c)
   <span style="color: red">`C_N = sup_π I_π(Θ;X_{1:N})` at `σ_eff = σ/√N` for `N ∈ {2, 4}` at `D = 2`, from (b)'s AtomicPriors recipe run at the same reduced noise, to `0.01` nats: an external check of the capacity solver where `p*` has more atoms. The reduction itself is shown in §4.4 and checked by T7(c) and the twin cells (§5.4); `repeat`, named here first, builds the `N`-fold channel of a discrete-outcome likelihood and cannot run on 26-dimensional Gaussian data</span>; (d) `mutual` of a
   fixed grid prior, the 15 ordered points of `{0.1, 0.3, 0.5, 0.7, 0.9}²` with equal weights at `D = 2`, to `0.005` nats; (e) `transtrum`'s cloud of `θ̂` at `D = 2`, `N = 1`, 2000 points,
-  on the whole manifold, as `transtrum` requires: a two-sample KS test per coordinate at `p > 10⁻³`, and the mass within `0.02` in `ξ` of each edge (coinciding rates, `ξ = 0`, `ξ = 1`) within four binomial standard errors at the two clouds' sizes, the port's inflated by its autocorrelation.
+  on the whole manifold, as `transtrum` requires: a two-sample KS test per coordinate at `p > 10⁻³`, and the mass within `0.02` in `ξ` of each edge (coinciding rates, `ξ = 0`, `ξ = 1`) within four binomial standard errors at the two clouds' sizes, the <span style="color: red">sampler's at its effective sample size. `generate.jl` keeps `transtrum`'s data points and re-fits each `θ̂` with §4.2's tight solve, since `transtrum`'s own fits stop early along flat ridges; its chain keeps every 1600th step, from seeded random walkers, the first setting at which the cloud stopped drifting (docs DD-J3)</span>.
 
 `p_lat` has no fixture here, since AtomicPriors.jl has no conditional objective; its
 references are T18 and the second eye test (§5.3).
@@ -2264,10 +2271,7 @@ revision log and the git history.
   gaps of [§2.4](#24-what-is-reported-and-what-cannot-be-asserted). A lead of `p*` that
   `p_proj` shares implicates adapting to the budget, not discreteness
   ([§3.6](#36-what-would-sink-it), point 2).
-- **OQ-6 — The `p_proj` sampler** ([§4.2](#42-prior-construction)). A Python port of
-  AtomicPriors.jl's `transtrum`: an ensemble Markov chain on `x` targeting `p_NML`, one
-  maximum-likelihood projection per step. `transtrum`'s own output at a small cell is
-  frozen as a fixture, which checks the port's mixing near the edges (§5.5, T12(e)).
+- **OQ-6 — The `p_proj` sampler** ([§4.2](#42-prior-construction)). <span style="color: red">Adaptive importance sampling, started from Jeffreys or from a neighbouring cell's cloud. A port of `transtrum`'s ensemble chain was tried first. At the cheap cell it needs about 200 steps per independent point, and a random walk's mixing time grows with the square of the manifold's length in Fisher lengths [guess beyond the cheap cell], so the sweep's row would have cost hours. Langevin moves on the free NML score, `−(x − y(θ̂))/σ²` (Danskin's theorem), mixed two to four times faster on the edge masses but no faster along the manifold. `transtrum`'s own cloud, re-fitted tightly, stays the external check (§5.5, T12(e)).</span>
 - **OQ-7 — Julia as a dependency.** AtomicPriors.jl generates the frozen fixtures of §5.5
   at dev time, so pytest never imports Julia, and supplies `p*` above `D_switch` (OQ-1).
   Julia ≥ 1.6 stays outside the uv environment; `README.md`'s *Local setup* lists it as
@@ -3834,3 +3838,32 @@ Decided with MB; edits are red, and §4 flips to draft for one cross-reference.
 Downstream: `tests/test_002_references.py` (T12(b); T12(c) renamed
 `test_t12c_capacity_at_reduced_noise`, fixture `capacity_N{N}`), `tests/spec002_common.py`
 (`T12_PSTAR`, `T12_CAPACITY`), `tests/fixtures/atomicpriors/generate.jl`.
+
+### 2026-11-26 — Correction + Refinement (§4.2, §5.1, §5.2, §5.5, §7; the `p_proj` sampler)
+
+The port of `transtrum`'s ensemble chain did not mix. Its 2000-point cloud held about ten
+independent points, and T12(e) failed against `transtrum`'s converged cloud. A converged
+chain needs about 200 steps per independent point at the cheap cell, and more on longer
+manifolds, so the sweep's `p_proj` row would have cost hours. Decided with MB; edits are red.
+
+- **§4.2, OQ-6.** `p_proj` is sampled by adaptive importance sampling. Rounds start from
+  Jeffreys' draws used as atoms, or from a neighbouring cell's cloud. Each later round
+  proposes from the previous round's weighted cloud, with 10% of the Jeffreys atoms as a
+  defensive part. The result is a weighted discrete prior. At seven hard cells
+  (`D ≤ 4`, both families, the smallest `σ_eff` and the curvature knob), the sampler
+  agreed with a run started from `p*`'s atoms within about two standard errors. That used
+  2000 draws per round on warm starts and 8000 on cold ones; cold starts at 2000 left one
+  mean at exp-decay `D = 4` 3.6 standard errors off. The pseudocode is replaced; a code
+  block cannot carry red. OQ-6 records the chain and Langevin moves as tried and set aside.
+- **Tight fits (§4.2).** Along sloppy directions a fit's stopping rule moves `θ̂`. On the
+  same data, the default and polished fits differ by 0.03–0.06 in exp-decay's
+  coinciding-rates fraction, which is close to T12(e)'s allowance.
+- **T12(e), §5.5(e).** The port's two chains become two independent starts, from Jeffreys
+  and from `p_U`. The port's error comes from its effective sample size, not its
+  autocorrelation. `transtrum`'s points are re-fitted with the tight solve.
+- **Coverage (§4.2).** `p_proj` at every `D`, checked to `D = 4`.
+
+§4 and §5 were draft already; §7 flips to draft. Downstream: `src/infomax/pproj.py`;
+`build_cast` passes the weighted cloud as a `DiscretePrior`; `generate.jl` keeps
+`transtrum`'s data points and re-fits them; T12(e)'s two starts; docs DD-P1 and the Testing
+notes.
