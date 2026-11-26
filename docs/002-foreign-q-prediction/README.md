@@ -168,15 +168,20 @@ probability `f / (4 f_max)`.
 `p_LN` above `D = 5`, are `SampledPrior`s: weighted clouds of 20000 draws in ordered `xi`,
 with a normalised log density.
 - *Jeffreys' sampler.* Adaptive importance sampling in unordered log decay times. Round 0
-  draws `N(0.8, 1.5²)` log times; later rounds draw from Scott-bandwidth Gaussian kernels
-  around the previous weighted cloud, with 10% of round 0's law. Each round has 8000 draws.
-  It stops once `log Z` varies by less than 0.02 nats over three rounds, and a last round of
-  20000 draws gives the cloud, `log_normaliser` and its standard error. Seed
-  `SAMPLED_SEED + D`.
-- *Results.* `log Z` was 0.8466 ± 0.0065 at `D = 4` and −4.0597 ± 0.0103 at `D = 5`, against
-  brute force's 0.8411 ± 0.0013 and −4.0646 ± 0.0022. It builds in 20–25 s. `I(p_J)` at
-  `D = 5` was 2.300 bits, against A&M's 2.29. The sampler's effective sample size levels off
-  near 32% of a round at `D = 5` and 8% at `D = 7`; a better proposal is open.
+  draws Student-t log times (3 degrees of freedom, location 0.8, scale 1.5); later rounds
+  draw from Scott-bandwidth Gaussian kernels around the previous weighted cloud, with 10% of
+  round 0's law. Each round has 8000 draws. It stops once `log Z` varies by less than 0.02
+  nats over three rounds, and a last round of 20000 draws gives the cloud, `log_normaliser`
+  and its standard error. A last round below half the adaptive rounds' median effective
+  sample share is redrawn, at most three times; then the build raises. Seed
+  `SAMPLED_SEED + D`. Round 0 was `N(0.8, 1.5²)` until 2026-11-26. Toward slow rates
+  Jeffreys' density in log time falls only exponentially, so the normal's tails could not
+  bound the weights (*Testing notes*).
+- *Results* (t first law). `log Z` was 0.828 ± 0.007 at `D = 4`, −4.063 ± 0.010 at `D = 5` and
+  −19.394 ± 0.025 at `D = 7`, against brute force's 0.842 ± 0.001, −4.067 ± 0.002 and
+  −19.388 ± 0.010. It builds in 20–40 s. `I(p_J)` at `D = 7` was 1.72 bits (1.73 and 1.77
+  under two other seeds), against A&M's 1.71. The effective sample share is about 53% at
+  `D = 4`, 31% at `D = 5` and 7.5–8% at `D = 7`.
 - *Marginals.* The weighted cloud's mixture by default. `refined_log_marginal` gives a
   per-point estimate: up to 200 posterior centres resampled from the likelihood-weighted
   cloud, full-covariance or diagonal kernels, 20% defensive kernel density of the cloud,
@@ -476,6 +481,15 @@ is approved, at the human's request).
   chased. Resolved (MB, 2026-11-26): `1e-6` in 1-D, where the divergences are exact, and
   `1e-3` at the cheap cell (`PLAT_GAP_EXACT`, `PLAT_GAP_QUADRATURE`; spec §5.2). There (b)
   checks only that the solve ended by its own rule. It follows DD-S1, still open.
+- **Jeffreys' sampler collapsed at `D = 7`** (extended eye test). `I(p_J)` came out 1.52
+  bits against A&M's 1.71. Under two other seeds the build gave 1.73 and 1.71 bits with
+  7–8% effective draws. Drawing `theta` from one healthy build and the marginal from
+  another gave the same `I`, so a cloud does not flatter itself. The default seed's last
+  round had collapsed (adaptive rounds 7–9%): one draw with a log decay time near 10 took
+  about 5000 times the mean weight, leaving 15 effective draws, with `log Z` −19.10 ± 0.26
+  against brute force's −19.39 ± 0.01. T4's three-standard-error check would have passed
+  it. Resolved (MB, 2026-11-26): a Student-t first law and a last-round guard (DD-Q4). T4
+  adds `D = 7` and a 1% floor on the effective share.
 - **First fast-suite run** (`762eae0`, 18.5 min): 140 passed, 17 failed: the T12 fixtures
   (8), T13(d) (2), T7(a) (2), T14(a) log-normals (2), T21(a) `mass_near`, T16(b) at the
   cheap cell, and T7(c), a bug in the batched kernel tables (two-dimensional data have two

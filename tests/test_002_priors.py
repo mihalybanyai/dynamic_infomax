@@ -148,12 +148,14 @@ def test_t4_uniform_density_is_absolute():
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("D", [4, 5])
+@pytest.mark.parametrize("D", [4, 5, 7])
 def test_t4_sampled_jeffreys_normaliser_matches_brute_force(D):
     """T4 (§5.2, OQ-13): from `D = 4`, exp-decay's `p_J` is sampled by adaptive importance
     sampling; its `log Z` over ordered `xi` agrees with brute force over `2e6` uniform ordered
     draws within three combined standard errors. Brute force: `log Z = log mean sqrt(det g)
-    - log D!`. Catches a wrong Jacobian of the log-time coordinates or a lost `D!`."""
+    - log D!`. Catches a wrong Jacobian of the log-time coordinates or a lost `D!`. The cloud
+    also keeps at least 1% of its draws effective: a collapsed build (15 of 20000 at `D = 7`,
+    2026-11-26) inflates its own standard error enough to pass the first check."""
     import math
 
     from infomax.sampled import _log_sqrt_det_g
@@ -167,6 +169,7 @@ def test_t4_sampled_jeffreys_normaliser_matches_brute_force(D):
     log_z = lv.max() + np.log(r.mean()) - math.lgamma(D + 1)
     se = r.std() / (r.mean() * np.sqrt(r.size))
     assert abs(p_J.log_normaliser - log_z) <= 3 * np.hypot(se, p_J.log_normaliser_se), (p_J.log_normaliser, log_z, se)
+    assert p_J.ess / p_J.weights.size >= 0.01, p_J.ess
 
 
 @pytest.mark.slow

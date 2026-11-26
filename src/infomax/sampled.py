@@ -9,11 +9,16 @@ per point by importance sampling.
 Jeffreys is sampled by adaptive importance sampling in unordered log decay times
 `theta = -log(-log xi)`, where its density is `sqrt(det g)` times the Jacobian of `xi`
 (Jeffreys is invariant) and symmetric under swapping rates. The first round draws independent
-normal log times; each later round draws from a Gaussian kernel density of the previous
-weighted cloud, with `ALPHA` of the first law as the defensive part. Rounds stop once `log Z`
-has varied by less than `LOGZ_TOL` over three rounds; a last round of `N_CLOUD` draws gives the
-cloud and the normaliser. Builds are deterministic (`SAMPLED_SEED`), since the builders take no
-generator (`skills/manage-randomness.md`, rule 7).
+Student-t log times (`T_DF` degrees of freedom); each later round draws from a Gaussian kernel
+density of the previous weighted cloud, with `ALPHA` of the first law as the defensive part.
+Toward slow rates (`theta -> +inf`) Jeffreys' density in log time falls only exponentially, so
+a normal defensive part left the weights unbounded there: at `D = 7` one final draw took
+about 5000 times the mean weight and left 15 effective draws of 20000 (2026-11-26). The t's
+polynomial tails bound them. Rounds stop once `log Z` has varied by less than `LOGZ_TOL` over
+three rounds; a last round of `N_CLOUD` draws gives the cloud and the normaliser. A last round
+whose effective sample share falls below `FINAL_ESS_SHARE` of the adaptive rounds' median is
+redrawn, at most `FINAL_REDRAWS` times, and then the build fails. Builds are deterministic
+(`SAMPLED_SEED`), since the builders take no generator (`skills/manage-randomness.md`, rule 7).
 """
 from __future__ import annotations
 
@@ -31,8 +36,12 @@ SAMPLED_SEED: int = 20261126
 N_CLOUD: int = 20000
 N_ROUND: int = 8000
 ALPHA: float = 0.1
+T_DF: float = 3.0
+"""Degrees of freedom of the defensive Student-t in log time: tails heavier than Jeffreys'."""
 LOGZ_TOL: float = 0.02
 MAX_ROUNDS: int = 15
+FINAL_ESS_SHARE: float = 0.5
+FINAL_REDRAWS: int = 3
 JEFFREYS_SAMPLED_FROM_D: int = 4
 """Exp-decay `p_J` is sampled from this `D` (its grid misses 5% of the mass at `D = 4`)."""
 GRID_MAX_D: int = 5
@@ -158,7 +167,10 @@ def build_sampled_jeffreys(model: Model) -> SampledPrior:
     rng = np.random.default_rng(SAMPLED_SEED + D)
     lo, hi = np.asarray(model.box.low, float), np.asarray(model.box.high, float)
     mu0, sd0 = 0.8, 1.5
-    log_q0 = lambda th: np.sum(scipy.stats.norm.logpdf(th, mu0, sd0), axis=-1)  # noqa: E731
+    log_q0 = lambda th: np.sum(scipy.stats.t.logpdf(th, T_DF, mu0, sd0), axis=-1)  # noqa: E731
+
+    def draw_q0(n):
+        return mu0 + sd0 * rng.standard_t(T_DF, size=(n, D))
 
     def xi_of(th):
         return np.exp(-np.exp(-th))
@@ -171,13 +183,13 @@ def build_sampled_jeffreys(model: Model) -> SampledPrior:
 
     def one_round(n, cloud, w):
         if cloud is None:
-            th = rng.normal(mu0, sd0, size=(n, D))
+            th = draw_q0(n)
             return th, log_q0(th)
         sd = np.sqrt(w @ (cloud - w @ cloud) ** 2)
         bw = np.maximum(sd * (1.0 / np.sum(w**2)) ** (-1.0 / (D + 4)), 1e-6)
         th = cloud[rng.choice(len(cloud), size=n, p=w)] + bw * rng.standard_normal((n, D))
         base = rng.uniform(size=n) < ALPHA
-        th[base] = rng.normal(mu0, sd0, size=(int(base.sum()), D))
+        th[base] = draw_q0(int(base.sum()))
         keep = w > 1e-12
         log_q = np.logaddexp(np.log1p(-ALPHA) + _kde_logpdf(th, cloud[keep], w[keep] / w[keep].sum(), bw),
                              np.log(ALPHA) + log_q0(th))
@@ -192,7 +204,7 @@ def build_sampled_jeffreys(model: Model) -> SampledPrior:
         se = r.std() / (r.mean() * np.sqrt(len(r)))
         return lw, log_z, se
 
-    cloud, w, hist = None, None, []
+    cloud, w, hist, ess_hist = None, None, [], []
     for rnd in range(MAX_ROUNDS):
         th, log_q = one_round(N_ROUND, cloud, w)
         lw, log_z, _ = weigh(th, log_q)
@@ -200,12 +212,23 @@ def build_sampled_jeffreys(model: Model) -> SampledPrior:
         w /= w.sum()
         cloud = th
         hist.append(log_z)
+        ess_hist.append(1.0 / np.sum(w**2) / len(w))
         if rnd >= 3 and np.std(hist[-3:]) < LOGZ_TOL:
             break
-    th, log_q = one_round(N_CLOUD, cloud, w)
-    lw, log_z, se = weigh(th, log_q)
-    wf = np.exp(lw - lw.max())
-    wf /= wf.sum()
+    floor = FINAL_ESS_SHARE * float(np.median(ess_hist[-3:]))
+    for _ in range(FINAL_REDRAWS + 1):
+        th, log_q = one_round(N_CLOUD, cloud, w)
+        lw, log_z, se = weigh(th, log_q)
+        wf = np.exp(lw - lw.max())
+        wf /= wf.sum()
+        share = 1.0 / np.sum(wf**2) / len(wf)
+        if share >= floor:
+            break
+    else:
+        raise RuntimeError(
+            f"sampled Jeffreys at D = {D}: the last round's effective sample share {share:.2%} stayed "
+            f"below {floor:.2%} over {FINAL_REDRAWS} redraws"
+        )
     keep = wf > 0
     atoms = np.sort(xi_of(th[keep]), axis=-1)
     log_z_ordered = log_z - lgamma(D + 1)

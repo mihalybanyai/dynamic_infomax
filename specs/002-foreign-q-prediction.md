@@ -7,7 +7,7 @@
 | [1.2 Generative model](#12-generative-model) | reviewed | 261124 |
 | [2. Objective](#2-objective) | reviewed | 261121 |
 | [3. The case for transfer (and how it could fail)](#3-the-case-for-transfer-and-how-it-could-fail) | reviewed | 261124 |
-| [4. Algorithm](#4-algorithm) | reviewed | 261126 |
+| [4. Algorithm](#4-algorithm) | draft | 261126 |
 | [5. Properties to verify](#5-properties-to-verify) | draft | 261126 |
 | [6. Report](#6-report) | reviewed | 261126 |
 | [7. Open questions](#7-open-questions) | reviewed | 261126 |
@@ -1533,7 +1533,7 @@ ordered `Θ`, held in `ξ`.
   for `x` drawn from the NML distribution `p_NML(x) ∝ max_θ p(x|θ)` at `σ_eff` [read:
   A&M App. A.3; Quinn §5.2]. Sampled by adaptive importance sampling (OQ-6). Each round draws `θ` from a proposal made of atoms, adds noise at `σ_eff`, fits `θ̂(x)` within `Θ`, and weights the draw by `p(x|θ̂(x)) / m_q(x)`, where `m_q`, the proposal's Bayes mixture, is a finite sum. The first proposal is Jeffreys' draws used as atoms; each later one is the previous round's weighted cloud, mixed with 10% of those Jeffreys atoms so that no weight is unbounded. Rounds continue until the effective sample size reaches 85% in two consecutive rounds; a last round with tight fits gives the result, the weighted `θ̂` carried as a discrete prior. The fit itself supplies the faces' mass: data beyond a face project onto it, so the next proposal has atoms there. A cell varied by one knob from a cell already built starts from that cell's cloud, with 2000 draws per round; a cell with no such neighbour starts from Jeffreys, with 8000. A cell whose last round falls below 85% repeats from Jeffreys. The weights make each cloud consistent for `p_proj` whatever its proposal, so a warm start changes only the cost. Fits must be tight (polished to `1e-15` tolerances): along sloppy directions the likelihood is nearly flat, and a fit's stopping rule moves `θ̂`, by 0.03–0.06 in exp-decay's coinciding-rates fraction (2026-11-26). At seven of the sweep's hardest cells (`D ≤ 4`) the sampler agreed with a run started from `p*`'s atoms within about two standard errors, in 1–4 s per warm-started cell and 30–45 s per cold start (2026-11-26). `p_NML` normalises because the manifold is compact. In exp-decay `Θ` is the whole manifold, so the fit within it is the unconstrained one `transtrum` makes. The sampler is checked against `transtrum`'s cloud and against a second, independent start (T12(e)).
 - **`p_J`, Jeffreys.** `√det g` normalised over `Θ` by quadrature; in the cones its
-  `θ_1`-marginal is `∝ θ_1^{D−1}` in closed form (T4). In exp-decay it is integrated on the quadrature grid at `D ≤ 3`. From `D = 4` it is sampled by adaptive importance sampling in unordered log decay times, where its density is `√det g` times the Jacobian of `ξ`. The first round draws independent normal log times; each later round draws from a kernel density of the previous weighted cloud, with 10% of the first law as the defensive part. It stops once `log Z` has varied by less than 0.02 nats over three rounds, and the same weights give the normaliser. The grid is set aside from `D = 4` because it loses Jeffreys' mass where rates nearly coincide: 5% at `D = 4` and 24% at `D = 5`, against brute force over uniform draws, which the sampler matched at `D = 5` within 0.003 nats (2026-11-26). Above `D ≈ 12` its determinant needs more than double precision, which AtomicPriors.jl supplies through an extended-precision path and a routine that uses the Jacobian's near-Vandermonde form [read: `resources/AtomicPriors.jl/src/mod/ymap.jl`, docstrings; A&M App. A.5]. That it normalises on the whole manifold is a [guess], checked by T4.
+  `θ_1`-marginal is `∝ θ_1^{D−1}` in closed form (T4). In exp-decay it is integrated on the quadrature grid at `D ≤ 3`. From `D = 4` it is sampled by adaptive importance sampling in unordered log decay times, where its density is `√det g` times the Jacobian of `ξ`. The first round draws independent <span style="color: red">Student-t log times (3 degrees of freedom)</span>; each later round draws from a kernel density of the previous weighted cloud, with 10% of the first law as the defensive part. <span style="color: red">The t's tails are heavier than Jeffreys': toward slow rates its density in log time falls only exponentially, so a normal first law left the weights unbounded there. At `D = 7` one draw of the last round took about 5000 times the mean weight and left 15 effective draws of 20000 (2026-11-26).</span> It stops once `log Z` has varied by less than 0.02 nats over three rounds, and the same weights give the normaliser. <span style="color: red">A last round whose effective sample share falls below half the adaptive rounds' median is redrawn, at most three times, and the build then fails.</span> The grid is set aside from `D = 4` because it loses Jeffreys' mass where rates nearly coincide: 5% at `D = 4` and 24% at `D = 5`, against brute force over uniform draws, which the sampler matched at `D = 5` within 0.003 nats (2026-11-26). Above `D ≈ 12` its determinant needs more than double precision, which AtomicPriors.jl supplies through an extended-precision path and a routine that uses the Jacobian's near-Vandermonde form [read: `resources/AtomicPriors.jl/src/mod/ymap.jl`, docstrings; A&M App. A.5]. That it normalises on the whole manifold is a [guess], checked by T4.
 - **`p_U`, uniform** on `Θ` in its own coordinates: in `θ` in the cones, in `ξ` in exp-decay, where each rate is `k_μ ∼ Exp(1)` before ordering. A privileged-information prior ([§2.2](#22-the-cast)).
 - **`p_LN`, log-normal**, in exp-decay only, where it is A&M's prior (Eq. 10): each
   `θ_μ` normal with `(θ̄, τ) = (0, 1)` as A&M (OQ-3), restricted to the ordered `Θ`, that
@@ -1869,7 +1869,7 @@ an edge effect unrelated to the co-volume.
 value. A unit test of the solver, not of any result.
 
 **T4 — Jeffreys.** `p_J` sums to one after quadrature, and in exp-decay its normaliser over the whole manifold converges as the quadrature is refined; in the cones its `θ_1`-marginal is
-`∝ θ_1^{D−1}` within quadrature tolerance. In exp-decay at `D = 4, 5`, the sampled `p_J`'s `log Z` agrees with brute force over `2·10^6` uniform ordered draws within three standard errors; and at `D = 5`, at a typical and a face-adjacent state, the two per-point marginals of §4.4 agree within 0.1 nats. Catches a wrong determinant, a missing
+`∝ θ_1^{D−1}` within quadrature tolerance. In exp-decay at `D = 4, 5` <span style="color: red">and 7</span>, the sampled `p_J`'s `log Z` agrees with brute force over `2·10^6` uniform ordered draws within three standard errors<span style="color: red">, and at least 1% of its draws are effective, since a collapsed build's own error is large enough to pass the first check</span>; and at `D = 5`, at a typical and a face-adjacent state, the two per-point marginals of §4.4 agree within 0.1 nats. Catches a wrong determinant, a missing
 normaliser or swapped axes.
 
 **T5 — Gaussian split.** For random `(μ_q, Σ_q, μ_π, Σ_π)`, (3.3.1) matches a numeric
@@ -3949,3 +3949,27 @@ Two corrections from the third fast-suite run, decided with MB; the edit to §5.
 
 §5 flips to draft. Downstream: `tests/spec002_common.py` (`PLAT_GAP_EXACT`,
 `PLAT_GAP_QUADRATURE`), `test_t16a_b_plat_conditional_equalizer_and_bounds`.
+
+### 2026-11-26 — Correction (§4.2, §5.2; Jeffreys' sampler at `D = 7`)
+
+The extended eye test put `I(p_J)` at `D = 7` at 1.52 bits, against A&M's 1.71. Rebuilt under
+two more seeds, the sampler gave 1.73 and 1.71 bits with 7–8% effective draws. The default
+seed's build had collapsed: its 14 adaptive rounds held 7–9%, but in the last round one draw,
+with a log decay time near 10, took about 5000 times the mean weight and left 15 effective
+draws of 20000. Its `log Z` was −19.10 ± 0.26 against brute force's −19.39 ± 0.01. Toward slow
+rates Jeffreys' density in log time falls only exponentially, faster-falling normal tails
+cannot bound the weights there, and any seed could collapse. Decided with MB; edits are red.
+
+- **§4.2.** The first law, and so the defensive part, is a Student-t with 3 degrees of freedom.
+  A last round that falls below half the adaptive rounds' effective sample share is redrawn,
+  at most three times; then the build fails. At `D = 7` the default seed now keeps 7.5% of its
+  draws effective, with `log Z` = −19.394 ± 0.025 against brute force's −19.388 ± 0.010, and
+  `I(p_J)` = 1.72 bits (1.73 and 1.77 under two other seeds). At `D = 4, 5` the normaliser
+  stays within three standard errors of brute force.
+- **T4 (§5.2).** The sampled normaliser is also checked at `D = 7`, and the cloud must keep at
+  least 1% of its draws effective. The collapsed build passed the first check: its own
+  standard error was 0.26.
+
+§4 flips to draft; §5 is already draft. Downstream: `sampled.build_sampled_jeffreys`,
+`test_t4_sampled_jeffreys_normaliser_matches_brute_force`, docs DD-Q4. Every sampled `p_J` from
+`D = 4` changes, so the eye test's `D ≥ 4` rows need redrawing.
