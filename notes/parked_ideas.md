@@ -174,3 +174,11 @@ posterior, not the prior's. *What would settle it:* at `D = 3`, clouds of 2·10�
 2·10⁵ draws, at states whose divergence spans 6–16 nats; the failure threshold should move
 with `log K`. Then `p*`'s atom count across spec 002's `D`-sweep: exponential growth in `D`
 would sink the "cheap to use" side [recalled: A&M's figures suggest it stays modest].
+
+*A second budget, the same argument (MB, 2026-11-26).* Spec 002's whole argument could
+probably be rerun with `K` in place of `N` [guess]. Both budgets coarse-grain the states:
+`N` by what the data can tell apart, about `σ/√N`; `K` by what probability the agent can
+represent, about `1/K`. Each then starves the regions a volume-allocated measure leaves
+thin. They differ in two ways. Extra computation can buy back part of the `K` error but none
+of the `N` error. And `K` is far harder to know or control in an experiment than `N`. Not
+spec 002's object of study; there the two effects are to be kept apart.
