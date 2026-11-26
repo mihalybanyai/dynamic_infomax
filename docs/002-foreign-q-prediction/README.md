@@ -194,6 +194,14 @@ with a normalised log density.
   freedom, core 2) is T4's second version. Above `D = 5` it warns, and it warns when fewer
   than 20 draws are effective. `cloud()` gives the plain cloud, which screens in
   `worst_case_bias_pressure`.
+- *Annealed* (`annealed_log_marginal`). Where the bell-shaped estimate keeps fewer than
+  `ANNEAL_BELOW = 50` effective draws, `_lmn` uses a sequential Monte Carlo sampler. 2000
+  particles are resampled from the cloud. The likelihood's power climbs in steps that keep
+  80% of the particles effective, each followed by systematic resampling and 10 random-walk
+  Metropolis moves; the scale follows the particles' covariance and adapts to about 25%
+  accepted. `log m` is the sum of the steps' log mean incremental weights. The coordinates
+  are ordered log decay times as `u = (theta_(1), log gaps)`. Seeded by the point's bytes;
+  `replicate` gives an independent run. About 1.2 s per point at `D = 5`, with 10–30 steps.
 - *Superseded.* `kernel_log_marginal`: Gaussian kernels around up to 200 likelihood-weighted
   cloud draws, 20% defensive kernel density, 1000 draws. Its centres come from the cloud, so
   at thin states it misses the posterior. It is kept for the thin-states figure. Before it,
@@ -541,6 +549,17 @@ is approved, at the human's request).
     scipy returned that last point, not the best one, so the estimate was `-inf`. The search
     now keeps the best state seen, is bounded to log decay times in `[-8, 35]`, and polishes
     with Powell when L-BFGS ends worse.
+- **The annealed estimate** (OQ-14, 2026-11-26). With its first settings (1000 particles,
+  50% kept per step, 5 moves) it took 9–19 steps. Runs differed by 0.2–0.6 nats per datum,
+  and against `p_LN`'s exact grid at `D = 5` it was 0.1–0.3 nats low. Six settings were
+  measured on the grid at two faces and on run agreement at Jeffreys' `D = 7` corner. With
+  2000 particles, 80% and 10 moves: grid error at the fast-and-slow face 0.003 ± 0.05 nats,
+  run spread 0.06–0.08, 1.2 s per point. At the exact `D = 5` corner every setting sat 0.32
+  above the grid, and the bell-shaped estimate agreed with it; the grid also fell short at
+  the exact corner at `D = 3`. At `D = 7`, at Jeffreys' corner, runs differed by 2.5–14 nats
+  under every setting. Hand-over: at `D = 5`, data where the bell-shaped estimate kept 5% or
+  more agreed with the annealed one within 0.05 nats (16 of 16 at the corner for both
+  priors). Below 5% it was off by 0.9–2.6 nats on Jeffreys' faces, or returned `-inf`.
 - **First fast-suite run** (`762eae0`, 18.5 min): 140 passed, 17 failed: the T12 fixtures
   (8), T13(d) (2), T7(a) (2), T14(a) log-normals (2), T21(a) `mass_near`, T16(b) at the
   cheap cell, and T7(c), a bug in the batched kernel tables (two-dimensional data have two

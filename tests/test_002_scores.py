@@ -270,6 +270,72 @@ def test_t7a_sampled_marginal_matches_the_grid_at_thin_states(name):
     assert all(abs(v) <= 0.1 for v in off.values()), off
 
 
+@pytest.mark.slow
+@pytest.mark.parametrize("name", ["p_LN", "p_J"])
+def test_t7a_annealed_marginal_matches_the_grid_at_thin_states(name):
+    """T7(a) (§4.4, OQ-14): the annealed per-point estimate, which takes over where the
+    bell-shaped one keeps few effective draws, agrees with the grid on its own at `D = 3`:
+    at each state of `THIN_STATES_D3`, the mean `log m` over 8 data within 0.1 nats. It needs
+    no proposal near the posterior, so it checks the routed marginal by a different method."""
+    from infomax.sampled import build_sampled_jeffreys, sampled_from
+
+    model = cheap_model(D=3)
+    s = model.sigma_eff
+    grid = {"p_LN": build_pln, "p_J": build_jeffreys}[name](model)
+    sampled = sampled_from(grid, model, name) if name == "p_LN" else build_sampled_jeffreys(model)
+    off = {}
+    for k, (label, theta) in enumerate(THIN_STATES_D3.items()):
+        y = model.y(np.asarray(theta, dtype=float)[None])[0]
+        x = y + s * np.random.default_rng(20261230 + k).standard_normal((8, y.size))
+        a, _ = sampled.annealed_log_marginal(model, x)
+        off[label] = float(np.mean(log_marginal(grid, model, x) - a))
+    assert all(abs(v) <= 0.1 for v in off.values()), off
+
+
+FACES_D5 = {
+    "corner": [1.0] * 5,
+    "near corner": [0.97] * 5,
+    "fast and slow": [0.0] + [1.0] * 4,
+    "near fast and slow": [0.02] + [1.0] * 4,
+}
+"""Exp-decay faces at `D = 5` where the priors are thin. At the corner the routed marginal and
+the annealed one agree within 0.02 nats for `p_LN`, while `p_LN`'s grid sits 0.41 below both
+(2026-11-26); the grid comparison leaves the corner out."""
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("name", ["p_LN", "p_J"])
+def test_t7a_routed_marginal_at_thin_states_in_d5(name):
+    """T7(a) (§4.4, OQ-14): at `D = 5`, the routed marginal of a sampled prior at faces, over
+    16 data per state. `p_LN` still has its exact grid at `D = 5`: carried as a cloud, the path
+    it takes above `D = 5`, its mean `log m` agrees with the grid's within 0.1 nats at the faces
+    of `FACES_D5` other than the corner. Jeffreys, sampled from `D = 4`, has no grid: its routed
+    `log m` agrees with an independent annealed run (another seed) within 0.1 nats at every
+    face. There the bell-shaped estimate keeps 5-20% of its draws effective at the corner and
+    under 5% on the faces with a fast rate, where the annealed one takes over."""
+    from infomax.sampled import sampled_from
+
+    model = cheap_model(D=5)
+    s = model.sigma_eff
+    off = {}
+    if name == "p_LN":
+        grid = build_pln(model)
+        assert not hasattr(grid, "per_point_log_marginal"), "at D = 5 the reference must be the grid"
+        prior = sampled_from(grid, model, "p_LN")
+        states = {k: v for k, v in FACES_D5.items() if k != "corner"}
+    else:
+        prior = build_jeffreys(model)
+        assert hasattr(prior, "per_point_log_marginal"), "p_J should be sampled from D = 4"
+        states = FACES_D5
+    for k, (label, theta) in enumerate(states.items()):
+        y = model.y(np.asarray(theta, dtype=float)[None])[0]
+        x = y + s * np.random.default_rng(20261290 + k).standard_normal((16, y.size))
+        routed = log_marginal(prior, model, x)
+        ref = log_marginal(grid, model, x) if name == "p_LN" else prior.annealed_log_marginal(model, x, replicate=1)[0]
+        off[label] = float(np.mean(ref - routed))
+    assert all(abs(v) <= 0.1 for v in off.values()), off
+
+
 @pytest.mark.parametrize("name", ["p_J", "p_U"])
 @pytest.mark.parametrize("D", [4, 6])
 def test_t7a_tapered_cone_marginal_matches_brute_force(D, name):

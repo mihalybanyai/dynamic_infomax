@@ -83,11 +83,23 @@ MAX_GROUP: int = 5040
 """At most this many relabellings (7!); larger blocks are split at their widest gap."""
 PERM_CHUNK: int = 256
 PER_POINT_MAX_D: int = 5
-"""Above this `D` the per-point estimate is not validated: at `D = 7` it kept 0.1-1% of its
-draws effective for Jeffreys, and its two variants differed by up to 0.9 nats (2026-11-26).
-It still runs there, with a warning (OQ-14)."""
-MIN_EFFECTIVE: float = 20.0
-"""A per-point estimate with fewer effective draws than this is flagged."""
+"""Above this `D` the routed marginal is not validated (OQ-14); it runs there with a warning."""
+ANNEAL_BELOW: float = 50.0
+"""A per-point estimate with fewer effective draws than this is replaced by the annealed one
+(at `D = 5` the bell-shaped proposal kept 0.1% on one of Jeffreys' faces, 2026-11-26)."""
+
+# the annealed per-point estimate (§4.4, OQ-14)
+N_ANNEAL: int = 2000
+"""Particles of the annealed estimate."""
+ANNEAL_ESS: float = 0.8
+"""Each tempering step is chosen so that its incremental weights keep this share effective."""
+ANNEAL_MOVES: int = 10
+"""Random-walk Metropolis moves per tempering step."""
+ANNEAL_MAX_STEPS: int = 2000
+"""Settings chosen at D = 5 against p_LN's exact grid and at D = 7 on two-run agreement, among
+(particles, ESS share, moves) in {(1000, .5, 5), (1000, .9, 5), (1000, .5, 20), (1000, .9, 20),
+(2000, .8, 10), (500, .95, 20)}: run-to-run spread 0.06-0.08 nats at D = 5 faces, 1.2 s per
+point (2026-11-26)."""
 
 
 def _theta_of(xi):
@@ -129,6 +141,28 @@ def _block_permutations(blocks: list[np.ndarray]) -> np.ndarray:
     """Every permutation of the coordinates that permutes within each block, as index rows."""
     parts = [list(itertools.permutations(b.tolist())) for b in blocks]
     return np.array([sum((list(q) for q in combo), []) for combo in itertools.product(*parts)], dtype=int)
+
+
+def _u_of_theta(th: np.ndarray) -> np.ndarray:
+    """Ordered log decay times to `u = (theta_(1), log gaps)`; gaps floored at `1e-13`."""
+    th = np.sort(np.atleast_2d(th), axis=-1)
+    return np.concatenate([th[:, :1], np.log(np.maximum(np.diff(th, axis=-1), 1e-13))], axis=-1)
+
+
+def _theta_of_u(u: np.ndarray) -> np.ndarray:
+    """`u = (theta_(1), log gaps)` to ordered log decay times."""
+    u = np.atleast_2d(u)
+    with np.errstate(over="ignore"):
+        steps = np.exp(u[:, 1:])
+    return u[:, :1] + np.concatenate([np.zeros((len(u), 1)), np.cumsum(steps, axis=-1)], axis=-1)
+
+
+def _systematic(w: np.ndarray, rng: np.random.Generator) -> np.ndarray:
+    """Systematic resampling indices for normalised weights `w`."""
+    n = w.size
+    c = np.cumsum(w)
+    c[-1] = 1.0
+    return np.searchsorted(c, (rng.uniform() + np.arange(n)) / n)
 
 
 def _mvt_logpdf(z: np.ndarray, mu: np.ndarray, L: np.ndarray, nu: float) -> np.ndarray:
@@ -180,8 +214,9 @@ class SampledPrior(CloudPrior):
 
     def _lmn(self, model: Model, x: np.ndarray, s: float) -> np.ndarray:
         """`log m(x)` at noise `s`, routed (§4.4, OQ-14): the cloud's mixture where the cloud
-        weighted by the likelihood keeps at least `N0_THIN` effective draws, the per-point
-        estimate elsewhere. `log_marginal` and `log_predictive` both come through here."""
+        weighted by the likelihood keeps at least `N0_THIN` effective draws; elsewhere the
+        per-point estimate, or the annealed one where that keeps fewer than `ANNEAL_BELOW`
+        effective draws. `log_marginal` and `log_predictive` both come through here."""
         x = np.atleast_2d(np.asarray(x, dtype=float))
         keep = self.weights > 0
         Y, lw = model.y(self.atoms[keep]), self.log_weights[keep]
@@ -195,12 +230,13 @@ class SampledPrior(CloudPrior):
                 warnings.warn(f"{self.name}: the per-point estimate is not validated above D = {PER_POINT_MAX_D} "
                               f"(OQ-14); {int(thin.sum())} thin points at D = {model.D}")
             lm, ess = self.per_point_log_marginal(model, x[thin], s)
+            weak = ~np.isfinite(lm) | (ess * N_PER_POINT < ANNEAL_BELOW)
+            if weak.any():
+                lm[weak] = self.annealed_log_marginal(model, x[thin][weak], s)[0]
             ok = np.isfinite(lm)
-            weak = ok & (ess * N_PER_POINT < MIN_EFFECTIVE)
-            if weak.any() or not ok.all():
-                warnings.warn(f"{self.name}: the per-point estimate kept fewer than {MIN_EFFECTIVE:.0f} effective "
-                              f"draws at {int(weak.sum())} and failed at {int((~ok).sum())} of {int(thin.sum())} "
-                              "thin points; the cloud's value is used where it failed")
+            if not ok.all():
+                warnings.warn(f"{self.name}: the annealed estimate failed at {int((~ok).sum())} of "
+                              f"{int(thin.sum())} thin points; the cloud's value is used there")
             idx = np.flatnonzero(thin)
             out[idx[ok]] = lm[ok]
         return out
@@ -319,6 +355,94 @@ class SampledPrior(CloudPrior):
         share = float(1.0 / np.sum((w / w.sum()) ** 2) / N_PER_POINT)
         lm = log_dfact - np.log(len(group)) + scipy.special.logsumexp(lw) - np.log(N_PER_POINT)
         return float(lm), share
+
+    def annealed_log_marginal(self, model: Model, x: np.ndarray, s: float | None = None, *,
+                              replicate: int = 0) -> tuple[np.ndarray, np.ndarray]:
+        """`log m(x)` at noise `s` for each row of `x` by annealed importance sampling with
+        resampling (a sequential Monte Carlo sampler), and each point's number of tempering
+        steps (§4.4, OQ-14).
+
+        It needs no proposal near the posterior. `N_ANNEAL` particles start from the cloud,
+        resampled by weight, as draws from the prior. The likelihood is raised to a power `beta`
+        that climbs from 0 to 1, each step chosen so that the incremental weights keep
+        `ANNEAL_ESS` of the particles effective; `log m` is the sum of the steps' log mean
+        incremental weights. After each step the particles are resampled and moved by
+        `ANNEAL_MOVES` random-walk Metropolis steps on the tempered target, with the particles'
+        own covariance, scaled to about a quarter accepted. The coordinates are the ordered log
+        decay times written as the smallest and the logs of the gaps, which are unconstrained
+        and free of relabelling symmetry; the target is the ordered density times the
+        Jacobians. `replicate` selects an independent run (a different seed); each point's
+        draws come from a generator seeded by the point itself."""
+        s = model.sigma_eff if s is None else float(s)
+        x = np.atleast_2d(np.asarray(x, dtype=float))
+        out, steps = np.empty(len(x)), np.empty(len(x))
+        for i in range(len(x)):
+            digest = hashlib.blake2b(x[i].tobytes() + b"anneal" + bytes([replicate]), digest_size=16).digest()
+            rng = np.random.default_rng(np.frombuffer(digest, dtype=np.uint32))
+            out[i], steps[i] = self._annealed_one(model, x[i], s, rng)
+        return out, steps
+
+    def _annealed_one(self, model: Model, x: np.ndarray, s: float, rng: np.random.Generator) -> tuple[float, int]:
+        D = self.atoms.shape[1]
+        lo, hi = np.asarray(model.box.low, float), np.asarray(model.box.high, float)
+
+        def prior_and_lik(u):
+            th = _theta_of_u(u)
+            xi = np.exp(-np.exp(-th))
+            with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
+                lp = self.log_density(xi) + np.sum(-np.exp(-th) - th, axis=-1) + np.sum(u[:, 1:], axis=-1)
+            bad = ~(np.isfinite(lp) & np.all((xi >= lo) & (xi <= hi), axis=-1) & np.all(np.isfinite(th), axis=-1))
+            lp[bad] = -np.inf
+            ll = np.full(len(u), -np.inf)
+            if (~bad).any():
+                ll[~bad] = log_normal_iso(x, model.y(xi[~bad]), s)
+            return lp, ll
+
+        keep = self.weights > 0
+        atoms, w0 = self.atoms[keep], self.weights[keep] / self.weights[keep].sum()
+        u = _u_of_theta(_theta_of(np.sort(atoms[rng.choice(len(atoms), size=N_ANNEAL, p=w0)], axis=-1)))
+        lp, ll = prior_and_lik(u)
+        ok = np.isfinite(lp) & np.isfinite(ll)
+        if not ok.any():
+            return -np.inf, 0
+        if not ok.all():  # draws that lose their density on the way to u (rates within 1e-13)
+            j = rng.choice(np.flatnonzero(ok), size=N_ANNEAL)
+            u, lp, ll = u[j], lp[j], ll[j]
+        beta, log_z, n_steps, scale = 0.0, 0.0, 0, 2.38 / np.sqrt(D)
+
+        def ess(d):
+            a = d * ll
+            w = np.exp(a - a.max())
+            return w.sum() ** 2 / np.sum(w * w)
+
+        while beta < 1.0:
+            n_steps += 1
+            if n_steps > ANNEAL_MAX_STEPS:
+                return -np.inf, n_steps
+            d_hi = 1.0 - beta
+            if ess(d_hi) >= ANNEAL_ESS * N_ANNEAL:
+                d = d_hi
+            else:
+                a, b = 0.0, d_hi
+                for _ in range(40):
+                    mid = 0.5 * (a + b)
+                    a, b = (mid, b) if ess(mid) >= ANNEAL_ESS * N_ANNEAL else (a, mid)
+                d = max(a, 1e-12)
+            inc = d * ll
+            log_z += float(scipy.special.logsumexp(inc) - np.log(N_ANNEAL))
+            beta = 1.0 if d == d_hi else beta + d
+            w = np.exp(inc - inc.max())
+            j = _systematic(w / w.sum(), rng)
+            u, lp, ll = u[j], lp[j], ll[j]
+            L = np.linalg.cholesky(np.atleast_2d(np.cov(u.T)) + 1e-10 * np.eye(D))
+            for _ in range(ANNEAL_MOVES):
+                prop = u + scale * (rng.standard_normal((N_ANNEAL, D)) @ L.T)
+                lp_p, ll_p = prior_and_lik(prop)
+                with np.errstate(invalid="ignore"):
+                    acc = np.log(rng.uniform(size=N_ANNEAL)) < (lp_p + beta * ll_p) - (lp + beta * ll)
+                u[acc], lp[acc], ll[acc] = prop[acc], lp_p[acc], ll_p[acc]
+                scale = float(np.clip(scale * np.exp(acc.mean() - 0.25), 0.02, 3.0))
+        return log_z, n_steps
 
     def kernel_log_marginal(self, model: Model, x: np.ndarray, rng: np.random.Generator, *,
                             kernel: str = "full") -> tuple[np.ndarray, np.ndarray]:
