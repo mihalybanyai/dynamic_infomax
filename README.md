@@ -54,7 +54,7 @@ cd dynamic_infomax
   read or run the code. Install with `brew install gh` on macOS and then
   `gh auth login`.
 
-- **[Julia](https://julialang.org/) ≥ 1.6** — optional. Needed only to
+- **[Julia](https://julialang.org/) ≥ 1.11** — optional. Needed only to
   regenerate the AtomicPriors.jl reference fixtures of spec 002 (§5.5)
   and to compute `p*` beyond the grid's reach (spec 002, OQ-1). pytest
   never needs it, since the fixtures are committed as JSON. Install
@@ -65,8 +65,14 @@ cd dynamic_infomax
   brew install juliaup                             # macOS, via Homebrew
   ```
 
-  The version floor is AtomicPriors.jl's
-  (`resources/AtomicPriors.jl/Project.toml`).
+  The fixtures have their own Julia environment, which pins AtomicPriors.jl to its upstream
+  commit, and Julia 1.11 or later. Regenerate them from the repository root, on exactly one
+  thread (the script refuses otherwise; spec 002 docs, DD-J1):
+
+  ```bash
+  julia --threads=1 --project=tests/fixtures/atomicpriors -e 'using Pkg; Pkg.instantiate()'
+  julia --threads=1 --project=tests/fixtures/atomicpriors tests/fixtures/atomicpriors/generate.jl
+  ```
 
 ### Editor (optional)
 

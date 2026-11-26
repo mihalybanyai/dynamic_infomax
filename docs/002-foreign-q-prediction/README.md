@@ -250,11 +250,86 @@ The memo lives in memory only; a cache that survives the process is left for lat
 the code is stable.
 
 **DD-A1 — The atomic path.** (`pstar.build_pstar(method="atomic")`.) AtomicPriors.jl
-through `juliacall` (OQ-1) needs Julia, which is not installed. The path raises
-`NotImplementedError`. `D_switch` is unset, and every build uses candidate sets.
+through `juliacall` (OQ-1) is not written: `juliacall` is not a dependency yet, and the path
+will need DD-J1's pins and single thread. It raises `NotImplementedError`. `D_switch` is
+unset, and every build uses candidate sets.
 
 **DD-A2 — Exp-decay `p_ref` beyond `D = 2`.** Not implemented yet (the coverage table
 asks for `D ≤ 4`): `build_pref` raises `NotImplementedError` at `D ≥ 3`.
+
+**DD-J1 — The fixtures' Julia environment.** (`tests/fixtures/atomicpriors/Project.toml`,
+`Manifest.toml`.) AtomicPriors.jl is unregistered and `resources/AtomicPriors.jl` is
+gitignored, so the environment takes it from upstream at its only commit, `0dfd103`
+(2022-02-27); the local copy is identical apart from upstream's CI folder. Two pins keep it
+working on Julia 1.13:
+
+- *LineSearches `7.0 - 7.4`.* LineSearches 7.5.1 declares NLSolversBase 7 but calls
+  NLSolversBase 8's `value_gradient!`, which returns a tuple; 7.6.0 and later declare 8
+  correctly. AtomicPriors' ForwardDiff 0.10 holds NLSolversBase at 7, so the resolver picks
+  7.5.1, and every `optim!` call fails. LineSearches is a direct dependency only to carry
+  this bound.
+- *One thread.* AtomicPriors sizes per-thread buffers by `Threads.nthreads()` and indexes
+  them by `threadid()`. Since Julia 1.12, `--threads=N` and a plain `julia` add an
+  interactive thread, so `threadid()` can exceed `nthreads()`. `generate.jl` refuses to run
+  unless `--threads=1`, which also makes each seed's output independent of the machine.
+
+**DD-J2 — `transtrum`'s log-rate cap.** (`generate.jl`, `ylograte`.) `transtrum` fits in the
+unbounded coordinate `theta = log k`, where `y_t = mean exp(-e^theta t)`. For
+`theta >= log 746 ≈ 6.6`, `y` and its derivative are already exactly 0 in Float64 (`t >= 1`);
+above `log(floatmax) ≈ 709.78`, `exp` overflows and the derivative becomes `-t·∞·0 = NaN`.
+Levenberg–Marquardt does step there, and Julia's LU then refuses the matrix. `generate.jl`
+caps `theta` at 700 inside the map. Below the cap every value and Jacobian is unchanged bit
+for bit (checked at `theta = 0.3, 5, 6.7, 699, 705`); above it the NaN becomes its limit, 0.
+Any other NaN still raises, and every value `generate.jl` writes is checked finite. With the
+cap, the mutual information of `transtrum`'s cloud agrees with AtomicPriors' separate
+`transtrum_exp` within 0.04 nats over three seeds (times `1:2`, AtomicPriors' own test).
+
+**DD-J3 — Which AtomicPriors routines produce each fixture.** (`generate.jl`.) §5.5 names
+`mutual` and `optim!`/`nlopt!` over `mutual`, but `mutual` needs an explicit grid over the
+data, which 26 dimensions rule out. The fixtures use AtomicPriors' Gaussian routines instead,
+as its own documentation does for exp-decay [read: `resources/AtomicPriors.jl/docs/basic.jl`]:
+
+- `p*`: `nlopt!` on the kernel bound `ekern` at `σ√2`, from 200 Sobol atoms. The optimum
+  barely depends on the start: from 100, 150 or 200 atoms, with or without a restart, `I` is
+  3.093–3.094 nats at `D = 2`. Each atom is sorted onto the ordered `Θ`, since `y` is
+  symmetric in the rates and `nlopt!` returns permuted copies of one atom. Then atoms whose
+  predictions lie within `0.1σ` merge, since `nlopt!`'s own `unique` merges only to 5
+  digits. Merging before sorting averaged `(0.97, 0)` and `(0, 0.97)` into `(0.48, 0.48)`,
+  which cost 0.04 nats and left a face with `b = 1.08` nats; the first generated fixture had
+  that bug. `nlopt!` stops once an iteration changes `ekern` by less than 1e-8 nats; with no
+  tolerance it has no stopping rule, and at T12(c)'s `N = 4` (400 starting atoms) it ran for
+  over 4 hours. T12(c) starts from 200 atoms at `N = 2` and 400 at `N = 4`, since the atoms
+  grow like `N^(D/2)`.
+- `I` (b, d): Monte Carlo, `mcarlo`, 10⁶ draws for `p*` and 4·10⁶ for the fixed prior.
+- `B` (b): `fcarlo` minus `I`, maximised over an ordered grid in `xi`, faces included (step
+  1/50 at `D = 2`, 1/20 at `D = 3`), in two stages: 2000 draws per state, then 2·10⁵ for the
+  top 20.
+- `transtrum` (e): 200 walkers (at least the data dimension plus 2 are needed), each seed
+  starting them from its own `randn` draw. Every 1600th step of each walker is kept, and
+  2000 points are drawn from what remains. The fraction of the cloud with coinciding rates
+  (`|xi_2 − xi_1| < 0.02`) fell as the chains lengthened, until it stopped:
+
+  | Walkers, step kept, start | Coinciding-rates fraction (two seeds) |
+  |---|---|
+  | 60, every 10th or 100th, Sobol | 0.46–0.69 |
+  | 200 or 400, every 100th or 200th, Sobol | 0.45–0.53 |
+  | 200, every 400th, Sobol | 0.33, 0.34 |
+  | 200, every 1600th, Sobol | 0.27, 0.25 |
+  | 200, every 1600th, random | 0.27, 0.25 |
+  | 200, every 6400th, random | 0.27, 0.27 |
+
+  The other two edges agree as well at 1600 and 6400 (`xi = 0`: 0.14–0.16; `xi = 1`:
+  0.20–0.23). With Sobol starts the two seeds share their walkers' starting points, so
+  their agreement within a row said nothing about convergence; with random starts it does.
+  A chain keeping every 1600th step takes about 20 minutes.
+  The emcee walkers move through the 26-dimensional data space, while the target is a thin
+  tube around the 2-dimensional model surface. The Python port (OQ-6) uses the same
+  algorithm, so it likely needs equally long chains `[guess]`; T12(e)'s check that two of
+  the port's chains agree settles this, provided they start apart.
+
+Each estimate is the mean over two seeds, and their difference is the recorded spread.
+`ekern`'s optimum is A&M's `p*`, not necessarily the exact capacity prior. T12(b) measures
+the gap between the two.
 
 ## Testing notes
 
@@ -268,8 +343,28 @@ is approved, at the human's request).
   warp. Resolved (MB, 2026-11-25): the check runs on the candidates within `rho` of `v`
   only, where the warp acts; spec §5.2's "on the grid" now says so. The tip stays in the
   net, since `p*` may put an atom there.
-- **T12, AtomicPriors.jl fixtures.** `tests/fixtures/atomicpriors/` does not exist:
-  generating it needs Julia (§5.5), so T12(a)–(e) fail at "missing fixture".
+- **T12, AtomicPriors.jl fixtures.** Generated by `tests/fixtures/atomicpriors/generate.jl`
+  (DD-J1–J3) on 2026-11-25. T12(a) and T12(d) pass.
+- **T12(c), `C_N` through `repeat`.** `repeat` builds the `N`-fold channel of a
+  discrete-outcome likelihood matrix, and exp-decay's data are 26-dimensional Gaussian, so
+  §5.5(c) could not run as written. Resolved (MB, 2026-11-25): (c) runs (b)'s recipe at
+  `sigma/sqrt(N)` for `N = 2, 4`, an external check of the capacity solver at lower noise.
+  The reduction itself is covered by spec §4.4, T7(c) and the twin cells. Stacking `N`
+  copies of the data was set aside: `ekern` sees only `‖Δy‖²/σ²`, where `N` copies are
+  exactly `σ/√N`.
+- **T12(e), the `p_proj` port has not mixed.** Against `transtrum`'s converged cloud (DD-J3),
+  the port's two chains (`build_pproj`, 2000 points) put 0.70 and 0.63 of their mass on
+  coinciding rates, against 0.255, and 0.25 and 0.12 exactly at `xi_1 = 0`, against 0.07.
+  They disagree with each other as well. Those values match `transtrum`'s own chains before
+  they converged, so the port needs equally long chains: about 1600 steps per kept point. That
+  is a code fix with a cost for every cell, since `p_proj` is in the cast (`build_cast`).
+  Open (MB): how to pay for it.
+- **T12(b), atom matching.** The candidate set's unmerged atoms (DD-C2) outnumber Julia's
+  continuous ones about two to one, and merged counts only follow the merge radius.
+  Resolved (MB, 2026-11-25): atoms are compared through the cross-equalizer, the Python
+  `p*`'s bias pressure within 0.05 nats of zero at every Julia atom (largest seen: 0.024 at
+  `D = 3`). That value is above the solver's 1e-3 stopping threshold (DD-S1): either
+  Monte-Carlo noise or a location between candidates.
 - **T14(a), `p_LN` and `p_LN^*` samplers.** The test integrates each density on its own
   600-point midpoint grid and requires the total to be 1 within `5e-3`. For the
   log-normals it gets 0.972, because midpoints miss the density's integrable spike at
@@ -279,3 +374,7 @@ is approved, at the human's request).
   (8), T13(d) (2), T7(a) (2), T14(a) log-normals (2), T21(a) `mass_near`, T16(b) at the
   cheap cell, and T7(c), a bug in the batched kernel tables (two-dimensional data have two
   singular directions, not three), fixed after the run.
+- **Second fast-suite run** (`8f0ab36` plus the uncommitted T12 changes, T12 deselected while
+  its fixtures were regenerating; 23.5 min): 143 passed, 6 failed. Every failure is one of the
+  open test-side issues above: T7(a) (2), T14(a) log-normals (2), T21(a) `mass_near`, T16(b)
+  at the cheap cell. T7(c)'s fix holds, and T11, suspected of Monte-Carlo noise, passes.
