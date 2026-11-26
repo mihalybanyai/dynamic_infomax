@@ -32,6 +32,8 @@ from spec002_common import (
     EQUALIZER_SLACK,
     INFO_SLACK,
     MC_SIGMAS,
+    PLAT_GAP_EXACT,
+    PLAT_GAP_QUADRATURE,
     S_Q_TEST,
     agree_mc,
     cheap_model,
@@ -451,7 +453,9 @@ def test_t16a_b_plat_conditional_equalizer_and_bounds(where, N):
     capacity on `supp p_lat` and below it elsewhere; the two-sided bound of §4.2 closes.
     Run where §5.4 puts it (F2): the 1-D bounded channel at `N = 1` and `N = 4`, where
     `sigma_eff != sigma`, and the cheap cell. These compare the build with numbers it
-    reports; T16(d) and T16(e) compare it with independent ones."""
+    reports; T16(d) and T16(e) compare it with independent ones. The bound closes to the
+    solver's tolerance: `1e-6` in 1-D, and DD-S1's `1e-3` at the cheap cell, where (b)
+    checks only that the solve ended by its own rule (MB, 2026-11-26)."""
     model = _cone_1d(N) if where == "cone-1d" else cheap_model(N=N)
     res = build_plat(model)
     on_support = conditional_divergence(res, model, res.prior.atoms[res.prior.weights > 1e-8])
@@ -459,7 +463,8 @@ def test_t16a_b_plat_conditional_equalizer_and_bounds(where, N):
     rng = np.random.default_rng(20261142)
     off = conditional_divergence(res, model, model.box.sample_uniform(256, rng))
     assert np.max(off) <= res.conditional_capacity + EQUALIZER_SLACK
-    assert res.upper_bound - res.lower_bound <= 1e-6 + 1e-12
+    gap_tol = PLAT_GAP_EXACT if where == "cone-1d" else PLAT_GAP_QUADRATURE
+    assert res.upper_bound - res.lower_bound <= gap_tol + 1e-12
     assert res.lower_bound <= res.conditional_capacity <= res.upper_bound
 
 

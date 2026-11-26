@@ -8,7 +8,7 @@
 | [2. Objective](#2-objective) | reviewed | 261121 |
 | [3. The case for transfer (and how it could fail)](#3-the-case-for-transfer-and-how-it-could-fail) | reviewed | 261124 |
 | [4. Algorithm](#4-algorithm) | reviewed | 261126 |
-| [5. Properties to verify](#5-properties-to-verify) | reviewed | 261126 |
+| [5. Properties to verify](#5-properties-to-verify) | draft | 261126 |
 | [6. Report](#6-report) | reviewed | 261126 |
 | [7. Open questions](#7-open-questions) | reviewed | 261126 |
 | [8. References](#8-references) | reviewed | 261121 |
@@ -1834,7 +1834,7 @@ machinery; it does **not** assert the results
 | P11 | `p_proj`: the MLE projection recovers `θ̂`; `p_NML` normalises; `I_{p_proj} ≤ I_{p*} = C_N`; the sampler agrees with `transtrum` (P12) ([§4.2](#42-prior-construction)) | `test_002_priors.py::test_t11_nml_normaliser_in_the_1d_cone`, `::test_t11_pproj_cloud_is_slab_and_spike_in_the_1d_cone`, `::test_t11_projection_maps_outside_data_to_the_endpoints`, `::test_t11_pproj_projection_recovers_mle`, `::test_t11_projection_of_data_beyond_the_manifold_lands_on_a_face`, `::test_t11_pproj_information_below_capacity` |
 | P12 | AtomicPriors.jl references: exp-decay map and metric, `p*`, `C_N` at reduced noise, `mutual` of a fixed prior, and `transtrum`'s `p_proj` cloud match frozen values, and the atomic path's `I_{p*}` does not fall below AtomicPriors.jl's at `D = 5, 7` ([§5.5](#55-atomicpriorsjl-reference-fixtures)) | `test_002_references.py::test_t12a_exp_decay_map_and_metric`, `::test_t12b_pstar_matches_atomicpriors`, `::test_t12c_capacity_at_reduced_noise`, `::test_t12d_mutual_information_of_a_fixed_prior`, `::test_t12e_pproj_port_matches_transtrum`, `::test_t12f_atomic_path_not_below_atomicpriors` (slow) |
 | P13 | Models: the metric matches autodiff; exp-decay's map is invariant under permuting `θ` and its `Θ` holds only ordered `ξ`, on the whole manifold; in the hypercone `√det g / θ_1^{D−1}` is constant for every `φ`, the cross-section widths are `r φ^{μ−2}√N/σ`, and the vertex warp is one-to-one, the identity outside `ρ` and gives the angle `κπ/2` ([§4.1](#41-model-families)) | `test_002_models.py::test_t13a_metric_matches_finite_differences`, `::test_t13a_metric_with_curvature_matches_finite_differences`, `::test_t13b_exp_decay_symmetry_and_ordered_theta`, `::test_t13b_exp_decay_map_known_values`, `::test_t13b_matched_box_is_the_window`, `::test_t13c_hypercone_covolume_and_widths`, `::test_t13c_constant_cross_section_has_flat_volume`, `::test_t13d_vertex_warp`, `::test_t13d_curvature_knob_through_the_model`, `::test_t13d_curvature_off_is_identity` |
-| P14 | Natures: round-robin draws come from each prior's own sampler; the nested natures have their laws, and the agent's fixed coordinates are `½`; every draw carries its label; `q̄` averages the rows, and is not one; the stress natures lie where §4.3 places them ([§4.3](#43-foreign-q-family)) | `test_002_natures.py::test_t14a_round_robin_draws_come_from_the_prior`, `::test_t14a_samplers_match_their_densities` (slow), `::test_t14b_nested_cone_laws`, `::test_t14c_agent_fixes_ignored_coordinates_at_centre`, `::test_t14d_few_rates_share_one_rate_in_the_window`, `::test_t14e_vertex_nature_lies_on_faces_near_v`, `::test_t14e_vertex_nature_is_uniform_by_area`, `::test_t14e_interior_nature_is_truncated_normal`, `::test_t14f_qbar_is_the_average_of_the_rows`, `::test_t14i_nested_cell_is_one_nature_for_every_agent` |
+| P14 | Natures: round-robin draws come from each prior's own sampler; the nested natures have their laws, and the agent's fixed coordinates are `½`; every draw carries its label; `q̄` averages the rows, and is not one; the stress natures lie where §4.3 places them ([§4.3](#43-foreign-q-family)) | `test_002_natures.py::test_t14a_round_robin_draws_come_from_the_prior`, `::test_t14a_samplers_match_their_densities`, `::test_t14b_nested_cone_laws`, `::test_t14c_agent_fixes_ignored_coordinates_at_centre`, `::test_t14d_few_rates_share_one_rate_in_the_window`, `::test_t14e_vertex_nature_lies_on_faces_near_v`, `::test_t14e_vertex_nature_is_uniform_by_area`, `::test_t14e_interior_nature_is_truncated_normal`, `::test_t14f_qbar_is_the_average_of_the_rows`, `::test_t14i_nested_cell_is_one_nature_for_every_agent` |
 | P15 | `p_ref` in the cones: equals `p_U`; Schur complement `σ^{-2}`; in exp-decay, each ranking's `p_ref` normalises, distinct rankings give distinct priors, and the stiffest-direction ranking does not depend on its transversal ([§3.5](#35-a-third-route-ordering-instead-of-budget), [§4.2](#42-prior-construction)) | `test_002_priors.py::test_t15a_cone_schur_complement`, `::test_t15b_c_cone_pref_is_uniform`, `::test_t15d_exp_decay_rankings_normalise_and_differ`, `::test_t15d_exp_decay_pref_matches_the_berger_bernardo_formula` (slow), `::test_t15e_stiffest_ranking_ignores_transversal`, `::test_t15f_cone_pref_with_curvature` |
 | P16 | `p_lat`: conditional equalizer; the two-sided bound closes; equals `p*` at budget 1 when `N = 0` ([§4.2](#42-prior-construction)) | `test_002_priors.py::test_t16a_b_plat_conditional_equalizer_and_bounds`, `::test_t16c_plat_at_zero_budget_is_pstar`, `::test_t16d_conditional_capacity_is_a_difference_of_informations`, `::test_t16e_gaussian_plat_matches_a_direct_maximisation` |
 | P17 | One-step score: `r_N = R_{N+1} − R_N`, and the decomposition (2.1.6) ([§2.1](#21-the-scores-cumulative-and-one-step-held-out-log-loss), [§4.4](#44-score-estimation)) | `test_002_scores.py::test_t17_one_step_score`, `::test_t17c_predictive_is_the_ratio_of_marginals`, `::test_t17d_cumulative_score_depends_on_sigma_over_root_N_only` |
@@ -1940,7 +1940,7 @@ transversals agrees pointwise within quadrature tolerance (`[^4-stiff]`).
 
 **T16 — `p_lat`.** (a) At convergence the per-cell one-step divergence
 `f^{(N+1)} − f^{(N)}` is within tolerance of the conditional capacity on `supp p_lat`, and
-below it elsewhere. (b) The two-sided bound of §4.2 closes below tolerance. (c) At `N = 0`
+below it elsewhere. (b) The two-sided bound of §4.2 closes below tolerance<span style="color: red">: `10^{-6}` nats with one-dimensional data, where the divergences are exact, and the solver's `10^{-3}` beyond (docs DD-S1)</span>. (c) At `N = 0`
 the build equals `p*` at budget 1 on the same candidate set. Catches swapped noise levels or a
 wrong difference of divergences.
 
@@ -3933,3 +3933,19 @@ Decided with MB; edits are red.
 and per-point marginal for continuous priors (`priors002.py`, `diagnostics.worst_case_bias_pressure`),
 T4's two tests, the eye test at `D = 7, 11`, and docs DD-Q1 and the *Testing notes*. The
 `D = 4, 5` eye-test rows need redrawing once `p_J` is sampled there.
+
+### 2026-11-26 — Correction (§5.1, §5.2; T16(b)'s tolerance, T14(a)'s marker)
+
+Two corrections from the third fast-suite run, decided with MB; the edit to §5.2 is red.
+
+- **T16(b) (§5.2).** At the cheap cell, the two-sided bound closed to 9.3e-4 nats, not
+  `10^{-6}`. Beyond one-dimensional data the solver stops once no candidate exceeds the
+  conditional capacity by `10^{-3}` nats (docs DD-S1), and the divergences carry quadrature
+  error of a few `10^{-4}`. So (b) holds the bound to `10^{-6}` in 1-D, where the
+  divergences are exact, and to the solver's `10^{-3}` beyond. There it checks only that
+  the solve ended by its own rule. This follows DD-S1, which is still open for review.
+- **T14(a) (§5.1).** `test_t14a_samplers_match_their_densities` was listed as slow. It runs
+  at the cheap cell in about 40 s, and the code never marked it, so the marker is removed.
+
+§5 flips to draft. Downstream: `tests/spec002_common.py` (`PLAT_GAP_EXACT`,
+`PLAT_GAP_QUADRATURE`), `test_t16a_b_plat_conditional_equalizer_and_bounds`.

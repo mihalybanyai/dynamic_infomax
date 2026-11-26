@@ -63,6 +63,16 @@ T2_TOL: float = 1e-6
 INFO_SLACK: float = 1e-3
 """Nats of solver slack in inequalities between information values (T9, T11, T23)."""
 
+PLAT_GAP_EXACT: float = 1e-6
+"""T16(b): nats within which `p_lat`'s two-sided bound closes where the divergences are
+exact (one-dimensional data)."""
+
+PLAT_GAP_QUADRATURE: float = 1e-3
+"""T16(b) beyond one-dimensional data: the solver's stopping rule, violations below 1e-3
+nats not chased (docs DD-S1, open thread for MB). The divergences there carry quadrature
+error of a few 1e-4 nats, so a tighter gap would chase the estimator's error. At the cheap
+cell the gap is 9.3e-4 (MB, 2026-11-26)."""
+
 # T12's tolerances and cells, fixed by spec §5.5 before the fixtures exist (F7); the
 # fixtures carry values and metadata only. Auto-chosen in the spec; MB to confirm.
 T12_SIGMA: float = 0.1
