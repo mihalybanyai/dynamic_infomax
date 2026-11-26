@@ -7,7 +7,7 @@
 | [1.2 Generative model](#12-generative-model) | reviewed | 261124 |
 | [2. Objective](#2-objective) | reviewed | 261121 |
 | [3. The case for transfer (and how it could fail)](#3-the-case-for-transfer-and-how-it-could-fail) | reviewed | 261124 |
-| [4. Algorithm](#4-algorithm) | reviewed | 261124 |
+| [4. Algorithm](#4-algorithm) | draft | 261125 |
 | [5. Properties to verify](#5-properties-to-verify) | draft | 261124 |
 | [6. Report](#6-report) | reviewed | 261124 |
 | [7. Open questions](#7-open-questions) | reviewed | 261121 |
@@ -1729,7 +1729,7 @@ For each cell `(model, D, σ, N, box, W, taper, fall-off, curvature, nature)`, w
 the log-ratio of every prior (`m_π(X_{1:N}) = p(X_{1:N}|x̄)·m_π(x̄)`). Hence
 `R_N^q(π) = 𝔼[log p(x̄|θ) − log m_π(x̄)]` exactly, and the posterior after `X_{1:N}` depends
 on `x̄` alone, so `r_N` needs one `x̄` and one `x'` per draw. The literal `N`-fold version
-is built once as a cross-check (T7c, and AtomicPriors' `repeat` in T12).
+is built once as a cross-check (T7c<span style="color: red">; T12(c) checks the solver at the reduced noise, since AtomicPriors' `repeat` needs discrete outcomes</span>).
 
 **Evaluating `m_π(x̄)` and `m_π(x'|x̄)`.** For discrete or candidate-set priors (`p*`, `p_lat`,
 the mis-budgeted `p*`), exact finite sums:
@@ -1825,7 +1825,7 @@ machinery; it does **not** assert the results
 | P9 | A&M's prior side: `I_{p*} ≥ I_{p_J}` and `B(p*) ≤ B(p_J)` at every `D` (A&M Fig. 5) | `test_002_references.py::test_t9_am_prior_side_dominance` (slow) |
 | P10 | Determinism: a fixed seed gives identical score arrays ([§4.4](#44-score-estimation)) | `test_002_pipeline.py::test_t10_seed_determinism` |
 | P11 | `p_proj`: the MLE projection recovers `θ̂`; `p_NML` normalises; `I_{p_proj} ≤ I_{p*} = C_N`; the port agrees with `transtrum` (P12) ([§4.2](#42-prior-construction)) | `test_002_priors.py::test_t11_nml_normaliser_in_the_1d_cone`, `::test_t11_pproj_cloud_is_slab_and_spike_in_the_1d_cone`, `::test_t11_projection_maps_outside_data_to_the_endpoints`, `::test_t11_pproj_projection_recovers_mle`, `::test_t11_projection_of_data_beyond_the_manifold_lands_on_a_face`, `::test_t11_pproj_information_below_capacity` |
-| P12 | AtomicPriors.jl references: exp-decay map and metric, `p*`, `C_N` through `repeat`, `mutual` of a fixed prior, and `transtrum`'s `p_proj` cloud match frozen values ([§5.5](#55-atomicpriorsjl-reference-fixtures)) | `test_002_references.py::test_t12a_exp_decay_map_and_metric`, `::test_t12b_pstar_matches_atomicpriors`, `::test_t12c_capacity_through_repeat`, `::test_t12d_mutual_information_of_a_fixed_prior`, `::test_t12e_pproj_port_matches_transtrum` |
+| P12 | AtomicPriors.jl references: exp-decay map and metric, `p*`, <span style="color: red">`C_N` at reduced noise</span>, `mutual` of a fixed prior, and `transtrum`'s `p_proj` cloud match frozen values ([§5.5](#55-atomicpriorsjl-reference-fixtures)) | `test_002_references.py::test_t12a_exp_decay_map_and_metric`, `::test_t12b_pstar_matches_atomicpriors`, `::test_t12c_capacity_at_reduced_noise`, `::test_t12d_mutual_information_of_a_fixed_prior`, `::test_t12e_pproj_port_matches_transtrum` |
 | P13 | Models: the metric matches autodiff; exp-decay's map is invariant under permuting `θ` and its `Θ` holds only ordered `ξ`, on the whole manifold; in the hypercone `√det g / θ_1^{D−1}` is constant for every `φ`, the cross-section widths are `r φ^{μ−2}√N/σ`, and the vertex warp is one-to-one, the identity outside `ρ` and gives the angle `κπ/2` ([§4.1](#41-model-families)) | `test_002_models.py::test_t13a_metric_matches_finite_differences`, `::test_t13a_metric_with_curvature_matches_finite_differences`, `::test_t13b_exp_decay_symmetry_and_ordered_theta`, `::test_t13b_exp_decay_map_known_values`, `::test_t13b_matched_box_is_the_window`, `::test_t13c_hypercone_covolume_and_widths`, `::test_t13c_constant_cross_section_has_flat_volume`, `::test_t13d_vertex_warp`, `::test_t13d_curvature_knob_through_the_model`, `::test_t13d_curvature_off_is_identity` |
 | P14 | Natures: round-robin draws come from each prior's own sampler; the nested natures have their laws, and the agent's fixed coordinates are `½`; every draw carries its label; `q̄` averages the rows, and is not one; the stress natures lie where §4.3 places them ([§4.3](#43-foreign-q-family)) | `test_002_natures.py::test_t14a_round_robin_draws_come_from_the_prior`, `::test_t14a_samplers_match_their_densities` (slow), `::test_t14b_nested_cone_laws`, `::test_t14c_agent_fixes_ignored_coordinates_at_centre`, `::test_t14d_few_rates_share_one_rate_in_the_window`, `::test_t14e_vertex_nature_lies_on_faces_near_v`, `::test_t14e_vertex_nature_is_uniform_by_area`, `::test_t14e_interior_nature_is_truncated_normal`, `::test_t14f_qbar_is_the_average_of_the_rows`, `::test_t14i_nested_cell_is_one_nature_for_every_agent` |
 | P15 | `p_ref` in the cones: equals `p_U`; Schur complement `σ^{-2}`; in exp-decay, each ranking's `p_ref` normalises, distinct rankings give distinct priors, and the stiffest-direction ranking does not depend on its transversal ([§3.5](#35-a-third-route-ordering-instead-of-budget), [§4.2](#42-prior-construction)) | `test_002_priors.py::test_t15a_cone_schur_complement`, `::test_t15b_c_cone_pref_is_uniform`, `::test_t15d_exp_decay_rankings_normalise_and_differ`, `::test_t15d_exp_decay_pref_matches_the_berger_bernardo_formula` (slow), `::test_t15e_stiffest_ranking_ignores_transversal`, `::test_t15f_cone_pref_with_curvature` |
@@ -1901,9 +1901,7 @@ chosen point of the manifold. The sampler itself is checked against `transtrum` 
 T12(e).
 
 **T12 — AtomicPriors.jl references.** Against the frozen values of §5.5: (a) exp-decay's
-`y(θ)` and metric at sampled `θ`; (b) `p*`'s atoms and weights up to relabelling,
-`I_{p*}` and `B(p*)` at a small exp-decay cell; (c) the capacity `C_N` from `repeat` and
-`mutual`, against the `σ_eff` build; (d) `mutual` of a fixed prior; (e) `transtrum`'s
+`y(θ)` and metric at sampled `θ`; (b) <span style="color: red">`I_{p*}`, `B(p*)` and the cross-equalizer at `p*`'s reference atoms</span> at a small exp-decay cell; (c) the capacity `C_N` <span style="color: red">at the reduced noise of `N = 2, 4`</span>, against the `σ_eff` build; (d) `mutual` of a fixed prior; (e) `transtrum`'s
 cloud of `θ̂` against the port of §4.2, which on exp-decay's whole manifold makes the same unconstrained fit `transtrum` requires [read: `resources/AtomicPriors.jl/src/max/sample.jl`, `_transtrum`]: a
 two-sample test, and the mass near the manifold's edges (coinciding rates, rates outside
 the window), where the chain's mixing is least certain; and two independent chains of the port give the same cloud in a two-sample test. A divergence flags a wrong model,
@@ -2104,14 +2102,15 @@ without making Julia a dependency of the test suite:
   `k_μ = e^{θ_μ}` with its `loglog` option. The first coordinate is this spec's `ξ_μ = e^{−k_μ}`, so for (a)–(d) `generate.jl` needs no change of variables beyond sorting the rates, and T12(a) asserts the bridge before the other fixtures are
   trusted. `transtrum`, for (e), refuses the compact coordinate and needs the unbounded one, `θ = log k` [read: `resources/AtomicPriors.jl/src/max/sample.jl`, `_transtrum`: "expected an unclamped prior!"], so `generate.jl` maps its cloud to `ξ = exp(−e^{θ})` and sorts it.
 - **What is frozen, at which cell, and to what tolerance** (auto-chosen; please confirm). All at exp-decay, `σ = 0.1`. (a) `y(θ)` and the metric at 10 states drawn uniformly on the ordered `Θ` at `D = 3`, to a relative `1e-10` for `y` and `1e-8` for the metric; (b) `p*`'s atoms
-  and weights, `I_{p*}` and `B(p*)` at `D ∈ {2, 3}`, `N = 1`. An atom matches when its prediction lies within half a Fisher length of the reference atom's, `‖y(θ_a) − y(θ_a^{ref})‖ ≤ ½σ_eff`, since the candidate set and Julia's continuous atoms need not coincide; weights to `0.02`, `I_{p*}` to `0.01` nats, and `B(p*)` to `0.2` nats, about A&M's own numerical error for it [read: A&M Fig. 5, 0.1–0.2 bits for the optimal prior]; (c)
-  `C_N = sup_π I_π(Θ;X_{1:N})` through `repeat` for `N ∈ {1, 2, 4}` at `D = 2`, the
-  independent check that the `σ_eff` build is the budget-`N` capacity, to `0.01` nats; (d) `mutual` of a
+  and weights, `I_{p*}` and `B(p*)` at `D ∈ {2, 3}`, `N = 1`. <span style="color: red">The atoms are compared through the cross-equalizer: the Python `p*`'s bias pressure lies within `0.05` nats of zero at every reference atom. The capacity-achieving Bayes mixture is unique while the prior need not be, so every optimal prior's atoms lie where any other's bias pressure vanishes [recalled][^5-unique-mixture]; atoms and weights are not matched one to one, since the candidate set's unmerged atoms outnumber Julia's continuous ones about two to one at any merge radius (first fixtures, 2026-11-25)</span>; `I_{p*}` to `0.01` nats, and `B(p*)` to `0.2` nats, about A&M's own numerical error for it [read: A&M Fig. 5, 0.1–0.2 bits for the optimal prior]; (c)
+  <span style="color: red">`C_N = sup_π I_π(Θ;X_{1:N})` at `σ_eff = σ/√N` for `N ∈ {2, 4}` at `D = 2`, from (b)'s AtomicPriors recipe run at the same reduced noise, to `0.01` nats: an external check of the capacity solver where `p*` has more atoms. The reduction itself is shown in §4.4 and checked by T7(c) and the twin cells (§5.4); `repeat`, named here first, builds the `N`-fold channel of a discrete-outcome likelihood and cannot run on 26-dimensional Gaussian data</span>; (d) `mutual` of a
   fixed grid prior, the 15 ordered points of `{0.1, 0.3, 0.5, 0.7, 0.9}²` with equal weights at `D = 2`, to `0.005` nats; (e) `transtrum`'s cloud of `θ̂` at `D = 2`, `N = 1`, 2000 points,
   on the whole manifold, as `transtrum` requires: a two-sample KS test per coordinate at `p > 10⁻³`, and the mass within `0.02` in `ξ` of each edge (coinciding rates, `ξ = 0`, `ξ = 1`) within four binomial standard errors at the two clouds' sizes, the port's inflated by its autocorrelation.
 
 `p_lat` has no fixture here, since AtomicPriors.jl has no conditional objective; its
 references are T18 and the second eye test (§5.3).
+
+[^5-unique-mixture]: <span style="color: red">Capacity's Kuhn–Tucker conditions: `I` is strictly concave in the output distribution, so all capacity-achieving priors share one Bayes mixture `m*`, and each puts its atoms where `D_KL(p(x|θ)‖m*) = C`. Settled by a textbook statement of the conditions [CITATION NEEDED]. The first fixtures fit it: the two priors agree on `I` within 0.004 nats while 23% of the Python mass at `D = 3` lies over one noise unit from every Julia atom, and the Python bias pressure at Julia's atoms stays within `[−0.003, 0.024]` nats.</span>
 
 ## 6. Report
 
@@ -3811,3 +3810,27 @@ The check now runs on the candidate set within `ρ` of `v`, `v` excluded (red): 
 candidates at the curvature cell, smallest `det g` 8.1 at `κ = ¼`. Outside the ball the
 test already compares `√det g` with the unwarped model's. §5 is already draft.
 Downstream: `test_t13d_curvature_knob_through_the_model`.
+
+### 2026-11-25 — Correction (§4.4, §5.1, §5.2, §5.5; T12(b), T12(c), first AtomicPriors fixtures)
+
+Two of §5.5's comparisons could not run as written, found when `generate.jl` first ran.
+Decided with MB; edits are red, and §4 flips to draft for one cross-reference.
+
+- **T12(c).** `repeat` builds the `N`-fold channel of a discrete-outcome likelihood matrix;
+  exp-decay's data are 26-dimensional Gaussian. (c) now runs (b)'s AtomicPriors recipe at
+  `σ_eff = σ/√N` for `N ∈ {2, 4}`. That is an external check of the capacity solver at
+  lower noise, where `p*` has more atoms. The reduction itself is shown in §4.4 and checked
+  by T7(c) and the twin cells. `N = 1` is dropped, as it repeats (b) at `D = 2`. §4.4's
+  cross-reference to `repeat` is corrected.
+- **T12(b).** At `σ = 0.1` the candidate set keeps 102 and 122 atoms above weight `10⁻³`
+  (unmerged, DD-C2), and AtomicPriors has 61 and 58. Merging the Python atoms gives counts
+  that follow the radius: 98, 82, 66 at 0.5, 0.75, 1 noise units at `D = 2`. Ten and nine
+  of the Julia atoms also lie beyond half a Fisher length of every Python atom. The atom-by-atom
+  match is replaced by the cross-equalizer, `|b(θ_a)| ≤ 0.05` nats at every reference atom
+  under the Python `p*` [recalled][^5-unique-mixture]. The 0.05 was chosen after seeing the
+  first fixture's largest value, 0.024, so unlike the other tolerances it was not fixed
+  before the reference existed. `I_{p*}` and `B(p*)` keep their tolerances.
+
+Downstream: `tests/test_002_references.py` (T12(b); T12(c) renamed
+`test_t12c_capacity_at_reduced_noise`, fixture `capacity_N{N}`), `tests/spec002_common.py`
+(`T12_PSTAR`, `T12_CAPACITY`), `tests/fixtures/atomicpriors/generate.jl`.

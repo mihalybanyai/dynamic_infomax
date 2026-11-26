@@ -66,8 +66,8 @@ INFO_SLACK: float = 1e-3
 # fixtures carry values and metadata only. Auto-chosen in the spec; MB to confirm.
 T12_SIGMA: float = 0.1
 T12_YMAP = dict(D=3, n_states=10, rtol_y=1e-10, rtol_fim=1e-8)
-T12_PSTAR = dict(N=1, atom_fisher=0.5, weight_atol=0.02, I_atol=0.01, B_atol=0.2)
-T12_CAPACITY = dict(D=2, N=(1, 2, 4), atol=0.01)
+T12_PSTAR = dict(N=1, cross_atol=0.05, I_atol=0.01, B_atol=0.2)
+T12_CAPACITY = dict(D=2, N=(2, 4), atol=0.01)
 T12_MUTUAL = dict(D=2, levels=(0.1, 0.3, 0.5, 0.7, 0.9), atol=0.005)
 T12_TRANSTRUM = dict(D=2, N=1, cloud=2000, ks_p=1e-3, edge_width=0.02, edge_sigmas=4.0)
 T12_SPREAD_SHARE: float = 0.25

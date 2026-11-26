@@ -107,10 +107,12 @@ def test_t12a_exp_decay_map_and_metric():
 @pytest.mark.parametrize("D", [2, 3])
 def test_t12b_pstar_matches_atomicpriors(D):
     """T12(b): `p*` at exp-decay, `sigma = 0.1`, `N = 1`, against AtomicPriors.jl (§5.5):
-    every reference atom has a match whose prediction lies within half a Fisher length,
-    `||y(a) - y(a_ref)|| <= sigma_eff / 2`, since the candidate set and Julia's continuous
-    atoms need not coincide; matched weights to 0.02; `I_{p*}` to 0.01 nats; `B(p*)` to
-    0.2 nats."""
+    `I_{p*}` to 0.01 nats; `B(p*)` to 0.2 nats; and the cross-equalizer, the Python `p*`'s
+    bias pressure within 0.05 nats of zero at every reference atom. The capacity-achieving
+    mixture is unique while the prior need not be, so every optimal prior's atoms lie where
+    any other's bias pressure vanishes; atoms and weights are not compared one to one
+    (MB, 2026-11-25: the candidate set's unmerged atoms outnumber Julia's continuous ones
+    about two to one, at any merge radius)."""
     tol = T12_PSTAR
     fx = _fixture(f"pstar_D{D}", D=D, N=tol["N"])
     for key, t in (("I", tol["I_atol"]), ("B", tol["B_atol"])):
@@ -118,25 +120,23 @@ def test_t12b_pstar_matches_atomicpriors(D):
     model = cheap_model(D=D, sigma=T12_SIGMA)
     res = build_pstar(model)
     np.testing.assert_allclose(res.capacity, fx["I"], atol=tol["I_atol"])
-    ref_atoms, ref_w = np.array(fx["atoms"]), np.array(fx["weights"])
-    big = res.prior.weights > 1e-3
-    got, got_w = res.prior.atoms[big], res.prior.weights[big]
-    assert len(got) == len(ref_atoms), "a different number of atoms"
-    dist = np.linalg.norm(model.y(ref_atoms)[:, None] - model.y(got)[None], axis=-1)
-    match = dist.argmin(axis=1)
-    assert len(set(match)) == len(ref_atoms), "two reference atoms match one atom"
-    assert np.all(dist[np.arange(len(ref_atoms)), match] <= tol["atom_fisher"] * model.sigma_eff)
-    np.testing.assert_allclose(got_w[match], ref_w, atol=tol["weight_atol"])
+    ref_atoms = np.array(fx["atoms"])
+    assert ref_atoms.ndim == 2 and ref_atoms.shape[1] == D and len(ref_atoms) >= 2
+    b_at_ref = bias_pressure(res.prior, model, ref_atoms, rng=np.random.default_rng(20261203))
+    worst = int(np.argmax(np.abs(b_at_ref)))
+    assert np.abs(b_at_ref[worst]) <= tol["cross_atol"], ("cross-equalizer", ref_atoms[worst], b_at_ref[worst])
     B = np.max(bias_pressure(res.prior, model, res.candidates))
     np.testing.assert_allclose(B, fx["B"], atol=tol["B_atol"])
 
 
 @pytest.mark.parametrize("N", T12_CAPACITY["N"])
-def test_t12c_capacity_through_repeat(N):
-    """T12(c): `C_N` from AtomicPriors.jl's literal `N`-fold channel (`repeat`, `mutual`)
-    matches the `sigma_eff` build to 0.01 nats: the independent check that the reduction is
-    right (§5.5)."""
-    fx = _fixture(f"capacity_repeat_N{N}", D=T12_CAPACITY["D"], N=N)
+def test_t12c_capacity_at_reduced_noise(N):
+    """T12(c): `C_N` at `sigma_eff = sigma / sqrt(N)`, `N = 2, 4`, `D = 2`, matches
+    AtomicPriors.jl's `p*` recipe of (b) run at the same reduced noise, to 0.01 nats: an
+    external check of the capacity solver where `p*` has more atoms (§5.5). The reduction
+    itself is checked by T7(c) and the twin cells; `repeat` builds the `N`-fold channel of a
+    discrete-outcome likelihood and cannot run on 26-dimensional Gaussian data."""
+    fx = _fixture(f"capacity_N{N}", D=T12_CAPACITY["D"], N=N)
     _spread_ok(fx, "C_N", T12_CAPACITY["atol"])
     model = cheap_model(D=T12_CAPACITY["D"], N=N, sigma=T12_SIGMA)
     np.testing.assert_allclose(build_pstar(model).capacity, fx["C_N"], atol=T12_CAPACITY["atol"])
