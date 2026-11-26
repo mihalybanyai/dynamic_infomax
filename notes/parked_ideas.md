@@ -97,3 +97,40 @@ the gap in mutual information, the worst-case
 [bias pressure](../GLOSSARY.md#bias-pressure), and whether atoms split at the right
 budgets. A failure there ends it cheaply. It would join the cheap updates listed in
 `notes/budget-value-of-information.md` §9.
+
+### Particle or variational `p*` for large `D` (2026-11-26)
+
+*From:* the chat on `p_proj`'s cost in spec 002. The variational direction is MB's
+interest. The particle idea is a TODO in the overleaf draft
+(`resources/overleaf_doc/main.tex:111`), which cites Dauwels 2005; only the bib entry is in
+the repo. *Idea:* compute `p*` at one budget with [atoms](../GLOSSARY.md#atom) that move,
+instead of [Blahut–Arimoto](../GLOSSARY.md#blahut-arimoto-algorithm) on a fixed candidate
+net, whose size grows with the Fisher volume and so fast with `D`. Two steps:
+- **Particle Blahut–Arimoto** [recalled: Dauwels 2005]. Blahut–Arimoto reweights a set of
+  particles, and each particle moves uphill on its divergence from the
+  [Bayes mixture](../GLOSSARY.md#bayes-mixture). The cost grows with the number of atoms,
+  not with the net. This would give spec 002 an atomic path (OQ-1) in Python, without
+  Julia.
+- **Variational, on top.** When the exact posterior over hundreds of atoms in
+  high-dimensional data gets expensive, a recognition network replaces it, as in the
+  Barber–Agakov bound of Mohamed & Rezende 2015 [read: §4.1–§4.2]. The particles stay as
+  the source, since a continuous family collapses onto atoms (see the hazards of the entry
+  above).
+
+Either comes with a certificate. Any output density `q` bounds capacity from above,
+`C ≤ max_θ D_KL(p(x|θ)‖q)` [recalled]. So the prior's information from below and this
+bound from above bracket `C`, and their gap is the worst-case
+[bias pressure](../GLOSSARY.md#bias-pressure) `B` that spec 002's tests already check.
+
+The case for it: AtomicPriors' solver, which the
+[budget-network entry](#budget-conditioned-prior-network-2026-11-13) counts as the existing
+large-`D` solver, scales badly. `nlopt!` on its kernel bound took about 3 hours for 210
+atoms at spec 002's T12(c) cell (`D = 2`, `N = 4`, sharing the machine with other runs);
+the candidate set builds `p*` at `N = 1` in about 7 seconds (spec 002 docs, DD-J3). The
+budget-network entry amortises over budgets; this one is about a single budget at large
+`D`, and the two compose.
+
+*What would settle it:* particle Blahut–Arimoto at exp-decay, `D = 2, 3` and
+`N = 1, 2, 4`, against the candidate set and the AtomicPriors fixtures of spec 002's
+T12(b) and (c), on the gap in `I`, on `B`, and on wall time as the atoms grow. Then
+`D = 5, 7, 11`, where the candidate sets fail.
