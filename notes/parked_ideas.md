@@ -134,3 +134,43 @@ budget-network entry amortises over budgets; this one is about a single budget a
 `N = 1, 2, 4`, against the candidate set and the AtomicPriors fixtures of spec 002's
 T12(b) and (c), on the gap in `I`, on `B`, and on wall time as the atoms grow. Then
 `D = 5, 7, 11`, where the candidate sets fail.
+
+### Deployable priors as `K`-sample agents (2026-11-26)
+
+*From:* the chat on spec 002's OQ-14, where sampled priors failed at thin states. MB
+observed that people handle high-dimensional inference quickly, however approximately, so
+the difficulty may be one of principle and may differ between families. The link to the
+mass bound is Claude's. *Idea:* estimating a prior's marginal `m_π(x)` by sampling the
+prior needs about `exp(KL(posterior ‖ prior))` draws [recalled: Chatterjee & Diaconis
+2018]. At data from a state `θ` that KL is of the order of the prior's per-state
+[redundancy](../GLOSSARY.md#redundancy-and-regret) `R^θ(π)` [guess], which spec 002's mass
+bound (3.2.1) ties to `−log π(A(θ))`. So a prior is expensive to use exactly where it is
+wrong, by the same number of nats. An agent that carries its prior as `K` samples, as the
+sampling hypothesis has it [recalled: Fiser, Berkes, Orbán & Lengyel 2010; Vul et al. 2014],
+has a second budget, `log K`: where its prior's redundancy exceeds it, the agent is
+over-surprised. Three consequences:
+- **Families differ in kind.** Discrete [minimax](../GLOSSARY.md#minimax) priors (`p*`,
+  `p_lat`) cap their worst-case redundancy at the [capacity](../GLOSSARY.md#channel-capacity)
+  `C_N`, the [equalizer condition](../GLOSSARY.md#equalizer-condition), and their marginals
+  are exact finite sums over [atoms](../GLOSSARY.md#atom). [Jeffreys'](../GLOSSARY.md#jeffreys-prior)
+  redundancy grows with `D` where the [co-volume](../GLOSSARY.md#co-volume) pulls its mass
+  away: `(D−1) log(W/θ_1)` in the hypercone, spec 002 eq. (3.2.2). A sampled Jeffreys then
+  needs `K` exponential in `D` there. A&M's bias and this cost are one quantity.
+- **A computational twin of budget-consciousness.** A `K`-sample agent should prefer a prior
+  whose worst-case redundancy stays below `log K`, which is the equalizer property again.
+- **Which Jeffreys is [deployable](../GLOSSARY.md#deployable-prior)?** The continuous one, or
+  its `K`-sample version? Spec 002 scores the continuous priors (§2.2); a `K`-sample variant
+  of each could join the cast, as the mis-budgeted `p*` did. Amortised inference, a learned
+  map from data to posterior, is trained on prior draws and would inherit the same limit
+  [guess].
+
+*Evidence so far:* at `D = 3`, `p_LN`'s cloud of 20000 draws, whose threshold would be
+`log 20000 ≈ 9.9` nats, was within 0.03 nats of the grid at states where the per-state
+divergence was 1.3–6.4 nats, and off by 4–54 nats where it was 16.6–18.8 (spec 002 docs,
+*Testing notes*). There are no states between 6.4 and 16.6, so this is consistent with the
+threshold, not a test of it. Jeffreys' cloud, drawn from a deliberately broad proposal,
+failed far less at the same states: what matters is the sampling distribution's mass at the
+posterior, not the prior's. *What would settle it:* at `D = 3`, clouds of 2·10³, 2·10⁴ and
+2·10⁵ draws, at states whose divergence spans 6–16 nats; the failure threshold should move
+with `log K`. Then `p*`'s atom count across spec 002's `D`-sweep: exponential growth in `D`
+would sink the "cheap to use" side [recalled: A&M's figures suggest it stays modest].
