@@ -147,6 +147,54 @@ def test_t4_uniform_density_is_absolute():
     np.testing.assert_allclose(build_uniform(cone).log_density(theta), -np.log(W_CONE), atol=1e-12)
 
 
+def _log_sqrt_det_g_decimal(model, xi, digits: int = 80) -> float:
+    """`log sqrt det g` at one state in `digits`-digit decimal arithmetic, written in the test:
+    `g = J^T J / sigma^2` with `J_{t mu} = t xi_mu^(t-1) / D`, its determinant by Gaussian
+    elimination with partial pivoting."""
+    from decimal import Decimal, localcontext
+
+    with localcontext() as ctx:
+        ctx.prec = digits
+        t = [Decimal(repr(float(v))) for v in model.times]
+        s2 = Decimal(repr(float(model.sigma_eff))) ** 2
+        D = len(xi)
+        J = [[t[a] * Decimal(repr(float(xi[mu]))) ** (t[a] - 1) / D for mu in range(D)] for a in range(len(t))]
+        A = [[sum(J[a][i] * J[a][j] for a in range(len(t))) / s2 for j in range(D)] for i in range(D)]
+        det = Decimal(1)
+        for k in range(D):
+            piv = max(range(k, D), key=lambda i: abs(A[i][k]))
+            if piv != k:
+                A[k], A[piv] = A[piv], A[k]
+                det = -det
+            det *= A[k][k]
+            for i in range(k + 1, D):
+                f = A[i][k] / A[k][k]
+                for j in range(k, D):
+                    A[i][j] -= f * A[k][j]
+        return float(det.ln() / 2)
+
+
+@pytest.mark.parametrize("D", [3, 4, 5, 7, 11])
+def test_t4_jeffreys_density_matches_high_precision(D):
+    """T4 (§4.2): Jeffreys' exp-decay density `sqrt det g`, as the sampled prior and its
+    normaliser use it, matches 80-digit arithmetic written in the test within 1e-3 nats, at
+    typical states, near the no-decay corner and where two rates nearly coincide. In double
+    precision the direct determinant of `J^T J` was off by up to 43 nats at `D = 7` and 260 at
+    `D = 11` at such states, and non-finite at some from `D = 5`; those are the thin states
+    where the per-point marginal works (2026-11-26)."""
+    from infomax.sampled import _log_sqrt_det_g
+
+    model = cheap_model(D=D)
+    rng = np.random.default_rng(20261300 + D)
+    typical = np.sort(rng.uniform(0.02, 0.98, size=(4, D)), axis=-1)
+    near_corner = np.sort(1.0 - 10 ** rng.uniform(-4, -1, size=(3, D)), axis=-1)
+    close = np.sort(rng.uniform(0.1, 0.9, size=(3, D)), axis=-1)
+    close[:, 1] = close[:, 0] * (1 + 1e-3)
+    xi = np.concatenate([typical, near_corner, np.sort(close, axis=-1)])
+    want = np.array([_log_sqrt_det_g_decimal(model, row) for row in xi])
+    np.testing.assert_allclose(_log_sqrt_det_g(model, xi), want, rtol=0, atol=1e-3)
+
+
 @pytest.mark.slow
 @pytest.mark.parametrize("D", [4, 5, 7])
 def test_t4_sampled_jeffreys_normaliser_matches_brute_force(D):

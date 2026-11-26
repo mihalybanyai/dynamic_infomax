@@ -110,6 +110,7 @@ hashes are filled at stage 3, after the eye test is approved.
 | `test_002_priors.py::test_t4_jeffreys_normaliser_converges_on_whole_manifold` | 1 | passing | (none yet) |
 | `test_002_priors.py::test_t4_jeffreys_normaliser_matches_an_independent_quadrature` | 1 | passing | (none yet) |
 | `test_002_priors.py::test_t4_jeffreys_normalises` | 2 | passing | (none yet) |
+| `test_002_priors.py::test_t4_jeffreys_density_matches_high_precision` | 5 | passing | (none yet) |
 | `test_002_priors.py::test_t4_uniform_density_is_absolute` | 1 | passing | (none yet) |
 | `test_002_priors.py::test_t7b_pstar_method_agreement` | 1 | passing (the adaptive pool) | (none yet) |
 | `test_002_references.py::test_t12a_exp_decay_map_and_metric` | 1 | passing | (none yet) |

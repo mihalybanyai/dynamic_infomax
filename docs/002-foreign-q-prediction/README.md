@@ -560,6 +560,18 @@ is approved, at the human's request).
   under every setting. Hand-over: at `D = 5`, data where the bell-shaped estimate kept 5% or
   more agreed with the annealed one within 0.05 nats (16 of 16 at the corner for both
   priors). Below 5% it was off by 0.9–2.6 nats on Jeffreys' faces, or returned `-inf`.
+- **Jeffreys' density in double precision** (2026-11-26). Against 80-digit decimal
+  arithmetic, the direct `slogdet(J^T J)` was off by up to 43 nats at `D = 7`, 95 at `D = 9`
+  and 260 at `D = 11` at near-corner and near-coincident states, and non-finite at 3 of 12
+  states at `D = 5`. It was already 3.7e-4 nats off at typical states at `D = 4`. That is
+  where the per-point marginal works, so the `D = 7` instabilities may come from it.
+  `_log_sqrt_det_g` now uses `_log_sqrt_det_g_newton` for equally spaced times: the
+  Jacobian is `diag(t/D) V diag(xi^(t_0-1))`, with `V` Vandermonde in `z = xi^c`. Its Newton
+  factorisation `V = P Omega` gives `det Omega = prod (z_j - z_i)` exactly, and `P`'s entries
+  are complete homogeneous symmetric polynomials with non-negative terms. Error at most
+  8e-12 (`D = 5`), 1.4e-9 (`D = 7`), 5.8e-7 (`D = 9`), 5.7e-5 (`D = 11`) and 3.2 (`D = 13`).
+  It takes 1.1 s per 10^5 states at `D = 11`. Test:
+  `test_t4_jeffreys_density_matches_high_precision`.
 - **First fast-suite run** (`762eae0`, 18.5 min): 140 passed, 17 failed: the T12 fixtures
   (8), T13(d) (2), T7(a) (2), T14(a) log-normals (2), T21(a) `mass_near`, T16(b) at the
   cheap cell, and T7(c), a bug in the batched kernel tables (two-dimensional data have two

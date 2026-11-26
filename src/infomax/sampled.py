@@ -498,11 +498,64 @@ class SampledPrior(CloudPrior):
 
 
 def _log_sqrt_det_g(model: Model, xi: np.ndarray) -> np.ndarray:
-    """`log sqrt(det g(xi))` at `sigma_eff`, `-inf` where `g` is singular."""
+    """`log sqrt(det g(xi))` at `sigma_eff`, `-inf` where `g` is singular.
+
+    Exp-decay with equally spaced times goes through `_log_sqrt_det_g_newton`, which is
+    stable where rates nearly coincide or approach a face. The direct determinant of
+    `J^T J` in double precision is not: against 80-digit arithmetic it was off by up to 43
+    nats at `D = 7` and 260 at `D = 11` at near-corner and near-coincident states, and
+    non-finite at some states from `D = 5` (2026-11-26). Other models use the direct form."""
+    xi = np.atleast_2d(np.asarray(xi, dtype=float))
+    t = np.asarray(getattr(model, "times", ()), dtype=float)
+    if model.family == "exp_decay" and t.size >= 2 and np.allclose(np.diff(t), t[1] - t[0], rtol=1e-12, atol=0.0):
+        return _log_sqrt_det_g_newton(t, model.D, model.sigma_eff, xi)
     with np.errstate(divide="ignore", invalid="ignore"):
         J = model.jacobian(xi)
         sign, ld = np.linalg.slogdet(np.swapaxes(J, -1, -2) @ J / model.sigma_eff**2)
     out = 0.5 * ld
+    out[(sign <= 0) | ~np.isfinite(out)] = -np.inf
+    return out
+
+
+def _log_sqrt_det_g_newton(t: np.ndarray, D: int, sigma: float, xi: np.ndarray) -> np.ndarray:
+    """`log sqrt(det g)` for exp-decay, `y_t = mean_mu xi_mu^t`, at equally spaced times.
+
+    With `c` the time step and `z = xi^c`, the Jacobian is `J_{a mu} = (t_a / D) xi_mu^(t_0 - 1)
+    z_mu^a`: a row scaling, a column scaling and a tall Vandermonde matrix `V_{a mu} = z_mu^a`.
+    In the Newton basis `V = P Omega`, with `Omega` upper triangular of determinant
+    `prod_{i<j} (z_j - z_i)` and `P_{a j} = h_{a-j}(z_0, ..., z_j)`, complete homogeneous
+    symmetric polynomials built by `h_r(z_0..z_j) = h_r(z_0..z_{j-1}) + z_j h_{r-1}(z_0..z_j)`, a
+    sum of non-negative terms. So `log sqrt det g = sum_{i<j} log(z_j - z_i) + (t_0 - 1) sum log
+    xi + 1/2 logdet(P^T W P) - D log sigma`, `W = diag((t_a / D)^2)`, with `z_j - z_i` taken
+    as `z_i expm1(c (log xi_j - log xi_i))`. The near-singular part is the exact product; the
+    rest is well conditioned. Against 80-digit arithmetic the error was at most 1.4e-9 nats
+    at `D = 7` and 5.7e-5 at `D = 11`, and 3.2 at `D = 13`, where `P^T W P` itself loses
+    double precision (2026-11-26)."""
+    xi = np.sort(np.atleast_2d(xi), axis=-1)
+    n, m = xi.shape[0], t.size
+    c = float(t[1] - t[0])
+    with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
+        lx = np.log(xi)
+        z = np.exp(c * lx)
+        lv = np.zeros(n)
+        for j in range(1, D):
+            for i in range(j):
+                d = np.where(z[:, i] > 0, z[:, i] * np.expm1(c * (lx[:, j] - lx[:, i])), z[:, j])
+                lv += np.log(d)
+        P = np.zeros((n, m, D))
+        h_prev = z[:, :1] ** np.arange(m)[None, :]
+        P[:, :, 0] = h_prev
+        for j in range(1, D):
+            h = np.empty((n, m))
+            h[:, 0] = 1.0
+            for k in range(1, m):
+                h[:, k] = h_prev[:, k] + z[:, j] * h[:, k - 1]
+            P[:, j:, j] = h[:, : m - j]
+            h_prev = h
+        M = np.einsum("nai,a,naj->nij", P, (t / D) ** 2, P)
+        sign, ld = np.linalg.slogdet(M)
+        lead = 0.0 if t[0] == 1.0 else (t[0] - 1.0) * np.sum(lx, axis=-1)
+        out = lv + lead + 0.5 * ld - D * np.log(sigma)
     out[(sign <= 0) | ~np.isfinite(out)] = -np.inf
     return out
 
