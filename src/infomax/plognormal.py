@@ -72,6 +72,12 @@ def build_pln(model: Model, theta_bar: float = 0.0, tau: float = 1.0):
 
     prior = ExpDecayProductPrior("p_LN", model, log_h, log_H_interval, sampler, inv_H=inv_H)
     prior.theta_bar, prior.tau = float(theta_bar), float(tau)
+    from infomax.sampled import GRID_MAX_D, sampled_from
+
+    if model.D > GRID_MAX_D:  # beyond the grids: a cloud of its draws (§4.4, OQ-13)
+        cloud = sampled_from(prior, model, "p_LN")
+        cloud.theta_bar, cloud.tau = prior.theta_bar, prior.tau
+        return cloud
     return prior
 
 

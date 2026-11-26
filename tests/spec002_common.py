@@ -70,6 +70,9 @@ T12_PSTAR = dict(N=1, cross_atol=0.05, I_atol=0.01, B_atol=0.2)
 T12_CAPACITY = dict(D=2, N=(2, 4), atol=0.01)
 T12_MUTUAL = dict(D=2, levels=(0.1, 0.3, 0.5, 0.7, 0.9), atol=0.005)
 T12_TRANSTRUM = dict(D=2, N=1, cloud=2000, ks_p=1e-3, edge_width=0.02, edge_sigmas=4.0)
+T12_ATOMIC = dict(D=(5, 7), N=1, I_floor=0.01)
+"""T12(f): the atomic path's `I_{p*}` may fall at most `I_floor` nats below AtomicPriors.jl's,
+and may exceed it without bound (§5.5(f))."""
 T12_SPREAD_SHARE: float = 0.25
 """A fixture fails T12 if a recorded Julia run-to-run spread exceeds this share of its tolerance."""
 
@@ -130,7 +133,7 @@ def build_cast(model: Model, rng: np.random.Generator) -> dict:
         "p*_N/10": build_pstar(model, budget=model.N / 10).prior,
         "p*_10N": build_pstar(model, budget=10 * model.N).prior,
         "p_lat": build_plat(model).prior,
-        "p_proj": build_pproj(model, 2000, rng),
+        "p_proj": build_pproj(model, rng),
         "p_J": build_jeffreys(model),
         "p_U": build_uniform(model),
     }

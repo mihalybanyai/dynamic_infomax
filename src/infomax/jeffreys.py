@@ -40,9 +40,16 @@ def build_jeffreys(model, *, quadrature_points: int | None = None):
     Exp-decay, and the cone with curvature: `sqrt(det g)` on a quadrature grid, normalised
     with `quadrature_points` nodes per axis, exposed as `log_normaliser` (in `xi` for
     exp-decay), and sampled by rejection on the grid. Extended precision above `D ≈ 12` is
-    not available on this path (OQ-1).
+    not available on this path (OQ-1). Exp-decay from `D = 4` (unless `quadrature_points`
+    asks for the grid): adaptive importance sampling (`infomax.sampled`, §4.2, OQ-13), since
+    the grid loses Jeffreys' mass where rates nearly coincide.
     """
     import scipy.special
+
+    from infomax.sampled import JEFFREYS_SAMPLED_FROM_D, build_sampled_jeffreys
+
+    if model.family == "exp_decay" and model.D >= JEFFREYS_SAMPLED_FROM_D and quadrature_points is None:
+        return build_sampled_jeffreys(model)
 
     from infomax.priors002 import ConeProductPrior, GridPrior002
     from infomax.quadrature import cone_theta1_rule

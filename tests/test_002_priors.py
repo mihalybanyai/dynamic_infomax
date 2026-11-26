@@ -145,6 +145,47 @@ def test_t4_uniform_density_is_absolute():
     np.testing.assert_allclose(build_uniform(cone).log_density(theta), -np.log(W_CONE), atol=1e-12)
 
 
+@pytest.mark.slow
+@pytest.mark.parametrize("D", [4, 5])
+def test_t4_sampled_jeffreys_normaliser_matches_brute_force(D):
+    """T4 (§5.2, OQ-13): from `D = 4`, exp-decay's `p_J` is sampled by adaptive importance
+    sampling; its `log Z` over ordered `xi` agrees with brute force over `2e6` uniform ordered
+    draws within three combined standard errors. Brute force: `log Z = log mean sqrt(det g)
+    - log D!`. Catches a wrong Jacobian of the log-time coordinates or a lost `D!`."""
+    import math
+
+    from infomax.sampled import _log_sqrt_det_g
+
+    model = cheap_model(D=D)
+    p_J = build_jeffreys(model)
+    assert hasattr(p_J, "refined_log_marginal"), "p_J should be the sampled prior from D = 4"
+    rng = np.random.default_rng(20261205)
+    lv = np.concatenate([_log_sqrt_det_g(model, np.sort(rng.uniform(size=(100_000, D)), axis=-1)) for _ in range(20)])
+    r = np.exp(lv - lv.max())
+    log_z = lv.max() + np.log(r.mean()) - math.lgamma(D + 1)
+    se = r.std() / (r.mean() * np.sqrt(r.size))
+    assert abs(p_J.log_normaliser - log_z) <= 3 * np.hypot(se, p_J.log_normaliser_se), (p_J.log_normaliser, log_z, se)
+
+
+@pytest.mark.slow
+def test_t4_pointwise_marginals_agree():
+    """T4 (§5.2, §4.4): at `D = 5`, at a typical and a face-adjacent state, the per-point
+    marginal's two variants (full and diagonal kernels) agree within 0.1 nats on the mean
+    `log m` over 16 draws of `x` from the state. Catches a proposal whose density is
+    mis-evaluated, since two different proposals then disagree."""
+    model = cheap_model(D=5)
+    p_J = build_jeffreys(model)
+    rng = np.random.default_rng(20261206)
+    typical = p_J.sample(1, rng)[0]
+    face = np.sort(np.concatenate([[1e-4], rng.uniform(size=4)]))
+    for state in (typical, face):
+        y = model.y(state[None])[0]
+        x = y + model.sigma_eff * rng.standard_normal((16, model.m_out))
+        a, ess_a = p_J.refined_log_marginal(model, x, rng, kernel="full")
+        b, ess_b = p_J.refined_log_marginal(model, x, rng, kernel="diagonal")
+        assert abs(a.mean() - b.mean()) <= 0.1, (state, a.mean(), b.mean(), ess_a.min(), ess_b.min())
+
+
 def test_t4_jeffreys_cone_marginal():
     """T4: in the cone Jeffreys' `theta_1`-marginal is `∝ theta_1^(D-1)` on `[0, W]`, i.e.
     its CDF is `(theta_1 / W)^D` (§1.2, §9.2). Catches a wrong determinant or swapped axes."""
@@ -164,7 +205,8 @@ def test_t4_jeffreys_cone_marginal():
 @pytest.mark.slow
 def test_t7b_pstar_method_agreement():
     """T7(b): where both the candidate-set and the atomic path run, their `R_N^q` agree
-    within Monte-Carlo and solver tolerance (§4.2, OQ-1). Needs AtomicPriors.jl."""
+    within Monte-Carlo and solver tolerance (§4.2, OQ-1). The atomic path is the adaptive
+    pool on the same solver."""
     model = cheap_model()
     sets = build_pstar(model, method="candidates")
     atomic = build_pstar(model, method="atomic")
@@ -195,20 +237,26 @@ def test_t11_nml_normaliser_in_the_1d_cone():
 def test_t11_pproj_cloud_is_slab_and_spike_in_the_1d_cone():
     """T11 (F14): `p_proj` in the 1-D cone is Quinn's slab and spike: data beyond either end
     project onto it, so each end carries `1/(2Z) = 0.228` of the cloud, and the slab between
-    is uniform (§3.4, §4.2). The ends' fractions are checked within four standard errors,
-    taken from batch means since the cloud comes from a Markov chain; the slab is KS-tested
-    on every tenth interior point, for the same reason. A `build_pproj` that returns draws
-    of `p_U` has no mass at the ends and fails."""
+    is uniform (§3.4, §4.2). The cloud is weighted (importance sampling, OQ-6), so the
+    ends' weighted fractions are checked within four binomial standard errors at the
+    cloud's effective sample size, and the slab by a weighted KS statistic at that size. A
+    `build_pproj` that returns draws of `p_U` has no mass at the ends and fails."""
     model = _cone_1d(1)
-    atoms = build_pproj(model, 8000, np.random.default_rng(20261135)).atoms[:, 0]
+    cloud = build_pproj(model, np.random.default_rng(20261135))
+    atoms, w, n_eff = cloud.atoms[:, 0], cloud.weights, cloud.ess
     Z = 1.0 + W_CONE / (SIGMA_1D * np.sqrt(2 * np.pi))
     for end in (0.0, W_CONE):
-        hit = np.isclose(atoms, end, rtol=0, atol=1e-12).astype(float)
-        batches = hit.reshape(40, -1).mean(axis=1)
-        se = max(batches.std(ddof=1) / np.sqrt(batches.size), np.sqrt(hit.mean() * (1 - hit.mean()) / hit.size))
-        assert abs(hit.mean() - 1 / (2 * Z)) <= MC_SIGMAS * se, f"end {end}"
-    interior = atoms[(atoms > 1e-12) & (atoms < W_CONE - 1e-12)][::10]
-    assert scipy.stats.kstest(interior, scipy.stats.uniform(0, W_CONE).cdf).pvalue > 1e-3
+        p = w @ np.isclose(atoms, end, rtol=0, atol=1e-12)
+        se = np.sqrt(p * (1 - p) / n_eff)
+        assert abs(p - 1 / (2 * Z)) <= MC_SIGMAS * se, f"end {end}"
+    inside = (atoms > 1e-12) & (atoms < W_CONE - 1e-12)
+    xs, ws = atoms[inside], w[inside] / w[inside].sum()
+    order = np.argsort(xs)
+    ecdf = np.cumsum(ws[order])
+    u = xs[order] / W_CONE
+    ks = max(np.max(np.abs(ecdf - u)), np.max(np.abs(ecdf - ws[order] - u)))
+    n_in = 1.0 / np.sum(ws**2)
+    assert scipy.stats.kstwo.sf(ks, int(n_in)) > 1e-3
 
 
 def test_t11_projection_maps_outside_data_to_the_endpoints():
@@ -260,7 +308,7 @@ def test_t11_pproj_information_below_capacity(D):
     rng = np.random.default_rng(20261137)
     model = cheap_model(D=D)
     cap = build_pstar(model).capacity
-    i_proj = mutual_information(build_pproj(model, 2000, rng), model, rng=rng)
+    i_proj = mutual_information(build_pproj(model, rng), model, rng=rng)
     assert i_proj <= cap + INFO_SLACK
 
 

@@ -20,6 +20,7 @@ per `workflows/implement-spec.md`. Design decisions are in
 | src/infomax/pref.py | pending-tests | (none yet) |
 | src/infomax/plognormal.py | pending-tests | (none yet) |
 | src/infomax/jeffreys.py | pending-tests | (none yet) |
+| src/infomax/sampled.py | pending-tests | (none yet) |
 | src/infomax/qfamily.py | pending-tests | (none yet) |
 | src/infomax/score.py | pending-tests | (none yet) |
 | src/infomax/diagnostics.py | pending-tests | (none yet) |
@@ -104,16 +105,19 @@ hashes are filled at stage 3, after the eye test is approved.
 | `test_002_priors.py::test_t23_tuned_lognormal_is_a_local_maximum` | 2 | passing | (none yet) |
 | `test_002_priors.py::test_t3_pstar_equalizer` | 1 | passing | (none yet) |
 | `test_002_priors.py::test_t4_jeffreys_cone_marginal` | 1 | passing | (none yet) |
+| `test_002_priors.py::test_t4_sampled_jeffreys_normaliser_matches_brute_force` | 2 | passing | (none yet) |
+| `test_002_priors.py::test_t4_pointwise_marginals_agree` | 1 | passing | (none yet) |
 | `test_002_priors.py::test_t4_jeffreys_normaliser_converges_on_whole_manifold` | 1 | passing | (none yet) |
 | `test_002_priors.py::test_t4_jeffreys_normaliser_matches_an_independent_quadrature` | 1 | passing | (none yet) |
 | `test_002_priors.py::test_t4_jeffreys_normalises` | 2 | passing | (none yet) |
 | `test_002_priors.py::test_t4_uniform_density_is_absolute` | 1 | passing | (none yet) |
-| `test_002_priors.py::test_t7b_pstar_method_agreement` | 1 | failing (atomic path: needs Julia) | (none yet) |
+| `test_002_priors.py::test_t7b_pstar_method_agreement` | 1 | passing (the adaptive pool) | (none yet) |
 | `test_002_references.py::test_t12a_exp_decay_map_and_metric` | 1 | passing | (none yet) |
 | `test_002_references.py::test_t12b_pstar_matches_atomicpriors` | 2 | passing | (none yet) |
 | `test_002_references.py::test_t12c_capacity_at_reduced_noise` | 2 | passing | (none yet) |
 | `test_002_references.py::test_t12d_mutual_information_of_a_fixed_prior` | 1 | passing | (none yet) |
-| `test_002_references.py::test_t12e_pproj_port_matches_transtrum` | 1 | failing (the port has not mixed; Testing notes) | (none yet) |
+| `test_002_references.py::test_t12e_pproj_port_matches_transtrum` | 1 | passing | (none yet) |
+| `test_002_references.py::test_t12f_atomic_path_not_below_atomicpriors` | 2 | passing | (none yet) |
 | `test_002_references.py::test_t18_plat_matches_tanaka` | 2 | passing | (none yet) |
 | `test_002_references.py::test_t9_am_prior_side_dominance` | 4 | not-yet-run | (none yet) |
 | `test_002_scores.py::test_t17_one_step_score` | 1 | passing | (none yet) |
@@ -125,7 +129,7 @@ hashes are filled at stage 3, after the eye test is approved.
 | `test_002_scores.py::test_t1d_floor_and_mismatch_errors_match_their_spread` | 1 | not-yet-run | (none yet) |
 | `test_002_scores.py::test_t1e_gap_error_comes_from_per_draw_differences` | 1 | passing | (none yet) |
 | `test_002_scores.py::test_t20_round_robin_mismatches_are_non_negative` | 1 | passing | (none yet) |
-| `test_002_scores.py::test_t7a_continuous_quadrature_matches_a_fine_atom_sum` | 3 | failing [p_U, p_LN]: the reference grid's error (Testing notes) | (none yet) |
+| `test_002_scores.py::test_t7a_continuous_quadrature_matches_a_fine_atom_sum` | 3 | passing (reference grid fixed; Testing notes) | (none yet) |
 | `test_002_scores.py::test_t7a_discrete_marginal_is_the_atom_sum` | 1 | passing | (none yet) |
 | `test_002_scores.py::test_t7a_discrete_predictive_is_the_atom_sum` | 1 | passing | (none yet) |
 | `test_002_scores.py::test_t7a_tapered_cone_marginal_matches_brute_force` | 4 | passing | (none yet) |
@@ -140,5 +144,5 @@ hashes are filled at stage 3, after the eye test is approved.
 | Eye test | Status | Figure path |
 |----------|--------|-------------|
 | A&M Fig. 5, default run `D <= 4` (band for `B`, §5.3 as revised) | passed (MB, 2026-11-25) | tests/figures/002_foreign_q_prediction/eyetest_am_fig5.png |
-| A&M Fig. 5, extended run `D in {5, 7, 11}` | not-yet-run (needs AtomicPriors.jl) | tests/figures/002_foreign_q_prediction/eyetest_am_fig5.png |
+| A&M Fig. 5, extended run `D in {5, 7, 11}` | partial: `D = 5` run 2026-11-26 on the atomic path (734 s); `D = 7, 11` wait for sampled `p_J` and `p_LN` marginals; `D ≤ 5` approved by MB (2026-11-26) | tests/figures/002_foreign_q_prediction/eyetest_am_fig5.png |
 | Komaki Fig. 1 (binomial `p_lat`) | passed (MB, 2026-11-25) | tests/figures/002_foreign_q_prediction/eyetest_komaki_fig1.png |

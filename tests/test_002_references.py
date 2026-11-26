@@ -37,6 +37,7 @@ from spec002_common import (
     T12_MUTUAL,
     T12_PSTAR,
     T12_SIGMA,
+    T12_ATOMIC,
     T12_SPREAD_SHARE,
     T12_TRANSTRUM,
     T12_YMAP,
@@ -158,50 +159,71 @@ def test_t12d_mutual_information_of_a_fixed_prior():
     np.testing.assert_allclose(mutual_information(prior, model), fx["I"], atol=T12_MUTUAL["atol"])
 
 
-def _edge_fractions(z: np.ndarray, width: float) -> np.ndarray:
-    """Fractions of a cloud within `width` in `xi` of each edge: coinciding rates, `xi = 0`
-    (a rate decaying at once) and `xi = 1` (a rate never decaying)."""
+def _edge_fractions(z: np.ndarray, width: float, w: np.ndarray | None = None) -> np.ndarray:
+    """Weighted fractions of a cloud within `width` in `xi` of each edge: coinciding rates,
+    `xi = 0` (a rate decaying at once) and `xi = 1` (a rate never decaying)."""
+    w = np.full(len(z), 1.0 / len(z)) if w is None else w
     return np.array([
-        np.mean(np.abs(z[:, 1] - z[:, 0]) < width),
-        np.mean(z[:, 0] < width),
-        np.mean(z[:, 1] > 1 - width),
+        w @ (np.abs(z[:, 1] - z[:, 0]) < width),
+        w @ (z[:, 0] < width),
+        w @ (z[:, 1] > 1 - width),
     ])
 
 
-def _batch_means_se(indicator: np.ndarray, n_batches: int = 20) -> float:
-    """Standard error of a chain's mean from batch means, at least the binomial one."""
-    p = indicator.mean()
-    batches = indicator[: len(indicator) // n_batches * n_batches].reshape(n_batches, -1).mean(1)
-    return max(batches.std(ddof=1) / np.sqrt(n_batches), np.sqrt(p * (1 - p) / len(indicator)))
+def _weighted_ks_p(xa: np.ndarray, wa: np.ndarray, xb: np.ndarray, wb: np.ndarray) -> float:
+    """Two-sample KS p-value for weighted samples, each at its effective size."""
+    grid = np.concatenate([xa, xb])
+    Fa = np.array([wa @ (xa <= g) for g in grid])
+    Fb = np.array([wb @ (xb <= g) for g in grid])
+    na, nb = 1.0 / np.sum(wa**2), 1.0 / np.sum(wb**2)
+    return float(scipy.stats.kstwo.sf(np.max(np.abs(Fa - Fb)), int(na * nb / (na + nb))))
 
 
 def test_t12e_pproj_port_matches_transtrum():
-    """T12(e): the port's cloud of `theta-hat` matches `transtrum`'s at exp-decay, `D = 2`,
-    `sigma = 0.1`, on the whole manifold (§5.5). `transtrum` runs in the unbounded log-rate
-    coordinate, so `generate.jl` maps its cloud to sorted `xi`. A two-sample KS test per
-    coordinate at `p > 1e-3`, and the mass within 0.02 of each edge (coinciding rates,
-    `xi = 0`, `xi = 1`) within four standard errors at the two clouds' sizes, the port's from
-    batch means; and two independent chains of the port also agree (m8)."""
+    """T12(e): the sampler's weighted cloud of `theta-hat` matches `transtrum`'s at
+    exp-decay, `D = 2`, `sigma = 0.1`, on the whole manifold (§5.5). `generate.jl` maps
+    `transtrum`'s cloud to sorted `xi` and re-fits each point tightly. A two-sample KS test
+    per coordinate at `p > 1e-3`, each cloud at its effective size, and the mass within 0.02
+    of each edge (coinciding rates, `xi = 0`, `xi = 1`) within four binomial standard errors
+    at those sizes; and two independent starts of the sampler, from Jeffreys and from
+    `p_U`, also agree (OQ-6)."""
     tol = T12_TRANSTRUM
     fx = _fixture("transtrum", D=tol["D"], N=tol["N"])
     ref = np.array(fx["theta_hat"])
     assert ref.shape == (tol["cloud"], tol["D"]) and np.all(np.diff(ref, axis=1) >= 0)
+    w_ref = np.full(len(ref), 1.0 / len(ref))
     model = cheap_model(D=tol["D"], sigma=T12_SIGMA)
-    a = build_pproj(model, tol["cloud"], np.random.default_rng(20261201)).atoms
-    b = build_pproj(model, tol["cloud"], np.random.default_rng(20261202)).atoms
+    a = build_pproj(model, np.random.default_rng(20261201))
+    b = build_pproj(model, np.random.default_rng(20261202), first="uniform")
     for j in range(tol["D"]):
-        assert scipy.stats.ks_2samp(a[:, j], ref[:, j]).pvalue > tol["ks_p"]
-        assert scipy.stats.ks_2samp(a[:, j], b[:, j]).pvalue > tol["ks_p"]
+        assert _weighted_ks_p(a.atoms[:, j], a.weights, ref[:, j], w_ref) > tol["ks_p"]
+        assert _weighted_ks_p(a.atoms[:, j], a.weights, b.atoms[:, j], b.weights) > tol["ks_p"]
     width = tol["edge_width"]
-    got, want = _edge_fractions(a, width), _edge_fractions(ref, width)
-    for k, (indicator_a, p_ref) in enumerate(
-        zip(
-            (np.abs(a[:, 1] - a[:, 0]) < width, a[:, 0] < width, a[:, 1] > 1 - width),
-            want,
-        )
-    ):
-        se = np.hypot(_batch_means_se(indicator_a.astype(float)), np.sqrt(p_ref * (1 - p_ref) / len(ref)))
-        assert abs(got[k] - p_ref) <= tol["edge_sigmas"] * se + 1e-12, ("edge", k, got[k], p_ref)
+    got, want = _edge_fractions(a.atoms, width, a.weights), _edge_fractions(ref, width)
+    other = _edge_fractions(b.atoms, width, b.weights)
+    for k in range(3):
+        se = np.hypot(np.sqrt(got[k] * (1 - got[k]) / a.ess), np.sqrt(want[k] * (1 - want[k]) / len(ref)))
+        assert abs(got[k] - want[k]) <= tol["edge_sigmas"] * se + 1e-12, ("edge vs transtrum", k, got[k], want[k])
+        se_ab = np.hypot(np.sqrt(got[k] * (1 - got[k]) / a.ess), np.sqrt(other[k] * (1 - other[k]) / b.ess))
+        assert abs(got[k] - other[k]) <= tol["edge_sigmas"] * se_ab + 1e-12, ("edge, two starts", k, got[k], other[k])
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("D", T12_ATOMIC["D"])
+def test_t12f_atomic_path_not_below_atomicpriors(D):
+    """T12(f): at A&M's `D in {5, 7}`, exp-decay, `sigma = 0.1`, `N = 1`, the atomic path's
+    `I_{p*}` is at least AtomicPriors.jl's minus 0.01 nats (§5.5(f)). One-sided: `p*`
+    maximises `I`, and the reference optimises a kernel bound, so it is a floor, not the
+    value; at `D = 5` the atomic path exceeded it by 0.027 nats (2026-11-26). Also checks
+    that the pool's last round leaves no violation above the solver's tolerance."""
+    tol = T12_ATOMIC
+    fx = _fixture(f"pstar_D{D}", D=D, N=tol["N"])
+    _spread_ok(fx, "I", tol["I_floor"])
+    model = cheap_model(D=D, sigma=T12_SIGMA)
+    res = build_pstar(model, method="atomic")
+    assert res.method == "atomic"
+    assert res.capacity >= fx["I"] - tol["I_floor"], (res.capacity, fx["I"])
+    assert res.max_violation <= 2e-3, res.max_violation
 
 
 # ---------------------------------------------------------------------------

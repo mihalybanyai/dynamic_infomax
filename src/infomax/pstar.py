@@ -1,9 +1,10 @@
 """The capacity prior `p*` and its mis-budgeted copies (spec 002 §4.2).
 
 Blahut–Arimoto on a candidate set placed by Fisher distance (points at most 0.5 Fisher
-lengths apart at `sigma_eff`, seeded with the faces of `Theta`); beyond the sets'
-reach, AtomicPriors.jl through `juliacall` (OQ-1), which is not installed here, so the
-atomic path raises.
+lengths apart at `sigma_eff`, seeded with the faces of `Theta`); beyond the sets' reach,
+the atomic path (OQ-1, DD-A1): the same solver on an adaptive pool of face, interior and
+nearby states, thinned to the net's minimum separation and regrown each round.
+`method="auto"` falls back to it when the candidate set passes `10^6` points.
 
 The candidate set (DD-C1) is a Poisson-disk net in prediction space, in noise units:
 every pair of candidates is at least `spacing/2` apart, and Bridson's growth step
@@ -43,6 +44,8 @@ class PStarResult:
     method: str  # "candidates" or "atomic"
     budget: float
     support_residual: float = 0.0
+    rounds: int = 0  # atomic path: pool rounds
+    max_violation: float = 0.0  # atomic path: max f - C over the last pool (provenance, §6.1)
 
 
 # ---------------------------------------------------------------------------
@@ -339,8 +342,8 @@ def build_pstar(
     builds the explicit `N`-fold channel instead of the `sigma_eff` reduction (T7c).
     """
     M = float(model.N if budget is None else budget)
-    if method == "atomic":
-        raise NotImplementedError("the atomic path needs AtomicPriors.jl through juliacall (OQ-1), not installed")
+    if method == "atomic" and (literal_nfold or candidates is not None):
+        raise ValueError("the atomic path builds its own pool at sigma_eff (§4.2)")
     from infomax.priors002 import _model_key
 
     # the reduced build depends on sigma and the budget only through sigma / sqrt(budget),
@@ -353,7 +356,15 @@ def build_pstar(
     hit = _BUILD_CACHE.get(key)
     if hit is not None:
         return hit if hit.budget == M else dataclasses.replace(hit, budget=M)
-    result = _build_pstar(model, M, spacing, candidates, literal_nfold, tol)
+    if method == "atomic":
+        result = _build_pstar_atomic(model, M, tol)
+    else:
+        try:
+            result = _build_pstar(model, M, spacing, candidates, literal_nfold, tol)
+        except RuntimeError:
+            if method != "auto" or candidates is not None or literal_nfold:
+                raise
+            result = _build_pstar_atomic(model, M, tol)  # beyond D_switch (§4.2, OQ-1)
     if len(_BUILD_CACHE) > 64:
         _BUILD_CACHE.clear()
     _BUILD_CACHE[key] = result
@@ -383,4 +394,125 @@ def _build_pstar(model: Model, M: float, spacing: float, candidates, literal_nfo
     return PStarResult(
         prior=prior, capacity=capacity, candidates=cands, masses=sol.masses, method="candidates", budget=M,
         support_residual=sol.support_residual,
+    )
+
+
+# ---------------------------------------------------------------------------
+# The atomic path: an adaptive pool (§4.2, OQ-1)
+# ---------------------------------------------------------------------------
+
+POOL_FACE_PER_D = 400
+"""Fresh face states per round, per dimension; half as many interior states join them."""
+POOL_SEPARATION = 0.25
+"""Minimum separation of pool states in noise units: the candidate net's own (spacing / 2),
+since near-duplicate states stall the Newton step (DD-S1)."""
+POOL_MAX_ROUNDS = 15
+
+
+def _random_face_states(model: Model, n: int, rng: np.random.Generator) -> np.ndarray:
+    """States on random faces of `Theta`, without listing the faces (there are `3^D` in the
+    cone). Ordered `Theta` (exp-decay): the rates fall into consecutive blocks (each gap cut
+    with probability 0.3, so few blocks are likely); the first block may sit at the low
+    end, the last at the high end, the rest take sorted uniform values. Otherwise each
+    coordinate sits at its low or high bound with probability 1/4 each, or is uniform."""
+    D = model.D
+    lo, hi = np.asarray(model.box.low, float), np.asarray(model.box.high, float)
+    if not model.box.ordered:
+        u = rng.uniform(size=(n, D))
+        theta = lo + (hi - lo) * rng.uniform(size=(n, D))
+        theta = np.where(u < 0.25, lo, np.where(u > 0.75, hi, theta))
+        return theta
+    a, b = float(lo[0]), float(hi[0])
+    out = np.empty((n, D))
+    for i in range(n):
+        cuts = np.flatnonzero(rng.uniform(size=D - 1) < 0.3) + 1
+        sizes = np.diff(np.concatenate([[0], cuts, [D]]))
+        vals = np.sort(a + (b - a) * rng.uniform(size=sizes.size))
+        if rng.uniform() < 0.3:
+            vals[0] = a
+        if rng.uniform() < 0.3:
+            vals[-1] = b
+        out[i] = np.repeat(np.sort(vals), sizes)
+    return out
+
+
+def _perturbed(model: Model, atoms: np.ndarray, rng: np.random.Generator) -> np.ndarray:
+    """Small moves of each atom: jitter at 0.3%, 1% and 3% of each coordinate's range, and a
+    snap of one coordinate to a bound or, in exp-decay, onto its neighbouring rate."""
+    lo, hi = np.asarray(model.box.low, float), np.asarray(model.box.high, float)
+    span = hi - lo
+    moves = [np.clip(atoms + sc * span * rng.standard_normal(atoms.shape), lo, hi) for sc in (0.003, 0.01, 0.03)]
+    snap = atoms.copy()
+    j = rng.integers(0, model.D, size=len(atoms))
+    mode = rng.integers(0, 3 if (model.box.ordered and model.D > 1) else 2, size=len(atoms))
+    for a in range(len(atoms)):
+        if mode[a] == 0:
+            snap[a, j[a]] = lo[j[a]]
+        elif mode[a] == 1:
+            snap[a, j[a]] = hi[j[a]]
+        else:
+            snap[a, j[a]] = snap[a, j[a] - 1 if j[a] > 0 else 1]
+    moves.append(snap)
+    out = np.concatenate(moves)
+    return np.sort(out, axis=-1) if model.box.ordered else out
+
+
+def _thin(Yhat: np.ndarray, n_keep_first: int, r: float) -> np.ndarray:
+    """Indices of a greedy minimum-separation subset: the first `n_keep_first` points always
+    stay; a later point stays only if no earlier kept point lies within `r`."""
+    tree = cKDTree(Yhat)
+    removed = np.zeros(Yhat.shape[0], dtype=bool)
+    for i in range(Yhat.shape[0]):
+        if removed[i]:
+            continue
+        for j in tree.query_ball_point(Yhat[i], r):
+            if j > i and j >= n_keep_first:
+                removed[j] = True
+    return np.flatnonzero(~removed)
+
+
+def _build_pstar_atomic(model: Model, M: float, tol: float) -> PStarResult:
+    """`p*` on an adaptive pool (§4.2, OQ-1). Each round the pool holds the support, fresh
+    face and interior states, and small moves of the support; it is thinned to
+    `POOL_SEPARATION`, and `solve_capacity` solves the weights on it from the support and adds
+    its violators. Rounds stop when one adds no atom and `C` has risen by less than `1e-4`
+    nats (at least three rounds). Deterministic: the pool's draws use a fixed seed."""
+    model_b = model.at_budget(M)
+    ymap, s = _channel(model, M, False)
+    rng = np.random.default_rng(NET_SEED + 1)
+    D = model.D
+    support, w, lam_prev, sol, pool, added = np.empty((0, D)), np.empty(0), -np.inf, None, None, 0
+    for rnd in range(POOL_MAX_ROUNDS):
+        fresh = np.concatenate([
+            _random_face_states(model_b, POOL_FACE_PER_D * D, rng),
+            model_b.box.sample_uniform(POOL_FACE_PER_D * D // 2, rng),
+        ])
+        parts = [support, fresh] + ([_perturbed(model_b, support, rng)] if len(support) else [])
+        pool = np.concatenate(parts)
+        Y = ymap(pool)
+        keep = _thin(Y / s, len(support), POOL_SEPARATION)
+        pool, Y = pool[keep], Y[keep]
+        obj = GaussianObjective(Y, s)
+        fast = None if Y.shape[1] == 1 else GaussianObjective(Y, s, fast=True)
+        initial = np.arange(len(support)) if len(support) else None
+        sol = solve_capacity(obj, fast=fast, initial=initial, tol=tol)
+        on = sol.masses > 1e-6 * sol.masses.max()
+        new_support = pool[on]
+        if len(support):
+            old = cKDTree(ymap(support) / s)
+            d, _ = old.query(ymap(new_support) / s, k=1)
+            added = int(np.sum(d > 1e-9))
+        else:
+            added = len(new_support)
+        support, w = new_support, sol.masses[on] / sol.masses[on].sum()
+        if rnd >= 2 and added == 0 and sol.value - lam_prev < 1e-4:
+            break
+        lam_prev = sol.value
+    prior = DiscretePrior(f"p*[{M:g}]", support, w)
+    masses = np.zeros(len(pool))
+    masses[on] = w
+    return PStarResult(
+        prior=prior, capacity=float(sol.value), candidates=pool, masses=masses, method="atomic", budget=M,
+        support_residual=sol.support_residual, rounds=rnd + 1,
+        max_violation=float(np.max(sol.f_all) - sol.value),
     )

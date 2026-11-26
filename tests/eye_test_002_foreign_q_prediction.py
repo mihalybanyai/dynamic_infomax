@@ -19,12 +19,14 @@ Two figures for human review, against published shapes:
 
 This is not a pytest test (no `test_` prefix; no assertions). Run it directly:
 
-    uv run python tests/eye_test_002_foreign_q_prediction.py [--extended]
+    uv run python tests/eye_test_002_foreign_q_prediction.py [--extended[=5,7,11]]
 
 The default run, `D <= 4` on the candidate-set path, is the quick smoke check. Approval
-needs one run with `--extended`, which adds A&M's `D in {5, 7, 11}` through AtomicPriors.jl
+needs one run with `--extended`, which adds A&M's `D in {5, 7, 11}` on the atomic path
 (OQ-1) and saves those numbers to `eyetest_am_fig5_extended.json` beside the figure; later
-runs redraw from that file without recomputing. A&M's `D = 26` is left out so the eye
+runs redraw from that file without recomputing, and a partial run (`--extended=5`) adds
+its `D` to the file. Above `D = 5`, `p_J`'s and `p_LN`'s quadrature grids outgrow memory, so
+`D = 7, 11` wait for their sampled marginals (2026-11-26). A&M's `D = 26` is left out so the eye
 test stays cheap. Figures go to `tests/figures/002_foreign_q_prediction/`. The approval is
 recorded in `experiments/002-foreign-q-prediction/CODEGEN_LOG.md`; the full suite runs only
 after it. Regenerated after the test red-team (F2, F3, F16).
@@ -86,7 +88,7 @@ def _scores_at(D: int, rng: np.random.Generator) -> dict:
     """`I` in nats for each prior, and the band `[B_interior, B_all]` of `max_theta b` over
     `p*`'s candidate set (§5.3.1)."""
     model = build_model("exp_decay", D, m=26, sigma=0.1, N=1)
-    pstar = build_pstar(model)
+    pstar = build_pstar(model, method="atomic" if D > max(D_GRID) else "auto")
     priors = {"p*": pstar.prior, "p_J": build_jeffreys(model), "p_LN": build_pln(model)}
     states = pstar.candidates
     out = {"I": {}, "B": {}}
@@ -96,19 +98,18 @@ def _scores_at(D: int, rng: np.random.Generator) -> dict:
     return out
 
 
-def am_fig5(rng: np.random.Generator, extended: bool) -> Path:
+def am_fig5(rng: np.random.Generator, extended: tuple[int, ...]) -> Path:
     """Panel pair of A&M Fig. 5: information and worst-case bias pressure against `D`."""
     rows = {D: _scores_at(D, rng) for D in D_GRID}
+    cache = json.loads(EXTENDED_CACHE.read_text()) if EXTENDED_CACHE.exists() else {"rows": {}, "seconds": {}}
     if extended:
-        start = time.perf_counter()
-        ext = {D: _scores_at(D, rng) for D in D_EXTENDED}
-        EXTENDED_CACHE.write_text(
-            json.dumps({"seconds": time.perf_counter() - start, "rows": {str(D): r for D, r in ext.items()}}, indent=1)
-        )
-        print(f"extended run took {time.perf_counter() - start:.0f} s; record it in spec §5.3")
-        rows.update(ext)
-    elif EXTENDED_CACHE.exists():
-        rows.update({int(D): r for D, r in json.loads(EXTENDED_CACHE.read_text())["rows"].items()})
+        for D in extended:
+            start = time.perf_counter()
+            cache["rows"][str(D)] = _scores_at(D, rng)
+            cache["seconds"][str(D)] = time.perf_counter() - start
+            print(f"extended run at D = {D} took {cache['seconds'][str(D)]:.0f} s; record it in spec §5.3")
+        EXTENDED_CACHE.write_text(json.dumps(cache, indent=1))
+    rows.update({int(D): r for D, r in cache["rows"].items()})
     Ds = sorted(rows)
     fig, (top, bottom) = plt.subplots(2, 1, figsize=(5.5, 6.5), sharex=True)
     for name in PRIORS:
@@ -156,12 +157,15 @@ def komaki_fig1() -> Path:
 def main() -> None:
     rng = np.random.default_rng(SEED)
     FIG_DIR.mkdir(parents=True, exist_ok=True)
-    extended = "--extended" in sys.argv
+    arg = next((a for a in sys.argv[1:] if a.startswith("--extended")), None)
+    extended = () if arg is None else (D_EXTENDED if arg == "--extended" else tuple(int(d) for d in arg.split("=", 1)[1].split(",")))
     paths = [am_fig5(rng, extended=extended), komaki_fig1()]
     for path in paths:
         print(f"figure written to {path}")
-    if not (extended or EXTENDED_CACHE.exists()):
-        print("Approval needs the extended run: rerun with --extended (spec §5.3).")
+    done = set(json.loads(EXTENDED_CACHE.read_text())["rows"]) if EXTENDED_CACHE.exists() else set()
+    missing = [D for D in D_EXTENDED if str(D) not in done]
+    if missing:
+        print(f"Approval needs the extended run at D = {missing} (spec §5.3).")
     print("Human approval of these figures is required before the full spec 002 suite runs (spec §5.3).")
 
 

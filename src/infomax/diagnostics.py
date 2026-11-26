@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from infomax.mixture import log_normal_iso
 from infomax.models import Model
 
 
@@ -373,6 +374,19 @@ def worst_case_bias_pressure(
         cand = np.unique(np.concatenate([best] + [np.asarray(n, dtype=int) for n in near]))
         if cand.size > 2 * top:  # keep the best-screened neighbourhoods first
             cand = np.concatenate([best, np.setdiff1d(cand, best)[: 2 * top - best.size]])
+        if hasattr(prior, "refined_log_marginal"):
+            # a sampled continuous prior (§4.4, OQ-13): the cloud screens, and the 20
+            # highest states are refined with the per-point marginal, where the cloud
+            # underestimates m because the prior is thin there
+            f_c = per_state_redundancy(prior, model, pts[cand], rng=rng, n_x=n_screen)
+            cand = cand[np.argsort(-f_c)[:20]]
+            Yc = model.y(pts[cand])
+            f_ref = np.empty(cand.size)
+            for k in range(cand.size):
+                x = Yc[k] + model.sigma_eff * rng.standard_normal((n_screen, Yc.shape[1]))
+                lm, _ = prior.refined_log_marginal(model, x, rng)
+                f_ref[k] = float(np.mean(log_normal_iso(x, Yc[k], model.sigma_eff) - lm))
+            return float(np.max(f_ref)) - info
         f_ref = per_state_redundancy(prior, model, pts[cand], rng=rng, n_x=n_refine)
         return float(np.max(f_ref)) - info
 

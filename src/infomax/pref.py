@@ -36,9 +36,12 @@ def build_uniform(model: Model):
         def inv_H(a, b, u):
             return a + (b - a) * u
 
-        return ExpDecayProductPrior(
+        prior = ExpDecayProductPrior(
             "p_U", model, log_h, log_H_interval, lambda n, rng: model.box.sample_uniform(n, rng), inv_H=inv_H
         )
+        from infomax.sampled import GRID_MAX_D, sampled_from
+
+        return sampled_from(prior, model, "p_U") if model.D > GRID_MAX_D else prior  # §4.4, OQ-13
     if model.family == "hypercone":
         W = model.W
         if model.curvature == 1.0:

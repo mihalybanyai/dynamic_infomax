@@ -5,7 +5,7 @@
 #     julia --threads=1 --project=tests/fixtures/atomicpriors tests/fixtures/atomicpriors/generate.jl [fixtures...]
 #
 # With no arguments every fixture is written; arguments pick some: ymap pstar capacity mutual
-# transtrum. This folder's environment pins AtomicPriors.jl to its upstream commit and
+# transtrum pstar_highD. This folder's environment pins AtomicPriors.jl to its upstream commit and
 # LineSearches below 7.5 (DD-J1). Each JSON file holds values and metadata only: T12's
 # tolerances are fixed by spec §5.5 and pinned in tests/spec002_common.py.
 # Design decisions DD-J1 to DD-J3 are in docs/002-foreign-q-prediction/README.md.
@@ -153,6 +153,29 @@ function fixture_pstar(D::Int)
 end
 
 # ---------------------------------------------------------------------------------------------
+# (f) pstar_highD: I_{p*} at A&M's D in {5, 7}, N = 1, the reference for the atomic path
+# ---------------------------------------------------------------------------------------------
+
+const HIGHD_START = 100        # about twice the 54-57 atoms the optimum keeps (2026-11-26)
+
+function fixture_pstar_highD(D::Int)
+    t = @elapsed p = nlopt!(q -> ekern(yexp(q, TIMES), SIGMA * sqrt(2)), sobol(D, HIGHD_START); ftol=NLOPT_FTOL)
+    xi, w, merged = merge_atoms(p.array, p.weights)
+    Is = map(SEEDS) do s
+        Random.seed!(s)
+        mcarlo(ycompact(xi), w, SIGMA, I_DRAWS)
+    end
+    @printf("p* D = %d: %d atoms (%d merged) in %.0f s, I = %.4f nats (seeds differ by %.4f)\n",
+            D, length(w), merged, t, mean(Is), abs(Is[1] - Is[2]))
+    fx = meta(D=D, atoms=sorted_rows(xi), weights=w, I=mean(Is), n_start=HIGHD_START, merged=merged,
+              merge_radius_sigma=MERGE_RADIUS,
+              method="nlopt!(ekern(yexp(p, times), sigma*sqrt(2)); ftol=$NLOPT_FTOL) from sobol(D, $HIGHD_START); " *
+                     "I by mcarlo ($I_DRAWS draws); mean of two seeds. A kernel-bound optimum: a floor for I_{p*}, not its value")
+    fx["spread"] = Dict("I" => abs(Is[1] - Is[2]))
+    write_fixture("pstar_D$D", fx)
+end
+
+# ---------------------------------------------------------------------------------------------
 # (c) capacity: C_N at sigma_eff = sigma / sqrt(N), N in {2, 4}, D = 2
 # ---------------------------------------------------------------------------------------------
 
@@ -223,22 +246,50 @@ xi_from_lograte(theta) = exp.(-exp.(theta))          # xi = exp(-k), k = exp(the
 
 edge_fractions(z) = [mean(abs.(z[2, :] .- z[1, :]) .< EDGE), mean(z[1, :] .< EDGE), mean(z[2, :] .> 1 - EDGE)]
 
+const REFIT_STARTS = 3         # transtrum's own fit plus two random log-rates
+
+"""Re-fit one data point tightly (spec 002 §5.5(e), DD-J3): LsqFit with x_tol = g_tol = 1e-15
+from transtrum's own estimate and from random log-rates, keeping the smallest residual.
+transtrum's fits stop early along flat ridges, which moved its coinciding-rates fraction
+by about 0.03 (2026-11-26)."""
+function tight_refit(x::AbstractVector, theta0::AbstractVector, rng)
+    J = similar(x, length(x), length(theta0))
+    f(_, th) = ylograte(th)
+    jac(_, th) = ForwardDiff.jacobian!(J, ylograte, th)
+    best, cost = theta0, sum(abs2, ylograte(theta0) .- x)
+    for k in 1:REFIT_STARTS
+        start = k == 1 ? theta0 : randn(rng, length(theta0))
+        fit = AtomicPriors.LsqFit.curve_fit(f, jac, 1:0, x, start; x_tol=1e-15, g_tol=1e-15, maxIter=5000)
+        c = sum(abs2, fit.resid)
+        if isfinite(c) && c < cost
+            best, cost = fit.param, c
+        end
+    end
+    best
+end
+
 function fixture_transtrum()
     clouds = map(SEEDS) do s
         Random.seed!(s)
-        th = transtrum(ylograte, Weighted(randn(Xoshiro(s), 2, WALKERS)), SIGMA, (CLOUD + 200) * THIN; nthin=THIN, verbose=false)
-        size(th, 2) >= CLOUD || error("transtrum returned $(size(th, 2)) points, fewer than $CLOUD")
-        keep = sort(randperm(Xoshiro(s), size(th, 2))[1:CLOUD])
-        sort(xi_from_lograte(th.array[:, keep]); dims=1)
+        xs, _, ths = AtomicPriors._transtrum(ylograte, Weighted(randn(Xoshiro(s), 2, WALKERS)), SIGMA,
+                                             (CLOUD + 200) * THIN; nthin=THIN, verbose=false)
+        size(ths, 2) >= CLOUD || error("transtrum returned $(size(ths, 2)) points, fewer than $CLOUD")
+        keep = sort(randperm(Xoshiro(s), size(ths, 2))[1:CLOUD])
+        rng = Xoshiro(s + 1)
+        refit = reduce(hcat, [tight_refit(xs[:, i], ths[:, i], rng) for i in keep])
+        moved = mean(abs.(sort(xi_from_lograte(refit); dims=1) .- sort(xi_from_lograte(ths[:, keep]); dims=1)) .> 1e-3)
+        @printf("seed %d: re-fit moved %.1f%% of the coordinates by more than 1e-3 in xi\n", s, 100moved)
+        sort(xi_from_lograte(refit); dims=1)
     end
     e1, e2 = edge_fractions(clouds[1]), edge_fractions(clouds[2])
     se = sqrt.(max.(e1 .* (1 .- e1), 1 / CLOUD) / CLOUD .* 2)     # binomial SE of a difference
     @printf("transtrum: edge fractions %s, seeds differ by %s binomial SEs\n",
             string(round.(e1; digits=4)), string(round.(abs.(e1 .- e2) ./ se; digits=2)))
     fx = meta(D=2, cloud=CLOUD, theta_hat=rows(clouds[1]), walkers=WALKERS, thin=THIN,
-              lograte_cap=CAP, edge_fractions=e1,
+              lograte_cap=CAP, edge_fractions=e1, refit_starts=REFIT_STARTS,
               method="transtrum(theta -> yexp(min.(theta, $CAP), times), walkers from randn(Xoshiro(seed), 2, $WALKERS), sigma, n; " *
-                     "nthin=$THIN), $CLOUD points drawn without replacement, mapped to sorted xi; seed 1's cloud")
+                     "nthin=$THIN), $CLOUD points drawn without replacement, each re-fitted by LsqFit at x_tol = g_tol = 1e-15 " *
+                     "from $REFIT_STARTS starts, mapped to sorted xi; seed 1's cloud")
     fx["spread"] = Dict("edge_coinciding" => abs(e1[1] - e2[1]), "edge_xi0" => abs(e1[2] - e2[2]),
                         "edge_xi1" => abs(e1[3] - e2[3]), "edge_in_binomial_se" => abs.(e1 .- e2) ./ se)
     write_fixture("transtrum", fx)
@@ -246,7 +297,7 @@ end
 
 # ---------------------------------------------------------------------------------------------
 
-const ALL = ("ymap", "pstar", "capacity", "mutual", "transtrum")
+const ALL = ("ymap", "pstar", "pstar_highD", "capacity", "mutual", "transtrum")
 
 function main(args)
     which = isempty(args) ? ALL : Tuple(args)
@@ -254,6 +305,7 @@ function main(args)
     @printf("AtomicPriors %s, Julia %s, seeds %s\n", AP_COMMIT[1:7], VERSION, SEEDS)
     "ymap" in which && fixture_ymap()
     "pstar" in which && foreach(fixture_pstar, (2, 3))
+    "pstar_highD" in which && foreach(fixture_pstar_highD, (5, 7))
     "capacity" in which && foreach(fixture_capacity, (2, 4))
     "mutual" in which && fixture_mutual()
     "transtrum" in which && fixture_transtrum()

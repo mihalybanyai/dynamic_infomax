@@ -1,23 +1,32 @@
 """The NML pushforward `p_proj` (spec 002 §4.2, OQ-6).
 
-A port of AtomicPriors.jl's `transtrum`: an ensemble Markov chain on `x` targets
-`p_NML(x) ∝ max_theta p(x|theta)`, and the maximum-likelihood `theta-hat` of each
-retained step forms the cloud.
+Adaptive importance sampling. Each round draws `theta` from a proposal made of atoms, adds
+noise at `sigma_eff`, fits the maximum-likelihood `theta-hat(x)` within `Theta`, and weights
+the draw by `p(x | theta-hat(x)) / m_q(x)`; the proposal's mixture `m_q` is a finite sum, so
+the weights are exact. The first proposal is the draws of a broad prior (Jeffreys, or `p_U`
+for an independent second start) used as atoms; each later one is the previous round's
+weighted cloud, mixed with 10% of those first atoms so that no weight is unbounded. The fit
+supplies the faces' mass: data beyond a face project onto it, so the next proposal has atoms
+there. A warm start (`start=`, a neighbouring cell's cloud) changes only the cost, since the
+weights make every cloud consistent for `p_proj` whatever its proposal. The last round uses
+tight fits: along sloppy directions the likelihood is nearly flat and the default fit's
+stopping rule moves `theta-hat` (DD-P1). The result is a weighted `CloudPrior`.
 
 The projection (DD-P1) is a batched, box-constrained Levenberg–Marquardt least-squares
 fit of `y(theta)` to `x`, started from the nearest points of a Fisher-spaced seed set
-(the candidate net of `infomax.pstar`, faces included) and from a walker's previous
+(the candidate net of `infomax.pstar`, faces included) and, optionally, from a previous
 estimate. In exp-decay it runs on the unordered cube, which the map's permutation
-symmetry makes equivalent, and sorts the result into the ordered `Theta`. The chain is
-the affine-invariant stretch move of emcee (Goodman & Weare 2010) [recalled], the
-sampler `transtrum` calls through KissMCMC [read: `resources/AtomicPriors.jl/src/max/sample.jl`].
+symmetry makes equivalent, and sorts the result into the ordered `Theta`. `tight=True`
+polishes each fit by bounded least squares at `1e-15` tolerances.
 """
 from __future__ import annotations
 
 import numpy as np
 from scipy.spatial import cKDTree
 
-from infomax.mixture import log_normal_iso
+import warnings
+
+from infomax.mixture import log_normal_iso, mixture_logpdf
 from infomax.models import Model
 from infomax.priors002 import CloudPrior
 
@@ -82,8 +91,25 @@ def _lm(model: Model, x: np.ndarray, theta0: np.ndarray, *, iters: int = 40) -> 
     return th, cost
 
 
-def mle_project(model: Model, x: np.ndarray, *, previous: np.ndarray | None = None) -> np.ndarray:
-    """The maximum-likelihood state for data `x` within `Theta`, at `sigma_eff`."""
+def _polish(model: Model, x: np.ndarray, theta: np.ndarray) -> np.ndarray:
+    """Each fit polished by bounded least squares at `1e-15` tolerances (DD-P1)."""
+    from scipy.optimize import least_squares
+
+    lo, hi = np.asarray(model.box.low, float), np.asarray(model.box.high, float)
+    out = np.empty_like(theta)
+    for i in range(x.shape[0]):
+        res = least_squares(
+            lambda t: model.y(t[None])[0] - x[i], np.clip(theta[i], lo, hi), bounds=(lo, hi),
+            jac=lambda t: model.jacobian(t[None])[0], xtol=1e-15, ftol=1e-15, gtol=1e-15,
+            max_nfev=2000, method="trf",
+        )
+        out[i] = res.x
+    return out
+
+
+def mle_project(model: Model, x: np.ndarray, *, previous: np.ndarray | None = None, tight: bool = False) -> np.ndarray:
+    """The maximum-likelihood state for data `x` within `Theta`, at `sigma_eff`; `tight`
+    polishes each fit (DD-P1)."""
     x = np.atleast_2d(np.asarray(x, dtype=float))
     n = x.shape[0]
     if model.family == "hypercone" and model.D == 1 and model.D_full == 1 and model.curvature == 1.0:
@@ -100,6 +126,13 @@ def mle_project(model: Model, x: np.ndarray, *, previous: np.ndarray | None = No
     th = th.reshape(len(starts), n, -1)
     c = c.reshape(len(starts), n)
     best = th[np.argmin(c, axis=0), np.arange(n)]
+    if tight:
+        best = _polish(model, x, best)
+    # a fit that reaches a face lies on it exactly: snap values within 1e-12 of the range
+    # (the polish can stop at 1e-20 instead of 0)
+    lo, hi = np.asarray(model.box.low, float), np.asarray(model.box.high, float)
+    eps = 1e-12 * (hi - lo)
+    best = np.where(best - lo < eps, lo, np.where(hi - best < eps, hi, best))
     if model.box.ordered:
         best = np.sort(best, axis=-1)
     return best
@@ -131,41 +164,81 @@ def nml_log_normaliser(model: Model, rng: np.random.Generator, *, n: int = 4096)
     return float(top + np.log(mean)), float(r.std(ddof=1) / (mean * np.sqrt(n)))
 
 
+def _first_prior(model: Model, first: str):
+    if first == "jeffreys":
+        from infomax.jeffreys import build_jeffreys
+
+        return build_jeffreys(model)
+    if first == "uniform":
+        from infomax.pref import build_uniform
+
+        return build_uniform(model)
+    raise ValueError(f"unknown first proposal {first!r}")
+
+
+def _is_round(model, atoms, w, base, alpha, n, rng, tight):
+    """One round: draw from the proposal `(1 - alpha) * cloud + alpha * base`, fit, weight."""
+    s = model.sigma_eff
+    theta0 = atoms[rng.choice(atoms.shape[0], size=n, p=w)]
+    from_base = rng.uniform(size=n) < alpha
+    theta0[from_base] = base[rng.integers(0, base.shape[0], size=int(from_base.sum()))]
+    x = model.y(theta0) + s * rng.standard_normal((n, model.m_out))
+    keep = w > 0
+    log_cloud = mixture_logpdf(x, model.y(atoms[keep]), np.log(w[keep]), s)
+    log_base = mixture_logpdf(x, model.y(base), np.full(base.shape[0], -np.log(base.shape[0])), s)
+    log_q = np.logaddexp(np.log1p(-alpha) + log_cloud, np.log(alpha) + log_base)
+    theta_hat = mle_project(model, x, tight=tight)
+    log_w = log_normal_iso(x, model.y(theta_hat), s) - log_q
+    wt = np.exp(log_w - log_w.max())
+    wt /= wt.sum()
+    return theta_hat, wt, float(1.0 / np.sum(wt**2) / n)
+
+
 def build_pproj(
     model: Model,
-    n_samples: int,
     rng: np.random.Generator,
     *,
-    n_walkers: int = 64,
-    burn: int = 1000,
-    a: float = 2.0,
+    start: CloudPrior | None = None,
+    first: str = "jeffreys",
+    n_cold: int = 8000,
+    n_warm: int = 2000,
+    alpha: float = 0.1,
+    ess_ok: float = 0.85,
+    max_rounds: int = 12,
 ) -> CloudPrior:
-    """`p_proj` as a cloud of `n_samples` maximum-likelihood estimates (§4.2)."""
-    m = model.m_out
-    if n_walkers % 2:
-        n_walkers += 1
-    theta0 = model.box.sample_uniform(n_walkers, rng)
-    X = model.y(theta0)  # walkers start on the manifold
-    logp, TH = _log_nml_unnorm(model, X, previous=theta0)
-    half = n_walkers // 2
-    n_keep = int(np.ceil(n_samples / n_walkers))
-    kept = []
-    for step in range(burn + n_keep):
-        for first in (0, 1):
-            sl_k = slice(0, half) if first == 0 else slice(half, n_walkers)
-            sl_c = slice(half, n_walkers) if first == 0 else slice(0, half)
-            Xk, Xc = X[sl_k], X[sl_c]
-            partner = Xc[rng.integers(0, half, size=half)]
-            z = ((a - 1.0) * rng.uniform(size=half) + 1.0) ** 2 / a
-            prop = partner + z[:, None] * (Xk - partner)
-            lp_prop, th_prop = _log_nml_unnorm(model, prop, previous=TH[sl_k])
-            log_acc = (m - 1) * np.log(z) + lp_prop - logp[sl_k]
-            acc = np.log(rng.uniform(size=half)) < log_acc
-            idx = np.arange(n_walkers)[sl_k][acc]
-            X[idx] = prop[acc]
-            logp[idx] = lp_prop[acc]
-            TH[idx] = th_prop[acc]
-        if step >= burn:
-            kept.append(TH.copy())
-    cloud = np.concatenate(kept, axis=0)[:n_samples]
-    return CloudPrior("p_proj", cloud)
+    """`p_proj` as a weighted cloud of maximum-likelihood estimates (§4.2, OQ-6).
+
+    Cold start (`start=None`): `n_cold` draws of the `first` prior ("jeffreys" or
+    "uniform") are the first and the defensive proposal. Warm start: a neighbouring cell's
+    cloud is the first proposal, with `n_warm` draws per round, its atoms clipped into this
+    model's `Theta`. Rounds continue until the effective sample size reaches `ess_ok` in two
+    consecutive rounds (at least two rounds, at most `max_rounds`); a last round with tight
+    fits gives the cloud. A warm start whose last round falls below `ess_ok` repeats cold.
+    The returned prior carries `ess` (as a fraction of the draws in `ess_fraction`),
+    `rounds` and `warm`."""
+    n = n_cold if start is None else n_warm
+    base = _first_prior(model, first).sample(n, rng)
+    if start is None:
+        atoms, w = base, np.full(n, 1.0 / n)
+    else:
+        lo, hi = np.asarray(model.box.low, float), np.asarray(model.box.high, float)
+        atoms = np.clip(np.asarray(start.atoms, dtype=float), lo, hi)
+        if model.box.ordered:
+            atoms = np.sort(atoms, axis=-1)
+        w = np.asarray(start.weights, dtype=float)
+    ok, rounds = 0, 0
+    for rnd in range(max_rounds):
+        atoms, w, ess = _is_round(model, atoms, w, base, alpha, n, rng, tight=False)
+        rounds += 1
+        ok = ok + 1 if ess >= ess_ok else 0
+        if rnd >= 1 and ok >= 2:
+            break
+    atoms, w, ess = _is_round(model, atoms, w, base, alpha, n, rng, tight=True)
+    rounds += 1
+    if ess < ess_ok and start is not None:
+        return build_pproj(model, rng, first=first, n_cold=n_cold, alpha=alpha, ess_ok=ess_ok, max_rounds=max_rounds)
+    if ess < ess_ok:
+        warnings.warn(f"p_proj: effective sample size {ess:.2f} of the draws, below {ess_ok}", RuntimeWarning, stacklevel=2)
+    cloud = CloudPrior("p_proj", atoms, w)
+    cloud.ess_fraction, cloud.rounds, cloud.warm = ess, rounds, start is not None
+    return cloud

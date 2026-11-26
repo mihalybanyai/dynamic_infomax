@@ -186,13 +186,18 @@ class DiscretePrior(PriorBase):
 class CloudPrior(DiscretePrior):
     """A sample-backed prior: `p_proj`'s cloud of maximum-likelihood estimates (§4.2).
 
-    Its mixture is the equal-weight average over the cloud,
-    `m(x) = mean_j N(x; y(theta-hat_j), sigma_eff^2 1)`, and its own sampler draws from the
-    cloud, so its own world matches its mixture exactly (T20)."""
+    Its mixture is the weighted sum over the cloud,
+    `m(x) = sum_j w_j N(x; y(theta-hat_j), sigma_eff^2 1)`, equal weights unless given (the
+    importance weights of `pproj.build_pproj`), and its own sampler draws from the cloud by
+    weight, so its own world matches its mixture exactly (T20). `ess` is the effective
+    sample size `1 / sum w_j^2`."""
 
-    def __init__(self, name: str, atoms: np.ndarray) -> None:
+    def __init__(self, name: str, atoms: np.ndarray, weights: np.ndarray | None = None) -> None:
         atoms = np.asarray(atoms, dtype=float)
-        super().__init__(name, atoms, np.full(atoms.shape[0], 1.0 / atoms.shape[0]))
+        if weights is None:
+            weights = np.full(atoms.shape[0], 1.0 / atoms.shape[0])
+        super().__init__(name, atoms, weights)
+        self.ess = float(1.0 / np.sum(self.weights**2))
 
 
 # ---------------------------------------------------------------------------

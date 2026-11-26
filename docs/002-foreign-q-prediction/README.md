@@ -162,23 +162,66 @@ sampling. A cell is proposed in proportion to its volume times the largest densi
 nodes, a point is drawn uniformly in its part of `Theta`, and it is accepted with
 probability `f / (4 f_max)`.
 
+**DD-Q4 — Continuous priors beyond the grids.** (`sampled.py`; `build_jeffreys`, `build_pln`,
+`build_uniform`.) Spec §4.2, §4.4 and OQ-13. Exp-decay `p_J` from `D = 4`, and `p_U` and
+`p_LN` above `D = 5`, are `SampledPrior`s: weighted clouds of 20000 draws in ordered `xi`,
+with a normalised log density.
+- *Jeffreys' sampler.* Adaptive importance sampling in unordered log decay times. Round 0
+  draws `N(0.8, 1.5²)` log times; later rounds draw from Scott-bandwidth Gaussian kernels
+  around the previous weighted cloud, with 10% of round 0's law. Each round has 8000 draws.
+  It stops once `log Z` varies by less than 0.02 nats over three rounds, and a last round of
+  20000 draws gives the cloud, `log_normaliser` and its standard error. Seed
+  `SAMPLED_SEED + D`.
+- *Results.* `log Z` was 0.8466 ± 0.0065 at `D = 4` and −4.0597 ± 0.0103 at `D = 5`, against
+  brute force's 0.8411 ± 0.0013 and −4.0646 ± 0.0022. It builds in 20–25 s. `I(p_J)` at
+  `D = 5` was 2.300 bits, against A&M's 2.29. The sampler's effective sample size levels off
+  near 32% of a round at `D = 5` and 8% at `D = 7`; a better proposal is open.
+- *Marginals.* The weighted cloud's mixture by default. `refined_log_marginal` gives a
+  per-point estimate: up to 200 posterior centres resampled from the likelihood-weighted
+  cloud, full-covariance or diagonal kernels, 20% defensive kernel density of the cloud,
+  1000 draws, and each point's effective sample size. `worst_case_bias_pressure` screens
+  with the cloud and refines the 20 highest states per point, with 64 draws each.
+- *First attempt.* A Gaussian at the tight fit, with covariance `(g + 100 I)^-1`, reached
+  1% effective sample size, and two such proposals differed by 3–4 nats.
+
 **DD-P1 — The maximum-likelihood projection.** (`pproj.mle_project`.) A batched,
 box-constrained Levenberg–Marquardt fit, started from the three nearest points of a
-Fisher-spaced seed net (`candidate_set` at spacing 1) and, in the chain, from the
-walker's previous estimate. In exp-decay it runs on the unordered cube (the map is
-permutation-symmetric) and sorts the result. In the 1-D cone the projection is the clip.
+Fisher-spaced seed net (`candidate_set` at spacing 1) and, optionally, from a previous
+estimate. In exp-decay it runs on the unordered cube (the map is permutation-symmetric) and
+sorts the result. In the 1-D cone the projection is the clip.
 
 Each fit stops once a step lowers its cost by less than `1e-12` of it, or its damping
 passes `1e6`; all starting points of a batch run as one array. That took `p_proj`'s build at
 the cheap cell from 44 s to 12 s, mostly by removing Python overhead.
 
+`tight=True` then polishes each fit by bounded least squares (`scipy.optimize.least_squares`,
+`xtol = ftol = gtol = 1e-15`). It is needed because along sloppy directions the likelihood
+is nearly flat, and the default stopping rule fires there early. On the same 3000 data
+points, the default fits put 0.335 of the cloud on coinciding rates and `transtrum`'s 0.287;
+polished from both, they gave 0.31 and 0.30, and met on 99% of points (2026-11-26). Raising
+the iteration cap does not help: the cost rule, not the cap, stops the fit. The polish runs
+only in the sampler's last round (DD-P3), since earlier rounds only shape the proposal.
+A fit within `1e-12` of the range from a bound is snapped onto it, since the polish can
+stop at `xi = 3e-20` instead of 0. Without the snap, T12(e)'s KS test read the cloud's
+point mass on a face as off the face and failed at `p = 1e-12`, while every quantile
+agreed with `transtrum`'s within 0.01.
+
 **DD-P2 — The NML normaliser.** (`pproj.nml_log_normaliser`.) Importance sampling from
 `p_U`'s marginal at 1.25 times the noise, with the delta-method error of `log Z`.
 
-**DD-P3 — The chain.** (`pproj.build_pproj`.) Goodman–Weare's stretch move (`a = 2`),
-two half-ensembles, `n_walkers = 64`, `burn = 1000`, and every walker's estimate kept at
-every step after burn-in (no thinning). This follows the spec's defaults; T12(e), which
-would check it against `transtrum`, needs Julia (*Testing notes*).
+**DD-P3 — The sampler.** (`pproj.build_pproj`.) Adaptive importance sampling, as spec
+§4.2 and OQ-6 fix it: cold starts from 8000 Jeffreys draws (or `p_U`'s, `first="uniform"`,
+for an independent second start), warm starts from a given cloud with 2000 draws per round,
+10% of the first atoms as the defensive part, rounds until the effective sample size is at
+least 85% twice in a row (2 to 12), then a tight round. The result is a weighted
+`CloudPrior` carrying `ess`, `ess_fraction`, `rounds` and `warm`. A warm start whose last
+round falls below 85% repeats cold; a cold start that ends below it warns. Warm-start atoms
+are clipped into the new cell's `Θ`, so a cloud from the whole manifold can seed the window
+box.
+
+It replaces a stretch-move chain (`a = 2`, 64 walkers, 1000 burn-in steps, every step kept).
+That chain held about ten independent points per 2000-point cloud, by its autocorrelation
+time of about 200 steps at the cheap cell (*Testing notes*, T12(e)).
 
 **DD-R1 — Stiffest first at `D = 2`.** (`pref._StiffestField`, `pref.ranking_coordinate`.)
 The Berger–Bernardo prior in coordinates (`psi`, arc length) is rewritten free of
@@ -249,10 +292,26 @@ build alone depends, so the cheap cell's `p*_{10N}` and its twin's `p*_{40}` sha
 The memo lives in memory only; a cache that survives the process is left for later, when
 the code is stable.
 
-**DD-A1 — The atomic path.** (`pstar.build_pstar(method="atomic")`.) AtomicPriors.jl
-through `juliacall` (OQ-1) is not written: `juliacall` is not a dependency yet, and the path
-will need DD-J1's pins and single thread. It raises `NotImplementedError`. `D_switch` is
-unset, and every build uses candidate sets.
+**DD-A1 — The atomic path.** (`pstar._build_pstar_atomic`, `build_pstar(method="atomic")`.)
+The adaptive pool of spec §4.2. Each round: `400 D` states on random faces, without listing
+them (the cone has `3^D`), and `200 D` interior states. In the ordered `Θ`, rates fall into
+consecutive blocks with each gap cut with probability 0.3, the end blocks pinned with
+probability 0.3 each. Otherwise each coordinate sits at a bound with probability ½. The
+current support and four moves of each atom join them: jitter at 0.3%, 1% and 3% of the
+range, and one coordinate snapped to a bound or onto its neighbouring rate. The pool is
+thinned to `POOL_SEPARATION = 0.25` noise units, keeping the support, and solved by
+`solve_capacity` from the support. It stops at the first round, from the third on, that
+adds no atom and raises `C` by less than `1e-4` nats (at most 15 rounds). The pool's draws
+use `NET_SEED + 1`, so builds are deterministic. `method="auto"` falls back to it when the
+candidate set passes `10^6` points. The result records `rounds` and `max_violation`, the
+largest `f − C` over the last pool (§6.1).
+
+Thinning matters: without it the first round at `D = 2` took 20 minutes, since near-duplicate
+states stall the Newton step (DD-S1); with it the build takes 2–3 minutes. At `D = 2` the pool
+gave `C = 3.0980` nats against the candidate set's 3.0979 (98 atoms, 9 rounds). At `D = 4` it
+gave 3.2890 against 3.2886. At `D = 5` it gave 3.3254 ± 0.0013 nats by direct Monte Carlo,
+against AtomicPriors.jl's 3.2987 ± 0.0018 (2026-11-26). The hypercone's face states are
+untested.
 
 **DD-A2 — Exp-decay `p_ref` beyond `D = 2`.** Not implemented yet (the coverage table
 asks for `D ≤ 4`): `build_pref` raises `NotImplementedError` at `D ≥ 3`.
@@ -321,11 +380,19 @@ as its own documentation does for exp-decay [read: `resources/AtomicPriors.jl/do
   The other two edges agree as well at 1600 and 6400 (`xi = 0`: 0.14–0.16; `xi = 1`:
   0.20–0.23). With Sobol starts the two seeds share their walkers' starting points, so
   their agreement within a row said nothing about convergence; with random starts it does.
-  A chain keeping every 1600th step takes about 20 minutes.
+  A chain keeping every 1600th step takes about 20 minutes. `generate.jl` then re-fits each
+  of the 2000 kept points from its data point. It uses LsqFit at `x_tol = g_tol = 1e-15`,
+  from `transtrum`'s own estimate and two random log-rates, and keeps the smallest
+  residual (spec §5.5(e)). `transtrum`'s fits, like ours, stop early along flat ridges
+  (DD-P1).
   The emcee walkers move through the 26-dimensional data space, while the target is a thin
-  tube around the 2-dimensional model surface. The Python port (OQ-6) uses the same
-  algorithm, so it likely needs equally long chains `[guess]`; T12(e)'s check that two of
-  the port's chains agree settles this, provided they start apart.
+  tube around the 2-dimensional model surface. The old Python port of the same chain did
+  need chains this long, which is why spec §4.2 replaced it (DD-P3).
+
+- `pstar_highD` (f): `nlopt!` on `ekern` from 100 Sobol atoms at `D = 5, 7`, about twice the
+  54–57 atoms the optimum keeps, with `I` by `mcarlo`. It is a floor for `I_{p*}`, not its
+  value, since `ekern`'s optimum fell 0.027 nats short of the atomic path at `D = 5`; T12(f)
+  is one-sided.
 
 Each estimate is the mean over two seeds, and their difference is the recorded spread.
 `ekern`'s optimum is A&M's `p*`, not necessarily the exact capacity prior. T12(b) measures
@@ -343,6 +410,41 @@ is approved, at the human's request).
   warp. Resolved (MB, 2026-11-25): the check runs on the candidates within `rho` of `v`
   only, where the warp acts; spec §5.2's "on the grid" now says so. The tip stays in the
   net, since `p*` may put an atom there.
+- **T7(a), the fine-grid reference.** `test_t7a_continuous_quadrature_matches_a_fine_atom_sum`
+  built its reference from density values at the midpoints of a 400 x 400 grid in `xi`,
+  with the diagonal cells at full weight. Against a converged reference (exact cell masses,
+  1600 x 1600), that reference was off by 2.5e-3 nats for `p_U` and 3.8e-2 for `p_LN`, while
+  the code's quadrature was off by 2.4e-5 and 2.1e-4. The diagonal cells straddle the
+  ordered region and carry half their area; midpoints misjudge `p_LN`'s spike at `xi -> 0`
+  (DD-Q2). Resolved (MB, 2026-11-26): the test gives product laws exact cell masses from
+  closed-form per-rate CDFs written in the test, the diagonal cells their ordered half at
+  its centroid. All three priors pass at 1e-3.
+- **`p_J`'s exp-decay grid loses mass at `D ≥ 4`.** Brute force over 2·10⁶ uniform ordered
+  draws gives `log ∫ √det g`, which the grid (DD-Q1) underestimates. It misses 0.0% of the
+  mass at `D = 2`, 0.2% at `D = 3`, 5.0% at `D = 4` and 24% at `D = 5`. The node weights are
+  renormalised, so the grid stood for a distorted Jeffreys. At `D = 5`, two rates within 0.02
+  of each other carried 1.3% of its mass against 5.5% in truth, and a rate near instant decay
+  carried 0.87 against 0.68. Resolved (MB, 2026-11-26): `p_J` is sampled from `D = 4`
+  (DD-Q4, OQ-13). The eye test's `D = 4, 5` rows were redrawn with it.
+- **T7(a), the fine-grid reference.** `test_t7a_continuous_quadrature_matches_a_fine_atom_sum`
+  built its reference from density values at the midpoints of a 400 x 400 grid in `xi`,
+  with the diagonal cells at full weight. Against a converged reference (exact cell masses,
+  1600 x 1600), that reference was off by 2.5e-3 nats for `p_U` and 3.8e-2 for `p_LN`, while
+  the code's quadrature was off by 2.4e-5 and 2.1e-4. The diagonal cells straddle the
+  ordered region and carry half their area; midpoints misjudge `p_LN`'s spike at `xi -> 0`
+  (DD-Q2). Resolved (MB, 2026-11-26): the test gives product laws exact cell masses from
+  closed-form per-rate CDFs written in the test, the diagonal cells their ordered half at
+  its centroid. All three priors pass at 1e-3.
+- **`p_J`'s exp-decay grid loses mass at `D ≥ 4` (open).** Brute force over 2·10⁶ uniform
+  ordered draws gives `log ∫ √det g`, which the grid (DD-Q1) underestimates. It misses 0.0%
+  of the mass at `D = 2`, 0.2% at `D = 3`, 5.0% at `D = 4` and 24% at `D = 5`. An adaptive
+  importance sampler agreed with brute force at `D = 5` (−4.0674 against −4.0646 ± 0.0022).
+  The node weights are renormalised, so the grid prior is a distorted Jeffreys, not an
+  unnormalised one. At `D = 5`, near-coincident rates (two within 0.02) carry 1.3% of its
+  mass, against 5.5% in truth; a rate near instant decay (`xi_1 < 0.05`) carries 0.87,
+  against 0.68 (2026-11-26). The eye test's `I(p_J)` at `D = 4, 5` still sits within 0.03
+  bits of A&M. Its `B` band and the sweep's `p_J` scores at `D ≥ 4` rest on the distorted
+  prior.
 - **T12, AtomicPriors.jl fixtures.** Generated by `tests/fixtures/atomicpriors/generate.jl`
   (DD-J1–J3) on 2026-11-25. T12(a) and T12(d) pass.
 - **T12(c), `C_N` through `repeat`.** `repeat` builds the `N`-fold channel of a
@@ -352,13 +454,15 @@ is approved, at the human's request).
   The reduction itself is covered by spec §4.4, T7(c) and the twin cells. Stacking `N`
   copies of the data was set aside: `ekern` sees only `‖Δy‖²/σ²`, where `N` copies are
   exactly `σ/√N`.
-- **T12(e), the `p_proj` port has not mixed.** Against `transtrum`'s converged cloud (DD-J3),
-  the port's two chains (`build_pproj`, 2000 points) put 0.70 and 0.63 of their mass on
-  coinciding rates, against 0.255, and 0.25 and 0.12 exactly at `xi_1 = 0`, against 0.07.
-  They disagree with each other as well. Those values match `transtrum`'s own chains before
-  they converged, so the port needs equally long chains: about 1600 steps per kept point. That
-  is a code fix with a cost for every cell, since `p_proj` is in the cast (`build_cast`).
-  Open (MB): how to pay for it.
+- **T12(e), the `p_proj` port had not mixed.** Against `transtrum`'s converged cloud (DD-J3),
+  the old port's two chains (2000 points) put 0.70 and 0.63 of their mass on coinciding
+  rates, against 0.255, and 0.25 and 0.12 exactly at `xi_1 = 0`, against 0.07. They also
+  disagreed with each other. Resolved (MB, 2026-11-26): spec §4.2 and OQ-6 replace the
+  chain with adaptive importance sampling (DD-P3), and `transtrum`'s points are re-fitted
+  tightly (DD-J3). T12(e) now compares weighted clouds at their effective sizes, and checks
+  two independent starts (Jeffreys and `p_U`), not two chains. It passes against the
+  re-fitted fixture (2026-11-26). The re-fit moved 1.3–1.4% of `transtrum`'s coordinates
+  by more than 1e-3, and its coinciding-rates fraction from 0.255 to 0.260.
 - **T12(b), atom matching.** The candidate set's unmerged atoms (DD-C2) outnumber Julia's
   continuous ones about two to one, and merged counts only follow the merge radius.
   Resolved (MB, 2026-11-25): atoms are compared through the cross-equalizer, the Python
@@ -374,6 +478,9 @@ is approved, at the human's request).
   (8), T13(d) (2), T7(a) (2), T14(a) log-normals (2), T21(a) `mass_near`, T16(b) at the
   cheap cell, and T7(c), a bug in the batched kernel tables (two-dimensional data have two
   singular directions, not three), fixed after the run.
+- **Third fast-suite run** (`0483d5b` plus the new `p_proj` sampler, T12(e) deselected while
+  its fixture was re-fitted; 35 min with other jobs running): 149 passed, 6 failed. They are
+  the same open test-side issues as in the second run. T12(e) then passed on its own.
 - **Second fast-suite run** (`8f0ab36` plus the uncommitted T12 changes, T12 deselected while
   its fixtures were regenerating; 23.5 min): 143 passed, 6 failed. Every failure is one of the
   open test-side issues above: T7(a) (2), T14(a) log-normals (2), T21(a) `mass_near`, T16(b)
