@@ -187,7 +187,10 @@ def test_t21a_mass_near_is_a_sum_of_weights():
     """T21(a) (m8): for a discrete prior `pi(A(theta))` is the total weight of the atoms whose
     predictions lie within one noise unit of `y(theta)` at budget `N`,
     `sqrt(N) ||y(theta_a) - y(theta)|| / sigma <= 1` (§1.1), here at `N = 4`, computed in the
-    test. A `mass_near` that overstates the mass would loosen the bound unseen."""
+    test. A `mass_near` that understates the mass would loosen the bound unseen; one that
+    overstates it is caught at the states with no atom within reach. The states are atoms
+    moved by 0.01 in `xi`, up to about 3 noise units near `xi = 1`, so some leave their own
+    atom's reach: the precondition asks only for both kinds of state (MB, 2026-11-26)."""
     rng = np.random.default_rng(20261190)
     sigma, N = 0.1, 4
     model = cheap_model(N=N)
@@ -198,7 +201,7 @@ def test_t21a_mass_near_is_a_sum_of_weights():
     theta = np.sort(np.clip(theta, 0, 1), axis=-1)
     dist = np.linalg.norm(model.y(atoms)[None] - model.y(theta)[:, None], axis=-1) * np.sqrt(N) / sigma
     want = (weights[None] * (dist <= 1.0)).sum(-1)
-    assert np.all(want > 0) and np.all(want < 1)
+    assert np.any(want == 0) and np.any(want > 0) and np.all(want < 1)
     np.testing.assert_allclose(mass_near(prior, model, theta), want, rtol=1e-12)
 
 
