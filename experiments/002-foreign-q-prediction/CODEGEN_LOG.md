@@ -25,7 +25,7 @@ per `workflows/implement-spec.md`. Design decisions are in
 | src/infomax/score.py | pending-tests | (none yet) |
 | src/infomax/diagnostics.py | pending-tests | (none yet) |
 | tests/fixtures/atomicpriors/generate.jl | pending-tests | (none yet) |
-| experiments/002-foreign-q-prediction/run.py | pending | (none yet) |
+| experiments/002-foreign-q-prediction/run.py | tier 0 written (cells in parallel, `R_N` only); later tiers, figures and report pending | (none yet) |
 
 ## Test status
 

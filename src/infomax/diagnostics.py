@@ -271,7 +271,7 @@ def row_summaries(draws_R: dict, draws_r: dict, own_prior: str | None) -> RowSum
     (`p_ref[<ranking>]` in exp-decay). `own_prior` is the row's own prior in the round
     robin, `None` for a nested or stress row. Only priors present in the dicts enter."""
     present = set(draws_R)
-    by = {"R": draws_R, "r": draws_r}
+    by = {S: d for S, d in (("R", draws_R), ("r", draws_r)) if d}  # a score not computed is skipped
     prot = [p for p in PROTAGONISTS if p in present]
     priv = [p for p in present if (p in PRIVILEGED_BASE or p == "p_ref" or p.startswith("p_ref[")) and p != own_prior]
     gap_J, gap_pi, gap_pair = {}, {}, {}

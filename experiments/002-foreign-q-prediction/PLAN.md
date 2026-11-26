@@ -50,12 +50,18 @@ The estimates are guesses until measured.
 
 ### Savings, by expected impact
 
-1. **Parallel cells and thin points**: not implemented.
+1. **Parallel cells**: in `run.py` for tier 0. Each worker builds its own cast and runs a fixed
+   number of threads (`--threads`, recorded), so results do not depend on the number of
+   workers: serial and two-worker runs agree bit for bit. Thin points within a cell are not
+   split across workers. On this laptop (8 cores, 8 GB) memory, not cores, sets the number of
+   workers; the cost-model run measures it.
 2. **A persistent build cache keyed by `σ/√N`**, which twin cells and the mis-budgeted `p*`
    share: not implemented (deferred until the code is stable; MB).
 3. **Robustness cells score a subset of rows**: in tier 2 above.
 4. **Draws raised only where a gap's sign is unresolved**: §5.4's 500 → 2000 rule.
-5. **Cheaper thin points**: the bell-shaped per-point estimate costs 1.8–3.5 s at `D = 7`;
+5. **Scoring `R_N` alone** where a tier needs only it, and a memo of thin points' marginals:
+   done; tier 0 had paid about three times its cost at thin points.
+6. **Cheaper thin points**: the bell-shaped per-point estimate costs 1.8–3.5 s at `D = 7`;
    not yet profiled.
 
 ## Success criteria
