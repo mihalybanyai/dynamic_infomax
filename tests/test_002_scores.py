@@ -185,20 +185,51 @@ def test_t7a_discrete_predictive_is_the_atom_sum():
     np.testing.assert_allclose(prior.log_predictive(model, x_prime, xbar), expected, rtol=1e-12)
 
 
+_PER_RATE_CDF = {
+    "p_U": lambda c: c,  # each rate k ~ Exp(1), so xi = exp(-k) is uniform
+    "p_LN": lambda c: scipy.stats.norm.cdf(-np.log(-np.log(c))),  # log decay time ~ N(0, 1), A&M's (0, 1)
+}
+"""Closed-form per-rate CDFs in `xi` of the product laws, written here so that T7(a)'s
+reference does not share the code's own CDF."""
+
+
+def _fine_grid_prior(name: str, prior, G: int = 400) -> DiscretePrior:
+    """`prior` on a `G x G` grid of `xi`-cells over the ordered triangle. A product law gets
+    each cell's exact mass from its closed-form CDF: `2 dF_1 dF_2` off the diagonal, and on
+    it the ordered half of the cell, `dF^2`, with the atom at that half's centroid. Midpoint
+    densities misjudge `p_LN`'s integrable spike at `xi -> 0` by 4e-2 nats, and full-weight
+    diagonal cells put twice the mass on coinciding rates (2.5e-3 nats for `p_U`; MB,
+    2026-11-26). `p_J` is not a product law and keeps midpoint densities; it vanishes on the
+    diagonal."""
+    e = np.linspace(0.0, 1.0, G + 1)
+    mid = 0.5 * (e[:-1] + e[1:])
+    i, j = np.meshgrid(np.arange(G), np.arange(G), indexing="ij")
+    keep = i <= j
+    i, j = i[keep], j[keep]
+    if name not in _PER_RATE_CDF:
+        grid = np.column_stack([mid[i], mid[j]])
+        weights = np.exp(prior.log_density(grid))
+        return DiscretePrior(f"{name} on a grid", grid, weights / weights.sum())
+    with np.errstate(divide="ignore"):
+        F = _PER_RATE_CDF[name](e)
+    F[0], F[-1] = 0.0, 1.0
+    dF = np.diff(F)
+    weights = np.where(i < j, 2.0 * dF[i] * dF[j], dF[i] ** 2)
+    lo, width = e[i], e[i + 1] - e[i]
+    grid = np.column_stack([np.where(i < j, mid[i], lo + width / 3), np.where(i < j, mid[j], lo + 2 * width / 3)])
+    return DiscretePrior(f"{name} on a grid", grid, weights / weights.sum())
+
+
 @pytest.mark.parametrize("name", ["p_U", "p_J", "p_LN"])
 def test_t7a_continuous_quadrature_matches_a_fine_atom_sum(name):
     """T7(a): a continuous prior's quadrature agrees with the atom sum of the same prior
     placed on a fine grid of `Theta` (a shared support), for `p_J` and `p_LN` as well as the
-    flat `p_U` (F6), so a quadrature that drops the prior's density fails."""
+    flat `p_U` (F6), so a quadrature that drops the prior's density fails. The grid's cells
+    carry exact masses for the product laws (`_fine_grid_prior`)."""
     rng = np.random.default_rng(20261164)
     model = cheap_model()
     prior = {"p_U": build_uniform, "p_J": build_jeffreys, "p_LN": build_pln}[name](model)
-    g = (np.arange(400) + 0.5) / 400
-    a, b = np.meshgrid(g, g, indexing="ij")
-    grid = np.column_stack([a.ravel(), b.ravel()])
-    grid = grid[grid[:, 0] <= grid[:, 1]]
-    weights = np.exp(prior.log_density(grid))
-    fine = DiscretePrior(f"{name} on a grid", grid, weights / weights.sum())
+    fine = _fine_grid_prior(name, prior)
     xbar = model.y(prior.sample(10, rng)) + model.sigma_eff * rng.standard_normal((10, model.m_out))
     np.testing.assert_allclose(
         log_marginal(prior, model, xbar, method="quadrature"), log_marginal(fine, model, xbar, method="atoms"), atol=1e-3
