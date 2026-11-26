@@ -152,6 +152,41 @@ work are fine.
 existing format." The human can adapt anything; what they cannot recover is
 the time spent reading a misformatted draft.
 
+#### IR-2 — Hours of compute: look for minutes first
+
+**Rule.** Before running a computation expected to take hours or more, or
+planning around one, spend a few minutes looking for a way to bring it down
+to minutes. That holds for one run, or a sweep summed over its cells. Look
+for a cheaper algorithm or estimator, a precision matched to what the
+conclusion needs, reuse across cells, or a smaller design that answers the
+same question. Motivating failures, spec 002: the cheap cell's cast went from
+over 40 minutes to 5 once someone looked (2026-11-25). The `p_proj` sampler
+went from 20-minute Julia chains per seed to seconds per cell by importance
+sampling, after hours of chain runs had been spent on it first (2026-11-26).
+
+This binds even when the slow route is the one a spec or a reference
+implementation prescribes, the hours cost only machine time, or the run is
+already planned. Exploration runs at the speed of the loop. An hour-scale
+computation gets run once and believed; a minute-scale one gets varied,
+checked and understood. That is the difference between a principled
+conclusion and a shot in the dark.
+
+**Scope.** Computations whose results feed a conclusion: experiments,
+sweeps, reference fixtures, test suites. Not installs or downloads. The check
+is minutes, not a redesign. Its output is a cheaper route, or one sentence on
+why none was found.
+
+**Action.** (1) Estimate the cost: wall time, or evaluations times their
+rate. (2) At hours or more, spend a few minutes on alternatives, measuring
+where measuring is cheap. (3) Report the estimate, what was tried, and the
+route chosen. A speed-up that changes what is computed (an estimator, a
+tolerance, the design) is a content change, and goes to the human like any
+spec change.
+
+**Anti-pattern.** "This will take about five hours; I'll start it in the
+background." Starting it costs nothing. The hours it takes, and the checks
+nobody runs because of them, are the cost.
+
 ## Directory map
 
 - `GLOSSARY.md` — definitions of terms used across the repo; documents link here.
