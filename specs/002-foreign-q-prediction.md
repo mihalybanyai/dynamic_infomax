@@ -2042,7 +2042,7 @@ it must finish and write non-empty figures before review.
 ### 5.4 Sweep design
 
 Values the code uses, pinned here and not in the test file. Auto-decisions are flagged for
-ratification.
+ratification. <span style="color: red">The order in which the cells run, in three priority tiers with the verdict of §3.7 first, is in `experiments/002-foreign-q-prediction/PLAN.md`; the report states which tier each claim rests on.</span>
 
 - **Base cell and variations** (auto-chosen; please confirm). Each model runs a base cell,
   and each knob is varied alone from it, across the `D`-sweep and every nature. The full
@@ -4091,3 +4091,11 @@ Steps 2–4 of the plan agreed with MB after the density correction. Edits are r
 
 Downstream: `sampled.build_sampled_jeffreys` (`anneal`), `_anneal_jeffreys`,
 `SampledPrior.annealed_bracket`.
+
+### 2026-11-26 — Refinement (§5.4; priority tiers)
+
+A full run of §5.4 was estimated at days on one laptop. Decided with MB: the cells run in
+three priority tiers, set out in `experiments/002-foreign-q-prediction/PLAN.md`. Tier 0 is
+§3.7's verdict on `R_N`, with `p*`, `p_J`, `p_U` and `p_LN`, in both families' base cells and
+the cone at fall-off 0.5, at `D = 1`–4. Tier 1 adds the budget family and `r_N`; tier 2 the
+remaining knobs and `D ≥ 5`. §5.4 gains a pointer in red; the design itself is unchanged.
