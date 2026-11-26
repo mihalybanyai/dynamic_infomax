@@ -82,6 +82,9 @@ For the other priors A&M plot lower and upper bounds on `B` (Bennett's method)."
 
 PRIORS = ("p*", "p_J", "p_LN")
 STYLE = {"p*": ("o-", "C0"), "p_J": ("s--", "C3"), "p_LN": ("^-.", "C2")}
+EYE_I_DRAWS = 2048
+"""Draws of `(theta, x)` for each continuous prior's `I`: Monte-Carlo error about 0.03 bits,
+against A&M's points digitised to about ±0.05 (IR-2; MB, 2026-11-26)."""
 
 
 def _scores_at(D: int, rng: np.random.Generator) -> dict:
@@ -93,8 +96,8 @@ def _scores_at(D: int, rng: np.random.Generator) -> dict:
     states = pstar.candidates
     out = {"I": {}, "B": {}}
     for name, prior in priors.items():
-        out["I"][name] = pstar.capacity if name == "p*" else mutual_information(prior, model, rng=rng)
-        out["B"][name] = list(worst_case_bias_pressure(prior, model, states, rng))
+        out["I"][name] = pstar.capacity if name == "p*" else mutual_information(prior, model, rng=rng, n=EYE_I_DRAWS)
+        out["B"][name] = list(worst_case_bias_pressure(prior, model, states, rng, info=out["I"][name]))
     return out
 
 

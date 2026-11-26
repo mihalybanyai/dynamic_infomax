@@ -149,5 +149,5 @@ hashes are filled at stage 3, after the eye test is approved.
 | Eye test | Status | Figure path |
 |----------|--------|-------------|
 | A&M Fig. 5, default run `D <= 4` (band for `B`, §5.3 as revised) | passed (MB, 2026-11-25) | tests/figures/002_foreign_q_prediction/eyetest_am_fig5.png |
-| A&M Fig. 5, extended run `D in {5, 7, 11}` | partial: `D = 5, 7` on the atomic path with sampled `p_J` from `D = 4` (2026-11-26; 814 s and 963 s). `D ≤ 5` approved by MB on the old Jeffreys grid; the redraw awaits review. At `D = 7`, `I(p_J)` is 0.19 bits below A&M (handoff, thread 5). `D = 11` not run | tests/figures/002_foreign_q_prediction/eyetest_am_fig5.png |
+| A&M Fig. 5, extended run `D in {5, 7, 11}` | partial: `D ≤ 5` redrawn on the corrected Jeffreys density (stable determinant, annealed build where needed) and the routed marginal, with the IR-2 speed-ups (2026-11-26; `D = 5` in 611 s, the whole run 842 s). At `D = 5`: `I` = 4.80, 2.30, 2.52 bits for `p*`, `p_J`, `p_LN`, against A&M's 4.76, 2.29, 2.53; A&M's `B` bounds inside both bands. Awaits MB's review; `D = 7, 11` to run | tests/figures/002_foreign_q_prediction/eyetest_am_fig5.png |
 | Komaki Fig. 1 (binomial `p_lat`) | passed (MB, 2026-11-25) | tests/figures/002_foreign_q_prediction/eyetest_komaki_fig1.png |

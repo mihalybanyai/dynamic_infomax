@@ -349,6 +349,9 @@ def worst_case_bias_pressure(
     n_screen: int = 64,
     n_refine: int = 512,
     top: int = 32,
+    info: float | None = None,
+    top_sampled: int = 10,
+    n_sampled: int = 16,
 ) -> tuple[float, float]:
     """The eye test's band for `B = max_theta b(theta)` (§5.3, §5.3.1), in nats:
     `(B over n_own draws from the prior itself, B over all of `states`)`.
@@ -357,13 +360,17 @@ def worst_case_bias_pressure(
     Each maximum is found in two stages: `b` on a subset thinned to `screen_spacing` Fisher
     lengths, with `n_screen` draws of `x`; then the states within half that spacing of the
     best screened ones (at most `2 top`) re-evaluated with `n_refine` draws, so that noise in
-    the screen does not inflate the maximum and thinning does not lose it."""
+    the screen does not inflate the maximum and thinning does not lose it. A sampled prior is
+    screened by its plain cloud, and its `top_sampled` highest states are refined through the
+    routed marginal with `n_sampled` draws each: `B` is read on a log scale, and 16 draws put
+    about 1 nat of noise on values of 50-400 (IR-2: about 8 times cheaper; MB, 2026-11-26).
+    `info`, if given, is the prior's `I`, which is otherwise recomputed."""
     from scipy.spatial import cKDTree
 
     from infomax.pstar import _initial_support
     from infomax.score import mutual_information, per_state_redundancy
 
-    info = mutual_information(prior, model, rng=rng)
+    info = mutual_information(prior, model, rng=rng) if info is None else float(info)
 
     def two_stage(pts: np.ndarray) -> float:
         Yh = model.y(pts) / model.sigma_eff
@@ -377,16 +384,16 @@ def worst_case_bias_pressure(
         if cand.size > 2 * top:  # keep the best-screened neighbourhoods first
             cand = np.concatenate([best, np.setdiff1d(cand, best)[: 2 * top - best.size]])
         if sampled:
-            # a sampled continuous prior (§4.4, OQ-13, OQ-14): the cloud screens, and the 20
-            # highest states are refined with the per-point marginal, where the cloud
-            # underestimates m because the prior is thin there
+            # a sampled continuous prior (§4.4, OQ-13, OQ-14): the cloud screens, and the
+            # highest states are refined with the routed marginal, since the cloud
+            # underestimates m where the prior is thin
             f_c = per_state_redundancy(screen, model, pts[cand], rng=rng, n_x=n_screen)
-            cand = cand[np.argsort(-f_c)[:20]]
+            cand = cand[np.argsort(-f_c)[:top_sampled]]
             Yc = model.y(pts[cand])
             f_ref = np.empty(cand.size)
             for k in range(cand.size):
-                x = Yc[k] + model.sigma_eff * rng.standard_normal((n_screen, Yc.shape[1]))
-                lm, _ = prior.per_point_log_marginal(model, x)
+                x = Yc[k] + model.sigma_eff * rng.standard_normal((n_sampled, Yc.shape[1]))
+                lm = prior.log_marginal(model, x)
                 f_ref[k] = float(np.mean(log_normal_iso(x, Yc[k], model.sigma_eff) - lm))
             return float(np.max(f_ref)) - info
         f_ref = per_state_redundancy(prior, model, pts[cand], rng=rng, n_x=n_refine)
