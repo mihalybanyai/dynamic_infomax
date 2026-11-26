@@ -95,11 +95,15 @@ def score_cell(
     rng: np.random.Generator,
     literal_nfold: bool = False,
     nature_model: Model | None = None,
+    scores: tuple[str, ...] = ("R", "r"),
 ) -> CellScores:
     """Score every prior in `priors` on one cell, under common random numbers (§4.4).
 
     `model` is the agent's model. For a nested hypercone nature, `nature_model` is the
     `D_max` cone the nature lives in (§2.3); the agent's predictions share its data space.
+    `scores=("R",)` skips the one-step score: no predictive is evaluated, and the `r` fields
+    are empty dicts with `floor_r` NaN. The draws, `x'` included, are the same either way, so
+    `R` is identical whichever scores are asked for (experiment 002, tier 0).
     """
     from infomax.diagnostics import gaussian_kl_split
     from infomax.qfamily import nature_prior, submodel_floor
@@ -115,6 +119,7 @@ def score_cell(
         log_p_x = log_normal_iso(xbar, y, s_eff)
     log_p_xp = log_normal_iso(x_prime, y, model.sigma)
 
+    want_r = "r" in scores
     cache: dict = {}
 
     def marg(obj, mdl):
@@ -124,24 +129,27 @@ def score_cell(
                 lm = _literal_log_marginal(obj, mdl, X)
             else:
                 lm = obj.log_marginal(mdl, xbar)
-            cache[key] = (lm, obj.log_predictive(mdl, x_prime, xbar))
+            cache[key] = (lm, obj.log_predictive(mdl, x_prime, xbar) if want_r else None)
         return cache[key]
 
     q_obj = nature_prior(nm, nature)
     q_m, q_p = marg(q_obj, nm) if nature[0] != "own" else marg(nature[1], model)
     floor_draws_R = log_p_x - q_m
-    floor_draws_r = log_p_xp - q_p
+    floor_draws_r = log_p_xp - q_p if want_r else None
 
     out = {k: {} for k in ("R_mean", "R_mcse", "r_mean", "r_mcse", "mm_R", "mm_r", "mm_R_se", "mm_r_se", "dR", "dr")}
     for name, prior in priors.items():
         lm, lp = marg(prior, model)
-        dR, dr = log_p_x - lm, log_p_xp - lp
-        out["dR"][name], out["dr"][name] = dR, dr
+        dR = log_p_x - lm
+        out["dR"][name] = dR
         out["R_mean"][name], out["R_mcse"][name] = float(dR.mean()), _mcse(dR)
-        out["r_mean"][name], out["r_mcse"][name] = float(dr.mean()), _mcse(dr)
-        mR, mr = q_m - lm, q_p - lp
+        mR = q_m - lm
         out["mm_R"][name], out["mm_R_se"][name] = float(mR.mean()), _mcse(mR)
-        out["mm_r"][name], out["mm_r_se"][name] = float(mr.mean()), _mcse(mr)
+        if want_r:
+            dr, mr = log_p_xp - lp, q_p - lp
+            out["dr"][name] = dr
+            out["r_mean"][name], out["r_mcse"][name] = float(dr.mean()), _mcse(dr)
+            out["mm_r"][name], out["mm_r_se"][name] = float(mr.mean()), _mcse(mr)
 
     # §3.3's split, against the row's matched predictive
     shift, spread = {}, {}
@@ -168,7 +176,7 @@ def score_cell(
 
     return CellScores(
         R_mean=out["R_mean"], R_mcse=out["R_mcse"], r_mean=out["r_mean"], r_mcse=out["r_mcse"],
-        floor_R=float(floor_draws_R.mean()), floor_r=float(floor_draws_r.mean()),
+        floor_R=float(floor_draws_R.mean()), floor_r=float(floor_draws_r.mean()) if want_r else float("nan"),
         mismatch_R=out["mm_R"], mismatch_r=out["mm_r"], draws_R=out["dR"], draws_r=out["dr"],
         mismatch_R_mcse=out["mm_R_se"], mismatch_r_mcse=out["mm_r_se"], theta=theta, labels=labels,
         floor_sub=floor_sub, mean_shift=shift, spread_mismatch=spread,

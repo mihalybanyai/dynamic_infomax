@@ -39,7 +39,7 @@ import scipy.stats
 
 from infomax.mixture import log_normal_iso, mixture_logpdf
 from infomax.models import Model
-from infomax.priors002 import CloudPrior
+from infomax.priors002 import CloudPrior, _model_key
 
 SAMPLED_SEED: int = 20261126
 N_CLOUD: int = 20000
@@ -90,6 +90,10 @@ MAX_GROUP: int = 5040
 PERM_CHUNK: int = 256
 PER_POINT_MAX_D: int = 5
 """Above this `D` the routed marginal is not validated (OQ-14); it runs there with a warning."""
+MEMO_MAX: int = 200_000
+"""Thin points' routed `log m` kept per sampled prior, keyed by model, noise and the point's
+bytes; the estimates are deterministic functions of the point, so the memo changes no number.
+`log_predictive` asks again for the marginal at `x-bar` that `log_marginal` has computed."""
 ANNEAL_BELOW: float = 50.0
 """A per-point estimate with fewer effective draws than this is replaced by the annealed one
 (at `D = 5` the bell-shaped proposal kept 0.1% on one of Jeffreys' faces, 2026-11-26)."""
@@ -196,6 +200,7 @@ class SampledPrior(CloudPrior):
         D = self.atoms.shape[1]
         sd = np.sqrt(self.weights @ (self.atoms - self.weights @ self.atoms) ** 2)
         self._kde_bw = np.maximum(1.06 * sd * n_kde ** (-1.0 / (D + 4)), 1e-6)
+        self._memo: dict = {}
 
     def log_density(self, theta: np.ndarray) -> np.ndarray:
         return self._log_density(np.atleast_2d(np.asarray(theta, dtype=float)))
@@ -222,7 +227,8 @@ class SampledPrior(CloudPrior):
         """`log m(x)` at noise `s`, routed (§4.4, OQ-14): the cloud's mixture where the cloud
         weighted by the likelihood keeps at least `N0_THIN` effective draws; elsewhere the
         per-point estimate, or the annealed one where that keeps fewer than `ANNEAL_BELOW`
-        effective draws. `log_marginal` and `log_predictive` both come through here."""
+        effective draws. `log_marginal` and `log_predictive` both come through here; thin points'
+        values are memoised (`MEMO_MAX`)."""
         x = np.atleast_2d(np.asarray(x, dtype=float))
         keep = self.weights > 0
         Y, lw = model.y(self.atoms[keep]), self.log_weights[keep]
@@ -235,15 +241,24 @@ class SampledPrior(CloudPrior):
             if model.D > PER_POINT_MAX_D:
                 warnings.warn(f"{self.name}: the per-point estimate is not validated above D = {PER_POINT_MAX_D} "
                               f"(OQ-14); {int(thin.sum())} thin points at D = {model.D}")
-            lm, ess = self.per_point_log_marginal(model, x[thin], s)
-            weak = ~np.isfinite(lm) | (ess * N_PER_POINT < ANNEAL_BELOW)
-            if weak.any():
-                lm[weak] = self.annealed_log_marginal(model, x[thin][weak], s)[0]
+            idx = np.flatnonzero(thin)
+            head = (_model_key(model), round(float(s), 14))
+            keys = [head + (x[i].tobytes(),) for i in idx]
+            todo = np.array([k not in self._memo for k in keys], dtype=bool)
+            if todo.any():
+                lm, ess = self.per_point_log_marginal(model, x[idx[todo]], s)
+                weak = ~np.isfinite(lm) | (ess * N_PER_POINT < ANNEAL_BELOW)
+                if weak.any():
+                    lm[weak] = self.annealed_log_marginal(model, x[idx[todo]][weak], s)[0]
+                if len(self._memo) + int(todo.sum()) > MEMO_MAX:
+                    self._memo.clear()
+                for k, v in zip((k for k, t in zip(keys, todo) if t), lm):
+                    self._memo[k] = float(v)
+            lm = np.array([self._memo.get(k, np.nan) for k in keys])
             ok = np.isfinite(lm)
             if not ok.all():
                 warnings.warn(f"{self.name}: the annealed estimate failed at {int((~ok).sum())} of "
                               f"{int(thin.sum())} thin points; the cloud's value is used there")
-            idx = np.flatnonzero(thin)
             out[idx[ok]] = lm[ok]
         return out
 

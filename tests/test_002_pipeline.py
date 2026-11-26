@@ -53,3 +53,36 @@ def test_t10_seed_determinism():
         assert a.mismatch_R[name] == b.mismatch_R[name] and a.mismatch_r[name] == b.mismatch_r[name]
     _, c = run(20261196, 20261198)
     assert not np.array_equal(a.draws_R["p_J"], c.draws_R["p_J"]), "the cell ignores its seed"
+
+
+def test_t10_scoring_R_alone_leaves_R_unchanged():
+    """T10 (experiment 002, tier 0): scoring `R_N` alone (`scores=("R",)`) gives bit-identical
+    `R` draws, floors and mismatches to scoring both, since the draws, `x'` included, are the
+    same; the one-step fields are then empty. And a sampled prior's memo of thin points
+    changes no number: at `D = 3`, near the no-decay corner, `log m` asked for again, after
+    the predictive has asked for it too, equals a fresh prior's (§4.4, OQ-14)."""
+    from infomax.plognormal import build_pln
+    from infomax.sampled import sampled_from
+
+    model = cheap_model()
+    priors = {"p_U": build_uniform(model), "p_J": build_jeffreys(model)}
+    both = score_cell(model, priors, ("own", priors["p_U"]), S_q=100, rng=np.random.default_rng(20261340))
+    only = score_cell(model, priors, ("own", priors["p_U"]), S_q=100, rng=np.random.default_rng(20261340), scores=("R",))
+    assert both.floor_R == only.floor_R and np.isnan(only.floor_r)
+    for name in priors:
+        np.testing.assert_array_equal(both.draws_R[name], only.draws_R[name])
+        assert both.mismatch_R[name] == only.mismatch_R[name]
+    assert only.draws_r == {} and only.r_mean == {}
+
+    m3 = cheap_model(D=3)
+    grid = build_pln(m3)
+    y = m3.y(np.full((1, 3), 0.97))[0]
+    x = y + m3.sigma_eff * np.random.default_rng(20261341).standard_normal((4, y.size))
+    x_prime = y + m3.sigma * np.random.default_rng(20261342).standard_normal((4, y.size))
+    cloud = sampled_from(grid, m3, "p_LN")
+    first = cloud.log_marginal(m3, x)
+    cloud.log_predictive(m3, x_prime, x)
+    again = cloud.log_marginal(m3, x)
+    fresh = sampled_from(grid, m3, "p_LN").log_marginal(m3, x)
+    np.testing.assert_array_equal(first, again)
+    np.testing.assert_array_equal(first, fresh)
