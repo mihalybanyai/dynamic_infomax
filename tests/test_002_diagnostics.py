@@ -175,9 +175,11 @@ def test_t21a_mass_bound(cell):
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("D", [6, 11, 26])
+@pytest.mark.parametrize("D", [6])
 def test_t21a_mass_bound_in_the_hypercone(D):
-    """T21(a) where §5.4 puts it (m8): in the hypercone at `D in {6, 11, 26}`."""
+    """T21(a) where §5.4 puts it (m8): in the hypercone at `D = 6`. At `D = 11, 26` building
+    the cast is expected to be infeasible, `p*`'s at least, so those cases are left out
+    (MB, 2026-11-26)."""
     model = cone_model(D)
     priors = {"p*": build_pstar(model).prior, "p_J": build_jeffreys(model), "p_U": build_uniform(model)}
     _check_mass_bound(model, priors, np.random.default_rng(20261189))

@@ -98,7 +98,8 @@ information of that prior. This is spec 000's runs of adjacent cells, in `D` dim
 `PStarResult.masses` keeps the unmerged weights over the candidates, which T16(c) and
 T19(a) compare.
 
-**DD-S1 — The solver.** (`capacity.solve_capacity`.) Spec 000's overrelaxed
+**DD-S1 — The solver.** (`capacity.solve_capacity`; its stopping rule accepted by MB,
+2026-11-26, and stated in spec §4.2.) Spec 000's overrelaxed
 Blahut–Arimoto loop (its per-cell divergence injected, §4.6) converges far too slowly to
 the `1e-3` level on ~100-atom, 26-dimensional problems. It is kept as the warm start, and
 the fixed point is finished by:
@@ -502,7 +503,14 @@ is approved, at the human's request).
   test's `1e-6`. That is DD-S1's stopping rule: beyond 1-D, violations below 1e-3 are not
   chased. Resolved (MB, 2026-11-26): `1e-6` in 1-D, where the divergences are exact, and
   `1e-3` at the cheap cell (`PLAT_GAP_EXACT`, `PLAT_GAP_QUADRATURE`; spec §5.2). There (b)
-  checks only that the solve ended by its own rule. It follows DD-S1, still open.
+  checks only that the solve ended by its own rule. It follows DD-S1, accepted by MB on
+  2026-11-26.
+- **T21(a) in the hypercone at `D = 11, 26`, left out** (MB, 2026-11-26). The test builds
+  `p*`, `p_J` and `p_U` there. `p*`'s candidate set passes `10^6` points, so `build_pstar`
+  would fall back to the atomic path, which has never run in the hypercone. Building the
+  cast there is expected to be infeasible, `p*`'s at least; it was not timed. The test
+  runs at `D = 6`, and spec §5.4 says so. T21(c), which needs no solver, still runs at
+  `D = 6, 11`.
 - **Jeffreys' sampler collapsed at `D = 7`** (extended eye test). `I(p_J)` came out 1.52
   bits against A&M's 1.71. Under two other seeds the build gave 1.73 and 1.71 bits with
   7–8% effective draws. Drawing `theta` from one healthy build and the marginal from

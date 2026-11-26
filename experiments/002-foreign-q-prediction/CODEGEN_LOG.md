@@ -35,7 +35,7 @@ hashes are filled at stage 3, after the eye test is approved.
 | Test | Cases | Status | Last-passing commit |
 |---|---|---|---|
 | `test_002_diagnostics.py::test_t21a_mass_bound` | 2 | passing | (none yet) |
-| `test_002_diagnostics.py::test_t21a_mass_bound_in_the_hypercone` | 3 | not-yet-run | (none yet) |
+| `test_002_diagnostics.py::test_t21a_mass_bound_in_the_hypercone` | 1 (`D = 6`; 11, 26 left out, Testing notes) | not-yet-run | (none yet) |
 | `test_002_diagnostics.py::test_t21a_mass_near_is_a_sum_of_weights` | 1 | passing (precondition fixed; Testing notes) | (none yet) |
 | `test_002_diagnostics.py::test_t21b_insurance_inequality` | 4 | not-yet-run | (none yet) |
 | `test_002_diagnostics.py::test_t21c_full_loss_exceeds_the_relevant_datum_divergence` | 2 | passing | (none yet) |
