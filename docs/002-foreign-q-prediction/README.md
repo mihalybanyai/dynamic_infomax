@@ -598,6 +598,14 @@ is approved, at the human's request).
     below A&M's by 0.01, 0.02 and 0.11 bits at `D = 5, 7, 11`. Two methods agree and more
     mixing changes nothing, so the build is not the cause. A&M's side (precision or sampler at
     `d = 11`) cannot be checked from the paper.
+- **The annealed estimate at `D = 11`** (2026-11-26, 6 data per state). For `p_LN` at the
+  corner, two runs differ by 0.05 nats on average and 0.12 at worst, with a bracket about
+  0.01 wide. For Jeffreys at the corner, near it and on the fast-and-slow face, they differ by
+  0.37–0.60 nats on average and up to 1.9, while each run's bracket stays under 0.12: the moves
+  do not equilibrate there, so the bracket understates the error. The bell-shaped estimate
+  keeps 0.1–0.5% effective and hands every point over. About 10 s per point (Jeffreys) and
+  2.7 s (`p_LN`), 36–48 steps. That is adequate for the eye test's `B` at `D = 11` (about 170
+  nats, read on a log scale), not for gaps between priors at `D = 11`.
 - **First fast-suite run** (`762eae0`, 18.5 min): 140 passed, 17 failed: the T12 fixtures
   (8), T13(d) (2), T7(a) (2), T14(a) log-normals (2), T21(a) `mass_near`, T16(b) at the
   cheap cell, and T7(c), a bug in the batched kernel tables (two-dimensional data have two

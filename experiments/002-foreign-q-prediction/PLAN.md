@@ -38,23 +38,32 @@ whatever cells a tier builds; they need no cells of their own.
 
 ### Cost and run order
 
-The estimates are guesses until measured.
+Measured on the development laptop (8 cores, 8 GB), 2026-11-26, sharing the machine with
+other runs, so slightly high: one tier-0 cell per kind at `D = 2` and `D = 4`, 500 draws, 2
+threads.
 
-- **Before tier 0:** time one full cell per family at `D = 2` and `D = 4`, about an hour (IR-2).
-- **Tier 0:** 12 cells, about 1–3 h on the development laptop [guess]. Preliminary results;
-  they decide whether a larger machine is worth asking for.
-- **Tier 1:** about 4–10 h more [guess]. It adds the heaviest builds (`p*_{10N}` took 340 s at
-  the cheap cell, `p_lat` about 50 s) and doubles the cells for `r_N`.
-- **Tier 2:** about 70 cells, days on one laptop [guess]. Waits for the savings below or a
-  larger machine.
+| Cell | `D = 2` | `D = 4` | Peak memory at `D = 4` |
+|---|---|---|---|
+| exp-decay base | 41 s | 380 s | 2.9 GB (0.7 GB at `D = 2`) |
+| hypercone base | 31 s | 108 s | 0.2 GB |
+| hypercone, nested natures | 125 s | 177 s | 0.3 GB |
+
+- **Tier 0:** 12 cells, about 22 min serially (`D = 1, 3` interpolated), and about 7–10 min with
+  the memory scheduler at its defaults (4 cells at once within 6 GB) [estimate]. The first
+  guess was 1–3 h.
+- **Tier 1:** not measured. It adds the heaviest builds (`p*_{10N}` took 340 s at the cheap cell,
+  `p_lat` about 50 s) and the twin cells for `r_N`; measure one cell before planning it.
+- **Tier 2:** about 70 cells, and `D ≥ 5`: the atomic-path `p*` (5–9 min at `D = 5`) and, for
+  Jeffreys at `D ≥ 9`, annealed per-point estimates of about 10 s per thin point. Measure first.
 
 ### Savings, by expected impact
 
-1. **Parallel cells**: in `run.py` for tier 0. Each worker builds its own cast and runs a fixed
-   number of threads (`--threads`, recorded), so results do not depend on the number of
-   workers: serial and two-worker runs agree bit for bit. Thin points within a cell are not
-   split across workers. On this laptop (8 cores, 8 GB) memory, not cores, sets the number of
-   workers; the cost-model run measures it.
+1. **Parallel cells**: in `run.py` for tier 0, a fresh worker process per cell, each with a
+   fixed number of threads (`--threads`, recorded), so results do not depend on the
+   scheduling: serial and parallel runs agree bit for bit. Cells are scheduled under a memory
+   budget (75% of physical memory by default), largest expected peak first, from the peaks
+   earlier runs recorded; an unmeasured cell counts as the heaviest measured one. Thin points
+   within a cell are not split across workers.
 2. **A persistent build cache keyed by `σ/√N`**, which twin cells and the mis-budgeted `p*`
    share: not implemented (deferred until the code is stable; MB).
 3. **Robustness cells score a subset of rows**: in tier 2 above.

@@ -7,7 +7,10 @@ manifold; the hypercone at `sigma = 1`, `N = 1`, `W = 50`, taper on, `phi = 1`, 
 the submodel agents of the `D_max = 26` cone at fall-off 0.5, which see the nested natures,
 each at `D = 1`-4. Every row of a cell (`qfamily.cell_rows`) is scored on `R_N` alone.
 
-Cells run in worker processes, a fresh one per cell, each with a fixed number of numba and BLAS threads
+Cells run in worker processes, a fresh one per cell, scheduled under a memory budget (largest
+expected peak first, each started when it fits; expected peaks come from earlier runs' records
+under `output/`, an unmeasured cell counting as the heaviest measured one), each with a fixed
+number of numba and BLAS threads
 (`--threads`, recorded), so that the workers share the cores and the summation order does not
 change with the number of workers. Each worker builds its own cast; no prior crosses a process
 boundary. Determinism: the experiment seed `20260601` is split into one child stream per
@@ -23,7 +26,7 @@ extra computation are null: the `r_N` scores, `covered_J`, `mass_bound_gap`, `jo
 the failure-map fields and the prior side other than `I_pstar`); `provenance.json`.
 
 Usage:
-    uv run python experiments/002-foreign-q-prediction/run.py [--workers 2] [--S_q 500]
+    uv run python experiments/002-foreign-q-prediction/run.py [--workers 0] [--mem-gb 0] [--S_q 500]
         [--threads 2] [--cells exp_decay/base/D2,hypercone/base/D4] [--out DIR] [--force]
 """
 from __future__ import annotations
@@ -49,7 +52,7 @@ THREADS_DEFAULT = 2
 BLAS) add in an order that depends on the thread count, and a change from 8 to 4 threads
 moved `C_N` by 4.5e-11 and the gaps to Jeffreys by up to 7.7e-4 relative (2026-11-26). With
 the count fixed and recorded, results do not depend on how the cells are scheduled."""
-_WORKERS = _argv_int(sys.argv[1:], "--workers", 2)
+_WORKERS = _argv_int(sys.argv[1:], "--workers", 0)  # 0: cores divided by threads
 _THREADS = _argv_int(sys.argv[1:], "--threads", THREADS_DEFAULT)
 for _var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "VECLIB_MAXIMUM_THREADS", "NUMBA_NUM_THREADS"):
     os.environ[_var] = str(_THREADS)
@@ -204,14 +207,65 @@ def provenance(args, timings: dict, wall: float) -> dict:
         "src_tree": _git("rev-parse", "HEAD:src/infomax"),
         "spec_commit": _git("log", "-1", "--format=%H", "--", "specs/002-foreign-q-prediction.md"),
         "packages": pkgs, "python": platform.python_version(), "platform": platform.platform(),
-        "cpu_count": os.cpu_count(), "workers": args.workers, "threads_per_worker": _THREADS,
+        "cpu_count": os.cpu_count(), "workers": args.workers or max(1, (os.cpu_count() or 1) // max(1, args.threads)),
+        "threads_per_worker": _THREADS, "physical_memory_mb": physical_memory_mb(), "mem_gb": args.mem_gb,
         "seed": SEED, "S_q": args.S_q, "tier": 0, "wall_seconds": wall, "cells": timings,
     }
 
 
+def known_peaks(output_root: Path) -> dict:
+    """Each cell's largest recorded peak memory (MB) over earlier runs under `output_root`
+    (`*/cells/*.json`): what the scheduler expects a cell to need."""
+    peaks: dict = {}
+    for path in output_root.glob("*/cells/*.json"):
+        try:
+            res = json.loads(path.read_text())
+        except (OSError, ValueError):
+            continue
+        name, mb = res.get("cell"), res.get("peak_rss_mb")
+        if name and mb:
+            peaks[name] = max(peaks.get(name, 0.0), float(mb))
+    return peaks
+
+
+def physical_memory_mb() -> float:
+    try:
+        return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") / 2**20
+    except (ValueError, OSError, AttributeError):
+        return 8192.0
+
+
+def schedule(todo: list, expected: dict, budget_mb: float, workers: int, submit, wait_one) -> list:
+    """Run `todo` under a memory budget: the cells start largest first, each as soon as its
+    expected peak fits in what the running cells leave of `budget_mb` and fewer than `workers`
+    run. A cell larger than the whole budget runs alone. `submit(cell)` returns a handle;
+    `wait_one(handles)` blocks until one finishes and returns `(handle, result)`."""
+    queue = sorted(todo, key=lambda c: -expected[c.name])
+    running: dict = {}
+    results = []
+    while queue or running:
+        used = sum(expected[c.name] for c in running.values())
+        started = False
+        for c in list(queue):
+            if len(running) >= workers:
+                break
+            if used + expected[c.name] <= budget_mb or not running:
+                running[submit(c)] = c
+                used += expected[c.name]
+                queue.remove(c)
+                started = True
+        if not started or len(running) >= workers or not queue:
+            handle, res = wait_one(list(running))
+            running.pop(handle)
+            results.append(res)
+    return results
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--workers", type=int, default=2)
+    ap.add_argument("--workers", type=int, default=0, help="most cells at once; 0: cores divided by threads")
+    ap.add_argument("--mem-gb", type=float, default=0.0,
+                    help="memory budget for the running cells; 0: 75%% of physical memory")
     ap.add_argument("--threads", type=int, default=THREADS_DEFAULT, help="threads per worker (recorded)")
     ap.add_argument("--S_q", type=int, default=S_Q)
     ap.add_argument("--cells", default="", help="comma-separated cell names; default: all of tier 0")
@@ -225,20 +279,44 @@ def main() -> None:
     seeds = dict(zip((c.name for c in cells), np.random.SeedSequence(SEED).spawn(len(cells))))
     chosen = [c for c in cells if not args.cells or c.name in set(args.cells.split(","))]
     todo = [c for c in chosen if args.force or not (out / "cells" / f"{c.name.replace('/', '__')}.json").exists()]
-    print(f"tier 0: {len(chosen)} cells chosen, {len(todo)} to run, {args.workers} workers x {_THREADS} threads", flush=True)
+    print(f"tier 0: {len(chosen)} cells chosen, {len(todo)} to run, {_THREADS} threads per cell", flush=True)
 
     start = time.perf_counter()
     import multiprocessing as mp
+    from concurrent.futures import FIRST_COMPLETED, wait
 
+    workers = args.workers or max(1, (os.cpu_count() or 1) // max(1, args.threads))
+    budget = args.mem_gb * 1024 if args.mem_gb else 0.75 * physical_memory_mb()
+    peaks = known_peaks(out.parent)
+    fallback = max(peaks.values(), default=budget)
+    expected = {c.name: peaks.get(c.name, fallback) for c in todo}
+    print(f"scheduler: up to {workers} cells at once within {budget / 1024:.1f} GB; expected peaks "
+          + ", ".join(f"{c.name} {expected[c.name] / 1024:.1f} GB" + ("" if c.name in peaks else " (unmeasured)") for c in todo),
+          flush=True)
     # one fresh process per cell: a cell's peak memory is its own (a reused worker reports the
     # peak of its whole life), and no state carries from one cell to the next
-    pool = ProcessPoolExecutor(max_workers=max(1, args.workers), mp_context=mp.get_context("spawn"), max_tasks_per_child=1)
-    futures = [pool.submit(run_cell, c, seeds[c.name], args.S_q) for c in todo]
-    results = (f.result() for f in as_completed(futures))
-    for res in results:
+    pool = ProcessPoolExecutor(max_workers=workers, mp_context=mp.get_context("spawn"), max_tasks_per_child=1)
+    done_out: list = []
+
+    def submit(cell):
+        return pool.submit(run_cell, cell, seeds[cell.name], args.S_q)
+
+    def wait_one(handles):
+        finished, _ = wait(handles, return_when=FIRST_COMPLETED)
+        h = next(iter(finished))
+        res = h.result()
+        _save(res)
+        return h, res
+
+    def _save(res):
         (out / "cells" / f"{res['cell'].replace('/', '__')}.json").write_text(json.dumps(res, indent=1, default=float))
         print(f"{res['cell']}: {res['seconds']:.0f} s (build {res['build_seconds']:.0f} s), "
               f"{len(res['rows'])} rows, peak {res['peak_rss_mb']:.0f} MB", flush=True)
+        done_out.append(res)
+
+    schedule(todo, expected, budget, workers, submit, wait_one)
+    pool.shutdown()
+    results = []
     wall = time.perf_counter() - start
 
     rows, timings = [], {}
