@@ -7,7 +7,7 @@ manifold; the hypercone at `sigma = 1`, `N = 1`, `W = 50`, taper on, `phi = 1`, 
 the submodel agents of the `D_max = 26` cone at fall-off 0.5, which see the nested natures,
 each at `D = 1`-4. Every row of a cell (`qfamily.cell_rows`) is scored on `R_N` alone.
 
-Cells run in parallel worker processes, each with a fixed number of numba and BLAS threads
+Cells run in worker processes, a fresh one per cell, each with a fixed number of numba and BLAS threads
 (`--threads`, recorded), so that the workers share the cores and the summation order does not
 change with the number of workers. Each worker builds its own cast; no prior crosses a process
 boundary. Determinism: the experiment seed `20260601` is split into one child stream per
@@ -228,14 +228,13 @@ def main() -> None:
     print(f"tier 0: {len(chosen)} cells chosen, {len(todo)} to run, {args.workers} workers x {_THREADS} threads", flush=True)
 
     start = time.perf_counter()
-    if args.workers <= 1:
-        results = (run_cell(c, seeds[c.name], args.S_q) for c in todo)
-    else:
-        import multiprocessing as mp
+    import multiprocessing as mp
 
-        pool = ProcessPoolExecutor(max_workers=args.workers, mp_context=mp.get_context("spawn"))
-        futures = [pool.submit(run_cell, c, seeds[c.name], args.S_q) for c in todo]
-        results = (f.result() for f in as_completed(futures))
+    # one fresh process per cell: a cell's peak memory is its own (a reused worker reports the
+    # peak of its whole life), and no state carries from one cell to the next
+    pool = ProcessPoolExecutor(max_workers=max(1, args.workers), mp_context=mp.get_context("spawn"), max_tasks_per_child=1)
+    futures = [pool.submit(run_cell, c, seeds[c.name], args.S_q) for c in todo]
+    results = (f.result() for f in as_completed(futures))
     for res in results:
         (out / "cells" / f"{res['cell'].replace('/', '__')}.json").write_text(json.dumps(res, indent=1, default=float))
         print(f"{res['cell']}: {res['seconds']:.0f} s (build {res['build_seconds']:.0f} s), "
