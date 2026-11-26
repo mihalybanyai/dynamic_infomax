@@ -81,6 +81,7 @@ hashes are filled at stage 3, after the eye test is approved.
 | `test_002_natures.py::test_t14h_submodel_floor_is_the_projection_loss` | 1 | passing | (none yet) |
 | `test_002_natures.py::test_t14i_nested_cell_is_one_nature_for_every_agent` | 1 | passing | (none yet) |
 | `test_002_pipeline.py::test_t10_seed_determinism` | 1 | passing | (none yet) |
+| `test_002_pipeline.py::test_t10_scoring_R_alone_leaves_R_unchanged` | 1 | passing (alone, 2026-11-26) | (none yet) |
 | `test_002_pipeline.py::test_t2_pipeline_pJ_equals_pU` | 4 | passing | (none yet) |
 | `test_002_priors.py::test_t11_nml_normaliser_in_the_1d_cone` | 1 | passing | (none yet) |
 | `test_002_priors.py::test_t11_pproj_cloud_is_slab_and_spike_in_the_1d_cone` | 1 | passing | (none yet) |

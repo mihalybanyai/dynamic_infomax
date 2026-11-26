@@ -1830,7 +1830,7 @@ machinery; it does **not** assert the results
 | P7c | Budget through the noise: `p*` and `R` at `σ_eff` agree with the explicit `N`-fold channel at small `D, N` ([§4](#4-algorithm)) | `test_002_scores.py::test_t7c_budget_through_the_noise`, `::test_t7c_two_fold_divergence_by_explicit_monte_carlo` |
 | P8 | Floors and ceiling: `R_N^q(π) ≥ I_q ≥ 0` and the one-step analogue per nature; `q̄` minimises the row average; the split of `[^2-qbar]` ([§2.5](#25-controls-the-ceiling-and-self-sampling)) | `test_002_scores.py::test_t8_floors_and_matched_prior`, `::test_t8_floors_on_every_row` (slow), `::test_t8_qbar_wins_the_row_average_and_splits_the_mean`, `test_002_natures.py::test_t14g_nature_marginals_match_brute_force`, `::test_t14h_submodel_floor_is_the_projection_loss` |
 | P9 | A&M's prior side: `I_{p*} ≥ I_{p_J}` and `B(p*) ≤ B(p_J)` at every `D` (A&M Fig. 5) | `test_002_references.py::test_t9_am_prior_side_dominance` (slow) |
-| P10 | Determinism: a fixed seed gives identical score arrays ([§4.4](#44-score-estimation)) | `test_002_pipeline.py::test_t10_seed_determinism` |
+| P10 | Determinism: a fixed seed gives identical score arrays<span style="color: red">; scoring `R_N` alone, and a sampled prior's memo of thin points, change no number</span> ([§4.4](#44-score-estimation)) | `test_002_pipeline.py::test_t10_seed_determinism`<span style="color: red">, `::test_t10_scoring_R_alone_leaves_R_unchanged`</span> |
 | P11 | `p_proj`: the MLE projection recovers `θ̂`; `p_NML` normalises; `I_{p_proj} ≤ I_{p*} = C_N`; the sampler agrees with `transtrum` (P12) ([§4.2](#42-prior-construction)) | `test_002_priors.py::test_t11_nml_normaliser_in_the_1d_cone`, `::test_t11_pproj_cloud_is_slab_and_spike_in_the_1d_cone`, `::test_t11_projection_maps_outside_data_to_the_endpoints`, `::test_t11_pproj_projection_recovers_mle`, `::test_t11_projection_of_data_beyond_the_manifold_lands_on_a_face`, `::test_t11_pproj_information_below_capacity` |
 | P12 | AtomicPriors.jl references: exp-decay map and metric, `p*`, `C_N` at reduced noise, `mutual` of a fixed prior, and `transtrum`'s `p_proj` cloud match frozen values, and the atomic path's `I_{p*}` does not fall below AtomicPriors.jl's at `D = 5, 7` ([§5.5](#55-atomicpriorsjl-reference-fixtures)) | `test_002_references.py::test_t12a_exp_decay_map_and_metric`, `::test_t12b_pstar_matches_atomicpriors`, `::test_t12c_capacity_at_reduced_noise`, `::test_t12d_mutual_information_of_a_fixed_prior`, `::test_t12e_pproj_port_matches_transtrum`, `::test_t12f_atomic_path_not_below_atomicpriors` (slow) |
 | P13 | Models: the metric matches autodiff; exp-decay's map is invariant under permuting `θ` and its `Θ` holds only ordered `ξ`, on the whole manifold; in the hypercone `√det g / θ_1^{D−1}` is constant for every `φ`, the cross-section widths are `r φ^{μ−2}√N/σ`, and the vertex warp is one-to-one, the identity outside `ρ` and gives the angle `κπ/2` ([§4.1](#41-model-families)) | `test_002_models.py::test_t13a_metric_matches_finite_differences`, `::test_t13a_metric_with_curvature_matches_finite_differences`, `::test_t13b_exp_decay_symmetry_and_ordered_theta`, `::test_t13b_exp_decay_map_known_values`, `::test_t13b_matched_box_is_the_window`, `::test_t13c_hypercone_covolume_and_widths`, `::test_t13c_constant_cross_section_has_flat_volume`, `::test_t13d_vertex_warp`, `::test_t13d_curvature_knob_through_the_model`, `::test_t13d_curvature_off_is_identity` |
@@ -1901,7 +1901,7 @@ Monte-Carlo error (`[^2-qbar]`).
 machinery before any foreign nature is scored.
 
 **T10 — Determinism.** Two runs with the same seed give bit-identical score arrays
-(`skills/manage-randomness.md`).
+(`skills/manage-randomness.md`). <span style="color: red">Scoring `R_N` alone, as tier 0 of the experiment does, gives the same `R` draws, floor and mismatches as scoring both scores, and leaves the one-step fields empty. A sampled prior memoises the routed `log m` of thin points; at `D = 3` near the no-decay corner, `log m` asked for again after the predictive has used it equals a fresh prior's.</span>
 
 **T11 — `p_proj`.** `p_NML ∝ max_θ p(x|θ)` has a finite normaliser on the compact manifold; `I_{p_proj} ≤ I_{p*} = C_N` within solver tolerance, since `p*` maximises the information (that `I_{p_proj}` tracks `I_{p*}`, far above `I_{p_J}` [read: Quinn Fig. 12], is shown in the report, [§6.1](#61-outputs), not asserted); and the projection recovers a known `θ̂` from synthetic `x` placed near a
 chosen point of the manifold. The sampler itself is checked against `transtrum` in
@@ -4099,3 +4099,9 @@ three priority tiers, set out in `experiments/002-foreign-q-prediction/PLAN.md`.
 §3.7's verdict on `R_N`, with `p*`, `p_J`, `p_U` and `p_LN`, in both families' base cells and
 the cone at fall-off 0.5, at `D = 1`–4. Tier 1 adds the budget family and `r_N`; tier 2 the
 remaining knobs and `D ≥ 5`. §5.4 gains a pointer in red; the design itself is unchanged.
+
+### 2026-11-26 — Clarification (§5.1, §5.2; T10's second test)
+
+`test_t10_scoring_R_alone_leaves_R_unchanged` came with `ecfcd8d` (tier 0 scores `R_N` alone;
+sampled priors memoise thin points) but was not in §5. It is now listed under P10 and
+described in T10, in red. It passes (2026-11-26). §5 stays draft.
