@@ -107,6 +107,11 @@ interpreter if needed, and creates `.venv/` with the pinned dependencies
 the `dev` group used for project tooling (`pypdf` for reading PDFs in
 `resources/`, `daft-pgm` for plate-notation diagrams in `diagrams/`).
 
+The test suite runs in parallel processes with pytest-xdist, `uv run pytest -n 3 --dist
+loadfile` (add `-m slow` for the slow tests). `tests/conftest.py` caps each worker's numba and
+BLAS threads at the cores divided by the workers. On a laptop with 8 GB, memory rather than
+cores limits the number of workers.
+
 Run commands inside the env with `uv run …` (e.g. `uv run pytest`,
 `uv run python diagrams/000-static-infomax-fig1-pgm.py`), or activate
 the venv with `source .venv/bin/activate`.

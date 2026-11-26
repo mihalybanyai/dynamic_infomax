@@ -17,6 +17,7 @@ dev = [
     "daft-pgm",   # plate-notation diagrams in diagrams/ (imports as `daft`)
     "code2flow>=2.5.1",
     "pypdfium2>=5.8.0",
+    "pytest-xdist>=3.8.0",  # run the test suite in parallel processes: pytest -n 3 --dist loadfile
 ]
 
 [build-system]
@@ -31,3 +32,4 @@ markers = [
     "slow: sweep-level spec-002 tests (D-sweeps, the atomic path); run with `pytest -m slow`",
 ]
 addopts = "-m 'not slow'"
+testpaths = ["tests"]
