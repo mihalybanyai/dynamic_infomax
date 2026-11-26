@@ -490,6 +490,21 @@ is approved, at the human's request).
   against brute force's −19.39 ± 0.01. T4's three-standard-error check would have passed
   it. Resolved (MB, 2026-11-26): a Student-t first law and a last-round guard (DD-Q4). T4
   adds `D = 7` and a 1% floor on the effective share.
+- **Sampled priors at thin states (open, OQ-14).** The extended eye test's upper `B` edge
+  for `p_LN` at `D = 7` was 416 bits, against A&M's 45–50. At `D = 5`, where `p_LN` still has
+  its exact grid, the `D = 7` path on the eye test's 1533 states gave `B` = 114 nats, against
+  the grid's 44. At the no-decay corner the per-state divergence was 46 nats by the grid, 121
+  by the per-point estimate and 234 by the plain cloud. Over the 20 states that set `B` the
+  per-point estimate overshot by a median of 10 and up to 75 nats, with an effective share
+  near 0.001 everywhere. Its two kernel variants agree (T4) because both take their centres
+  from the cloud. At `D = 3` the plain cloud overshot `p_LN` by 54 nats near the corner and
+  about 4 on faces with a fast and slow rate, and `p_J` by 0.15–0.28. The scores
+  (`score.log_marginal`) use the plain cloud everywhere; the per-point estimate runs only
+  inside `worst_case_bias_pressure`. New test,
+  `test_t7a_sampled_marginal_matches_the_grid_at_thin_states`: at `D = 3`, within 0.1 nats of
+  the grid at five thin states and a typical one. The grid agrees there with one of half its
+  cell length within 0.03 nats, but not at the corner itself (0.11–0.16), which is left out.
+  It fails for both priors until OQ-14 is resolved (2026-11-26).
 - **First fast-suite run** (`762eae0`, 18.5 min): 140 passed, 17 failed: the T12 fixtures
   (8), T13(d) (2), T7(a) (2), T14(a) log-normals (2), T21(a) `mass_near`, T16(b) at the
   cheap cell, and T7(c), a bug in the batched kernel tables (two-dimensional data have two

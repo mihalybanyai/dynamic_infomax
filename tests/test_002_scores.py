@@ -230,6 +230,46 @@ def test_t7a_continuous_quadrature_matches_a_fine_atom_sum(name):
     )
 
 
+THIN_STATES_D3 = {
+    "near corner": [0.97, 0.97, 0.97],
+    "fast and slow": [0.0, 1.0, 1.0],
+    "near fast and slow": [0.02, 1.0, 1.0],
+    "coincident": [0.5, 0.5, 0.5],
+    "mixed faces": [0.0, 0.5, 1.0],
+    "typical": [0.3, 0.6, 0.8],
+}
+"""Exp-decay states at `D = 3` where a 20000-draw cloud is thin, and one where it is not.
+At each, the default grid agrees with one of half its cell length (0.3 noise units) within
+0.03 nats on the mean `log m`. The no-decay corner `(1, 1, 1)` is left out: there the two
+grids differ by 0.11 (`p_LN`) and 0.16 (`p_J`) nats (2026-11-26)."""
+
+
+@pytest.mark.parametrize("name", ["p_LN", "p_J"])
+def test_t7a_sampled_marginal_matches_the_grid_at_thin_states(name):
+    """T7(a) (§4.4, OQ-13): a continuous prior carried as a sampled cloud (`SampledPrior`, the
+    path of `p_J` from `D = 4` and of the product laws above `D = 5`) gives the same `log m` as
+    the grid where both exist, including where the prior is thin. At `D = 3` both run. At each
+    state of `THIN_STATES_D3`, over 64 draws of `x`, the mean of `log m` from the sampled
+    prior's `log_marginal`, the path the scores use, agrees with the grid's within 0.1 nats,
+    T4's bar for marginals. A cloud has no draws where the prior's mass is below about
+    `1/20000`, so its mixture there underestimates `m`. At `D = 5` the per-point estimate
+    overstated `p_LN`'s per-state divergence by a median of 10 nats and up to 75 at face
+    states, and the plain cloud by up to 188 (MB, 2026-11-26)."""
+    from infomax.sampled import build_sampled_jeffreys, sampled_from
+
+    model = cheap_model(D=3)
+    s = model.sigma_eff
+    grid = {"p_LN": build_pln, "p_J": build_jeffreys}[name](model)
+    assert not hasattr(grid, "refined_log_marginal"), "at D = 3 the reference must be the grid"
+    sampled = sampled_from(grid, model, name) if name == "p_LN" else build_sampled_jeffreys(model)
+    off = {}
+    for k, (label, theta) in enumerate(THIN_STATES_D3.items()):
+        y = model.y(np.asarray(theta, dtype=float)[None])[0]
+        x = y + s * np.random.default_rng(20261230 + k).standard_normal((64, y.size))
+        off[label] = float(np.mean(log_marginal(grid, model, x) - log_marginal(sampled, model, x)))
+    assert all(abs(v) <= 0.1 for v in off.values()), off
+
+
 @pytest.mark.parametrize("name", ["p_J", "p_U"])
 @pytest.mark.parametrize("D", [4, 6])
 def test_t7a_tapered_cone_marginal_matches_brute_force(D, name):

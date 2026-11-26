@@ -10,7 +10,7 @@
 | [4. Algorithm](#4-algorithm) | draft | 261126 |
 | [5. Properties to verify](#5-properties-to-verify) | draft | 261126 |
 | [6. Report](#6-report) | reviewed | 261126 |
-| [7. Open questions](#7-open-questions) | reviewed | 261126 |
+| [7. Open questions](#7-open-questions) | draft | 261126 |
 | [8. References](#8-references) | reviewed | 261121 |
 | [9. Derivations](#9-derivations) | reviewed | 261121 |
 | [10. Revision log](#10-revision-log) | n/a | — |
@@ -1752,7 +1752,7 @@ the calibration histogram ([§6](#6-report)).
 (`skills/manage-randomness.md`); Blahut–Arimoto itself is deterministic. The seed is
 pinned in [§5.4](#54-sweep-design).
 
-**Marginals of continuous priors without a grid.** Where a continuous prior has no quadrature grid (`p_J` from `D = 4`; `p_U`, `p_LN` and `p_LN^*` once their grids pass `10^6` nodes, which in exp-decay is above `D = 5`), `log m_π(x)` is the mixture over a cloud of 20000 of its draws, weighted where the draws are. That is accurate where the prior has mass near `x`: at `D = 5` it lay within 0.11 nats of the per-point estimate below at the 95th percentile, and the information it gives within 0.03 nats. Where the prior has little mass near `x`, as at the faces where the worst-case bias pressure lives, the cloud underestimates `m`. There `log m_π(x)` is estimated per point by importance sampling. The cloud weighted by the likelihood gives posterior draws; a kernel density around up to 200 of them is the proposal, with 20% of a kernel density of the whole cloud as the defensive part; 1000 draws are used, and each point's effective sample size is recorded. At `D = 5` two independent versions of this estimate (full and diagonal kernels) agreed within 0.04 nats on per-state divergences at face states, at about 0.2 s per point. The worst-case bias pressure `B` is then found in two stages: the cloud screens every state, and the per-point estimate refines the 20 highest (2026-11-26).
+**Marginals of continuous priors without a grid.** Where a continuous prior has no quadrature grid (`p_J` from `D = 4`; `p_U`, `p_LN` and `p_LN^*` once their grids pass `10^6` nodes, which in exp-decay is above `D = 5`), `log m_π(x)` is the mixture over a cloud of 20000 of its draws, weighted where the draws are. That is accurate where the prior has mass near `x`: at `D = 5` it lay within 0.11 nats of the per-point estimate below at the 95th percentile, and the information it gives within 0.03 nats. Where the prior has little mass near `x`, as at the faces where the worst-case bias pressure lives, the cloud underestimates `m`. There `log m_π(x)` is estimated per point by importance sampling. The cloud weighted by the likelihood gives posterior draws; a kernel density around up to 200 of them is the proposal, with 20% of a kernel density of the whole cloud as the defensive part; 1000 draws are used, and each point's effective sample size is recorded. At `D = 5` two independent versions of this estimate (full and diagonal kernels) agreed within 0.04 nats on per-state divergences at face states, at about 0.2 s per point. <span style="color: red">Against `p_LN`'s exact grid at `D = 5`, though, it overstated per-state divergences at faces by a median of 10 nats and up to 75, with about 0.1% of its draws effective. The two versions agree because both take their centres from the cloud, not because either is right (OQ-14).</span> The worst-case bias pressure `B` is then found in two stages: the cloud screens every state, and the per-point estimate refines the 20 highest (2026-11-26).
 
 ### 4.5 Diagnostics
 
@@ -1825,7 +1825,7 @@ machinery; it does **not** assert the results
 | P4 | Jeffreys: `p_J ∝ √det g` normalises; its `θ_1`-marginal in the cones is `∝ θ_1^{D−1}`; the sampled `p_J` and the per-point marginal agree with brute force and with each other ([§4.2](#42-prior-construction)) | `test_002_priors.py::test_t4_jeffreys_normalises`, `::test_t4_jeffreys_normaliser_converges_on_whole_manifold`, `::test_t4_jeffreys_normaliser_matches_an_independent_quadrature`, `::test_t4_uniform_density_is_absolute`, `::test_t4_jeffreys_cone_marginal`, `::test_t4_sampled_jeffreys_normaliser_matches_brute_force` (slow), `::test_t4_pointwise_marginals_agree` (slow) |
 | P5 | The closed form (3.3.1) matches a numeric KL of two Gaussians, and both terms vanish at the matched prior ([§3.3](#33-score-decomposition-bias-vs-calibration-a-diagnostic)) | `test_002_diagnostics.py::test_t5_gaussian_kl_split_matches_numeric_kl`, `::test_t5_gaussian_kl_split_vanishes_when_matched`, `::test_t5_pure_shift_and_pure_spread` |
 | P6 | Hypercone deviation: Jeffreys' numeric posterior-mean deviation matches `(D−1)/x_1` to next order, toward the thick end, for `1 ≪ x_1 ≪ W` ([§1.2](#12-generative-model), [§9.2](#92-hypercone-posterior-deviation-eq-922)) | `test_002_diagnostics.py::test_t6_hypercone_jeffreys_deviation`, `::test_t6_hypercone_jeffreys_mode_is_the_exact_root` |
-| P7a | `m_π(X_{1:N})`: the discrete sum and quadrature agree ([§4.4](#44-score-estimation)) | `test_002_scores.py::test_t7a_discrete_marginal_is_the_atom_sum`, `::test_t7a_discrete_predictive_is_the_atom_sum`, `::test_t7a_continuous_quadrature_matches_a_fine_atom_sum`, `::test_t7a_tapered_cone_marginal_matches_brute_force` |
+| P7a | `m_π(X_{1:N})`: the discrete sum and quadrature agree<span style="color: red">; a sampled prior's marginal agrees with its grid where its mass is thin</span> ([§4.4](#44-score-estimation)) | `test_002_scores.py::test_t7a_discrete_marginal_is_the_atom_sum`, `::test_t7a_discrete_predictive_is_the_atom_sum`, `::test_t7a_continuous_quadrature_matches_a_fine_atom_sum`, `::test_t7a_tapered_cone_marginal_matches_brute_force`, <span style="color: red">`::test_t7a_sampled_marginal_matches_the_grid_at_thin_states`</span> |
 | P7b | `p*`: the candidate-set and atomic paths agree on `R` where both run ([§4.2](#42-prior-construction)) | `test_002_priors.py::test_t7b_pstar_method_agreement` (slow) |
 | P7c | Budget through the noise: `p*` and `R` at `σ_eff` agree with the explicit `N`-fold channel at small `D, N` ([§4](#4-algorithm)) | `test_002_scores.py::test_t7c_budget_through_the_noise`, `::test_t7c_two_fold_divergence_by_explicit_monte_carlo` |
 | P8 | Floors and ceiling: `R_N^q(π) ≥ I_q ≥ 0` and the one-step analogue per nature; `q̄` minimises the row average; the split of `[^2-qbar]` ([§2.5](#25-controls-the-ceiling-and-self-sampling)) | `test_002_scores.py::test_t8_floors_and_matched_prior`, `::test_t8_floors_on_every_row` (slow), `::test_t8_qbar_wins_the_row_average_and_splits_the_mean`, `test_002_natures.py::test_t14g_nature_marginals_match_brute_force`, `::test_t14h_submodel_floor_is_the_projection_loss` |
@@ -1884,7 +1884,7 @@ against A&M App. A.1, with the sign note of §9.2.
 
 **T7 — Marginals, solvers and the budget.** (a) For a discrete `p*` and a coarse
 continuous prior, `log m_π(X_{1:N})` from the atom sum agrees with quadrature on a shared
-support. (b) Where both the candidate-set and the atomic path run, their `R_N^q` agree within
+support. <span style="color: red">A continuous prior carried as a sampled cloud agrees with its grid at `D = 3`, within 0.1 nats on the mean `log m`, at face states where its mass is thin and at a typical state.</span> (b) Where both the candidate-set and the atomic path run, their `R_N^q` agree within
 Monte-Carlo and solver tolerance. (c) At small `(D, N)`, `p*` and `R_N^q` built at
 `σ_eff` agree with those from the literal channel `θ → X_{1:N}`; with T12(c), this pins
 the construction that the guarantee of §3.1 rests on.
@@ -2241,7 +2241,9 @@ Computed and not kept in the table: the per-draw score arrays, the candidate set
 
 ### 7.1 Open
 
-None as of 2026-11-20. The decisions below leave auto-chosen values in §4 and §5, each
+<span style="color: red">- **OQ-14 — Marginals of sampled priors where they are thin** ([§4.4](#44-score-estimation)). A cloud of 20000 draws has none where the prior's mass is below about `1/20000`, and the per-point estimate takes its proposal from the same cloud. Against exact grids, both overstate per-state divergences at faces: `p_LN`'s cloud by up to 54 nats near the no-decay corner at `D = 3`; at `D = 5`, its per-point estimate by a median of 10 nats and up to 75, and its cloud by up to 188. The scores use the cloud everywhere, so wherever a nature puts data where a sampled prior is thin, that prior's loss is inflated: `p_J` from `D = 4`, the product laws above `D = 5`. T7(a)'s thin-state test fails until this is resolved. A replacement estimator is proposed for MB's choice (2026-11-26).</span>
+
+The decisions below leave auto-chosen values in §4 and §5, each
 flagged "please confirm" where it appears.
 
 ### 7.2 Resolved
@@ -3973,3 +3975,27 @@ cannot bound the weights there, and any seed could collapse. Decided with MB; ed
 §4 flips to draft; §5 is already draft. Downstream: `sampled.build_sampled_jeffreys`,
 `test_t4_sampled_jeffreys_normaliser_matches_brute_force`, docs DD-Q4. Every sampled `p_J` from
 `D = 4` changes, so the eye test's `D ≥ 4` rows need redrawing.
+
+### 2026-11-26 — Refinement + Correction (§4.4, §5.1, §5.2, §7; thin states of sampled priors)
+
+The extended eye test's upper `B` edge for `p_LN` at `D = 7` was 416 bits, against A&M's
+45–50. At `D = 5`, where `p_LN` still has its exact grid, the `D = 7` path was run on the
+eye test's state set. Its `B` came out 114 nats against the grid's 44. At the no-decay corner
+the per-state divergence was 46 nats by the grid, 121 by the per-point estimate and 234 by the
+plain cloud. Over the 20 states that set `B`, the per-point estimate overshot by a median of
+10 nats and up to 75, with about 0.1% of its draws effective. At `D = 3` the plain cloud,
+which every score uses, overshot `p_LN` by 54 nats near the corner and Jeffreys' by 0.28.
+Decided with MB; edits are red.
+
+- **§4.4.** The claim that two per-point versions agree at faces is kept, with the grid
+  comparison beside it. Both versions take their centres from the cloud and share its failure.
+- **T7(a) (§5.1, §5.2).** A new test: at `D = 3`, a sampled cloud's `log m` agrees with its
+  grid within 0.1 nats at five thin states and a typical one. The grid agrees with one of
+  half its cell length within 0.03 nats there. The no-decay corner is left out, where the two
+  grids differ by up to 0.16. The test fails for both `p_LN` and `p_J`, and is meant to until
+  OQ-14 is resolved.
+- **OQ-14 (§7.1)** opens.
+
+§7 flips to draft; §4 and §5 are already draft. Downstream: `sampled.py`'s marginals, the
+scores of sampled priors, `diagnostics.worst_case_bias_pressure`, and the eye test's `B`
+bands from `D = 4`.
