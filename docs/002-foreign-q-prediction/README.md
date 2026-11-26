@@ -591,6 +591,13 @@ is approved, at the human's request).
     differed by at most 0.06 nats on average and 0.38 at worst. The forward–backward bracket
     was at most 0.04 nats wide on average and 0.15 at worst. The annealed estimate took 3–4.5
     s per point at faces at `D = 7`.
+  - *Stability against A&M's `I(p_J)`* (16384 draws, Monte-Carlo error about 0.01 bits).
+    Importance-sampled against annealed: 1.690 vs 1.695 bits at `D = 7` (`log Z` −19.361 for
+    both), and 1.329 vs 1.351 at `D = 9` (240 effective draws for importance sampling). At
+    `D = 11`, 10 moves per step gave 1.072 bits and 50 gave 1.077, taking 75 vs 246 s. Ours is
+    below A&M's by 0.01, 0.02 and 0.11 bits at `D = 5, 7, 11`. Two methods agree and more
+    mixing changes nothing, so the build is not the cause. A&M's side (precision or sampler at
+    `d = 11`) cannot be checked from the paper.
 - **First fast-suite run** (`762eae0`, 18.5 min): 140 passed, 17 failed: the T12 fixtures
   (8), T13(d) (2), T7(a) (2), T14(a) log-normals (2), T21(a) `mass_near`, T16(b) at the
   cheap cell, and T7(c), a bug in the batched kernel tables (two-dimensional data have two
