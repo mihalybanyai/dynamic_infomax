@@ -13,8 +13,11 @@ Everything is committed (through `1394f7c`, plus the eye-test figure commit afte
 
 - **Fast suite** (`0483d5b` plus the `p_proj` sampler; T12(e) run apart): 149 passed, 6
   failed (`experiments/002-foreign-q-prediction/runs/fast_suite_0483d5b-pproj.log`,
-  untracked). T7(a) has since been fixed, so four failures remain: T14(a) for the two
-  log-normals, T21(a) `mass_near`, and T16(b) at the cheap cell. All are test-side.
+  untracked). All six failures were test-side and are since fixed. T7(a) was fixed in
+  this session (`085e811`). T14(a), T21(a) and T16(b) were fixed with MB in a parallel
+  session (`82d31de`, `55bcf81`, `e675eab`; docs `0d8f378`, `20ce132`). T16(b) now holds
+  `p_lat`'s bound to 1e-6 in 1-D and to DD-S1's 1e-3 beyond. That edit is red in spec §5.2,
+  so §5 is draft again, awaiting MB's re-review.
 - **Slow tests run this session:** T7b, T12(f) and T4's two sampled tests pass. The slow
   suite as a whole has not run.
 - **Eye test:** MB approved `D ≤ 5` on the old Jeffreys grid. That grid turned out to lose 5%
@@ -43,10 +46,10 @@ Everything is committed (through `1394f7c`, plus the eye-test figure commit afte
 
 ## Open threads (decisions for MB)
 
-1. **Test-side issues:** T14(a)'s log-normal midpoint grid, probably the same fix as T7(a);
-   T21(a) `mass_near`'s own precondition; T16(b)'s `1e-6` bound.
+1. **Re-review §5:** T16(b)'s tolerance change (`e675eab`) is red there.
 2. **DD-S1:** the solver stops beyond 1-D at violations of 1e-3 nats and a support residual
-   of 2e-3, against the spec's `1e-8`. The atomic path inherits this.
+   of 2e-3, against the spec's `1e-8`. The atomic path inherits this, and T16(b) now follows
+   it.
 3. **Unconfirmed values:** §5.4's sweep design and §5.5's T12 tolerances. Two were chosen by
    Claude: T12(b)'s 0.05, after seeing the data, and T12(f)'s 0.01 floor.
 4. **Scope above `D = 4`:** which cells run there. IR-2 asks for a cost estimate before
@@ -67,7 +70,7 @@ Everything is committed (through `1394f7c`, plus the eye-test figure commit afte
 
 1. Look at the redrawn eye test, `tests/figures/002_foreign_q_prediction/eyetest_am_fig5.png`:
    `D = 4, 5` with sampled `p_J`, and `D = 7`.
-2. Decide threads 1–3. If agreed, fix T14(a) as T7(a) was.
+2. Decide threads 1–3.
 3. Estimate, then run, the slow suite (`pytest -m slow tests/test_002_*.py`), leaving out
    T21(a) at `D = 11, 26`; then the fast suite once more.
 4. Stage-3 bookkeeping: per-test commit hashes in the codegen log.
