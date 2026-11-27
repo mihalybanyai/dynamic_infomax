@@ -5,12 +5,12 @@
 | [0. Context](#0-context) | reviewed | 261121 |
 | [1. Setup](#1-setup) | reviewed | 261121 |
 | [1.2 Generative model](#12-generative-model) | reviewed | 261124 |
-| [2. Objective](#2-objective) | reviewed | 261121 |
-| [3. The case for transfer (and how it could fail)](#3-the-case-for-transfer-and-how-it-could-fail) | reviewed | 261124 |
-| [4. Algorithm](#4-algorithm) | reviewed | 261127 |
-| [5. Properties to verify](#5-properties-to-verify) | reviewed | 261127 |
-| [6. Report](#6-report) | reviewed | 261126 |
-| [7. Open questions](#7-open-questions) | reviewed | 261126 |
+| [2. Objective](#2-objective) | draft | 261127 |
+| [3. The case for transfer (and how it could fail)](#3-the-case-for-transfer-and-how-it-could-fail) | draft | 261127 |
+| [4. Algorithm](#4-algorithm) | draft | 261127 |
+| [5. Properties to verify](#5-properties-to-verify) | draft | 261127 |
+| [6. Report](#6-report) | draft | 261127 |
+| [7. Open questions](#7-open-questions) | draft | 261127 |
 | [8. References](#8-references) | reviewed | 261121 |
 | [9. Derivations](#9-derivations) | reviewed | 261121 |
 | [10. Revision log](#10-revision-log) | n/a | — |
@@ -818,7 +818,7 @@ prior's **mismatch**, its score minus the row's floor
 
 **Reading the table** ([§2.4](#24-what-is-reported-and-what-cannot-be-asserted)). Along a row:
 the gaps between priors. Down a column: the largest and the mean mismatch. Per pair of
-priors: the two crossed cells. Per nested nature: the trend in `D`. No cell is set aside. The diagonal is zero by construction. A cell whose redundancy exceeds `C_N` is labelled *beyond the cap*: `p*` wins it by theorem, and the size of the loss is the finding ([§3.7](#37-falsification)). The worlds of `p*`'s relatives, the priors built from its construction or its objective (`p*_{N/10}`, `p*_{10N}`, `p_lat`, `p_proj`, `p_LN^*`), are read as a group of their own. Neither column summary is neutral[^2-lean], so the table
+priors: the two crossed cells. Per nested nature: the trend in `D`. No cell is set aside. The diagonal is zero by construction. <span style="color: red">On a row whose nature lies inside the agent's `Θ`, a cell</span> whose redundancy exceeds `C_N` is labelled *beyond the cap*: `p*` wins it by theorem, and the size of the loss is the finding ([§3.7](#37-falsification)). The worlds of `p*`'s relatives, the priors built from its construction or its objective (`p*_{N/10}`, `p*_{10N}`, `p_lat`, `p_proj`, `p_LN^*`), are read as a group of their own. Neither column summary is neutral[^2-lean], so the table
 itself is the result. It is relative to the cast: another prior adds a row. And it is
 conditional: if nature is like this row, this prior loses this much. Which rows resemble
 real natures is outside this spec (`notes/parked_ideas.md`, *Benchmark natures*).
@@ -1350,8 +1350,8 @@ aside.
   whose redundancy in a row exceeds `C_N`. Such a cell is labelled: the sign there is
   guaranteed, while the size of the loss, and that a prior reached it at all, are the
   finding (the insurance of [§3.6](#36-what-would-sink-it), point 4). The label requires
-  the excess over `C_N` to exceed its Monte-Carlo error plus the capacity gap of `p*`'s
-  candidate set ([§4.5](#45-diagnostics)). In the reduced cone at `D = 26`, Jeffreys'
+  the excess over `C_N` to exceed <span style="color: red">four times</span> its Monte-Carlo error plus the capacity gap of `p*`'s
+  candidate set ([§4.5](#45-diagnostics)). <span style="color: red">It is made only where (3.1.1) holds, on rows whose nature lies inside the agent's `Θ`, and never for `p*` itself, whose excess over `C_N` is a check on the gap, recorded per row. The hypercone's nested natures put their states outside the agent's `Θ` ([§3.2](#32-the-heuristic-the-average-case-asymmetry-in-high-d)), so their rows report `R_N − C_N` and carry no label.</span> In the reduced cone at `D = 26`, Jeffreys'
   per-state redundancy already exceeds `C_N` for `θ_1 < 41` of 50
   (`notes/budget-value-of-information.md` §4). A claim that `p*` leads *within* the cap is
   stated over the other cells.
@@ -1533,7 +1533,7 @@ ordered `Θ`, held in `ξ`.
   for `x` drawn from the NML distribution `p_NML(x) ∝ max_θ p(x|θ)` at `σ_eff` [read:
   A&M App. A.3; Quinn §5.2]. Sampled by adaptive importance sampling (OQ-6). Each round draws `θ` from a proposal made of atoms, adds noise at `σ_eff`, fits `θ̂(x)` within `Θ`, and weights the draw by `p(x|θ̂(x)) / m_q(x)`, where `m_q`, the proposal's Bayes mixture, is a finite sum. The first proposal is Jeffreys' draws used as atoms; each later one is the previous round's weighted cloud, mixed with 10% of those Jeffreys atoms so that no weight is unbounded. Rounds continue until the effective sample size reaches 85% in two consecutive rounds; a last round with tight fits gives the result, the weighted `θ̂` carried as a discrete prior. The fit itself supplies the faces' mass: data beyond a face project onto it, so the next proposal has atoms there. A cell varied by one knob from a cell already built starts from that cell's cloud, with 2000 draws per round; a cell with no such neighbour starts from Jeffreys, with 8000. A cell whose last round falls below 85% repeats from Jeffreys. The weights make each cloud consistent for `p_proj` whatever its proposal, so a warm start changes only the cost. Fits must be tight (polished to `1e-15` tolerances): along sloppy directions the likelihood is nearly flat, and a fit's stopping rule moves `θ̂`, by 0.03–0.06 in exp-decay's coinciding-rates fraction (2026-11-26). At seven of the sweep's hardest cells (`D ≤ 4`) the sampler agreed with a run started from `p*`'s atoms within about two standard errors, in 1–4 s per warm-started cell and 30–45 s per cold start (2026-11-26). `p_NML` normalises because the manifold is compact. In exp-decay `Θ` is the whole manifold, so the fit within it is the unconstrained one `transtrum` makes. The sampler is checked against `transtrum`'s cloud and against a second, independent start (T12(e)).
 - **`p_J`, Jeffreys.** `√det g` normalised over `Θ` by quadrature; in the cones its
-  `θ_1`-marginal is `∝ θ_1^{D−1}` in closed form (T4). In exp-decay it is integrated on the quadrature grid at `D ≤ 3`. From `D = 4` it is sampled by adaptive importance sampling in unordered log decay times, where its density is `√det g` times the Jacobian of `ξ`. The first round draws independent Student-t log times (3 degrees of freedom); each later round draws from a kernel density of the previous weighted cloud, with 10% of the first law as the defensive part. The t's tails are heavier than Jeffreys': toward slow rates its density in log time falls only exponentially, so a normal first law left the weights unbounded there. At `D = 7` one draw of the last round took about 5000 times the mean weight and left 15 effective draws of 20000 (2026-11-26). It stops once `log Z` has varied by less than 0.02 nats over three rounds, and the same weights give the normaliser. A last round whose effective sample share falls below half the adaptive rounds' median is redrawn, at most three times. A build that stays collapsed, or whose last round keeps less than 2% effective, anneals instead: 20000 particles from the first law, sorted and written as the smallest log decay time and the logs of the gaps, are tempered toward Jeffreys in steps that keep 80% effective, each followed by resampling and 10 random-walk Metropolis moves; the steps' log mean incremental weights give `log Z`. At `D = 11`, where importance sampling kept 0.1–0.2%, three annealed builds gave `log Z` = −72.09, −72.14 and −72.15 in about 75 s, and `I(p_J)` = 1.07–1.08 bits from their clouds over 16384 draws, against A&M's ≈ 1.19 read off their figure (2026-11-26). The build is stable: an importance-sampled build agrees with the annealed one on `I` within 0.005 bits at `D = 7` and 0.02 at `D = 9`, and 50 moves per step instead of 10 change `I` at `D = 11` by 0.005 bits. Our `I(p_J)` sits below A&M's by 0.01, 0.02 and 0.11 bits at `D = 5, 7, 11`; the cause is not on our side as far as these checks reach, and is recorded, not explained. The grid is set aside from `D = 4` because it loses Jeffreys' mass where rates nearly coincide: 5% at `D = 4` and 24% at `D = 5`, against brute force over uniform draws, which the sampler matched at `D = 5` within 0.003 nats (2026-11-26). In double precision the direct determinant fails well before that: against 80-digit arithmetic it was off by up to 43 nats at `D = 7` and 260 at `D = 11` where rates nearly coincide or approach a face, and non-finite at some states from `D = 5`, so the sampler and the per-point marginal steered by a wrong density exactly at the thin states (2026-11-26). With the spec's equally spaced times, the Jacobian is a Vandermonde matrix in `ξ^c`, `c` the time step. Factored in the Newton basis, it leaves the near-singular part as the exact product `∏_{i<j}(z_j − z_i)` and a well-conditioned remainder of complete homogeneous symmetric polynomials, each a sum of non-negative terms. That form is within 6·10^{-5} nats of 80-digit arithmetic to `D = 11` and fails at `D = 13`. Above `D ≈ 12` its determinant needs more than double precision, which AtomicPriors.jl supplies through an extended-precision path and a routine that uses the Jacobian's near-Vandermonde form [read: `resources/AtomicPriors.jl/src/mod/ymap.jl`, docstrings; A&M App. A.5]. That it normalises on the whole manifold is a [guess], checked by T4.
+  `θ_1`-marginal is `∝ θ_1^{D−1}` in closed form (T4). In exp-decay it is integrated on the quadrature grid at `D ≤ 3`. From `D = 4` it is sampled by adaptive importance sampling in unordered log decay times, where its density is `√det g` times the Jacobian of `ξ`. The first round draws independent Student-t log times (3 degrees of freedom)<span style="color: red">, each truncated to `Θ`'s range where that range is finite, as on the matched box, and unchanged on the whole manifold. A build in which too few first-round draws fall inside `Θ` raises instead of returning (docs DD-Q4): untruncated, the law left 59 of 20000 inside the matched box at `D = 6`, and a `log Z` 6 nats off (2026-11-27)</span>; each later round draws from a kernel density of the previous weighted cloud, with 10% of the first law as the defensive part. The t's tails are heavier than Jeffreys': toward slow rates its density in log time falls only exponentially, so a normal first law left the weights unbounded there. At `D = 7` one draw of the last round took about 5000 times the mean weight and left 15 effective draws of 20000 (2026-11-26). It stops once `log Z` has varied by less than 0.02 nats over three rounds, and the same weights give the normaliser. A last round whose effective sample share falls below half the adaptive rounds' median is redrawn, at most three times. A build that stays collapsed, or whose last round keeps less than 2% effective, anneals instead: 20000 particles from the first law, sorted and written as the smallest log decay time and the logs of the gaps, are tempered toward Jeffreys in steps that keep 80% effective, each followed by resampling and 10 random-walk Metropolis moves; the steps' log mean incremental weights give `log Z`. At `D = 11`, where importance sampling kept 0.1–0.2%, three annealed builds gave `log Z` = −72.09, −72.14 and −72.15 in about 75 s, and `I(p_J)` = 1.07–1.08 bits from their clouds over 16384 draws, against A&M's ≈ 1.19 read off their figure (2026-11-26). The build is stable: an importance-sampled build agrees with the annealed one on `I` within 0.005 bits at `D = 7` and 0.02 at `D = 9`, and 50 moves per step instead of 10 change `I` at `D = 11` by 0.005 bits. Our `I(p_J)` sits below A&M's by 0.01, 0.02 and 0.11 bits at `D = 5, 7, 11`; the cause is not on our side as far as these checks reach, and is recorded, not explained. The grid is set aside from `D = 4` because it loses Jeffreys' mass where rates nearly coincide: 5% at `D = 4` and 24% at `D = 5`, against brute force over uniform draws, which the sampler matched at `D = 5` within 0.003 nats (2026-11-26). In double precision the direct determinant fails well before that: against 80-digit arithmetic it was off by up to 43 nats at `D = 7` and 260 at `D = 11` where rates nearly coincide or approach a face, and non-finite at some states from `D = 5`, so the sampler and the per-point marginal steered by a wrong density exactly at the thin states (2026-11-26). With the spec's equally spaced times, the Jacobian is a Vandermonde matrix in `ξ^c`, `c` the time step. Factored in the Newton basis, it leaves the near-singular part as the exact product `∏_{i<j}(z_j − z_i)` and a well-conditioned remainder of complete homogeneous symmetric polynomials, each a sum of non-negative terms. That form is within 6·10^{-5} nats of 80-digit arithmetic to `D = 11` and fails at `D = 13`. Above `D ≈ 12` its determinant needs more than double precision, which AtomicPriors.jl supplies through an extended-precision path and a routine that uses the Jacobian's near-Vandermonde form [read: `resources/AtomicPriors.jl/src/mod/ymap.jl`, docstrings; A&M App. A.5]. That it normalises on the whole manifold is a [guess], checked by T4.
 - **`p_U`, uniform** on `Θ` in its own coordinates: in `θ` in the cones, in `ξ` in exp-decay, where each rate is `k_μ ∼ Exp(1)` before ordering. A privileged-information prior ([§2.2](#22-the-cast)).
 - **`p_LN`, log-normal**, in exp-decay only, where it is A&M's prior (Eq. 10): each
   `θ_μ` normal with `(θ̄, τ) = (0, 1)` as A&M (OQ-3), restricted to the ordered `Θ`, that
@@ -1542,8 +1542,7 @@ ordered `Θ`, held in `ξ`.
   (auto-decided; please confirm).
 - **`p_LN^*`, the budget-tuned log-normal**, in exp-decay only (OQ-3): the member of the
   same family whose `(θ̄, τ)` maximise `I_π(Θ;X_{1:N})` at `σ_eff`. A two-parameter
-  search, Nelder–Mead from A&M's `(0, 1)` (auto-chosen; please confirm). `I_π = 𝔼_{θ∼π} D_KL(p(x|θ)‖m_π)` comes by Monte Carlo over the prior's own draws, with `m_π` from a second set of draws and common random numbers across `(θ̄, τ)`; above `D_switch`, from AtomicPriors.jl's `mutual` of a
-  weighted sample. As `τ` grows, each `ξ_μ = exp(−e^{−θ_μ})` is pushed to 0 or 1, so the family tends to `½δ_0 + ½δ_1` per rate, not to `p_U` (which is a Gumbel law in `θ`); as `τ` shrinks, it tends to a point mass. `p_LN` is a member of the family and `C_N` the maximum over all priors, so `I_{p_LN} ≤ I_{p_LN^*} ≤ C_N` (T23).
+  search, Nelder–Mead from A&M's `(0, 1)` (auto-chosen; please confirm). `I_π = 𝔼_{θ∼π} D_KL(p(x|θ)‖m_π)` comes by Monte Carlo over the prior's own draws, with `m_π` from a second set of draws and common random numbers across `(θ̄, τ)`; <span style="color: red">above `D = 5`, where `p_LN` is a cloud of draws (OQ-13), the search runs on the cloud's mixture, from the same draws in every trial, and the final `I` comes from the routed marginal of §4.4</span>. As `τ` grows, each `ξ_μ = exp(−e^{−θ_μ})` is pushed to 0 or 1, so the family tends to `½δ_0 + ½δ_1` per rate, not to `p_U` (which is a Gumbel law in `θ`); as `τ` shrinks, it tends to a point mass. `p_LN` is a member of the family and `C_N` the maximum over all priors, so `I_{p_LN} ≤ I_{p_LN^*} ≤ C_N` (T23).
 - **`p_ref`, the ranked reference prior** ([§3.5](#35-a-third-route-ordering-instead-of-budget)).
   In the cones with the curvature knob off it is `p_U`. With curvature on, the Berger–Bernardo formula of `[^3-schur]` by quadrature. In
   exp-decay (OQ-8), one `p_ref` per ranking, from the same formula with the ranked
@@ -1572,10 +1571,10 @@ ordered `Θ`, held in `ξ`.
 | `p*`, `p*_{N/10}`, `p*_{10N}` | candidate sets to `D_switch`, atomic path beyond | the same |
 | `p_lat` | candidate sets to `D_switch` | the same; beyond only once the atomic path is tested on its objective |
 | `p_proj` | adaptive importance sampling, every `D` (checked to `D = 4`) | the same |
-| `p_J` | closed form, every `D` | quadrature to `D = 3`, adaptive importance sampling from `D = 4`; extended precision above `D ≈ 12` |
+| `p_J` | closed form, every `D`<span style="color: red">; with curvature on, quadrature, `2 ≤ D ≤ 4`</span> | quadrature to `D = 3`, adaptive importance sampling from `D = 4`; extended precision above `D ≈ 12` |
 | `p_U` | every `D` | every `D` |
 | `p_LN`, `p_LN^*` | not carried | every `D` |
-| `p_ref` | `= p_U` with curvature off; quadrature with curvature on, `D ≤ 4` | quadrature, `D ≤ 4` |
+| `p_ref` | `= p_U` with curvature off; quadrature with curvature on, <span style="color: red">`2 ≤ D ≤ 4`</span> | quadrature, `D ≤ 4` |
 
 [^4-stiff]: `ψ` ranks the stiffest direction `v(θ)` when its Fisher gradient `g^{-1}dψ`
     is parallel to `v`, that is, when `dψ ∝ ω` with `ω = g v`; equivalently, the level
@@ -1597,7 +1596,7 @@ def build_pstar(model, *, tol=1e-8, mc_x=4096):
     if len(model.box) > D_SWITCH:                    # OQ-1
         return adaptive_pool_pstar(model)            # the atomic path: adaptive pool, same solver
     result = blahut_arimoto(f_kl=f_kl, n_cells=len(grid), tol=tol)   # src/infomax/ba.py
-    return extract_atoms(GridPrior(grid, result.masses))
+    return DiscretePrior(grid, result.masses)       # the candidate-set solution, unmerged (DD-C2)
 
 def build_plat(model, *, tol=1e-6, mc_x=4096):
     grid = candidate_set(model, spacing=0.5)
@@ -1640,7 +1639,7 @@ def build_pln_star(model, rng, *, n=4096):          # OQ-3; exp-decay only
     return LogNormalPrior(*best.x)
 ```
 
-The builds' `tol` holds where the divergences are exact, with one-dimensional data. Beyond, they come by quadrature, and the solver adds no candidate whose divergence exceeds `I` by less than `10^{-3}` nats, and accepts the equalizer on the support at `2·10^{-3}` nats once `I` has stopped rising (docs DD-S1; MB, 2026-11-26).
+The builds' `tol` holds where the divergences are exact, with one-dimensional data. Beyond, they come by quadrature, and the solver adds no candidate whose divergence exceeds `I` by less than `10^{-3}` nats, and accepts the equalizer on the support at `2·10^{-3}` nats once `I` has stopped rising (docs DD-S1; MB, 2026-11-26). <span style="color: red">Beyond one dimension it also stops after 24 rounds; a build stopped there is recorded as unconverged, with its largest remaining violation, and warns (docs DD-S1). The prior is the candidate-set solution itself: supported candidates are not merged into atoms (docs DD-C2).</span>
 
 `n_walkers` exceeds twice the data dimension `m = 26`, as an ensemble sampler needs, and
 `burn` is checked by T12(e) (both auto-chosen; please confirm).
@@ -1762,7 +1761,7 @@ Computed per cell beside the scores, for the readings of §1.2, §2.4, §3.2, §
 
 - **The label of [§3.7](#37-falsification).** `C_N` is the capacity at the cell's
   budget: `I_{p*}` from the `p*` build, equal at convergence to the largest per-state
-  divergence of `p*` (T3). A cell is *beyond the cap* for `π` when `R_N^q(π) − C_N` exceeds its Monte-Carlo error plus the capacity gap of `p*`'s candidate set, the largest `R_N^θ(p*) − C_N` over states off the set (T3); `p*` then wins it by (3.1.1). No other mark is made.
+  divergence of `p*` (T3). <span style="color: red">On a row whose nature lies inside the agent's `Θ`, a cell is *beyond the cap* for `π ≠ p*` when `R_N^q(π) − C_N` exceeds four times its Monte-Carlo error plus the capacity gap of `p*`'s candidate set: the largest `R_N^θ(p*) − C_N` over states off the set, interior and face states both, floored at 0 (T3). `p*` then wins it by (3.1.1). `R_N^q(p*) − C_N` is recorded per row with its error as a check on the gap; it can exceed four errors only through a fault in the build or in the gap. The hypercone's nested rows lie outside the agent's `Θ` and are not labelled.</span> No other mark is made.
 - **The failure map of [§2.4](#24-what-is-reported-and-what-cannot-be-asserted).** Per row and score: the breadth `I_q/C_N` (for `r_N`, the conditional floor over the conditional capacity that `p_lat` attains), and, per prior, the best rival's mismatch and the signed gap to it.
 - **The two terms of [§3.3](#33-score-decomposition-bias-vs-calibration-a-diagnostic).**
   Per draw, the posterior predictives of `π` and of the row's matched prior are
@@ -2070,7 +2069,7 @@ ratification. The order in which the cells run, in three priority tiers with the
   T2. Fall-off `φ ∈ {1, 0.5, 0.1}`: the square cone, then jointly irrelevant
   cross-sections; question 3 runs at `φ ∈ {0.5, 0.1}` only. Curvature `κ ∈ {1, ½, ¼}`: off, a 45° vertex and a 22.5°
   one, against `p_proj` ([§3.4](#34-the-second-protagonist-infomax-vs-mdl)). The
-  curvature cells run at `σ = 0.1`, `W = 5` and `φ = 0.05`: the base face is then 10 noise units
+  curvature cells run <span style="color: red">at `2 ≤ D ≤ 4` only, where the vertex nature's quadrature and curvature-on Jeffreys fit in memory (at `D = 1` the warp is the identity), and</span> at `σ = 0.1`, `W = 5` and `φ = 0.05`: the base face is then 10 noise units
   wide in its first cross-section direction, so the warped ball, of radius `5σ_eff = 0.5`, lies inside it, while the further directions stay jointly irrelevant (`Σ L_μ² ≈ 0.25`, about 0.03 nats); the relevant
   axis keeps the base cell's 50 Fisher lengths. (Auto-chosen; please confirm.)
 - **Natures.** Every row of [§2.3](#23-the-natures) at every cell where it is defined: the
@@ -2169,7 +2168,7 @@ Under `experiments/002-foreign-q-prediction/`:
 - `results_table.json` — one row per cell; schema in §6.3.
 - `provenance.json` — the git `HEAD`, `HEAD:src/infomax`, package versions and the spec's
   commit, written at run time and cited by the report (`meta/workflow-issues.md`, "Wire
-  experiment commit hashes"); for every cell on the atomic path, its rounds and the largest violation over its last pool.
+  experiment commit hashes"); for every <span style="color: red">`p*` and `p_lat` build, its rounds, whether it converged, and its largest remaining violation (on the atomic path, over its last pool).</span>
 - `REPORT.md` — body per §6.4.
 
 ### 6.2 Sweep coverage per output
@@ -2196,7 +2195,7 @@ curvature variation and the stress natures, and every exp-decay cell for `p_LN^*
   `π ∈ {p*, p_lat, p_proj, p_LN^*, p*_{N/10}, p*_{10N}, p_J, p_U, p_LN, p_ref, q̄}`, in
   nats; `p_LN` and `p_LN^*` empty in the cones, `p_ref` once per ranking in exp-decay.
 - **Mismatches and marks.** `floor_R`, `floor_r` (§4.3); `mismatch_R[π]`, `mismatch_r[π]`
-  with their errors; `C_N`; `beyond_cap[π]`; `relatives_world`, true in the worlds of `p*`'s relatives; for a nested nature, `floor_sub`, the submodel's own floor (§4.5).
+  with their errors; `C_N`; `beyond_cap[π]`<span style="color: red">, on rows inside the agent's `Θ`, never for `p*`; `pstar_cap_excess`, `R_N^q(p*) − C_N` with its error, the check of §4.5</span>; `relatives_world`, true in the worlds of `p*`'s relatives; for a nested nature, `floor_sub`, the submodel's own floor (§4.5).
 - **Row summaries** of [§2.4](#24-what-is-reported-and-what-cannot-be-asserted), with
   their errors, for `π ∈ {p*, p_lat, p_proj, p_LN^*}` and `S ∈ {R, r}`:
   `gap_J[π][S]`, to Jeffreys; `gap_pi[π][S]`, over the privileged-information priors other than the row's own, once per
@@ -2211,7 +2210,7 @@ curvature variation and the stress natures, and every exp-decay cell for `p_LN^*
   `joint_width2`, and at `D = 2` in exp-decay `joint_width_ratio`, the proxy over the
   geodesic width (T22(d)). For the failure map: `breadth[S]`, and per prior `best_rival[π][S]` and `gap_rival[π][S]`.
 - **Prior side.** `I_pstar`, `I_pJ`, `I_pproj`, `I_pLNstar`, `B_pstar`, `B_pJ`, `I_plat`
-  (bits); `pstar_n_atoms`, `pstar_method` (candidate set or atomic); `plat_support_size`;
+  (bits); `pstar_n_atoms`<span style="color: red">, the supported candidates, unmerged</span>, `pstar_method` (candidate set or atomic); `plat_support_size`;
   `pLNstar_theta_bar`, `pLNstar_tau`; `pref_rankings`, the rankings run in exp-decay.
 - **Provenance.** `S_q`, `seed_stream`.
 
@@ -2243,7 +2242,7 @@ Computed and not kept in the table: the per-draw score arrays, the candidate set
 
 ### 7.1 Open
 
-- **OQ-14 — Marginals of sampled priors where they are thin** ([§4.4](#44-score-estimation)). A cloud of 20000 draws has none where the prior's mass is below about `1/20000`, and the per-point estimate takes its proposal from the same cloud. Against exact grids, both overstate per-state divergences at faces: `p_LN`'s cloud by up to 54 nats near the no-decay corner at `D = 3`; at `D = 5`, its per-point estimate by a median of 10 nats and up to 75, and its cloud by up to 188. The scores use the cloud everywhere, so wherever a nature puts data where a sampled prior is thin, that prior's loss is inflated: `p_J` from `D = 4`, the product laws above `D = 5`. A per-point estimate from the posterior itself is implemented (§4.4): T7(a)'s thin-state test passes, and `p_LN`'s marginal matches its exact grid at `D = 5`. Where the bell-shaped proposal does not fit, Jeffreys on faces with an instantly decaying rate from `D = 5`, an annealed estimate takes over, which T7(a) checks at `D = 3` against the grid and at `D = 5` against an independent run. Open: every prior above `D = 5`. At `D = 7` two annealed runs differ by 2.5–14 nats on single data at Jeffreys' corner (2026-11-26).
+- **OQ-14 — Marginals of sampled priors where they are thin** ([§4.4](#44-score-estimation)). A cloud of 20000 draws has none where the prior's mass is below about `1/20000`, and the per-point estimate takes its proposal from the same cloud. Against exact grids, both overstate per-state divergences at faces: `p_LN`'s cloud by up to 54 nats near the no-decay corner at `D = 3`; at `D = 5`, its per-point estimate by a median of 10 nats and up to 75, and its cloud by up to 188. <span style="color: red">Before the routed marginal, the scores used the cloud everywhere, so wherever a nature put data where a sampled prior is thin, that prior's loss was inflated: `p_J` from `D = 4`, the product laws above `D = 5`. They now route thin points (§4.4).</span> A per-point estimate from the posterior itself is implemented (§4.4): T7(a)'s thin-state test passes, and `p_LN`'s marginal matches its exact grid at `D = 5`. Where the bell-shaped proposal does not fit, Jeffreys on faces with an instantly decaying rate from `D = 5`, an annealed estimate takes over, which T7(a) checks at `D = 3` against the grid and at `D = 5` against an independent run. Open: every prior above `D = 5`. At `D = 7` two annealed runs differ by 2.5–14 nats on single data at Jeffreys' corner (2026-11-26).
 
 The decisions below leave auto-chosen values in §4 and §5, each
 flagged "please confirm" where it appears.
@@ -4121,3 +4120,43 @@ described in T10, in red. It passes (2026-11-26). §5 stays draft.
   settings (2000 particles, 80%, 10 moves) carried no flag. Other flags stay.
 
 New text is in red; §4 and §5 go back to draft for it.
+
+### 2026-11-27 — Correction + Clarification (§2.4, §3.7, §4.2, §4.5, §5.4, §6.1, §6.3, §7.1; implementation red-team, Stage 3b)
+
+From `docs/002-foreign-q-prediction/redteam-impl.md`, decided with MB. Each edit is in red;
+§2–§7 are back to draft. Code and docs change only after MB's re-review (Stage 3c), and the
+tests named below are routed to `workflows/invoke-red-team-on-tests.md`.
+
+- **The beyond-the-cap label (F1; §2.4, §3.7, §4.5, §6.3).** Correction. At one Monte-Carlo
+  error the label fired on `p*` itself, whose excess over `C_N` is zero in its own world, in
+  about one run of six, and it claimed `p*`'s theorem on the hypercone's nested rows, whose
+  states lie outside the agent's `Θ`. It now needs four errors plus the gap, is made only on
+  rows inside the agent's `Θ`, and never for `p*`, whose excess is recorded per row as a check
+  (`pstar_cap_excess`). The gap takes face states as well and is floored at 0: interior
+  states alone gave −0.0007 and −0.0037 nats at exp-decay `D = 3, 4`, face states +0.025 and
+  +0.022. Downstream: `diagnostics.beyond_cap`, `capacity_gap`, `run.py`; T22(b), whose cases
+  encode the old margin.
+- **The solver's round cap (F2; §4.2, §6.1).** Clarification. Beyond 1-D the solver stopped
+  after 12 rounds without saying so, and three of five instrumented builds stopped there,
+  short of the 1e-3 rule. The cap is 24 (MB): in a trace, those three builds converged by
+  rounds 15, 14 and 24, and their capacities had moved by at most 4e-5 nats after round 12. A
+  build stopped by the cap is recorded as unconverged with its largest violation, and §6.1's
+  provenance covers every build. Downstream: `capacity.solve_capacity`, `PStarResult`,
+  `PLatResult`; T16(b) at the cone cell.
+- **Jeffreys' first law on the matched box (F3; §4.2).** Correction. Untruncated, the law left
+  59 of 20000 draws inside the matched box at `D = 6`, and the build returned a `log Z` 6 nats
+  off without a warning. The law is truncated to `Θ`, and a build with too few draws inside
+  raises. The whole manifold is unchanged. Downstream: `sampled.py`; T4 on the matched box.
+- **`p_LN^*` above `D = 5` (F6; §4.2).** Correction. The paragraph said "above `D_switch`,
+  from AtomicPriors.jl's `mutual`", which OQ-1 and OQ-7 had ruled out. Above `D = 5` the search
+  runs on the cloud's mixture, the same draws in every trial, and the final `I` on the routed
+  marginal. Downstream: `plognormal.py`; T23(b) at `D = 6`.
+- **The curvature cells' range (F7; §4.2, §5.4).** Clarification. They run at `2 ≤ D ≤ 4`:
+  beyond, the vertex nature's quadrature and curvature-on Jeffreys outgrow the machine, and
+  the code is to refuse.
+- **`p*` is not merged (F8; §4.2, §6.3).** Correction. The pseudocode merged supported
+  candidates into atoms. The code never did: merging moved mass by up to a net spacing and
+  broke the equalizer by several `1e-2` nats. `pstar_n_atoms` counts supported candidates,
+  unmerged.
+- **OQ-14's stale sentence (m4; §7.1).** Clarification: since the routed marginal, the scores
+  route thin points.

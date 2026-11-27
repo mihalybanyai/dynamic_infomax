@@ -29,6 +29,20 @@ The documentation mostly tracks the code: both call graphs regenerate edge for e
 
 **What would resolve it**: Never label `p*`; record `R(p*) − C_N` per row instead, as a check on the gap. Leave the label off rows whose nature lies outside the agent's `Θ`. Use a several-σ margin (the suite's `MC_SIGMAS = 4`). Take the gap's maximum over face states (`pstar._random_face_states`) as well as interior ones. The first three need §4.5's and §3.7's wording changed.
 
+
+> M: apply the suggested solution, with keeping the label everywhere as a purely descriptive one about the theorem (only when nature is inside theta), not something about the actual MC result. And set the tolerance to 4 sigmas.
+
+> C: To apply, reading (B) (MB, chat): the label exists only where (3.1.1) holds, on rows whose
+> nature lies inside the agent's `Θ`. There `beyond_cap[π]` holds when `R − C_N` exceeds 4 MCSE
+> plus the capacity gap, and `p*` wins the cell by theorem. The hypercone's nested rows keep their
+> numbers, `R − C_N` included, and carry no label. `p*` is never labelled: its `R(p*) − C_N` is
+> recorded per row as a check. The gap is the largest excess over interior and face states
+> (`pstar._random_face_states`), floored at 0. Spec (3b): §3.7 (*Beyond the cap*), §4.5, §2.4's
+> sentence on the label, and §6.3 (the definition, and a column for the check). Code (3c):
+> `diagnostics.beyond_cap` (4 MCSE, inside `Θ` only, never `p*`), `capacity_gap` (face states,
+> floor at 0), `run.py` (the check column). Routed `[test-gap]` to `invoke-red-team-on-tests.md`:
+> T22(b)'s cases encode the one-MCSE margin, and `(4.31, 0.1, 4.0, 0.2)` flips under four.
+
 ---
 
 ### F2: The capacity solver stops at a hard 12-round cap without saying so [severity: medium] [test-gap]
@@ -47,6 +61,20 @@ That `p_lat` solve also lost a round to a NaN. `KernelTable` takes each state's 
 
 **What would resolve it**: Return a `converged` flag and the final largest violation from `solve_capacity`, record both in `PStarResult` and `PLatResult` on every path, and warn when the cap is reached. Let the round budget follow the remaining violators instead of a constant. Build `KernelTable`'s neighbour lists from positive-weight atoms. Extend T16(b) to T8's cone cell. Then redo DD-S1's timing comparison (340 s against 795 s) on converged solves.
 
+> M: let's definitely report if a cap was hit. let's use 24 as a compromise though
+
+> C: To apply, with MB's fixed cap instead of a round budget that follows the violators. Code
+> (3c): `solve_capacity`'s cap beyond 1-D goes from 12 to 24 rounds; it returns `converged` and
+> the final largest violation `δ`, which `PStarResult` and `PLatResult` store on every path, and it
+> warns when the cap is reached. `KernelTable`'s neighbour lists take positive-weight atoms only
+> (the NaN). Spec (3b): §4.2's DD-S1 sentence states the 24-round cap and that a build stopped there
+> is recorded as unconverged with its `δ`; §6.1's provenance line ("for every cell on the atomic
+> path, its rounds and the largest violation") covers candidate-set builds too. Docs: DD-S1 (the cap,
+> the reporting, the per-round trace of 2026-11-27: the three capped builds converged by rounds 15,
+> 14 and 24; the 32-entrant timing comparison redone on converged solves). Routed `[test-gap]` to
+> `invoke-red-team-on-tests.md`: T16(b) at T8's cone cell, and a check that the suite's solves
+> converge.
+
 ---
 
 ### F3: The matched box's sampled Jeffreys collapses from `D = 6`, silently [severity: medium]
@@ -58,6 +86,16 @@ That `p_lat` solve also lost a round to a NaN. `KernelTable` takes each state's 
 **Concern**: The first law is fitted to the whole manifold, and on the matched box (`θ ∈ [0, log 5]`) almost none of its draws land in `Θ`. Importance sampling collapses, and the annealed build runs on the few that do land: 59 of 20,000 at `D = 6`, and 21 at `D = 7`[^6]. Its `log Z` comes out 6.0 and 7.5 nats too high. `log_density`, the bell-shaped per-point marginal and the own-world sampler all inherit the error, and nothing warns. At `D = 4, 5` the build agrees with brute force within 1.3 standard errors, but §5.4 runs the box knob across the `D`-sweep, and §6.1 plots both boxes.
 
 **What would resolve it**: Fit the first law to `Θ`, either each log time's t truncated to the box or uniform in `ξ` on the box. Raise an error when fewer than a set number of particles start inside `Θ`. Add T4's brute-force normaliser check on the matched box at `D = 4`–7.
+
+> M: apply these suggestions, including the new test. Treat this as a high-priority issue, because despite only touching tier 2, it's at the core of the spec
+
+> C: To apply; high priority (MB): before tier 2 runs the matched box. Code (3c): in
+> `build_sampled_jeffreys`, each log time's Student-t first law is truncated to `Θ` where the box is
+> finite; on the whole manifold the law and its draws are unchanged. The build and
+> `_anneal_jeffreys` raise when too few first-law draws start inside `Θ` (1000 of 20,000 proposed,
+> a design decision for DD-Q4). Spec (3b): §4.2's description of the first law says it is truncated
+> to `Θ`. Docs: DD-Q4. The new test, T4's brute-force normaliser on the matched box at `D = 4`–7,
+> is routed `[test-gap]` to `invoke-red-team-on-tests.md`: this workflow does not edit tests.
 
 ---
 
@@ -71,6 +109,12 @@ That `p_lat` solve also lost a round to a NaN. `KernelTable` takes each state's 
 
 **What would resolve it**: Clip each curve to `Θ` in log decay time before computing `L` and `G`, and run T15(d) and T15(e) on the matched box too.
 
+> M: the suggestion sounds reasonable to me
+
+> C: To apply. Code (3c): `_StiffestField` clips each curve to `Θ` in log decay time before
+> computing `L` and `G` (`pref.py`). Docs: the `p_ref` design entry. Routed `[test-gap]` to
+> `invoke-red-team-on-tests.md`: T15(d) and T15(e) on the matched box.
+
 ---
 
 ### F5: Per-state losses of sampled priors bypass the routed marginal [severity: medium]
@@ -83,6 +127,14 @@ That `p_lat` solve also lost a round to a NaN. `KernelTable` takes each state's 
 
 **What would resolve it**: Route a `SampledPrior` in `per_state_redundancy` through `log_marginal` with `n_x` draws of `x̄`, as `worst_case_bias_pressure`'s refinement already does, and run T21(a) once with a sampled prior.
 
+> M: yes, let's certainly use the more up-to-date solution everywhere
+
+> C: To apply. Code (3c): `per_state_redundancy` sends a `SampledPrior` through its routed
+> `log_marginal` with `n_x` draws of `x̄`, as `worst_case_bias_pressure`'s refinement does; every
+> caller (`covered_fraction`, `bias_pressure`, the mass bound) then uses the routed marginal. Docs:
+> the per-state redundancy entry. Routed `[test-gap]` to `invoke-red-team-on-tests.md`: T21(a)
+> with a sampled prior.
+
 ---
 
 ### F6: `p_LN^*`'s search above `D = 5` runs on a noisy objective [severity: medium]
@@ -94,6 +146,15 @@ That `p_lat` solve also lost a round to a NaN. `KernelTable` takes each state's 
 **Concern**: Above `GRID_MAX_D = 5`, `build_pln` returns a cloud, so the objective's marginal is the routed one. Its per-point estimates are seeded by each datum's bytes: moving `(θ̄, τ)` moves the data and reseeds them, which breaks the common random numbers DD-L1 relies on at thin points. At `D = 6`, a step of 1e-6 in `τ` moved the objective by 1.2e-3 nats[^9], against Nelder–Mead's `fatol = 1e-5`, so the search stops on noise. DD-L1's "the marginal by quadrature" and "a smooth function of the parameters" hold only up to `D = 5`, and T23 runs only at the cheap cell.
 
 **What would resolve it**: Above `D = 5`, search on the plain cloud's mixture, which is deterministic and uses the same draws in every trial, and evaluate the final `I` through the routed marginal. Or stop `p_LN^*` at `D = 5` and say so in the coverage table and DD-L1. Either way, run T23(b) at `D = 6`.
+
+> M: the suggestion sounds reasonable. I wouldn't stop at D=5 if not necessary. running the test for D=6 seems good too.
+
+> C: To apply the first option; no stop at `D = 5`. Code (3c): above `GRID_MAX_D`, `p_LN^*`'s
+> search runs on the plain cloud's mixture, deterministic and on the same draws in every trial,
+> and the final `I` comes from the routed marginal. Spec (3b): §4.2's `p_LN^*` paragraph says so,
+> replacing its stale clause "above `D_switch`, from AtomicPriors.jl's `mutual` of a weighted
+> sample", which OQ-1 and OQ-7 already ruled out. Docs: DD-L1. Routed `[test-gap]` to
+> `invoke-red-team-on-tests.md`: T23(b) at `D = 6`.
 
 ---
 
@@ -111,6 +172,14 @@ That `p_lat` solve also lost a round to a NaN. `KernelTable` takes each state's 
 
 **What would resolve it**: State `2 ≤ D ≤ 4` for the curvature cells in the coverage table and the README, and raise a clear error outside that range. Alternatively, size the vertex quadrature by each axis's Fisher width, as `box_grid` does, and build curvature-on Jeffreys as the closed form outside the ball plus quadrature inside it.
 
+> M: yeah iirc this is about the curvature param that aims to delineate p* and p_proj. seems reasonable to only use it up to 4 dims
+
+> C: To apply the first option (the knob is §3.4's case adversarial to `p_proj` and benign for
+> `p*`, as MB recalls). Spec (3b): §4.2's coverage table and §5.4's curvature knob state
+> `2 ≤ D ≤ 4` for the curvature cells. Code (3c): `VertexNature`, curvature-on `build_jeffreys` and
+> `_cone_pref_with_curvature` raise a clear error outside `2 ≤ D ≤ 4`, replacing the stale
+> AtomicPriors.jl message. Docs: the README's coverage statement and the curvature entries.
+
 ---
 
 ### F8: DD-C2 describes a merge the code does not do [severity: medium]
@@ -123,6 +192,15 @@ That `p_lat` solve also lost a round to a NaN. `KernelTable` takes each state's 
 
 **What would resolve it**: Rewrite DD-C2 to match the code: the prior is the candidate-set solution, and merging, at its stated radius, is for reporting only. Define `pstar_n_atoms` as one of the two counts.
 
+> M: merging is vestigial. let's delete it, and redefine everything as non-merged. if we need it later it's in the revision history.
+
+> C: To apply. Code (3c): `pstar.merge_atoms` and the comment pointing to it are deleted; `p*`
+> stays the unmerged candidate-set solution, and `run.py`'s `pstar_n_atoms` its supported
+> candidates. Spec (3b): §4.2's pseudocode returns the candidate-set solution (no
+> `extract_atoms`), and §6.3 defines `pstar_n_atoms` as the number of supported candidates,
+> unmerged. Docs: DD-C2 rewritten (no merging, and why: it moved mass by up to a net spacing and
+> broke the equalizer by several `1e-2` nats). Spec 000's `atoms.extract_atoms` is untouched.
+
 ---
 
 ### F9: `mixture.py` misdescribes its own estimator [severity: medium]
@@ -134,6 +212,13 @@ That `p_lat` solve also lost a round to a NaN. `KernelTable` takes each state's 
 **Concern**: The module docstring says that a span of more than one dimension is integrated with a scrambled Sobol set and antithetic pairs. The default `KernelTable` (DD-K1) instead uses a Gauss–Hermite tensor rule on at most three leading directions, plus an exact second-order term for the rest; Sobol is only the `method="sobol"` reference. This is the estimator behind `C_N`, the equalizer and the capacity gap, and DD-K1 measures the two methods' errors at 3.4e-4 and 2e-3 nats. The comment that dropped directions "move each exponent by under `RES_REL * CUTOFF`" also fails once a state has many neighbours. A dropped component can reach `RES_REL · sv_0`, and `sv_0` grows like the square root of the neighbour count times `CUTOFF`.
 
 **What would resolve it**: State DD-K1's rule in the docstring, and give the comment the bound `RES_REL · sv_0`.
+
+> M: make the edits
+
+> C: To apply. Code comments only (3c): `mixture.py`'s module docstring states DD-K1's rule
+> (Gauss–Hermite on the leading one to three directions plus the exact second-order term; Sobol
+> only as `method="sobol"`), and the comment at `:297` gives the bound `RES_REL · sv_0`.
+
 
 ## Minor
 
@@ -151,6 +236,28 @@ That `p_lat` solve also lost a round to a NaN. `KernelTable` takes each state's 
 - m12 — README module list (line 25) — `priors002.py` is a fifth module new beyond spec §4.6, and §4.6's edits to `prior.py`, `atoms.py` and `likelihood.py` were not made (they are spec 000's code, unchanged) — state the deviation.
 - m13 — `_make_call_graph.py:11–17`, `call_graph_functions.md` — "they were the only false ones" holds for cross-module edges only. The function graph keeps five false self-loops (`DifferenceObjective.cheap_f`, `.f`, `.f_S`, `.f_and_jac`, `KernelTable.__new__`) and lacks the edges `DifferenceObjective → GaussianObjective, BinomialObjective` — say so. Both graphs regenerate edge for edge at 8d933e3 (measured).
 - m14 — README DD-A1, `pstar.build_pstar(method="auto")` — `D_switch` is not documented. Exp-decay nets hold 3632, 4634 and 5871 candidates at `D = 3, 4, 5`. At `D = 5` the default path gave `C_N = 3.3250` (direct MC 3.3237 ± 0.0026) in 17 s, while PLAN's tier-2 costing assumes the atomic path's 4–9 minutes. Cone nets hold 4046, 13,347 and 67,033 candidates at `D = 4, 5, 6` (measured), so from about `D = 8` each build would grow a doomed 1e6-point net before falling back [guess] — state `D_switch` per family, and estimate a net's size before growing it.
+
+> M: m1 and m2 are serious findings, nature's nested model should be used everywhere appropriate. this is a definite error to be corrected. The rest of the suggestions should be applied too.
+
+> C: To apply; m1 and m2 treated as one serious finding (MB); m8 amended (MB, chat).
+> - m1, m2 — code: `QbarPrior` builds its nested rows on the nature's model, and samples there;
+>   `covered_fraction` and `mass_near` take the nature's model and an already built `p_J`; every
+>   other place that builds a nature is checked for the same mistake. `nature_prior` raises when
+>   given a hypercone nested row on the agent's submodel (`skills/write-implementation.md`, Rule 1).
+> - m3 — code: exp-decay `p_J` at `D ≤ 3` uses `sampled._log_sqrt_det_g`. This is on the eye
+>   test's path, so 3d's eye-test rerun covers it. Routed `[test-gap]`: T4's 80-digit test on the
+>   grid path.
+> - m4 — spec (3b): OQ-14's "The scores use the cloud everywhere" marked superseded. Docs: the two
+>   stale Testing-notes sentences marked superseded.
+> - m5, m6 — code docstrings. m7, m9, m10, m11, m12 — README edits as stated.
+> - m8 — code: `build_sampled_jeffreys` warns when its final cloud keeps fewer than 20 effective
+>   draws, so DD-Q4's claim becomes true (MB: no silent collapse). Docs: DD-Q4's "varies by less
+>   than 0.02 nats" reworded as a standard deviation below 0.02 over three rounds.
+> - m13 — helper script: `_make_call_graph.py`'s docstring scopes its claim to cross-module edges
+>   and names the false self-loops and missing edges; rerun, `call_graph_functions.md` regenerated.
+> - m14 — docs: DD-A1 states `D_switch` per family; code: the net's size is estimated before it is
+>   grown, so a doomed net falls back to the atomic path at once. Routed to experiment 002:
+>   `PLAN.md`'s tier-2 costing, which assumes the atomic path at `D = 5` (handoff).
 
 ## What the implementation gets right
 
