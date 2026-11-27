@@ -43,7 +43,8 @@ Paste into Claude Code:
 ```
 The test suite red-teaming is complete, so we can proceed to
 generate the implementation now. Do this according to the relevant
-section in [[SPEC_PATH]] and skills/manage-randomness.md. The
+section in [[SPEC_PATH]], skills/write-implementation.md and
+skills/manage-randomness.md. The
 generated code should pass the test suite perfectly.
 
 Generate a very compact code generation log at

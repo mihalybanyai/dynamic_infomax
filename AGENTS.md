@@ -164,6 +164,14 @@ over 40 minutes to 5 once someone looked (2026-11-25). The `p_proj` sampler
 went from 20-minute Julia chains per seed to seconds per cell by importance
 sampling, after hours of chain runs had been spent on it first (2026-11-26).
 
+**Memory counts with time.** On a fixed machine, peak memory sets how many
+computations run side by side, so it is wall time too. Estimate both; a
+computation that holds gigabytes it does not need gets the same few minutes of
+looking. Motivating failure, spec 002: §3.3's split held the posterior weights
+of every draw at once, about 7 GB at tier 0's 500 draws at `D = 4`, while the
+suites ran on two or three workers and the experiment's scheduler budgeted
+around such peaks. Batching made it 304 MB, bit-identical (DD-K4, 2026-11-27).
+
 This binds even when the slow route is the one a spec or a reference
 implementation prescribes, the hours cost only machine time, or the run is
 already planned. Exploration runs at the speed of the loop. An hour-scale
@@ -177,9 +185,10 @@ is minutes, not a redesign. Its output is a cheaper route, or one sentence on
 why none was found.
 
 **Action.** (1) Estimate the cost: wall time, or evaluations times their
-rate. (2) At hours or more, spend a few minutes on alternatives, measuring
-where measuring is cheap. (3) Report the estimate, what was tried, and the
-route chosen. A speed-up that changes what is computed (an estimator, a
+rate, and peak memory against the machine's and the parallel runs'. (2) At
+hours or more, or at a peak that limits the runs side by side, spend a few
+minutes on alternatives, measuring where measuring is cheap. (3) Report the
+estimate, what was tried, and the route chosen. A speed-up that changes what is computed (an estimator, a
 tolerance, the design) is a content change, and goes to the human like any
 spec change.
 
