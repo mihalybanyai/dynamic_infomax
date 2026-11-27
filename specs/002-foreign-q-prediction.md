@@ -7,8 +7,8 @@
 | [1.2 Generative model](#12-generative-model) | reviewed | 261124 |
 | [2. Objective](#2-objective) | reviewed | 261121 |
 | [3. The case for transfer (and how it could fail)](#3-the-case-for-transfer-and-how-it-could-fail) | reviewed | 261124 |
-| [4. Algorithm](#4-algorithm) | draft | 261126 |
-| [5. Properties to verify](#5-properties-to-verify) | draft | 261126 |
+| [4. Algorithm](#4-algorithm) | reviewed | 261127 |
+| [5. Properties to verify](#5-properties-to-verify) | reviewed | 261127 |
 | [6. Report](#6-report) | reviewed | 261126 |
 | [7. Open questions](#7-open-questions) | reviewed | 261126 |
 | [8. References](#8-references) | reviewed | 261121 |
@@ -1640,7 +1640,7 @@ def build_pln_star(model, rng, *, n=4096):          # OQ-3; exp-decay only
     return LogNormalPrior(*best.x)
 ```
 
-<span style="color: red">The builds' `tol` holds where the divergences are exact, with one-dimensional data. Beyond, they come by quadrature, and the solver adds no candidate whose divergence exceeds `I` by less than `10^{-3}` nats, and accepts the equalizer on the support at `2·10^{-3}` nats once `I` has stopped rising (docs DD-S1; MB, 2026-11-26).</span>
+The builds' `tol` holds where the divergences are exact, with one-dimensional data. Beyond, they come by quadrature, and the solver adds no candidate whose divergence exceeds `I` by less than `10^{-3}` nats, and accepts the equalizer on the support at `2·10^{-3}` nats once `I` has stopped rising (docs DD-S1; MB, 2026-11-26).
 
 `n_walkers` exceeds twice the data dimension `m = 26`, as an ensemble sampler needs, and
 `burn` is checked by T12(e) (both auto-chosen; please confirm).
@@ -2010,7 +2010,7 @@ so a fair anchor for the prior-side machinery
 ([Entropy 25(3):434, CC BY](https://www.mdpi.com/1099-4300/25/3/434)).
 
 - **Configuration.** Exp-decay on the ordered `Θ`, `m = 26` times in `[1, 5]`, `σ = 0.1`.
-  Two runs. The default run, `D ∈ {1, 2, 3, 4}` on the candidate-set path, is quick and is the smoke check. Approval needs one extended run at A&M's own `D ∈ {5, 7, 11}`, on the atomic path (OQ-1). A&M's `D = 26` is left out, so that the eye test stays cheap. The extended run saves its numbers beside the figure, so the figure redraws without recomputing; the time of its first run is recorded here: `D = 5` took 611 s on the corrected Jeffreys density and the routed marginal, and the whole run with `D ≤ 4` 14 min; `D = 7` took 2729 s, before the thin-point memo and sharing the machine (2026-11-26); <span style="color: red">`D = 11` took 3321 s (2026-11-27)</span>. Priors `p*`, `p_J` and `p_LN`. Seed `20260601` (auto-chosen; please
+  Two runs. The default run, `D ∈ {1, 2, 3, 4}` on the candidate-set path, is quick and is the smoke check. Approval needs one extended run at A&M's own `D ∈ {5, 7, 11}`, on the atomic path (OQ-1). A&M's `D = 26` is left out, so that the eye test stays cheap. The extended run saves its numbers beside the figure, so the figure redraws without recomputing; the time of its first run is recorded here: `D = 5` took 611 s on the corrected Jeffreys density and the routed marginal, and the whole run with `D ≤ 4` 14 min; `D = 7` took 2729 s, before the thin-point memo and sharing the machine (2026-11-26); `D = 11` took 3321 s (2026-11-27). Priors `p*`, `p_J` and `p_LN`. Seed `20260601` (auto-chosen; please
   confirm). `Θ` is the whole manifold, as A&M's `θ ∈ ℝ^D` (OQ-9).
 - **Output.** `tests/figures/002_foreign_q_prediction/eyetest_am_fig5.png`: the two
   panels, one line per prior, with A&M's own points at `D ∈ {1, 2, 3, 5, 7, 11}` overlaid as open markers, read off the published figure by eye [read: A&M Fig. 5, digitised by eye]. The bottom panel draws, for each prior, a band between two maxima of `b`: over 2000 draws from the prior itself, and over all of `Θ` (`p*`'s candidate set, faces included). A&M write `B = max_θ b(θ)` but do not say over which states it runs [read: A&M §2.2, App. A.4], and the choice matters: Jeffreys' `b` is about 0 in the interior at `D = 1` and about 1.3 bits on the faces, where half the noise falls off the manifold, and over `D ≤ 3` the two maxima differ by up to a factor of 6 (first runs of the eye test, 2026-11-25). A band from states one Fisher length from every face was tried first: it is empty at `D ≥ 3`, where every state lies within 0.6 noise units of a face.
@@ -2087,7 +2087,7 @@ ratification. The order in which the cells run, in three priority tiers with the
 - **Test subset.** T0 first, as a precondition. T1, T3, T5, T7a, T10, T13, T14, T17, T20
   and T22 at one cheap cell (exp-decay, `D = 2`, `σ = 0.1`, `N = 1`, in `p_U`'s own
   world; T14, T20 and T22 over all rows of that cell). T2 over the `D`-sweep of the
-  constant cross-section. T6 and T21 at `D ∈ {6, 11, 26}` in the hypercone<span style="color: red">, except T21(a) at `D = 6` only: at `D = 11, 26` building the cast is expected to be infeasible, `p*`'s at least, whose candidate set passes `10^6` points and whose atomic path has not run in the hypercone (MB, 2026-11-26)</span>. T7b and T7c at
+  constant cross-section. T6 and T21 at `D ∈ {6, 11, 26}` in the hypercone, except T21(a) at `D = 6` only: at `D = 11, 26` building the cast is expected to be infeasible, `p*`'s at least, whose candidate set passes `10^6` points and whose atomic path has not run in the hypercone (MB, 2026-11-26). T7b and T7c at
   small `(D, N)`. T9 and T11 over the `D`-sweep. T12 at the frozen cells of §5.5. T13(d)
   at one curvature cell. T15(d), T15(e) and T23 at the cheap cell. T16 at
   `N ∈ {0, 1, 4}` in the 1-D bounded channel and at the cheap cell. T18 on its two
