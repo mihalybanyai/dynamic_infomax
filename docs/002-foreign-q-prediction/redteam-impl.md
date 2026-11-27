@@ -41,7 +41,7 @@ The documentation mostly tracks the code: both call graphs regenerate edge for e
 > sentence on the label, and §6.3 (the definition, and a column for the check). Code (3c):
 > `diagnostics.beyond_cap` (4 MCSE, inside `Θ` only, never `p*`), `capacity_gap` (face states,
 > floor at 0), `run.py` (the check column). Routed `[test-gap]` to `invoke-red-team-on-tests.md`:
-> T22(b)'s cases encode the one-MCSE margin, and `(4.31, 0.1, 4.0, 0.2)` flips under four.
+> T22(b)'s cases encode the one-MCSE margin, and `(4.31, 0.1, 4.0, 0.2)` flips under four. Spec edits: fa30a3b.
 
 ---
 
@@ -73,7 +73,7 @@ That `p_lat` solve also lost a round to a NaN. `KernelTable` takes each state's 
 > the reporting, the per-round trace of 2026-11-27: the three capped builds converged by rounds 15,
 > 14 and 24; the 32-entrant timing comparison redone on converged solves). Routed `[test-gap]` to
 > `invoke-red-team-on-tests.md`: T16(b) at T8's cone cell, and a check that the suite's solves
-> converge.
+> converge. Spec edits: fa30a3b.
 
 ---
 
@@ -95,7 +95,7 @@ That `p_lat` solve also lost a round to a NaN. `KernelTable` takes each state's 
 > `_anneal_jeffreys` raise when too few first-law draws start inside `Θ` (1000 of 20,000 proposed,
 > a design decision for DD-Q4). Spec (3b): §4.2's description of the first law says it is truncated
 > to `Θ`. Docs: DD-Q4. The new test, T4's brute-force normaliser on the matched box at `D = 4`–7,
-> is routed `[test-gap]` to `invoke-red-team-on-tests.md`: this workflow does not edit tests.
+> is routed `[test-gap]` to `invoke-red-team-on-tests.md`: this workflow does not edit tests. Spec edits: fa30a3b.
 
 ---
 
@@ -154,7 +154,7 @@ That `p_lat` solve also lost a round to a NaN. `KernelTable` takes each state's 
 > and the final `I` comes from the routed marginal. Spec (3b): §4.2's `p_LN^*` paragraph says so,
 > replacing its stale clause "above `D_switch`, from AtomicPriors.jl's `mutual` of a weighted
 > sample", which OQ-1 and OQ-7 already ruled out. Docs: DD-L1. Routed `[test-gap]` to
-> `invoke-red-team-on-tests.md`: T23(b) at `D = 6`.
+> `invoke-red-team-on-tests.md`: T23(b) at `D = 6`. Spec edits: fa30a3b.
 
 ---
 
@@ -178,7 +178,7 @@ That `p_lat` solve also lost a round to a NaN. `KernelTable` takes each state's 
 > `p*`, as MB recalls). Spec (3b): §4.2's coverage table and §5.4's curvature knob state
 > `2 ≤ D ≤ 4` for the curvature cells. Code (3c): `VertexNature`, curvature-on `build_jeffreys` and
 > `_cone_pref_with_curvature` raise a clear error outside `2 ≤ D ≤ 4`, replacing the stale
-> AtomicPriors.jl message. Docs: the README's coverage statement and the curvature entries.
+> AtomicPriors.jl message. Docs: the README's coverage statement and the curvature entries. Spec edits: fa30a3b.
 
 ---
 
@@ -199,7 +199,7 @@ That `p_lat` solve also lost a round to a NaN. `KernelTable` takes each state's 
 > candidates. Spec (3b): §4.2's pseudocode returns the candidate-set solution (no
 > `extract_atoms`), and §6.3 defines `pstar_n_atoms` as the number of supported candidates,
 > unmerged. Docs: DD-C2 rewritten (no merging, and why: it moved mass by up to a net spacing and
-> broke the equalizer by several `1e-2` nats). Spec 000's `atoms.extract_atoms` is untouched.
+> broke the equalizer by several `1e-2` nats). Spec 000's `atoms.extract_atoms` is untouched. Spec edits: fa30a3b.
 
 ---
 
@@ -248,7 +248,7 @@ That `p_lat` solve also lost a round to a NaN. `KernelTable` takes each state's 
 >   test's path, so 3d's eye-test rerun covers it. Routed `[test-gap]`: T4's 80-digit test on the
 >   grid path.
 > - m4 — spec (3b): OQ-14's "The scores use the cloud everywhere" marked superseded. Docs: the two
->   stale Testing-notes sentences marked superseded.
+>   stale Testing-notes sentences marked superseded. Spec edits: fa30a3b.
 > - m5, m6 — code docstrings. m7, m9, m10, m11, m12 — README edits as stated.
 > - m8 — code: `build_sampled_jeffreys` warns when its final cloud keeps fewer than 20 effective
 >   draws, so DD-Q4's claim becomes true (MB: no silent collapse). Docs: DD-Q4's "varies by less
